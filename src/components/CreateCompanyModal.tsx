@@ -44,10 +44,10 @@ export function CreateCompanyModal({ open, onOpenChange, onCreated }: CreateComp
     setSubmitting(true);
     const { data, error } = await supabase.rpc("create_company", {
       p_name: form.name.trim(),
-      p_email: form.email.trim() || null,
+      p_email: form.email.trim() || undefined,
       p_currency: form.currency || "USD",
-      p_address: form.address.trim() || null,
-      p_phone: form.phone.trim() || null,
+      p_address: form.address.trim() || undefined,
+      p_phone: form.phone.trim() || undefined,
     });
     setSubmitting(false);
 
