@@ -1,33 +1,33 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TeamHeader } from '@/components/team/TeamHeader';
-import { MembersTable } from '@/components/team/MembersTable';
-import { InviteMemberModal } from '@/components/team/InviteMemberModal';
-import { PermissionMatrix } from '@/components/team/PermissionMatrix';
-import { useTeamMembers } from '@/hooks/useTeamMembers';
-import { useSeatUsage } from '@/hooks/useInviteMember';
-import { useCurrentRole } from '@/hooks/useCurrentRole';
-import { useQuery } from '@tanstack/react-query';
-import { listRolesForCompany } from '@/services/team/role.service';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useActiveCompanyId } from '@/hooks/useActiveCompanyId';
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TeamHeader } from "@/components/team/TeamHeader";
+import { MembersTable } from "@/components/team/MembersTable";
+import { InviteMemberModal } from "@/components/team/InviteMemberModal";
+import { PermissionMatrix } from "@/components/team/PermissionMatrix";
+import { useTeamMembers } from "@/hooks/useTeamMembers";
+import { useSeatUsage } from "@/hooks/useInviteMember";
+import { useCurrentRole } from "@/hooks/useCurrentRole";
+import { useQuery } from "@tanstack/react-query";
+import { listRolesForCompany } from "@/services/team/role.service";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
-export const Route = createFileRoute('/_authenticated/team')({
+export const Route = createFileRoute("/_authenticated/team")({
   component: TeamSettingsPage,
 });
 
 function TeamSettingsPage() {
   const activeCompanyId = useActiveCompanyId();
-  const companyId = activeCompanyId ?? '';
+  const companyId = activeCompanyId ?? "";
   const navigate = useNavigate();
 
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [tab, setTab] = useState<'members' | 'roles'>('members');
+  const [tab, setTab] = useState<"members" | "roles">("members");
 
   const { isAdmin, isLoading: isRoleLoading } = useCurrentRole(companyId);
   const { data: roles = [] } = useQuery({
-    queryKey: ['roles', companyId],
+    queryKey: ["roles", companyId],
     queryFn: () => listRolesForCompany(companyId),
     enabled: Boolean(companyId),
   });
@@ -60,10 +60,10 @@ function TeamSettingsPage() {
         companyId={companyId}
         seatUsage={seatUsage}
         onInviteClick={() => setInviteOpen(true)}
-        onManageRolesClick={() => setTab('roles')}
+        onManageRolesClick={() => setTab("roles")}
       />
 
-      <Tabs value={tab} onValueChange={(v) => setTab(v as 'members' | 'roles')}>
+      <Tabs value={tab} onValueChange={(v) => setTab(v as "members" | "roles")}>
         <TabsList>
           <TabsTrigger value="members">Members</TabsTrigger>
           {isAdmin && <TabsTrigger value="roles">Roles & Permissions</TabsTrigger>}
@@ -96,7 +96,12 @@ function TeamSettingsPage() {
         )}
       </Tabs>
 
-      <InviteMemberModal companyId={companyId} roles={roles} open={inviteOpen} onOpenChange={setInviteOpen} />
+      <InviteMemberModal
+        companyId={companyId}
+        roles={roles}
+        open={inviteOpen}
+        onOpenChange={setInviteOpen}
+      />
     </div>
   );
 }

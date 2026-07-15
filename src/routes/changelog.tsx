@@ -260,8 +260,8 @@ function ChangelogPage() {
               FinFlowTrack Changelog
             </h1>
             <p className="mt-6 text-lg leading-relaxed text-slate-600">
-              Follow product updates, new features, improvements, bug fixes,
-              and platform enhancements as FinFlowTrack continues to evolve.
+              Follow product updates, new features, improvements, bug fixes, and platform
+              enhancements as FinFlowTrack continues to evolve.
             </p>
 
             <div className="mt-8 flex flex-col items-center justify-center gap-3 text-sm text-slate-500 sm:flex-row sm:gap-6">
@@ -302,10 +302,9 @@ function ChangelogPage() {
             Introducing FinFlowTrack 1.0
           </h3>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-base">
-            Our first public release introduces the foundation of modern
-            small business accounting — built to help freelancers, startups,
-            and growing teams manage their finances in one connected
-            platform.
+            Our first public release introduces the foundation of modern small business accounting —
+            built to help freelancers, startups, and growing teams manage their finances in one
+            connected platform.
           </p>
           <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {[
@@ -342,8 +341,7 @@ function ChangelogPage() {
               Release Timeline
             </h2>
             <p className="mt-4 text-slate-600">
-              A chronological record of what's shipped and what's coming
-              next.
+              A chronological record of what's shipped and what's coming next.
             </p>
           </div>
 
@@ -366,9 +364,7 @@ function ChangelogPage() {
 
           <div className="relative mt-14 space-y-10 border-l border-slate-200 pl-8">
             {visibleReleases.length === 0 ? (
-              <p className="text-sm text-slate-600">
-                No releases match this filter yet.
-              </p>
+              <p className="text-sm text-slate-600">No releases match this filter yet.</p>
             ) : (
               visibleReleases.map((release) => (
                 <article key={release.version} className="relative">
@@ -382,12 +378,8 @@ function ChangelogPage() {
                       </span>
                       <span className="text-sm text-slate-500">{release.date}</span>
                     </div>
-                    <h3 className="mt-3 text-lg font-bold text-slate-900">
-                      {release.title}
-                    </h3>
-                    <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                      {release.summary}
-                    </p>
+                    <h3 className="mt-3 text-lg font-bold text-slate-900">{release.title}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-slate-600">{release.summary}</p>
 
                     <div className="mt-6 space-y-5">
                       {(Object.keys(release.items) as UpdateCategory[]).map((category) => {
@@ -431,13 +423,15 @@ function ChangelogPage() {
             <Compass className="h-4 w-4 text-emerald-600" />
             Coming Soon
           </span>
-          <h2 id="roadmap-heading" className="mt-6 text-3xl font-bold tracking-tight text-slate-900">
+          <h2
+            id="roadmap-heading"
+            className="mt-6 text-3xl font-bold tracking-tight text-slate-900"
+          >
             Where We're Headed
           </h2>
           <p className="mt-4 text-slate-600">
-            These are directions we're exploring for future releases. They
-            represent our current thinking, not a guaranteed release date or
-            commitment.
+            These are directions we're exploring for future releases. They represent our current
+            thinking, not a guaranteed release date or commitment.
           </p>
         </div>
         <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -449,9 +443,7 @@ function ChangelogPage() {
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white">
                 <item.icon className="h-5 w-5 text-emerald-600" />
               </div>
-              <span className="text-sm font-semibold text-slate-700">
-                {item.title}
-              </span>
+              <span className="text-sm font-semibold text-slate-700">{item.title}</span>
             </div>
           ))}
         </div>
@@ -463,14 +455,16 @@ function ChangelogPage() {
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50">
             <MessagesSquare className="h-6 w-6 text-emerald-600" />
           </div>
-          <h2 id="feedback-heading" className="mt-5 text-3xl font-bold tracking-tight text-slate-900">
+          <h2
+            id="feedback-heading"
+            className="mt-5 text-3xl font-bold tracking-tight text-slate-900"
+          >
             Built With Our Users
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-slate-600">
-            FinFlowTrack improves based on real feedback from business
-            owners, freelancers, accountants, and teams who use the platform
-            day to day. If there's something that would make your workflow
-            easier, we want to hear about it.
+            FinFlowTrack improves based on real feedback from business owners, freelancers,
+            accountants, and teams who use the platform day to day. If there's something that would
+            make your workflow easier, we want to hear about it.
           </p>
           <div className="mt-8">
             <a
@@ -507,9 +501,7 @@ function ChangelogPage() {
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50">
               <Users className="h-5 w-5 text-emerald-600" />
             </div>
-            <h2 className="mt-4 text-lg font-bold text-slate-900">
-              Transparency
-            </h2>
+            <h2 className="mt-4 text-lg font-bold text-slate-900">Transparency</h2>
             <dl className="mt-4 space-y-3 text-sm">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <dt className="text-slate-500">Published by</dt>
@@ -538,7 +530,10 @@ function ChangelogPage() {
       {/* FAQ */}
       <section aria-labelledby="faq-heading" className="border-t border-slate-100 bg-slate-50">
         <div className="mx-auto max-w-4xl px-6 py-20">
-          <h2 id="faq-heading" className="text-center text-3xl font-bold tracking-tight text-slate-900">
+          <h2
+            id="faq-heading"
+            className="text-center text-3xl font-bold tracking-tight text-slate-900"
+          >
             Frequently Asked Questions
           </h2>
           <div className="mt-12 space-y-6">
@@ -547,12 +542,8 @@ function ChangelogPage() {
                 key={faq.question}
                 className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
               >
-                <h3 className="text-base font-semibold text-slate-900">
-                  {faq.question}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                  {faq.answer}
-                </p>
+                <h3 className="text-base font-semibold text-slate-900">{faq.question}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">{faq.answer}</p>
               </article>
             ))}
           </div>
@@ -562,13 +553,15 @@ function ChangelogPage() {
       {/* Final CTA */}
       <section aria-labelledby="final-cta-heading" className="mx-auto max-w-6xl px-6 py-20">
         <div className="rounded-3xl bg-slate-900 px-8 py-16 text-center sm:px-16">
-          <h2 id="final-cta-heading" className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          <h2
+            id="final-cta-heading"
+            className="text-3xl font-bold tracking-tight text-white sm:text-4xl"
+          >
             Stay Updated With FinFlowTrack
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-slate-300">
-            New features, improvements, and fixes ship regularly. Start
-            using FinFlowTrack today, or reach out if there's something
-            you'd like to see next.
+            New features, improvements, and fixes ship regularly. Start using FinFlowTrack today, or
+            reach out if there's something you'd like to see next.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link

@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
-import { getCurrentUserPermissionKeys } from '@/services/team/permission.service';
-import type { PermissionKey } from '@/types/team.types';
+import { useQuery } from "@tanstack/react-query";
+import { getCurrentUserPermissionKeys } from "@/services/team/permission.service";
+import type { PermissionKey } from "@/types/team.types";
 
 /**
  * usePermissions(companyId) → { can, isLoading, permissionKeys }
@@ -15,7 +15,7 @@ import type { PermissionKey } from '@/types/team.types';
  */
 export function usePermissions(companyId: string) {
   const { data, isLoading, error } = useQuery({
-    queryKey: ['current-user-permissions', companyId],
+    queryKey: ["current-user-permissions", companyId],
     queryFn: () => getCurrentUserPermissionKeys(companyId),
     enabled: Boolean(companyId),
     staleTime: 60_000,

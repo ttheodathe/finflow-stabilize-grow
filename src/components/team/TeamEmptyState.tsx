@@ -1,5 +1,5 @@
-import { Button } from '@/components/ui/button';
-import { Users, UserPlus } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Users, UserPlus } from "lucide-react";
 
 interface TeamEmptyStateProps {
   onInviteClick: () => void;

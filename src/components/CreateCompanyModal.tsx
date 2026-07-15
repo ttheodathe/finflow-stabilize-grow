@@ -54,7 +54,8 @@ export function CreateCompanyModal({ open, onOpenChange, onCreated }: CreateComp
     if (error) {
       if (error.message?.includes("company_limit_reached")) {
         toast.error("Company limit reached", {
-          description: "Your current plan doesn't allow any more companies. Upgrade to add another.",
+          description:
+            "Your current plan doesn't allow any more companies. Upgrade to add another.",
         });
       } else {
         toast.error(error.message);

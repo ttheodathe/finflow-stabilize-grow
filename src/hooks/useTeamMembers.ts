@@ -1,19 +1,23 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   listCompanyMembers,
   changeMemberRole,
   suspendMember,
   reactivateMember,
   removeMember,
-} from '@/services/team/team.service';
-import { listPendingInvitations, resendInvitation, revokeInvitation } from '@/services/team/invitation.service';
-import type { CompanyMember, TeamInvitation } from '@/types/team.types';
+} from "@/services/team/team.service";
+import {
+  listPendingInvitations,
+  resendInvitation,
+  revokeInvitation,
+} from "@/services/team/invitation.service";
+import type { CompanyMember, TeamInvitation } from "@/types/team.types";
 
 export function teamMembersQueryKey(companyId: string) {
-  return ['team-members', companyId] as const;
+  return ["team-members", companyId] as const;
 }
 export function teamInvitationsQueryKey(companyId: string) {
-  return ['team-invitations', companyId] as const;
+  return ["team-invitations", companyId] as const;
 }
 
 export function useTeamMembers(companyId: string) {

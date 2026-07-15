@@ -184,13 +184,28 @@ const learningPaths: LearningPath[] = [
 ];
 
 const roadmapSteps = [
-  { title: "Create your FinFlowTrack account", description: "Sign up and verify your email to get started." },
-  { title: "Set up your company", description: "Add your business details and create your first workspace." },
-  { title: "Add customers and suppliers", description: "Build the contacts you'll invoice and purchase from." },
+  {
+    title: "Create your FinFlowTrack account",
+    description: "Sign up and verify your email to get started.",
+  },
+  {
+    title: "Set up your company",
+    description: "Add your business details and create your first workspace.",
+  },
+  {
+    title: "Add customers and suppliers",
+    description: "Build the contacts you'll invoice and purchase from.",
+  },
   { title: "Create invoices", description: "Bill your customers and start tracking payments." },
-  { title: "Track expenses", description: "Log spending so your records stay accurate and complete." },
+  {
+    title: "Track expenses",
+    description: "Log spending so your records stay accurate and complete.",
+  },
   { title: "Analyze reports", description: "Check income, expenses, and cash flow at a glance." },
-  { title: "Grow your business", description: "Use your financial clarity to make confident decisions." },
+  {
+    title: "Grow your business",
+    description: "Use your financial clarity to make confident decisions.",
+  },
 ];
 
 const popularGuides = [
@@ -340,9 +355,7 @@ function GuidesPage() {
     return learningPaths
       .map((path) => {
         const pathMatches = path.title.toLowerCase().includes(trimmed);
-        const matchingGuides = path.guides.filter((guide) =>
-          guide.toLowerCase().includes(trimmed)
-        );
+        const matchingGuides = path.guides.filter((guide) => guide.toLowerCase().includes(trimmed));
         if (pathMatches) return path;
         if (matchingGuides.length > 0) return { ...path, guides: matchingGuides };
         return null;
@@ -364,9 +377,8 @@ function GuidesPage() {
               Learn Smarter Ways to Manage Your Business Finances
             </h1>
             <p className="mt-6 text-lg leading-relaxed text-slate-600">
-              Explore practical accounting guides, tutorials, and resources
-              designed to help freelancers, startups, and growing businesses
-              improve financial management.
+              Explore practical accounting guides, tutorials, and resources designed to help
+              freelancers, startups, and growing businesses improve financial management.
             </p>
 
             <div className="mt-10">
@@ -411,8 +423,8 @@ function GuidesPage() {
                   New Business Owner Roadmap: From Sign-Up to First Report
                 </h2>
                 <p className="mt-2 text-sm text-slate-600">
-                  A complete walkthrough for setting up FinFlowTrack and
-                  running your first full accounting cycle.
+                  A complete walkthrough for setting up FinFlowTrack and running your first full
+                  accounting cycle.
                 </p>
                 <a
                   href="#roadmap"
@@ -428,14 +440,17 @@ function GuidesPage() {
       </section>
 
       {/* Featured Learning Paths */}
-      <section id="learning-paths" aria-labelledby="paths-heading" className="scroll-mt-20 mx-auto max-w-6xl px-6 py-20">
+      <section
+        id="learning-paths"
+        aria-labelledby="paths-heading"
+        className="scroll-mt-20 mx-auto max-w-6xl px-6 py-20"
+      >
         <div className="mx-auto max-w-2xl text-center">
           <h2 id="paths-heading" className="text-3xl font-bold tracking-tight text-slate-900">
             Featured Learning Paths
           </h2>
           <p className="mt-4 text-slate-600">
-            Structured guides organized around the way you actually run your
-            business.
+            Structured guides organized around the way you actually run your business.
           </p>
         </div>
 
@@ -455,12 +470,8 @@ function GuidesPage() {
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50">
                   <path.icon className="h-5 w-5 text-emerald-600" />
                 </div>
-                <h3 className="mt-4 text-base font-semibold text-slate-900">
-                  {path.title}
-                </h3>
-                <p className="mt-1.5 text-sm text-slate-600">
-                  {path.description}
-                </p>
+                <h3 className="mt-4 text-base font-semibold text-slate-900">{path.title}</h3>
+                <p className="mt-1.5 text-sm text-slate-600">{path.description}</p>
                 <ul className="mt-4 space-y-2">
                   {path.guides.map((guide) => (
                     <li key={guide}>
@@ -481,19 +492,25 @@ function GuidesPage() {
       </section>
 
       {/* Beginner Roadmap */}
-      <section id="roadmap" aria-labelledby="roadmap-heading" className="scroll-mt-20 border-t border-slate-100 bg-slate-50">
+      <section
+        id="roadmap"
+        aria-labelledby="roadmap-heading"
+        className="scroll-mt-20 border-t border-slate-100 bg-slate-50"
+      >
         <div className="mx-auto max-w-6xl px-6 py-20">
           <div className="mx-auto max-w-2xl text-center">
             <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-sm font-medium text-slate-600 shadow-sm">
               <Compass className="h-4 w-4 text-emerald-600" />
               Roadmap
             </span>
-            <h2 id="roadmap-heading" className="mt-6 text-3xl font-bold tracking-tight text-slate-900">
+            <h2
+              id="roadmap-heading"
+              className="mt-6 text-3xl font-bold tracking-tight text-slate-900"
+            >
               New Business Owner Roadmap
             </h2>
             <p className="mt-4 text-slate-600">
-              Follow this path from your first sign-up to your first
-              complete financial report.
+              Follow this path from your first sign-up to your first complete financial report.
             </p>
           </div>
 
@@ -504,12 +521,8 @@ function GuidesPage() {
                   {index + 1}
                 </span>
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <h3 className="text-sm font-semibold text-slate-900">
-                    {step.title}
-                  </h3>
-                  <p className="mt-1 text-sm text-slate-600">
-                    {step.description}
-                  </p>
+                  <h3 className="text-sm font-semibold text-slate-900">{step.title}</h3>
+                  <p className="mt-1 text-sm text-slate-600">{step.description}</p>
                 </div>
               </li>
             ))}
@@ -523,9 +536,7 @@ function GuidesPage() {
           <h2 id="popular-heading" className="text-3xl font-bold tracking-tight text-slate-900">
             Popular Guides
           </h2>
-          <p className="mt-4 text-slate-600">
-            The guides business owners come back to most.
-          </p>
+          <p className="mt-4 text-slate-600">The guides business owners come back to most.</p>
         </div>
         <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {popularGuides.map((guide) => (
@@ -537,12 +548,8 @@ function GuidesPage() {
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50">
                 <guide.icon className="h-5 w-5 text-emerald-600" />
               </div>
-              <h3 className="mt-4 text-base font-semibold text-slate-900">
-                {guide.title}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                {guide.description}
-              </p>
+              <h3 className="mt-4 text-base font-semibold text-slate-900">{guide.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">{guide.description}</p>
               <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700">
                 Read guide
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -553,10 +560,16 @@ function GuidesPage() {
       </section>
 
       {/* Guides by Business Type */}
-      <section aria-labelledby="business-type-heading" className="border-t border-slate-100 bg-slate-50">
+      <section
+        aria-labelledby="business-type-heading"
+        className="border-t border-slate-100 bg-slate-50"
+      >
         <div className="mx-auto max-w-6xl px-6 py-20">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 id="business-type-heading" className="text-3xl font-bold tracking-tight text-slate-900">
+            <h2
+              id="business-type-heading"
+              className="text-3xl font-bold tracking-tight text-slate-900"
+            >
               Guides by Business Type
             </h2>
             <p className="mt-4 text-slate-600">
@@ -572,9 +585,7 @@ function GuidesPage() {
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50">
                   <group.icon className="h-5 w-5 text-emerald-600" />
                 </div>
-                <h3 className="mt-4 text-base font-semibold text-slate-900">
-                  {group.title}
-                </h3>
+                <h3 className="mt-4 text-base font-semibold text-slate-900">{group.title}</h3>
                 <ul className="mt-4 space-y-2">
                   {group.guides.map((guide) => (
                     <li key={guide}>
@@ -614,9 +625,7 @@ function GuidesPage() {
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50">
                 <resource.icon className="h-5 w-5 text-emerald-600" />
               </div>
-              <h3 className="mt-4 text-sm font-semibold text-slate-900">
-                {resource.title}
-              </h3>
+              <h3 className="mt-4 text-sm font-semibold text-slate-900">{resource.title}</h3>
               <span className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
                 <Download className="h-3.5 w-3.5" />
                 Download
@@ -634,12 +643,14 @@ function GuidesPage() {
               <Lightbulb className="h-4 w-4 text-emerald-600" />
               FinFlowTrack Insights
             </span>
-            <h2 id="insights-heading" className="mt-6 text-3xl font-bold tracking-tight text-slate-900">
+            <h2
+              id="insights-heading"
+              className="mt-6 text-3xl font-bold tracking-tight text-slate-900"
+            >
               Perspectives on Where Accounting Is Headed
             </h2>
             <p className="mt-4 text-slate-600">
-              Grounded takes on the trends shaping financial management for
-              growing businesses.
+              Grounded takes on the trends shaping financial management for growing businesses.
             </p>
           </div>
           <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2">
@@ -652,12 +663,8 @@ function GuidesPage() {
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50">
                   <insight.icon className="h-5 w-5 text-emerald-600" />
                 </div>
-                <h3 className="mt-4 text-base font-semibold text-slate-900">
-                  {insight.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                  {insight.description}
-                </p>
+                <h3 className="mt-4 text-base font-semibold text-slate-900">{insight.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">{insight.description}</p>
               </a>
             ))}
           </div>
@@ -666,7 +673,10 @@ function GuidesPage() {
 
       {/* FAQ */}
       <section aria-labelledby="faq-heading" className="mx-auto max-w-4xl px-6 py-20">
-        <h2 id="faq-heading" className="text-center text-3xl font-bold tracking-tight text-slate-900">
+        <h2
+          id="faq-heading"
+          className="text-center text-3xl font-bold tracking-tight text-slate-900"
+        >
           Frequently Asked Questions
         </h2>
         <div className="mt-12 space-y-6">
@@ -675,12 +685,8 @@ function GuidesPage() {
               key={faq.question}
               className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
             >
-              <h3 className="text-base font-semibold text-slate-900">
-                {faq.question}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                {faq.answer}
-              </p>
+              <h3 className="text-base font-semibold text-slate-900">{faq.question}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">{faq.answer}</p>
             </article>
           ))}
         </div>
@@ -714,12 +720,14 @@ function GuidesPage() {
       {/* Final CTA */}
       <section aria-labelledby="final-cta-heading" className="mx-auto max-w-6xl px-6 py-20">
         <div className="rounded-3xl bg-slate-900 px-8 py-16 text-center sm:px-16">
-          <h2 id="final-cta-heading" className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          <h2
+            id="final-cta-heading"
+            className="text-3xl font-bold tracking-tight text-white sm:text-4xl"
+          >
             Ready to Simplify Your Business Finances?
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-slate-300">
-            Put these guides into practice inside FinFlowTrack. Start free,
-            no credit card required.
+            Put these guides into practice inside FinFlowTrack. Start free, no credit card required.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link

@@ -1,30 +1,30 @@
-export type MemberStatus = 'invited' | 'active' | 'suspended' | 'removed';
-export type InvitationStatus = 'pending' | 'accepted' | 'revoked' | 'expired';
+export type MemberStatus = "invited" | "active" | "suspended" | "removed";
+export type InvitationStatus = "pending" | "accepted" | "revoked" | "expired";
 
 export type RoleKey =
-  | 'owner'
-  | 'admin'
-  | 'accountant'
-  | 'manager'
-  | 'employee'
-  | 'viewer'
+  | "owner"
+  | "admin"
+  | "accountant"
+  | "manager"
+  | "employee"
+  | "viewer"
   | (string & {}); // allow company-defined custom roles
 
 export type PermissionKey =
-  | 'users.invite'
-  | 'users.remove'
-  | 'users.change_role'
-  | 'billing.manage'
-  | 'company.settings'
-  | 'company.delete'
-  | 'invoice.create'
-  | 'invoice.edit'
-  | 'invoice.delete'
-  | 'expense.create'
-  | 'expense.approve'
-  | 'reports.view'
-  | 'inventory.manage'
-  | 'payroll.manage'
+  | "users.invite"
+  | "users.remove"
+  | "users.change_role"
+  | "billing.manage"
+  | "company.settings"
+  | "company.delete"
+  | "invoice.create"
+  | "invoice.edit"
+  | "invoice.delete"
+  | "expense.create"
+  | "expense.approve"
+  | "reports.view"
+  | "inventory.manage"
+  | "payroll.manage"
   | (string & {});
 
 export interface Role {
@@ -108,7 +108,7 @@ export class TeamServiceError extends Error {
   code: string;
   constructor(code: string, message: string) {
     super(message);
-    this.name = 'TeamServiceError';
+    this.name = "TeamServiceError";
     this.code = code;
   }
 }

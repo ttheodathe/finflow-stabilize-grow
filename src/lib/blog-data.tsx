@@ -159,19 +159,17 @@ export const blogArticles: BlogArticle[] = [
     content: (
       <>
         <p>
-          Accounting can feel intimidating when you're running a small
-          business, but at its core it's simply the practice of recording,
-          organizing, and understanding your money. This guide walks through
-          the basics every business owner should know, without assuming any
+          Accounting can feel intimidating when you're running a small business, but at its core
+          it's simply the practice of recording, organizing, and understanding your money. This
+          guide walks through the basics every business owner should know, without assuming any
           prior accounting background.
         </p>
         <h2>What accounting actually covers</h2>
         <p>
-          Accounting includes everything from recording daily transactions
-          to producing the reports that tell you whether your business is
-          healthy. In practice, that usually means tracking income and
-          expenses, issuing and following up on invoices, and periodically
-          reviewing reports like profit and loss statements.
+          Accounting includes everything from recording daily transactions to producing the reports
+          that tell you whether your business is healthy. In practice, that usually means tracking
+          income and expenses, issuing and following up on invoices, and periodically reviewing
+          reports like profit and loss statements.
         </p>
         <h2>The core habits that make accounting manageable</h2>
         <ul>
@@ -181,15 +179,14 @@ export const blogArticles: BlogArticle[] = [
           <li>Review a simple report at least once a month.</li>
         </ul>
         <Callout>
-          <strong>In practice:</strong> Tools like FinFlowTrack automate the
-          recording and reporting side of this, so you spend less time on
-          data entry and more time reviewing what the numbers are telling
-          you.
+          <strong>In practice:</strong> Tools like FinFlowTrack automate the recording and reporting
+          side of this, so you spend less time on data entry and more time reviewing what the
+          numbers are telling you.
         </Callout>
         <h2>Financial statements, briefly explained</h2>
         <p>
-          You don't need to memorize accounting terminology to run a
-          healthy business, but three reports are worth understanding:
+          You don't need to memorize accounting terminology to run a healthy business, but three
+          reports are worth understanding:
         </p>
         <table>
           <thead>
@@ -214,9 +211,8 @@ export const blogArticles: BlogArticle[] = [
           </tbody>
         </table>
         <p>
-          Once these habits and reports feel familiar, accounting stops
-          being a mystery and starts being a tool you actually use to make
-          decisions.
+          Once these habits and reports feel familiar, accounting stops being a mystery and starts
+          being a tool you actually use to make decisions.
         </p>
       </>
     ),
@@ -239,16 +235,14 @@ export const blogArticles: BlogArticle[] = [
     content: (
       <>
         <p>
-          It's possible to be profitable on paper and still run out of cash.
-          That gap is exactly what cash flow measures: the actual timing of
-          money moving in and out of your business.
+          It's possible to be profitable on paper and still run out of cash. That gap is exactly
+          what cash flow measures: the actual timing of money moving in and out of your business.
         </p>
         <h2>Why the distinction matters</h2>
         <p>
-          Profit is calculated over a period, but cash arrives and leaves on
-          its own schedule. A large invoice that hasn't been paid yet counts
-          toward your profit, but it isn't cash you can use to pay rent or
-          payroll today.
+          Profit is calculated over a period, but cash arrives and leaves on its own schedule. A
+          large invoice that hasn't been paid yet counts toward your profit, but it isn't cash you
+          can use to pay rent or payroll today.
         </p>
         <h2>Common causes of cash flow problems</h2>
         <ul>
@@ -258,15 +252,13 @@ export const blogArticles: BlogArticle[] = [
           <li>Upfront costs for growth outpacing incoming cash</li>
         </ul>
         <Callout>
-          <strong>Quick check:</strong> If you can answer "how much cash do I
-          have available right now, and what's due in the next 30 days?" at
-          any moment, you're in a strong position to manage cash flow
-          proactively.
+          <strong>Quick check:</strong> If you can answer "how much cash do I have available right
+          now, and what's due in the next 30 days?" at any moment, you're in a strong position to
+          manage cash flow proactively.
         </Callout>
         <p>
-          Reviewing a simple cash flow report regularly — weekly if your
-          margins are tight — makes it much easier to spot problems before
-          they become urgent.
+          Reviewing a simple cash flow report regularly — weekly if your margins are tight — makes
+          it much easier to spot problems before they become urgent.
         </p>
       </>
     ),
@@ -289,9 +281,8 @@ export const blogArticles: BlogArticle[] = [
     content: (
       <>
         <p>
-          A well-structured invoice does more than look professional — it
-          removes friction from the payment process, which means you get
-          paid faster.
+          A well-structured invoice does more than look professional — it removes friction from the
+          payment process, which means you get paid faster.
         </p>
         <h2>What every invoice should include</h2>
         <ul>
@@ -303,21 +294,19 @@ export const blogArticles: BlogArticle[] = [
         </ul>
         <h2>Invoice numbering best practices</h2>
         <p>
-          A consistent numbering system (like sequential numbers or a
-          year-based prefix) makes it easy to track which invoices are
-          outstanding and avoids the confusion of duplicate or missing
-          numbers.
+          A consistent numbering system (like sequential numbers or a year-based prefix) makes it
+          easy to track which invoices are outstanding and avoids the confusion of duplicate or
+          missing numbers.
         </p>
         <Callout>
-          <strong>In practice:</strong> FinFlowTrack generates sequential
-          invoice numbers automatically and tracks each invoice's status, so
-          you always know what's paid, pending, or overdue.
+          <strong>In practice:</strong> FinFlowTrack generates sequential invoice numbers
+          automatically and tracks each invoice's status, so you always know what's paid, pending,
+          or overdue.
         </Callout>
         <h2>Making payment terms clear</h2>
         <p>
-          State your payment terms directly on the invoice — for example,
-          "Due within 14 days." Ambiguous terms are one of the most common,
-          avoidable causes of late payment.
+          State your payment terms directly on the invoice — for example, "Due within 14 days."
+          Ambiguous terms are one of the most common, avoidable causes of late payment.
         </p>
       </>
     ),
@@ -332,16 +321,12 @@ export const blogArticles: BlogArticle[] = [
     publishedAt: "June 8, 2026",
     updatedAt: "June 8, 2026",
     readTime: "5 min read",
-    relatedSlugs: [
-      "how-to-create-professional-invoices",
-      "understanding-cash-flow-basics",
-    ],
+    relatedSlugs: ["how-to-create-professional-invoices", "understanding-cash-flow-basics"],
     content: (
       <>
         <p>
-          Late payments are one of the most common cash flow challenges for
-          small businesses. A few consistent habits can noticeably reduce
-          how often they happen.
+          Late payments are one of the most common cash flow challenges for small businesses. A few
+          consistent habits can noticeably reduce how often they happen.
         </p>
         <ol>
           <li>Send invoices immediately after delivering work, not weeks later.</li>
@@ -351,9 +336,8 @@ export const blogArticles: BlogArticle[] = [
           <li>Offer more than one payment method to reduce friction.</li>
         </ol>
         <Callout>
-          Automated status tracking, like the kind built into FinFlowTrack,
-          makes it easy to see which invoices need a follow-up without
-          manually checking each one.
+          Automated status tracking, like the kind built into FinFlowTrack, makes it easy to see
+          which invoices need a follow-up without manually checking each one.
         </Callout>
       </>
     ),
@@ -368,39 +352,33 @@ export const blogArticles: BlogArticle[] = [
     publishedAt: "May 28, 2026",
     updatedAt: "June 2, 2026",
     readTime: "6 min read",
-    relatedSlugs: [
-      "complete-guide-to-small-business-accounting",
-      "managing-business-cash-flow",
-    ],
+    relatedSlugs: ["complete-guide-to-small-business-accounting", "managing-business-cash-flow"],
     content: (
       <>
         <p>
-          Expense tracking is one of the simplest habits to build, and one
-          of the most valuable — both for day-to-day decision-making and for
-          staying organized ahead of tax season.
+          Expense tracking is one of the simplest habits to build, and one of the most valuable —
+          both for day-to-day decision-making and for staying organized ahead of tax season.
         </p>
         <h2>Set up expense categories that match your business</h2>
         <p>
-          Generic categories like "office supplies" or "software" work for
-          many businesses, but it's worth tailoring categories to how your
-          business actually spends money, so your reports stay useful.
+          Generic categories like "office supplies" or "software" work for many businesses, but it's
+          worth tailoring categories to how your business actually spends money, so your reports
+          stay useful.
         </p>
         <h2>Keep business and personal spending separate</h2>
         <p>
-          Mixing personal and business expenses is one of the most common
-          sources of confusion at tax time. A dedicated business account
-          and card make this far easier to maintain.
+          Mixing personal and business expenses is one of the most common sources of confusion at
+          tax time. A dedicated business account and card make this far easier to maintain.
         </p>
         <Callout>
-          <strong>In practice:</strong> Recording expenses as they happen —
-          rather than reconstructing them from memory later — is the single
-          biggest factor in keeping your records accurate.
+          <strong>In practice:</strong> Recording expenses as they happen — rather than
+          reconstructing them from memory later — is the single biggest factor in keeping your
+          records accurate.
         </Callout>
         <h2>Hold onto your receipts</h2>
         <p>
-          Whether digital or physical, keeping receipts organized and
-          attached to the right expense entry makes it much easier to
-          verify records later, whether for your own review or a tax
+          Whether digital or physical, keeping receipts organized and attached to the right expense
+          entry makes it much easier to verify records later, whether for your own review or a tax
           filing.
         </p>
       </>
@@ -420,9 +398,8 @@ export const blogArticles: BlogArticle[] = [
     content: (
       <>
         <p>
-          Inventory ties up cash, space, and attention. Managing it well
-          means having enough stock to meet demand without tying up more
-          capital than necessary.
+          Inventory ties up cash, space, and attention. Managing it well means having enough stock
+          to meet demand without tying up more capital than necessary.
         </p>
         <h2>Core practices worth building early</h2>
         <ul>
@@ -432,13 +409,12 @@ export const blogArticles: BlogArticle[] = [
           <li>Reconcile physical counts against your records periodically.</li>
         </ul>
         <Callout>
-          Low-stock alerts and centralized stock records — both part of
-          FinFlowTrack's inventory foundation — help catch shortages before
-          they affect customers.
+          Low-stock alerts and centralized stock records — both part of FinFlowTrack's inventory
+          foundation — help catch shortages before they affect customers.
         </Callout>
         <p>
-          As your product range grows, these habits scale with you far more
-          easily than trying to track inventory in spreadsheets.
+          As your product range grows, these habits scale with you far more easily than trying to
+          track inventory in spreadsheets.
         </p>
       </>
     ),
@@ -457,16 +433,14 @@ export const blogArticles: BlogArticle[] = [
     content: (
       <>
         <p>
-          Accounting software automates the recording, organizing, and
-          reporting of financial data — tasks many businesses start out
-          doing manually in spreadsheets.
+          Accounting software automates the recording, organizing, and reporting of financial data —
+          tasks many businesses start out doing manually in spreadsheets.
         </p>
         <h2>Where spreadsheets start to break down</h2>
         <p>
-          Spreadsheets work fine for a handful of transactions a month. As
-          transaction volume grows, or once a team needs shared access,
-          manual formulas and version control become genuine risks to
-          accuracy.
+          Spreadsheets work fine for a handful of transactions a month. As transaction volume grows,
+          or once a team needs shared access, manual formulas and version control become genuine
+          risks to accuracy.
         </p>
         <h2>What cloud accounting software typically adds</h2>
         <ul>
@@ -476,8 +450,8 @@ export const blogArticles: BlogArticle[] = [
           <li>Reports generated on demand instead of built by hand</li>
         </ul>
         <Callout>
-          The right time to switch is usually when manual tracking starts
-          costing you more time than the software would — not before.
+          The right time to switch is usually when manual tracking starts costing you more time than
+          the software would — not before.
         </Callout>
       </>
     ),
@@ -496,14 +470,13 @@ export const blogArticles: BlogArticle[] = [
     content: (
       <>
         <p>
-          Healthy cash flow isn't about how much revenue you generate — it's
-          about whether cash arrives in time to cover what's due.
+          Healthy cash flow isn't about how much revenue you generate — it's about whether cash
+          arrives in time to cover what's due.
         </p>
         <h2>Build a simple cash flow forecast</h2>
         <p>
-          Even a basic forecast — expected income and expenses over the next
-          four to eight weeks — makes it far easier to spot a shortfall
-          before it happens.
+          Even a basic forecast — expected income and expenses over the next four to eight weeks —
+          makes it far easier to spot a shortfall before it happens.
         </p>
         <h2>Shorten the gap between work and payment</h2>
         <ul>
@@ -512,8 +485,8 @@ export const blogArticles: BlogArticle[] = [
           <li>Follow up on overdue invoices consistently</li>
         </ul>
         <Callout>
-          Reviewing your cash position weekly, rather than only at month-end,
-          gives you far more time to react to a shortfall.
+          Reviewing your cash position weekly, rather than only at month-end, gives you far more
+          time to react to a shortfall.
         </Callout>
       </>
     ),

@@ -278,11 +278,10 @@ function SecurityPage() {
               Security Built Into Every Layer
             </h1>
             <p className="mt-6 text-lg leading-relaxed text-slate-600">
-              FinFlowTrack helps businesses manage their financial operations
-              with confidence. From secure authentication and role-based
-              permissions to encrypted communications and managed cloud
-              infrastructure, protecting your business and financial data is
-              built into how we design, build, and operate the platform.
+              FinFlowTrack helps businesses manage their financial operations with confidence. From
+              secure authentication and role-based permissions to encrypted communications and
+              managed cloud infrastructure, protecting your business and financial data is built
+              into how we design, build, and operate the platform.
             </p>
             <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <Link
@@ -317,27 +316,29 @@ function SecurityPage() {
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50">
                 <card.icon className="h-5 w-5 text-emerald-600" />
               </div>
-              <h3 className="mt-4 text-base font-semibold text-slate-900">
-                {card.title}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                {card.description}
-              </p>
+              <h3 className="mt-4 text-base font-semibold text-slate-900">{card.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">{card.description}</p>
             </article>
           ))}
         </div>
       </section>
 
       {/* Security Principles */}
-      <section aria-labelledby="principles-heading" className="border-t border-slate-100 bg-slate-50">
+      <section
+        aria-labelledby="principles-heading"
+        className="border-t border-slate-100 bg-slate-50"
+      >
         <div className="mx-auto max-w-6xl px-6 py-20">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 id="principles-heading" className="text-3xl font-bold tracking-tight text-slate-900">
+            <h2
+              id="principles-heading"
+              className="text-3xl font-bold tracking-tight text-slate-900"
+            >
               Security Principles
             </h2>
             <p className="mt-4 text-slate-600">
-              A consistent set of principles guides how we authenticate
-              users, protect data, and operate the platform every day.
+              A consistent set of principles guides how we authenticate users, protect data, and
+              operate the platform every day.
             </p>
           </div>
           <div className="mt-12 grid grid-cols-1 gap-8 lg:grid-cols-2">
@@ -360,9 +361,7 @@ function SecurityPage() {
             <article className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
               <div className="flex items-center gap-3">
                 <Server className="h-5 w-5 text-emerald-600" />
-                <h3 className="text-lg font-semibold text-slate-900">
-                  Platform Protection
-                </h3>
+                <h3 className="text-lg font-semibold text-slate-900">Platform Protection</h3>
               </div>
               <ul className="mt-5 space-y-3">
                 {platformPrinciples.map((item) => (
@@ -380,12 +379,15 @@ function SecurityPage() {
       {/* Data Protection */}
       <section aria-labelledby="data-protection-heading" className="mx-auto max-w-6xl px-6 py-20">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 id="data-protection-heading" className="text-3xl font-bold tracking-tight text-slate-900">
+          <h2
+            id="data-protection-heading"
+            className="text-3xl font-bold tracking-tight text-slate-900"
+          >
             Data Protection
           </h2>
           <p className="mt-4 text-slate-600">
-            Financial data deserves careful handling at every stage, from the
-            moment it leaves your browser to how it's stored and maintained.
+            Financial data deserves careful handling at every stage, from the moment it leaves your
+            browser to how it's stored and maintained.
           </p>
         </div>
         <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -397,12 +399,8 @@ function SecurityPage() {
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50">
                 <card.icon className="h-5 w-5 text-emerald-600" />
               </div>
-              <h3 className="mt-4 text-base font-semibold text-slate-900">
-                {card.title}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                {card.description}
-              </p>
+              <h3 className="mt-4 text-base font-semibold text-slate-900">{card.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">{card.description}</p>
             </article>
           ))}
         </div>
@@ -417,18 +415,15 @@ function SecurityPage() {
                 Role-Based Access Control
               </h2>
               <p className="mt-4 text-slate-600">
-                Not everyone on your team needs access to every part of your
-                business. FinFlowTrack uses role-based access control so that
-                each teammate only sees the data relevant to their work.
-                Company owners define roles for every member of their
-                organization, and permissions are enforced consistently
-                across the entire platform.
+                Not everyone on your team needs access to every part of your business. FinFlowTrack
+                uses role-based access control so that each teammate only sees the data relevant to
+                their work. Company owners define roles for every member of their organization, and
+                permissions are enforced consistently across the entire platform.
               </p>
               <p className="mt-4 text-slate-600">
-                This approach reduces the risk of accidental changes,
-                keeps sensitive data like payroll and financial reports
-                limited to the people who need it, and gives owners a clear
-                picture of who can do what within their company.
+                This approach reduces the risk of accidental changes, keeps sensitive data like
+                payroll and financial reports limited to the people who need it, and gives owners a
+                clear picture of who can do what within their company.
               </p>
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -437,9 +432,7 @@ function SecurityPage() {
                   key={role.name}
                   className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
                 >
-                  <h3 className="text-sm font-semibold text-slate-900">
-                    {role.name}
-                  </h3>
+                  <h3 className="text-sm font-semibold text-slate-900">{role.name}</h3>
                   <p className="mt-1.5 text-xs leading-relaxed text-slate-600">
                     {role.description}
                   </p>
@@ -453,13 +446,15 @@ function SecurityPage() {
       {/* Multi-Company Security */}
       <section aria-labelledby="multi-company-heading" className="mx-auto max-w-6xl px-6 py-20">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 id="multi-company-heading" className="text-3xl font-bold tracking-tight text-slate-900">
+          <h2
+            id="multi-company-heading"
+            className="text-3xl font-bold tracking-tight text-slate-900"
+          >
             Multi-Company Security
           </h2>
           <p className="mt-4 text-slate-600">
-            Many businesses manage more than one company inside FinFlowTrack.
-            Each workspace is protected independently, so growth never comes
-            at the cost of security.
+            Many businesses manage more than one company inside FinFlowTrack. Each workspace is
+            protected independently, so growth never comes at the cost of security.
           </p>
         </div>
         <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -471,12 +466,8 @@ function SecurityPage() {
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50">
                 <card.icon className="h-5 w-5 text-emerald-600" />
               </div>
-              <h3 className="mt-4 text-base font-semibold text-slate-900">
-                {card.title}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                {card.description}
-              </p>
+              <h3 className="mt-4 text-base font-semibold text-slate-900">{card.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">{card.description}</p>
             </article>
           ))}
         </div>
@@ -490,9 +481,8 @@ function SecurityPage() {
               Audit Logging
             </h2>
             <p className="mt-4 text-slate-600">
-              Understanding what happened, and when, is essential for
-              financial accountability. FinFlowTrack keeps a clear record of
-              key activity across your company.
+              Understanding what happened, and when, is essential for financial accountability.
+              FinFlowTrack keeps a clear record of key activity across your company.
             </p>
           </div>
           <div className="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -504,12 +494,8 @@ function SecurityPage() {
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50">
                   <card.icon className="h-5 w-5 text-emerald-600" />
                 </div>
-                <h3 className="mt-4 text-lg font-semibold text-slate-900">
-                  {card.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                  {card.description}
-                </p>
+                <h3 className="mt-4 text-lg font-semibold text-slate-900">{card.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">{card.description}</p>
               </article>
             ))}
           </div>
@@ -523,9 +509,8 @@ function SecurityPage() {
             Backup &amp; Business Continuity
           </h2>
           <p className="mt-4 text-slate-600">
-            Your financial data needs to be there when you need it. Our
-            infrastructure and processes are designed to keep FinFlowTrack
-            reliable and recoverable.
+            Your financial data needs to be there when you need it. Our infrastructure and processes
+            are designed to keep FinFlowTrack reliable and recoverable.
           </p>
         </div>
         <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -537,28 +522,29 @@ function SecurityPage() {
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50">
                 <card.icon className="h-5 w-5 text-emerald-600" />
               </div>
-              <h3 className="mt-4 text-base font-semibold text-slate-900">
-                {card.title}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                {card.description}
-              </p>
+              <h3 className="mt-4 text-base font-semibold text-slate-900">{card.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">{card.description}</p>
             </article>
           ))}
         </div>
       </section>
 
       {/* Continuous Monitoring */}
-      <section aria-labelledby="monitoring-heading" className="border-t border-slate-100 bg-slate-50">
+      <section
+        aria-labelledby="monitoring-heading"
+        className="border-t border-slate-100 bg-slate-50"
+      >
         <div className="mx-auto max-w-6xl px-6 py-20">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 id="monitoring-heading" className="text-3xl font-bold tracking-tight text-slate-900">
+            <h2
+              id="monitoring-heading"
+              className="text-3xl font-bold tracking-tight text-slate-900"
+            >
               Continuous Monitoring
             </h2>
             <p className="mt-4 text-slate-600">
-              Security isn't a one-time effort. We continuously monitor the
-              application and its infrastructure to catch issues early and
-              keep improving.
+              Security isn't a one-time effort. We continuously monitor the application and its
+              infrastructure to catch issues early and keep improving.
             </p>
           </div>
           <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -570,12 +556,8 @@ function SecurityPage() {
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50">
                   <card.icon className="h-5 w-5 text-emerald-600" />
                 </div>
-                <h3 className="mt-4 text-base font-semibold text-slate-900">
-                  {card.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                  {card.description}
-                </p>
+                <h3 className="mt-4 text-base font-semibold text-slate-900">{card.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">{card.description}</p>
               </article>
             ))}
           </div>
@@ -590,16 +572,14 @@ function SecurityPage() {
               Secure Software Development
             </h2>
             <p className="mt-4 text-slate-600">
-              Security starts long before code reaches production. Every
-              change to FinFlowTrack goes through a development process
-              designed to catch issues early and keep the platform reliable
-              as it grows.
+              Security starts long before code reaches production. Every change to FinFlowTrack goes
+              through a development process designed to catch issues early and keep the platform
+              reliable as it grows.
             </p>
             <p className="mt-4 text-slate-600">
-              From code review to dependency management and testing, our
-              engineering practices are built to protect the accuracy and
-              confidentiality of the financial data our customers trust us
-              with.
+              From code review to dependency management and testing, our engineering practices are
+              built to protect the accuracy and confidentiality of the financial data our customers
+              trust us with.
             </p>
           </div>
           <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -617,22 +597,25 @@ function SecurityPage() {
       </section>
 
       {/* Responsible Vulnerability Disclosure */}
-      <section aria-labelledby="disclosure-heading" className="border-t border-slate-100 bg-slate-50">
+      <section
+        aria-labelledby="disclosure-heading"
+        className="border-t border-slate-100 bg-slate-50"
+      >
         <div className="mx-auto max-w-6xl px-6 py-20">
           <div className="mx-auto max-w-3xl">
-            <h2 id="disclosure-heading" className="text-3xl font-bold tracking-tight text-slate-900">
+            <h2
+              id="disclosure-heading"
+              className="text-3xl font-bold tracking-tight text-slate-900"
+            >
               Responsible Vulnerability Disclosure
             </h2>
             <p className="mt-4 text-slate-600">
-              We welcome reports from security researchers and customers who
-              believe they've found a vulnerability in FinFlowTrack. Acting
-              in good faith and giving us the opportunity to investigate
-              helps us protect every business on the platform.
+              We welcome reports from security researchers and customers who believe they've found a
+              vulnerability in FinFlowTrack. Acting in good faith and giving us the opportunity to
+              investigate helps us protect every business on the platform.
             </p>
             <article className="mt-8 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-              <h3 className="text-lg font-semibold text-slate-900">
-                Guidelines for Reporting
-              </h3>
+              <h3 className="text-lg font-semibold text-slate-900">Guidelines for Reporting</h3>
               <ul className="mt-5 space-y-3">
                 {disclosureGuidelines.map((item) => (
                   <li key={item} className="flex items-start gap-3 text-sm text-slate-600">
@@ -648,7 +631,10 @@ function SecurityPage() {
 
       {/* FAQ */}
       <section aria-labelledby="faq-heading" className="mx-auto max-w-4xl px-6 py-20">
-        <h2 id="faq-heading" className="text-center text-3xl font-bold tracking-tight text-slate-900">
+        <h2
+          id="faq-heading"
+          className="text-center text-3xl font-bold tracking-tight text-slate-900"
+        >
           Frequently Asked Questions
         </h2>
         <div className="mt-12 space-y-6">
@@ -657,12 +643,8 @@ function SecurityPage() {
               key={faq.question}
               className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
             >
-              <h3 className="text-base font-semibold text-slate-900">
-                {faq.question}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                {faq.answer}
-              </p>
+              <h3 className="text-base font-semibold text-slate-900">{faq.question}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">{faq.answer}</p>
             </article>
           ))}
         </div>
@@ -675,12 +657,15 @@ function SecurityPage() {
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50">
               <Mail className="h-6 w-6 text-emerald-600" />
             </div>
-            <h2 id="contact-heading" className="mt-5 text-2xl font-bold tracking-tight text-slate-900">
+            <h2
+              id="contact-heading"
+              className="mt-5 text-2xl font-bold tracking-tight text-slate-900"
+            >
               Contact the Security Team
             </h2>
             <p className="mt-3 text-slate-600">
-              Have a security question or want to report a potential
-              vulnerability? Reach out and our team will respond promptly.
+              Have a security question or want to report a potential vulnerability? Reach out and
+              our team will respond promptly.
             </p>
             <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <a
@@ -705,13 +690,16 @@ function SecurityPage() {
       {/* Final CTA */}
       <section aria-labelledby="final-cta-heading" className="mx-auto max-w-6xl px-6 py-20">
         <div className="rounded-3xl bg-slate-900 px-8 py-16 text-center sm:px-16">
-          <h2 id="final-cta-heading" className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          <h2
+            id="final-cta-heading"
+            className="text-3xl font-bold tracking-tight text-white sm:text-4xl"
+          >
             Security Is a Continuous Commitment
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-slate-300">
-            Protecting your business and financial data is never finished.
-            We keep investing in the people, processes, and infrastructure
-            that keep FinFlowTrack secure as your business grows.
+            Protecting your business and financial data is never finished. We keep investing in the
+            people, processes, and infrastructure that keep FinFlowTrack secure as your business
+            grows.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link

@@ -23,8 +23,7 @@ export const Route = createFileRoute("/features")({
   head: () => ({
     meta: [
       {
-        title:
-          "Features | FinFlowTrack - Modern Accounting Software for Growing Businesses",
+        title: "Features | FinFlowTrack - Modern Accounting Software for Growing Businesses",
       },
       {
         name: "description",
@@ -38,13 +37,10 @@ export const Route = createFileRoute("/features")({
 function FeaturesPage() {
   return (
     <div className="bg-background">
-
       {/* HERO */}
 
       <section className="border-b">
-
         <div className="container mx-auto max-w-7xl px-6 py-20">
-
           <span className="inline-flex rounded-full bg-primary/10 px-4 py-1 text-sm font-medium text-primary">
             FinFlowTrack Features
           </span>
@@ -56,22 +52,18 @@ function FeaturesPage() {
           </h1>
 
           <p className="mt-8 max-w-3xl text-lg leading-8 text-muted-foreground">
-            FinFlowTrack combines accounting, invoicing, inventory,
-            CRM, banking, payroll, financial reporting and AI-powered
-            bookkeeping into one secure cloud platform designed for
+            FinFlowTrack combines accounting, invoicing, inventory, CRM, banking, payroll, financial
+            reporting and AI-powered bookkeeping into one secure cloud platform designed for
             freelancers, startups, NGOs and growing businesses.
           </p>
 
           <div className="mt-10 flex flex-wrap gap-4">
-
             <Link
               to="/pricing"
               className="inline-flex items-center rounded-lg bg-primary px-6 py-3 text-primary-foreground hover:opacity-90"
             >
               View Pricing
-
               <ArrowRight className="ml-2 h-4 w-4" />
-
             </Link>
 
             <Link
@@ -80,356 +72,236 @@ function FeaturesPage() {
             >
               Learn More
             </Link>
-
           </div>
-
         </div>
-
       </section>
 
       {/* TRUST */}
 
       <section className="container mx-auto max-w-7xl px-6 py-16">
-
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-
           <div className="rounded-xl border p-8">
-
             <ShieldCheck className="mb-4 h-10 w-10 text-primary" />
 
-            <h3 className="font-semibold text-xl">
-              Secure by Design
-            </h3>
+            <h3 className="font-semibold text-xl">Secure by Design</h3>
 
             <p className="mt-4 text-muted-foreground">
-              Modern authentication, encrypted connections,
-              role-based permissions and audit logs.
+              Modern authentication, encrypted connections, role-based permissions and audit logs.
             </p>
-
           </div>
 
           <div className="rounded-xl border p-8">
-
             <Globe className="mb-4 h-10 w-10 text-primary" />
 
-            <h3 className="font-semibold text-xl">
-              Cloud-Based
-            </h3>
+            <h3 className="font-semibold text-xl">Cloud-Based</h3>
 
             <p className="mt-4 text-muted-foreground">
-              Access your financial information securely from
-              anywhere.
+              Access your financial information securely from anywhere.
             </p>
-
           </div>
 
           <div className="rounded-xl border p-8">
-
             <BadgeCheck className="mb-4 h-10 w-10 text-primary" />
 
-            <h3 className="font-semibold text-xl">
-              Built for Growth
-            </h3>
+            <h3 className="font-semibold text-xl">Built for Growth</h3>
 
             <p className="mt-4 text-muted-foreground">
-              Start with one business and expand to multiple
-              companies as you grow.
+              Start with one business and expand to multiple companies as you grow.
             </p>
-
           </div>
 
           <div className="rounded-xl border p-8">
-
             <BrainCircuit className="mb-4 h-10 w-10 text-primary" />
 
-            <h3 className="font-semibold text-xl">
-              AI Ready
-            </h3>
+            <h3 className="font-semibold text-xl">AI Ready</h3>
 
             <p className="mt-4 text-muted-foreground">
-              AI-powered bookkeeping and automation designed
-              to save valuable time.
+              AI-powered bookkeeping and automation designed to save valuable time.
             </p>
-
           </div>
-
         </div>
-
       </section>
 
       {/* FEATURE GRID */}
 
       <section className="bg-muted/40">
-
         <div className="container mx-auto max-w-7xl px-6 py-20">
-
           <div className="text-center">
-
-            <h2 className="text-4xl font-bold">
-              Powerful Modules
-            </h2>
+            <h2 className="text-4xl font-bold">Powerful Modules</h2>
 
             <p className="mx-auto mt-6 max-w-3xl text-muted-foreground">
-              Everything your finance team needs in one
-              integrated platform.
+              Everything your finance team needs in one integrated platform.
             </p>
-
           </div>
 
           <div className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-
             <div className="rounded-xl border bg-background p-8">
-
               <Receipt className="mb-5 h-10 w-10 text-primary" />
 
-              <h3 className="text-2xl font-semibold">
-                Smart Invoicing
-              </h3>
+              <h3 className="text-2xl font-semibold">Smart Invoicing</h3>
 
               <p className="mt-5 text-muted-foreground">
-                Create professional invoices, recurring invoices,
-                quotations and payment reminders.
+                Create professional invoices, recurring invoices, quotations and payment reminders.
               </p>
-
             </div>
 
             <div className="rounded-xl border bg-background p-8">
-
               <DollarSign className="mb-5 h-10 w-10 text-primary" />
 
-              <h3 className="text-2xl font-semibold">
-                Expense Management
-              </h3>
+              <h3 className="text-2xl font-semibold">Expense Management</h3>
 
               <p className="mt-5 text-muted-foreground">
-                Organize expenses, upload receipts,
-                categorize spending and track cash flow.
+                Organize expenses, upload receipts, categorize spending and track cash flow.
               </p>
-
             </div>
 
             <div className="rounded-xl border bg-background p-8">
-
               <Package className="mb-5 h-10 w-10 text-primary" />
 
-              <h3 className="text-2xl font-semibold">
-                Inventory Management
-              </h3>
+              <h3 className="text-2xl font-semibold">Inventory Management</h3>
 
               <p className="mt-5 text-muted-foreground">
-                Products, warehouses, stock movements,
-                purchase orders and low-stock alerts.
+                Products, warehouses, stock movements, purchase orders and low-stock alerts.
               </p>
-
             </div>
 
             <div className="rounded-xl border bg-background p-8">
-
               <Building2 className="mb-5 h-10 w-10 text-primary" />
 
-              <h3 className="text-2xl font-semibold">
-                Multi-Company
-              </h3>
+              <h3 className="text-2xl font-semibold">Multi-Company</h3>
 
               <p className="mt-5 text-muted-foreground">
-                Manage multiple organizations from one account
-                with subscription-based company limits.
+                Manage multiple organizations from one account with subscription-based company
+                limits.
               </p>
-
             </div>
 
             <div className="rounded-xl border bg-background p-8">
-
               <Users className="mb-5 h-10 w-10 text-primary" />
 
-              <h3 className="text-2xl font-semibold">
-                Team Collaboration
-              </h3>
+              <h3 className="text-2xl font-semibold">Team Collaboration</h3>
 
               <p className="mt-5 text-muted-foreground">
-                Invite employees and assign permissions
-                according to their responsibilities.
+                Invite employees and assign permissions according to their responsibilities.
               </p>
-
             </div>
 
             <div className="rounded-xl border bg-background p-8">
-
               <CreditCard className="mb-5 h-10 w-10 text-primary" />
 
-              <h3 className="text-2xl font-semibold">
-                Banking
-              </h3>
+              <h3 className="text-2xl font-semibold">Banking</h3>
 
               <p className="mt-5 text-muted-foreground">
-                Manage accounts, transactions,
-                reconciliation and cash balances.
+                Manage accounts, transactions, reconciliation and cash balances.
               </p>
-
             </div>
-
           </div>
-
         </div>
-
       </section>
-            {/* ADVANCED MODULES */}
+      {/* ADVANCED MODULES */}
 
       <section className="container mx-auto max-w-7xl px-6 py-20">
-
         <div className="text-center">
-
-          <h2 className="text-4xl font-bold">
-            Advanced Business Tools
-          </h2>
+          <h2 className="text-4xl font-bold">Advanced Business Tools</h2>
 
           <p className="mx-auto mt-6 max-w-3xl text-muted-foreground">
-            Beyond bookkeeping, FinFlowTrack provides the tools modern
-            businesses need to collaborate, automate processes, and make
-            informed financial decisions.
+            Beyond bookkeeping, FinFlowTrack provides the tools modern businesses need to
+            collaborate, automate processes, and make informed financial decisions.
           </p>
-
         </div>
 
         <div className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-
           <div className="rounded-xl border p-8">
-
             <FileBarChart2 className="mb-5 h-10 w-10 text-primary" />
 
-            <h3 className="text-2xl font-semibold">
-              Financial Reporting
-            </h3>
+            <h3 className="text-2xl font-semibold">Financial Reporting</h3>
 
             <p className="mt-5 text-muted-foreground">
-              Generate Profit & Loss statements, Balance Sheets,
-              Trial Balance, Cash Flow reports, General Ledger,
-              Tax summaries, and executive dashboards.
+              Generate Profit & Loss statements, Balance Sheets, Trial Balance, Cash Flow reports,
+              General Ledger, Tax summaries, and executive dashboards.
             </p>
-
           </div>
 
           <div className="rounded-xl border p-8">
-
             <BrainCircuit className="mb-5 h-10 w-10 text-primary" />
 
-            <h3 className="text-2xl font-semibold">
-              AI Bookkeeper
-            </h3>
+            <h3 className="text-2xl font-semibold">AI Bookkeeper</h3>
 
             <p className="mt-5 text-muted-foreground">
-              AI assists with transaction categorization,
-              bookkeeping suggestions, anomaly detection,
-              forecasting, and accounting recommendations.
+              AI assists with transaction categorization, bookkeeping suggestions, anomaly
+              detection, forecasting, and accounting recommendations.
             </p>
-
           </div>
 
           <div className="rounded-xl border p-8">
-
             <Users className="mb-5 h-10 w-10 text-primary" />
 
-            <h3 className="text-2xl font-semibold">
-              Customer Relationship Management
-            </h3>
+            <h3 className="text-2xl font-semibold">Customer Relationship Management</h3>
 
             <p className="mt-5 text-muted-foreground">
-              Manage customers, suppliers, contacts,
-              sales opportunities and communication history
+              Manage customers, suppliers, contacts, sales opportunities and communication history
               from one centralized workspace.
             </p>
-
           </div>
 
           <div className="rounded-xl border p-8">
-
             <Layers3 className="mb-5 h-10 w-10 text-primary" />
 
-            <h3 className="text-2xl font-semibold">
-              Project Management
-            </h3>
+            <h3 className="text-2xl font-semibold">Project Management</h3>
 
             <p className="mt-5 text-muted-foreground">
-              Organize projects, assign tasks,
-              track project expenses,
-              manage profitability,
-              and monitor project progress.
+              Organize projects, assign tasks, track project expenses, manage profitability, and
+              monitor project progress.
             </p>
-
           </div>
 
           <div className="rounded-xl border p-8">
-
             <FileSpreadsheet className="mb-5 h-10 w-10 text-primary" />
 
-            <h3 className="text-2xl font-semibold">
-              Payroll
-            </h3>
+            <h3 className="text-2xl font-semibold">Payroll</h3>
 
             <p className="mt-5 text-muted-foreground">
-              Manage employees, salaries,
-              payroll processing,
-              deductions, taxes,
-              and payroll reports.
+              Manage employees, salaries, payroll processing, deductions, taxes, and payroll
+              reports.
             </p>
-
           </div>
 
           <div className="rounded-xl border p-8">
-
             <Sparkles className="mb-5 h-10 w-10 text-primary" />
 
-            <h3 className="text-2xl font-semibold">
-              Subscription Management
-            </h3>
+            <h3 className="text-2xl font-semibold">Subscription Management</h3>
 
             <p className="mt-5 text-muted-foreground">
-              Flexible plans allow businesses
-              to unlock additional companies,
-              team members,
-              storage,
-              and premium functionality
-              as they grow.
+              Flexible plans allow businesses to unlock additional companies, team members, storage,
+              and premium functionality as they grow.
             </p>
-
           </div>
-
         </div>
-
       </section>
 
       {/* SECURITY */}
 
       <section className="bg-muted/40">
-
         <div className="container mx-auto max-w-7xl px-6 py-20">
-
           <div className="grid gap-14 lg:grid-cols-2">
-
             <div>
-
               <Lock className="mb-6 h-12 w-12 text-primary" />
 
-              <h2 className="text-4xl font-bold">
-                Security You Can Trust
-              </h2>
+              <h2 className="text-4xl font-bold">Security You Can Trust</h2>
 
               <p className="mt-6 text-lg leading-8 text-muted-foreground">
-                Financial data is among the most sensitive information a
-                business owns. FinFlowTrack is designed with security,
-                privacy, and reliability at its core.
+                Financial data is among the most sensitive information a business owns. FinFlowTrack
+                is designed with security, privacy, and reliability at its core.
               </p>
 
               <p className="mt-6 leading-8 text-muted-foreground">
-                We continuously improve our infrastructure and application
-                architecture to help protect customer information while
-                delivering a dependable cloud accounting experience.
+                We continuously improve our infrastructure and application architecture to help
+                protect customer information while delivering a dependable cloud accounting
+                experience.
               </p>
-
             </div>
 
             <div className="grid gap-5">
-
               {[
                 "Encrypted HTTPS communication",
                 "Role-Based Access Control (RBAC)",
@@ -440,47 +312,33 @@ function FeaturesPage() {
                 "Modern Authentication",
                 "Continuous Security Improvements",
               ].map((feature) => (
-
                 <div
                   key={feature}
                   className="flex items-center rounded-xl border bg-background p-5"
                 >
-
                   <ShieldCheck className="mr-4 h-5 w-5 text-primary" />
 
                   <span>{feature}</span>
-
                 </div>
-
               ))}
-
             </div>
-
           </div>
-
         </div>
-
       </section>
 
       {/* INTEGRATIONS */}
 
       <section className="container mx-auto max-w-7xl px-6 py-20">
-
         <div className="text-center">
-
-          <h2 className="text-4xl font-bold">
-            Built to Connect
-          </h2>
+          <h2 className="text-4xl font-bold">Built to Connect</h2>
 
           <p className="mx-auto mt-6 max-w-3xl text-muted-foreground">
-            FinFlowTrack is designed with integration in mind, allowing
-            businesses to streamline workflows and reduce manual work.
+            FinFlowTrack is designed with integration in mind, allowing businesses to streamline
+            workflows and reduce manual work.
           </p>
-
         </div>
 
         <div className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-
           {[
             {
               title: "Banking",
@@ -515,49 +373,28 @@ function FeaturesPage() {
               desc: "Discover third-party extensions and applications.",
             },
           ].map((item) => (
+            <div key={item.title} className="rounded-xl border p-7">
+              <h3 className="text-xl font-semibold">{item.title}</h3>
 
-            <div
-              key={item.title}
-              className="rounded-xl border p-7"
-            >
-
-              <h3 className="text-xl font-semibold">
-                {item.title}
-              </h3>
-
-              <p className="mt-4 text-muted-foreground">
-                {item.desc}
-              </p>
-
+              <p className="mt-4 text-muted-foreground">{item.desc}</p>
             </div>
-
           ))}
-
         </div>
-
       </section>
-            {/* WHY FINFLOWTRACK */}
+      {/* WHY FINFLOWTRACK */}
 
       <section className="bg-muted/40">
-
         <div className="container mx-auto max-w-7xl px-6 py-20">
-
           <div className="text-center">
-
-            <h2 className="text-4xl font-bold">
-              Why Businesses Choose FinFlowTrack
-            </h2>
+            <h2 className="text-4xl font-bold">Why Businesses Choose FinFlowTrack</h2>
 
             <p className="mx-auto mt-6 max-w-3xl text-muted-foreground">
-              FinFlowTrack is designed to help businesses simplify accounting,
-              improve visibility into financial performance, and scale with
-              confidence.
+              FinFlowTrack is designed to help businesses simplify accounting, improve visibility
+              into financial performance, and scale with confidence.
             </p>
-
           </div>
 
           <div className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-
             {[
               {
                 title: "Modern Cloud Platform",
@@ -584,70 +421,40 @@ function FeaturesPage() {
                 desc: "Built on modern technologies with scalability, security, and maintainability in mind.",
               },
             ].map((item) => (
-
-              <div
-                key={item.title}
-                className="rounded-xl border bg-background p-8"
-              >
-
+              <div key={item.title} className="rounded-xl border bg-background p-8">
                 <BadgeCheck className="mb-5 h-10 w-10 text-primary" />
 
-                <h3 className="text-xl font-semibold">
-                  {item.title}
-                </h3>
+                <h3 className="text-xl font-semibold">{item.title}</h3>
 
-                <p className="mt-4 text-muted-foreground">
-                  {item.desc}
-                </p>
-
+                <p className="mt-4 text-muted-foreground">{item.desc}</p>
               </div>
-
             ))}
-
           </div>
-
         </div>
-
       </section>
 
       {/* FEATURE COMPARISON */}
 
       <section className="container mx-auto max-w-7xl px-6 py-20">
-
         <div className="text-center">
-
-          <h2 className="text-4xl font-bold">
-            Everything in One Platform
-          </h2>
+          <h2 className="text-4xl font-bold">Everything in One Platform</h2>
 
           <p className="mt-6 text-muted-foreground">
             Replace multiple disconnected tools with one integrated solution.
           </p>
-
         </div>
 
         <div className="mt-16 overflow-hidden rounded-2xl border">
-
           <table className="w-full">
-
             <thead className="bg-muted">
-
               <tr>
+                <th className="px-6 py-5 text-left">Module</th>
 
-                <th className="px-6 py-5 text-left">
-                  Module
-                </th>
-
-                <th className="px-6 py-5 text-center">
-                  Included
-                </th>
-
+                <th className="px-6 py-5 text-center">Included</th>
               </tr>
-
             </thead>
 
             <tbody>
-
               {[
                 "Accounting",
                 "Invoices",
@@ -664,154 +471,96 @@ function FeaturesPage() {
                 "Audit Logs",
                 "API",
               ].map((module) => (
-
-                <tr
-                  key={module}
-                  className="border-t"
-                >
-
-                  <td className="px-6 py-5">
-                    {module}
-                  </td>
+                <tr key={module} className="border-t">
+                  <td className="px-6 py-5">{module}</td>
 
                   <td className="px-6 py-5 text-center">
-
                     <BadgeCheck className="mx-auto h-5 w-5 text-green-600" />
-
                   </td>
-
                 </tr>
-
               ))}
-
             </tbody>
-
           </table>
-
         </div>
-
       </section>
 
       {/* FAQ */}
 
       <section className="bg-muted/40">
-
         <div className="container mx-auto max-w-5xl px-6 py-20">
-
           <div className="text-center">
-
-            <h2 className="text-4xl font-bold">
-              Frequently Asked Questions
-            </h2>
-
+            <h2 className="text-4xl font-bold">Frequently Asked Questions</h2>
           </div>
 
           <div className="mt-14 space-y-8">
-
             <div className="rounded-xl border bg-background p-8">
-
-              <h3 className="text-xl font-semibold">
-                Who is FinFlowTrack designed for?
-              </h3>
+              <h3 className="text-xl font-semibold">Who is FinFlowTrack designed for?</h3>
 
               <p className="mt-4 text-muted-foreground">
-                FinFlowTrack is designed for freelancers, startups,
-                nonprofits, accountants, agencies, retailers, and
-                small to medium-sized businesses.
+                FinFlowTrack is designed for freelancers, startups, nonprofits, accountants,
+                agencies, retailers, and small to medium-sized businesses.
               </p>
-
             </div>
 
             <div className="rounded-xl border bg-background p-8">
-
-              <h3 className="text-xl font-semibold">
-                Can I manage multiple companies?
-              </h3>
+              <h3 className="text-xl font-semibold">Can I manage multiple companies?</h3>
 
               <p className="mt-4 text-muted-foreground">
-                Yes. Depending on your subscription, you can create,
-                manage, and switch between multiple companies while
-                keeping financial records separate.
+                Yes. Depending on your subscription, you can create, manage, and switch between
+                multiple companies while keeping financial records separate.
               </p>
-
             </div>
 
             <div className="rounded-xl border bg-background p-8">
-
               <h3 className="text-xl font-semibold">
                 Does FinFlowTrack include inventory management?
               </h3>
 
               <p className="mt-4 text-muted-foreground">
-                Yes. Inventory features include products,
-                warehouses, stock adjustments, purchase orders,
-                stock movements, and low-stock alerts.
+                Yes. Inventory features include products, warehouses, stock adjustments, purchase
+                orders, stock movements, and low-stock alerts.
               </p>
-
             </div>
 
             <div className="rounded-xl border bg-background p-8">
-
-              <h3 className="text-xl font-semibold">
-                Is my business data secure?
-              </h3>
+              <h3 className="text-xl font-semibold">Is my business data secure?</h3>
 
               <p className="mt-4 text-muted-foreground">
-                FinFlowTrack uses modern authentication, encrypted
-                communication, role-based permissions, audit logging,
-                and secure cloud infrastructure to help protect your
+                FinFlowTrack uses modern authentication, encrypted communication, role-based
+                permissions, audit logging, and secure cloud infrastructure to help protect your
                 financial information.
               </p>
-
             </div>
-
           </div>
-
         </div>
-
       </section>
 
       {/* FINAL CTA */}
 
       <section className="border-t">
-
         <div className="container mx-auto max-w-5xl px-6 py-24 text-center">
-
-          <h2 className="text-5xl font-bold">
-            Ready to Simplify Your Business Finances?
-          </h2>
+          <h2 className="text-5xl font-bold">Ready to Simplify Your Business Finances?</h2>
 
           <p className="mx-auto mt-8 max-w-3xl text-lg text-muted-foreground">
-            Join businesses using FinFlowTrack to manage accounting,
-            inventory, invoicing, payroll, reporting, and business
-            operations from one secure cloud platform.
+            Join businesses using FinFlowTrack to manage accounting, inventory, invoicing, payroll,
+            reporting, and business operations from one secure cloud platform.
           </p>
 
           <div className="mt-12 flex flex-wrap justify-center gap-4">
-
             <Link
               to="/pricing"
               className="inline-flex items-center rounded-lg bg-primary px-8 py-4 text-primary-foreground"
             >
               Get Started
-
               <ArrowRight className="ml-2 h-4 w-4" />
-
             </Link>
 
-            <Link
-              to="/contact"
-              className="rounded-lg border px-8 py-4"
-            >
+            <Link to="/contact" className="rounded-lg border px-8 py-4">
               Contact Sales
             </Link>
-
           </div>
-
         </div>
-
       </section>
-
     </div>
   );
 }

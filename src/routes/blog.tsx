@@ -127,7 +127,7 @@ function BlogPage() {
       (article) =>
         article.title.toLowerCase().includes(trimmed) ||
         article.excerpt.toLowerCase().includes(trimmed) ||
-        formatCategoryName(article.categorySlug).toLowerCase().includes(trimmed)
+        formatCategoryName(article.categorySlug).toLowerCase().includes(trimmed),
     );
   }, [query, latestArticles]);
 
@@ -145,9 +145,8 @@ function BlogPage() {
               FinFlowTrack Blog
             </h1>
             <p className="mt-6 text-lg leading-relaxed text-slate-600">
-              Insights, guides, and practical resources to help businesses
-              understand accounting, manage finances, and grow with
-              confidence.
+              Insights, guides, and practical resources to help businesses understand accounting,
+              manage finances, and grow with confidence.
             </p>
 
             <div className="mt-10">
@@ -204,9 +203,7 @@ function BlogPage() {
             <h3 className="mt-4 text-2xl font-bold tracking-tight text-slate-900">
               {featuredArticle.title}
             </h3>
-            <p className="mt-3 text-sm leading-relaxed text-slate-600">
-              {featuredArticle.excerpt}
-            </p>
+            <p className="mt-3 text-sm leading-relaxed text-slate-600">{featuredArticle.excerpt}</p>
             <div className="mt-6 flex flex-wrap items-center gap-4 text-xs text-slate-500">
               <span className="inline-flex items-center gap-1.5">
                 <UserCircle2 className="h-3.5 w-3.5" />
@@ -230,15 +227,20 @@ function BlogPage() {
       </section>
 
       {/* Category System */}
-      <section aria-labelledby="categories-heading" className="border-t border-slate-100 bg-slate-50">
+      <section
+        aria-labelledby="categories-heading"
+        className="border-t border-slate-100 bg-slate-50"
+      >
         <div className="mx-auto max-w-6xl px-6 py-20">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 id="categories-heading" className="text-3xl font-bold tracking-tight text-slate-900">
+            <h2
+              id="categories-heading"
+              className="text-3xl font-bold tracking-tight text-slate-900"
+            >
               Browse by Category
             </h2>
             <p className="mt-4 text-slate-600">
-              Find articles organized around the topics that matter most to
-              your business.
+              Find articles organized around the topics that matter most to your business.
             </p>
           </div>
           <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -250,12 +252,8 @@ function BlogPage() {
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50">
                   <category.icon className="h-5 w-5 text-emerald-600" />
                 </div>
-                <h3 className="mt-4 text-base font-semibold text-slate-900">
-                  {category.name}
-                </h3>
-                <p className="mt-1.5 text-sm text-slate-600">
-                  {category.description}
-                </p>
+                <h3 className="mt-4 text-base font-semibold text-slate-900">{category.name}</h3>
+                <p className="mt-1.5 text-sm text-slate-600">{category.description}</p>
                 <ul className="mt-4 space-y-2">
                   {category.previewArticles.map((title) => (
                     <li key={title}>
@@ -309,9 +307,7 @@ function BlogPage() {
                   <span className="w-fit rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
                     {formatCategoryName(article.categorySlug)}
                   </span>
-                  <h3 className="mt-3 text-base font-semibold text-slate-900">
-                    {article.title}
-                  </h3>
+                  <h3 className="mt-3 text-base font-semibold text-slate-900">{article.title}</h3>
                   <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-600">
                     {article.excerpt}
                   </p>
@@ -345,12 +341,8 @@ function BlogPage() {
               <UserCircle2 className="h-8 w-8 text-emerald-600" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-slate-900">
-                {editorialTeam.name}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                {editorialTeam.bio}
-              </p>
+              <h3 className="text-lg font-bold text-slate-900">{editorialTeam.name}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">{editorialTeam.bio}</p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {editorialTeam.expertise.map((tag) => (
                   <span
@@ -373,8 +365,7 @@ function BlogPage() {
             FinFlowTrack Research &amp; Insights
           </h2>
           <p className="mt-4 text-slate-600">
-            Ongoing analysis on small business finance, currently in
-            progress.
+            Ongoing analysis on small business finance, currently in progress.
           </p>
         </div>
         <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -389,9 +380,7 @@ function BlogPage() {
               className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center"
             >
               <BarChart3 className="mx-auto h-6 w-6 text-slate-400" />
-              <h3 className="mt-3 text-sm font-semibold text-slate-700">
-                {item}
-              </h3>
+              <h3 className="mt-3 text-sm font-semibold text-slate-700">{item}</h3>
               <p className="mt-1 text-xs text-slate-500">Coming soon</p>
             </div>
           ))}
@@ -399,15 +388,20 @@ function BlogPage() {
       </section>
 
       {/* Product Education */}
-      <section aria-labelledby="product-education-heading" className="border-t border-slate-100 bg-slate-50">
+      <section
+        aria-labelledby="product-education-heading"
+        className="border-t border-slate-100 bg-slate-50"
+      >
         <div className="mx-auto max-w-6xl px-6 py-20">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 id="product-education-heading" className="text-3xl font-bold tracking-tight text-slate-900">
+            <h2
+              id="product-education-heading"
+              className="text-3xl font-bold tracking-tight text-slate-900"
+            >
               Learn How FinFlowTrack Helps Businesses
             </h2>
             <p className="mt-4 text-slate-600">
-              Put what you read into practice with guides built around the
-              product itself.
+              Put what you read into practice with guides built around the product itself.
             </p>
           </div>
           <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -420,9 +414,7 @@ function BlogPage() {
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50">
                   <card.icon className="h-5 w-5 text-emerald-600" />
                 </div>
-                <span className="text-sm font-medium text-slate-700">
-                  {card.title}
-                </span>
+                <span className="text-sm font-medium text-slate-700">{card.title}</span>
               </Link>
             ))}
           </div>
@@ -435,12 +427,14 @@ function BlogPage() {
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50">
             <Mail className="h-6 w-6 text-emerald-600" />
           </div>
-          <h2 id="newsletter-heading" className="mt-5 text-2xl font-bold tracking-tight text-slate-900">
+          <h2
+            id="newsletter-heading"
+            className="mt-5 text-2xl font-bold tracking-tight text-slate-900"
+          >
             Get Business Finance Insights
           </h2>
           <p className="mt-3 text-slate-600">
-            New articles on accounting and small business finance, sent
-            occasionally — no spam.
+            New articles on accounting and small business finance, sent occasionally — no spam.
           </p>
           <form
             className="mx-auto mt-6 flex max-w-md flex-col gap-3 sm:flex-row"
@@ -469,7 +463,10 @@ function BlogPage() {
       {/* FAQ */}
       <section aria-labelledby="faq-heading" className="border-t border-slate-100 bg-slate-50">
         <div className="mx-auto max-w-4xl px-6 py-20">
-          <h2 id="faq-heading" className="text-center text-3xl font-bold tracking-tight text-slate-900">
+          <h2
+            id="faq-heading"
+            className="text-center text-3xl font-bold tracking-tight text-slate-900"
+          >
             Frequently Asked Questions
           </h2>
           <div className="mt-12 space-y-6">
@@ -478,12 +475,8 @@ function BlogPage() {
                 key={faq.question}
                 className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
               >
-                <h3 className="text-base font-semibold text-slate-900">
-                  {faq.question}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                  {faq.answer}
-                </p>
+                <h3 className="text-base font-semibold text-slate-900">{faq.question}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">{faq.answer}</p>
               </article>
             ))}
           </div>
@@ -493,12 +486,15 @@ function BlogPage() {
       {/* Final CTA */}
       <section aria-labelledby="final-cta-heading" className="mx-auto max-w-6xl px-6 py-20">
         <div className="rounded-3xl bg-slate-900 px-8 py-16 text-center sm:px-16">
-          <h2 id="final-cta-heading" className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          <h2
+            id="final-cta-heading"
+            className="text-3xl font-bold tracking-tight text-white sm:text-4xl"
+          >
             Ready to Simplify Your Accounting?
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-slate-300">
-            Put these ideas into practice with a platform built for
-            invoicing, expenses, inventory, and reporting.
+            Put these ideas into practice with a platform built for invoicing, expenses, inventory,
+            and reporting.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link

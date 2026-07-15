@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,11 +15,11 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
-import { MoreHorizontal, ShieldPlus, Ban, Trash2, RotateCcw, Send } from 'lucide-react';
-import type { CompanyMember, TeamInvitation } from '@/types/team.types';
-import { usePermissions } from '@/hooks/usePermissions';
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { MoreHorizontal, ShieldPlus, Ban, Trash2, RotateCcw, Send } from "lucide-react";
+import type { CompanyMember, TeamInvitation } from "@/types/team.types";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface MemberActionsProps {
   companyId: string;
@@ -47,10 +47,10 @@ export function MemberActions({
   const { can } = usePermissions(companyId);
   const [confirmRemoveOpen, setConfirmRemoveOpen] = useState(false);
 
-  const isOwner = member?.role?.key === 'owner';
+  const isOwner = member?.role?.key === "owner";
 
   if (invitation) {
-    if (!can('users.invite')) return null;
+    if (!can("users.invite")) return null;
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -63,7 +63,10 @@ export function MemberActions({
             <Send className="mr-2 h-4 w-4" /> Resend Invitation
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={onRevokeInvitation} className="text-destructive focus:text-destructive">
+          <DropdownMenuItem
+            onSelect={onRevokeInvitation}
+            className="text-destructive focus:text-destructive"
+          >
             <Trash2 className="mr-2 h-4 w-4" /> Revoke Invitation
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -73,8 +76,8 @@ export function MemberActions({
 
   if (!member || isOwner) return null; // Owner row has no actions menu
 
-  const canChangeRole = can('users.change_role');
-  const canRemove = can('users.remove');
+  const canChangeRole = can("users.change_role");
+  const canRemove = can("users.remove");
   if (!canChangeRole && !canRemove) return null;
 
   return (
@@ -91,12 +94,12 @@ export function MemberActions({
               <ShieldPlus className="mr-2 h-4 w-4" /> Change Role
             </DropdownMenuItem>
           )}
-          {canChangeRole && member.status === 'active' && (
+          {canChangeRole && member.status === "active" && (
             <DropdownMenuItem onSelect={onSuspend}>
               <Ban className="mr-2 h-4 w-4" /> Suspend
             </DropdownMenuItem>
           )}
-          {canChangeRole && member.status === 'suspended' && (
+          {canChangeRole && member.status === "suspended" && (
             <DropdownMenuItem onSelect={onReactivate}>
               <RotateCcw className="mr-2 h-4 w-4" /> Reactivate
             </DropdownMenuItem>
@@ -118,10 +121,12 @@ export function MemberActions({
       <AlertDialog open={confirmRemoveOpen} onOpenChange={setConfirmRemoveOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove {member.profile?.full_name ?? member.profile?.email}?</AlertDialogTitle>
+            <AlertDialogTitle>
+              Remove {member.profile?.full_name ?? member.profile?.email}?
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              They will immediately lose access to this company. This can't be undone from here — they
-              would need to be re-invited.
+              They will immediately lose access to this company. This can't be undone from here —
+              they would need to be re-invited.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

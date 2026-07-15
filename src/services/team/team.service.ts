@@ -1,7 +1,11 @@
-import { supabase as _sb } from '@/integrations/supabase/client';
+import { supabase as _sb } from "@/integrations/supabase/client";
 const supabase = _sb as any;
-import type { CompanyMember, MemberStatus, TeamServiceError as TeamServiceErrorType } from '@/types/team.types';
-import { TeamServiceError } from '@/types/team.types';
+import type {
+  CompanyMember,
+  MemberStatus,
+  TeamServiceError as TeamServiceErrorType,
+} from "@/types/team.types";
+import { TeamServiceError } from "@/types/team.types";
 
 const MEMBER_SELECT = `
   id, company_id, user_id, role_id, status, joined_at, invited_by, created_at, updated_at,
@@ -12,20 +16,20 @@ const MEMBER_SELECT = `
 /** List all members of a company (all statuses except 'removed' by default). */
 export async function listCompanyMembers(
   companyId: string,
-  opts: { includeRemoved?: boolean } = {}
+  opts: { includeRemoved?: boolean } = {},
 ): Promise<CompanyMember[]> {
   let query = supabase
-    .from('company_members')
+    .from("company_members")
     .select(MEMBER_SELECT)
-    .eq('company_id', companyId)
-    .order('created_at', { ascending: true });
+    .eq("company_id", companyId)
+    .order("created_at", { ascending: true });
 
   if (!opts.includeRemoved) {
-    query = query.neq('status', 'removed');
+    query = query.neq("status", "removed");
   }
 
   const { data, error } = await query;
-  if (error) throw new TeamServiceError('FETCH_MEMBERS_FAILED', error.message);
+  if (error) throw new TeamServiceError("FETCH_MEMBERS_FAILED", error.message);
   return (data ?? []) as unknown as CompanyMember[];
 }
 
@@ -36,19 +40,22 @@ export async function getCurrentMembership(companyId: string): Promise<CompanyMe
   if (!userId) return null;
 
   const { data, error } = await supabase
-    .from('company_members')
+    .from("company_members")
     .select(MEMBER_SELECT)
-    .eq('company_id', companyId)
-    .eq('user_id', userId)
+    .eq("company_id", companyId)
+    .eq("user_id", userId)
     .maybeSingle();
 
-  if (error) throw new TeamServiceError('FETCH_MEMBERSHIP_FAILED', error.message);
+  if (error) throw new TeamServiceError("FETCH_MEMBERSHIP_FAILED", error.message);
   return (data as unknown as CompanyMember) ?? null;
 }
 
 /** Change a member's role. Enforced server-side via RPC (owner immutable etc). */
-export async function changeMemberRole(memberId: string, newRoleId: string): Promise<CompanyMember> {
-  const { data, error } = await supabase.rpc('change_member_role', {
+export async function changeMemberRole(
+  memberId: string,
+  newRoleId: string,
+): Promise<CompanyMember> {
+  const { data, error } = await supabase.rpc("change_member_role", {
     p_member_id: memberId,
     p_new_role_id: newRoleId,
   });
@@ -57,8 +64,11 @@ export async function changeMemberRole(memberId: string, newRoleId: string): Pro
 }
 
 /** Suspend, reactivate, or remove a member. */
-export async function setMemberStatus(memberId: string, status: MemberStatus): Promise<CompanyMember> {
-  const { data, error } = await supabase.rpc('set_member_status', {
+export async function setMemberStatus(
+  memberId: string,
+  status: MemberStatus,
+): Promise<CompanyMember> {
+  const { data, error } = await supabase.rpc("set_member_status", {
     p_member_id: memberId,
     p_status: status,
   });
@@ -66,9 +76,9 @@ export async function setMemberStatus(memberId: string, status: MemberStatus): P
   return data as CompanyMember;
 }
 
-export const removeMember = (memberId: string) => setMemberStatus(memberId, 'removed');
-export const suspendMember = (memberId: string) => setMemberStatus(memberId, 'suspended');
-export const reactivateMember = (memberId: string) => setMemberStatus(memberId, 'active');
+export const removeMember = (memberId: string) => setMemberStatus(memberId, "removed");
+export const suspendMember = (memberId: string) => setMemberStatus(memberId, "suspended");
+export const reactivateMember = (memberId: string) => setMemberStatus(memberId, "active");
 
 /**
  * Maps a Postgres error (raised via `raise exception '...' using errcode = ...`)
@@ -76,11 +86,11 @@ export const reactivateMember = (memberId: string) => setMemberStatus(memberId, 
  * Postgres RAISE messages look like: "SEAT_LIMIT_REACHED: Your plan limit ..."
  */
 function mapRpcError(error: { message: string; code?: string }): TeamServiceErrorType {
-  const match = /^([A-Z_]+):\s*(.*)$/s.exec(error.message ?? '');
+  const match = /^([A-Z_]+):\s*(.*)$/s.exec(error.message ?? "");
   if (match) {
     return new TeamServiceError(match[1], match[2]);
   }
-  return new TeamServiceError('UNKNOWN_ERROR', error.message ?? 'Something went wrong.');
+  return new TeamServiceError("UNKNOWN_ERROR", error.message ?? "Something went wrong.");
 }
 
 export { mapRpcError };

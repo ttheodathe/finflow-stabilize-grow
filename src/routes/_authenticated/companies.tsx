@@ -61,17 +61,13 @@ function CompanyPage() {
     setLogoDisplay(data?.signedUrl ?? null);
   }
 
-async function loadActiveCompany(userIdArg: string) {
-    const activeId = typeof window !== "undefined" ? localStorage.getItem("currentCompanyId") : null;
+  async function loadActiveCompany(userIdArg: string) {
+    const activeId =
+      typeof window !== "undefined" ? localStorage.getItem("currentCompanyId") : null;
 
     const companyQuery = activeId
       ? supabase.from("companies").select("*").eq("id", activeId).maybeSingle()
-      : supabase
-          .from("companies")
-          .select("*")
-          .order("created_at")
-          .limit(1)
-          .maybeSingle();
+      : supabase.from("companies").select("*").order("created_at").limit(1).maybeSingle();
 
     const [{ data: c }, { data: p }] = await Promise.all([
       companyQuery,

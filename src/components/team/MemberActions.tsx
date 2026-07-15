@@ -4,10 +4,10 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { MoreVertical, RefreshCw, XCircle } from 'lucide-react';
-import type { CompanyMember, TeamInvitation } from '@/types/team.types';
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { MoreVertical, RefreshCw, XCircle } from "lucide-react";
+import type { CompanyMember, TeamInvitation } from "@/types/team.types";
 
 interface MemberActionsProps {
   companyId: string;
@@ -45,7 +45,10 @@ export function MemberActions({
             Resend invitation
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={onRevokeInvitation} className="text-destructive focus:text-destructive">
+          <DropdownMenuItem
+            onClick={onRevokeInvitation}
+            className="text-destructive focus:text-destructive"
+          >
             <XCircle className="mr-2 h-4 w-4" />
             Revoke invitation
           </DropdownMenuItem>
@@ -66,7 +69,7 @@ export function MemberActions({
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={onChangeRole}>Change role</DropdownMenuItem>
         <DropdownMenuSeparator />
-        {member.status === 'suspended' ? (
+        {member.status === "suspended" ? (
           <DropdownMenuItem onClick={onReactivate}>Reactivate</DropdownMenuItem>
         ) : (
           <DropdownMenuItem onClick={onSuspend}>Suspend</DropdownMenuItem>

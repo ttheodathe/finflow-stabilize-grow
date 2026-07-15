@@ -255,7 +255,10 @@ function NewEntryDialog({ accounts, onSaved }: { accounts: Account[]; onSaved: (
     const { error: e2 } = await supabase.from("journal_lines").insert(payload);
     setSaving(false);
     if (e2) {
-      await supabase.from("journal_entries").delete().eq("id", (entry as any).id);
+      await supabase
+        .from("journal_entries")
+        .delete()
+        .eq("id", (entry as any).id);
       toast.error(e2.message);
     } else {
       toast.success("Entry posted");

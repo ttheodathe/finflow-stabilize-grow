@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 /**
  * Reads the currently active company id.
@@ -16,7 +16,7 @@ import { useEffect, useState } from 'react';
  */
 export function useActiveCompanyId(): string | null {
   const [companyId, setCompanyId] = useState<string | null>(() =>
-    typeof window !== 'undefined' ? localStorage.getItem('currentCompanyId') : null,
+    typeof window !== "undefined" ? localStorage.getItem("currentCompanyId") : null,
   );
 
   useEffect(() => {
@@ -26,14 +26,14 @@ export function useActiveCompanyId(): string | null {
     }
 
     function handleStorage(event: StorageEvent) {
-      if (event.key === 'currentCompanyId') setCompanyId(event.newValue);
+      if (event.key === "currentCompanyId") setCompanyId(event.newValue);
     }
 
-    window.addEventListener('company-changed', handleCompanyChanged);
-    window.addEventListener('storage', handleStorage);
+    window.addEventListener("company-changed", handleCompanyChanged);
+    window.addEventListener("storage", handleStorage);
     return () => {
-      window.removeEventListener('company-changed', handleCompanyChanged);
-      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener("company-changed", handleCompanyChanged);
+      window.removeEventListener("storage", handleStorage);
     };
   }, []);
 

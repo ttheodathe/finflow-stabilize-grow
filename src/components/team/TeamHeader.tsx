@@ -1,6 +1,6 @@
-import { Button } from '@/components/ui/button';
-import { UserPlus, ShieldCheck } from 'lucide-react';
-import { usePermissions } from '@/hooks/usePermissions';
+import { Button } from "@/components/ui/button";
+import { UserPlus, ShieldCheck } from "lucide-react";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface TeamHeaderProps {
   companyId: string;
@@ -9,7 +9,12 @@ interface TeamHeaderProps {
   onManageRolesClick: () => void;
 }
 
-export function TeamHeader({ companyId, seatUsage, onInviteClick, onManageRolesClick }: TeamHeaderProps) {
+export function TeamHeader({
+  companyId,
+  seatUsage,
+  onInviteClick,
+  onManageRolesClick,
+}: TeamHeaderProps) {
   const { can } = usePermissions(companyId);
 
   return (
@@ -20,20 +25,20 @@ export function TeamHeader({ companyId, seatUsage, onInviteClick, onManageRolesC
           Manage who has access to this company
           {seatUsage && (
             <span className="ml-2 text-xs font-medium text-muted-foreground">
-              · {seatUsage.used} / {seatUsage.limit ?? '∞'} seats used
+              · {seatUsage.used} / {seatUsage.limit ?? "∞"} seats used
             </span>
           )}
         </p>
       </div>
 
       <div className="flex gap-2">
-        {can('users.change_role') && (
+        {can("users.change_role") && (
           <Button variant="outline" onClick={onManageRolesClick}>
             <ShieldCheck className="mr-2 h-4 w-4" />
             Manage Roles
           </Button>
         )}
-        {can('users.invite') && (
+        {can("users.invite") && (
           <Button onClick={onInviteClick}>
             <UserPlus className="mr-2 h-4 w-4" />
             Invite Member

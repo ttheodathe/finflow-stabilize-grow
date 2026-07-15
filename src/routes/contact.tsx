@@ -51,8 +51,7 @@ const contactMethods = [
   {
     icon: MessageCircle,
     title: "WhatsApp",
-    description:
-      "Message us on WhatsApp for a quick reply, wherever you're working from.",
+    description: "Message us on WhatsApp for a quick reply, wherever you're working from.",
     action: {
       label: "+250 735 709 728",
       href: "https://wa.me/250735709728",
@@ -125,9 +124,8 @@ function ContactPage() {
               We'd Love to Hear From You
             </h1>
             <p className="mt-6 text-lg leading-relaxed text-slate-600">
-              Whether you have a question about FinFlowTrack, need help with
-              your account, or just want to talk to a real person, our team
-              is ready to help by email, phone, or WhatsApp.
+              Whether you have a question about FinFlowTrack, need help with your account, or just
+              want to talk to a real person, our team is ready to help by email, phone, or WhatsApp.
             </p>
             <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <a
@@ -162,12 +160,8 @@ function ContactPage() {
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50">
                 <method.icon className="h-5 w-5 text-emerald-600" />
               </div>
-              <h3 className="mt-4 text-base font-semibold text-slate-900">
-                {method.title}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                {method.description}
-              </p>
+              <h3 className="mt-4 text-base font-semibold text-slate-900">{method.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">{method.description}</p>
               <a
                 href={method.action.href}
                 className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700 hover:text-emerald-800"
@@ -188,8 +182,8 @@ function ContactPage() {
               What Can We Help With?
             </h2>
             <p className="mt-4 text-slate-600">
-              No matter the reason you're reaching out, our team is ready to
-              point you in the right direction.
+              No matter the reason you're reaching out, our team is ready to point you in the right
+              direction.
             </p>
           </div>
           <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -201,12 +195,8 @@ function ContactPage() {
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50">
                   <reason.icon className="h-5 w-5 text-emerald-600" />
                 </div>
-                <h3 className="mt-4 text-base font-semibold text-slate-900">
-                  {reason.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                  {reason.description}
-                </p>
+                <h3 className="mt-4 text-base font-semibold text-slate-900">{reason.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">{reason.description}</p>
               </article>
             ))}
           </div>
@@ -223,12 +213,10 @@ function ContactPage() {
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50">
               <Mail className="h-5 w-5 text-emerald-600" />
             </div>
-            <h3 className="mt-4 text-lg font-semibold text-slate-900">
-              Email
-            </h3>
+            <h3 className="mt-4 text-lg font-semibold text-slate-900">Email</h3>
             <p className="mt-2 text-sm leading-relaxed text-slate-600">
-              For support requests, sales questions, or anything else, email
-              is the best way to reach the full team.
+              For support requests, sales questions, or anything else, email is the best way to
+              reach the full team.
             </p>
             <a
               href="mailto:support@finflowtrack.com"
@@ -241,12 +229,9 @@ function ContactPage() {
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50">
               <Phone className="h-5 w-5 text-emerald-600" />
             </div>
-            <h3 className="mt-4 text-lg font-semibold text-slate-900">
-              Call or WhatsApp
-            </h3>
+            <h3 className="mt-4 text-lg font-semibold text-slate-900">Call or WhatsApp</h3>
             <p className="mt-2 text-sm leading-relaxed text-slate-600">
-              Prefer to talk? Call us directly or send a message on WhatsApp
-              for a quick response.
+              Prefer to talk? Call us directly or send a message on WhatsApp for a quick response.
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-4">
               <a
@@ -274,20 +259,25 @@ function ContactPage() {
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50">
             <Clock className="h-6 w-6 text-emerald-600" />
           </div>
-          <h2 id="response-heading" className="mt-5 text-2xl font-bold tracking-tight text-slate-900">
+          <h2
+            id="response-heading"
+            className="mt-5 text-2xl font-bold tracking-tight text-slate-900"
+          >
             We Respond Quickly
           </h2>
           <p className="mt-3 text-slate-600">
-            Emails are typically answered within one business day. For
-            faster responses, call or message us on WhatsApp during working
-            hours.
+            Emails are typically answered within one business day. For faster responses, call or
+            message us on WhatsApp during working hours.
           </p>
         </div>
       </section>
 
       {/* FAQ */}
       <section aria-labelledby="faq-heading" className="mx-auto max-w-4xl px-6 py-20">
-        <h2 id="faq-heading" className="text-center text-3xl font-bold tracking-tight text-slate-900">
+        <h2
+          id="faq-heading"
+          className="text-center text-3xl font-bold tracking-tight text-slate-900"
+        >
           Frequently Asked Questions
         </h2>
         <div className="mt-12 space-y-6">
@@ -296,12 +286,8 @@ function ContactPage() {
               key={faq.question}
               className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
             >
-              <h3 className="text-base font-semibold text-slate-900">
-                {faq.question}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                {faq.answer}
-              </p>
+              <h3 className="text-base font-semibold text-slate-900">{faq.question}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">{faq.answer}</p>
             </article>
           ))}
         </div>
@@ -310,12 +296,15 @@ function ContactPage() {
       {/* Final CTA */}
       <section aria-labelledby="final-cta-heading" className="mx-auto max-w-6xl px-6 pb-20">
         <div className="rounded-3xl bg-slate-900 px-8 py-16 text-center sm:px-16">
-          <h2 id="final-cta-heading" className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          <h2
+            id="final-cta-heading"
+            className="text-3xl font-bold tracking-tight text-white sm:text-4xl"
+          >
             Let's Talk
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-slate-300">
-            Reach out however works best for you. Our team is ready to help
-            you get the most out of FinFlowTrack.
+            Reach out however works best for you. Our team is ready to help you get the most out of
+            FinFlowTrack.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <a

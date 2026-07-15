@@ -1,5 +1,11 @@
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { Role } from '@/types/team.types';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type { Role } from "@/types/team.types";
 
 interface RoleSelectorProps {
   roles: Role[];
@@ -10,7 +16,13 @@ interface RoleSelectorProps {
   excludeKeys?: string[];
 }
 
-export function RoleSelector({ roles, value, onChange, disabled, excludeKeys = ['owner'] }: RoleSelectorProps) {
+export function RoleSelector({
+  roles,
+  value,
+  onChange,
+  disabled,
+  excludeKeys = ["owner"],
+}: RoleSelectorProps) {
   const selectable = roles.filter((r) => !excludeKeys.includes(r.key));
 
   return (

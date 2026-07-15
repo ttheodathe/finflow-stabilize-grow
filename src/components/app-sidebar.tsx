@@ -203,7 +203,7 @@ export function AppSidebar() {
 
     setEmail(user.email ?? "");
 
-const [{ data: profile }, { data: memberRows }, { data: subRow }] = await Promise.all([
+    const [{ data: profile }, { data: memberRows }, { data: subRow }] = await Promise.all([
       supabase.from("profiles").select("full_name, avatar_url").eq("id", user.id).single(),
       supabase
         .from("company_members")
@@ -221,9 +221,7 @@ const [{ data: profile }, { data: memberRows }, { data: subRow }] = await Promis
     setFullName(profile?.full_name ?? "");
     setAvatarUrl(profile?.avatar_url ?? null);
 
-    const list = (memberRows ?? [])
-      .map((r: any) => r.company)
-      .filter(Boolean) as Company[];
+    const list = (memberRows ?? []).map((r: any) => r.company).filter(Boolean) as Company[];
     setCompanies(list);
 
     const storedId =
@@ -365,7 +363,7 @@ const [{ data: profile }, { data: memberRows }, { data: subRow }] = await Promis
                   {c.id === currentCompanyId && <Check className="h-4 w-4 text-primary shrink-0" />}
                 </DropdownMenuItem>
               ))}
-<DropdownMenuSeparator />
+              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => setCreateCompanyOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" /> Add company
               </DropdownMenuItem>

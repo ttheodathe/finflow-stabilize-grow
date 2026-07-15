@@ -85,18 +85,16 @@ const sections: TermsSection[] = [
     content: (
       <>
         <p>
-          FinFlowTrack is a cloud-based accounting and business management
-          platform that helps business owners, freelancers, startups, and
-          accounting teams track income and expenses, manage invoices and
-          customers, run financial reports, and collaborate across one or
-          more company workspaces.
+          FinFlowTrack is a cloud-based accounting and business management platform that helps
+          business owners, freelancers, startups, and accounting teams track income and expenses,
+          manage invoices and customers, run financial reports, and collaborate across one or more
+          company workspaces.
         </p>
         <p>
-          These Terms of Service ("Terms") explain the rules for using
-          FinFlowTrack, the responsibilities you take on as a user, and the
-          protections that apply to both you and FinFlowTrack. They form a
-          binding agreement between you (or the business you represent) and
-          FinFlowTrack.
+          These Terms of Service ("Terms") explain the rules for using FinFlowTrack, the
+          responsibilities you take on as a user, and the protections that apply to both you and
+          FinFlowTrack. They form a binding agreement between you (or the business you represent)
+          and FinFlowTrack.
         </p>
       </>
     ),
@@ -109,19 +107,17 @@ const sections: TermsSection[] = [
     content: (
       <>
         <p>
-          By creating a FinFlowTrack account, accessing the platform, or
-          otherwise using our services, you confirm that you have read,
-          understood, and agree to be bound by these Terms and our{" "}
+          By creating a FinFlowTrack account, accessing the platform, or otherwise using our
+          services, you confirm that you have read, understood, and agree to be bound by these Terms
+          and our{" "}
           <Link to="/privacy" className="font-medium text-emerald-700 hover:text-emerald-800">
             Privacy Policy
           </Link>
-          . If you are creating an account on behalf of a company or other
-          organization, you confirm that you have the authority to accept
-          these Terms on that organization's behalf.
+          . If you are creating an account on behalf of a company or other organization, you confirm
+          that you have the authority to accept these Terms on that organization's behalf.
         </p>
         <p>
-          If you do not agree to these Terms, you should not create an
-          account or use FinFlowTrack.
+          If you do not agree to these Terms, you should not create an account or use FinFlowTrack.
         </p>
       </>
     ),
@@ -134,8 +130,8 @@ const sections: TermsSection[] = [
     content: (
       <>
         <p>
-          FinFlowTrack provides tools designed to support day-to-day
-          accounting and business operations, including:
+          FinFlowTrack provides tools designed to support day-to-day accounting and business
+          operations, including:
         </p>
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-5">
@@ -173,8 +169,7 @@ const sections: TermsSection[] = [
           </div>
         </div>
         <p className="mt-4">
-          We may add, change, or remove features over time as we continue to
-          improve the platform.
+          We may add, change, or remove features over time as we continue to improve the platform.
         </p>
       </>
     ),
@@ -190,7 +185,8 @@ const sections: TermsSection[] = [
         <ul className="mt-3 space-y-2 text-sm text-slate-600">
           <li className="flex items-start gap-2.5">
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-            Provide accurate, current, and complete information when creating and maintaining your account.
+            Provide accurate, current, and complete information when creating and maintaining your
+            account.
           </li>
           <li className="flex items-start gap-2.5">
             <KeyRound className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
@@ -203,15 +199,18 @@ const sections: TermsSection[] = [
           <li className="flex items-start gap-2.5">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
             Notify us promptly at{" "}
-            <a href="mailto:support@finflowtrack.com" className="font-medium text-emerald-700 hover:text-emerald-800">
+            <a
+              href="mailto:support@finflowtrack.com"
+              className="font-medium text-emerald-700 hover:text-emerald-800"
+            >
               support@finflowtrack.com
             </a>{" "}
             if you suspect unauthorized access to your account.
           </li>
         </ul>
         <p className="mt-4">
-          You are responsible for all activity that occurs under your
-          account, including activity by team members you invite.
+          You are responsible for all activity that occurs under your account, including activity by
+          team members you invite.
         </p>
       </>
     ),
@@ -224,9 +223,8 @@ const sections: TermsSection[] = [
     content: (
       <>
         <p>
-          FinFlowTrack allows you to create and manage one or more company
-          workspaces, each containing its own business and financial
-          records, separate from other companies.
+          FinFlowTrack allows you to create and manage one or more company workspaces, each
+          containing its own business and financial records, separate from other companies.
         </p>
         <ul className="mt-3 space-y-2 text-sm text-slate-600">
           <li className="flex items-start gap-2.5">
@@ -235,15 +233,18 @@ const sections: TermsSection[] = [
           </li>
           <li className="flex items-start gap-2.5">
             <UserCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-            Company owners control who is invited to a workspace and what role each team member is assigned.
+            Company owners control who is invited to a workspace and what role each team member is
+            assigned.
           </li>
           <li className="flex items-start gap-2.5">
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-            You are responsible for making sure only authorized people have access to your company workspaces.
+            You are responsible for making sure only authorized people have access to your company
+            workspaces.
           </li>
           <li className="flex items-start gap-2.5">
             <Database className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-            Each company workspace's records are isolated from other companies, including other companies you may separately manage.
+            Each company workspace's records are isolated from other companies, including other
+            companies you may separately manage.
           </li>
         </ul>
       </>
@@ -257,30 +258,35 @@ const sections: TermsSection[] = [
     content: (
       <>
         <p>
-          FinFlowTrack offers both free and paid subscription plans. Paid
-          plans unlock additional features, limits, or company workspaces as
-          described on our pricing page at the time of purchase.
+          FinFlowTrack offers both free and paid subscription plans. Paid plans unlock additional
+          features, limits, or company workspaces as described on our pricing page at the time of
+          purchase.
         </p>
         <ul className="mt-3 space-y-2 text-sm text-slate-600">
           <li className="flex items-start gap-2.5">
             <CalendarClock className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-            Paid subscriptions are billed on a recurring cycle (such as monthly or annually) as selected at checkout.
+            Paid subscriptions are billed on a recurring cycle (such as monthly or annually) as
+            selected at checkout.
           </li>
           <li className="flex items-start gap-2.5">
             <RefreshCw className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-            Subscriptions renew automatically at the end of each billing cycle unless cancelled before the renewal date.
+            Subscriptions renew automatically at the end of each billing cycle unless cancelled
+            before the renewal date.
           </li>
           <li className="flex items-start gap-2.5">
             <Handshake className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-            You are responsible for all charges associated with your subscription and for keeping your payment details up to date.
+            You are responsible for all charges associated with your subscription and for keeping
+            your payment details up to date.
           </li>
           <li className="flex items-start gap-2.5">
             <Ban className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-            You may cancel your subscription at any time; cancellation takes effect at the end of the current billing cycle.
+            You may cancel your subscription at any time; cancellation takes effect at the end of
+            the current billing cycle.
           </li>
           <li className="flex items-start gap-2.5">
             <Layers className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-            Downgrading your plan may reduce available features, limits, or company workspaces, and some data may become read-only or inaccessible until you upgrade again.
+            Downgrading your plan may reduce available features, limits, or company workspaces, and
+            some data may become read-only or inaccessible until you upgrade again.
           </li>
         </ul>
       </>
@@ -317,8 +323,8 @@ const sections: TermsSection[] = [
           </li>
         </ul>
         <p className="mt-4">
-          We may investigate suspected violations and take appropriate
-          action, including suspending or terminating accounts involved.
+          We may investigate suspected violations and take appropriate action, including suspending
+          or terminating accounts involved.
         </p>
       </>
     ),
@@ -334,21 +340,19 @@ const sections: TermsSection[] = [
           <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
           <div className="space-y-3 text-sm text-amber-900">
             <p>
-              FinFlowTrack provides accounting and business management tools
-              only. It is not a substitute for advice from a qualified
-              professional accountant, tax advisor, or legal advisor.
+              FinFlowTrack provides accounting and business management tools only. It is not a
+              substitute for advice from a qualified professional accountant, tax advisor, or legal
+              advisor.
             </p>
             <p>
-              We do not review, verify, or guarantee the accuracy of the
-              information you enter, and we do not provide tax, legal, or
-              financial advice through the platform.
+              We do not review, verify, or guarantee the accuracy of the information you enter, and
+              we do not provide tax, legal, or financial advice through the platform.
             </p>
             <p>
-              You remain solely responsible for the accuracy of your
-              financial records, your compliance with applicable tax and
-              regulatory obligations, and any financial decisions you make
-              based on information from FinFlowTrack. We recommend consulting
-              a qualified professional for advice specific to your business.
+              You remain solely responsible for the accuracy of your financial records, your
+              compliance with applicable tax and regulatory obligations, and any financial decisions
+              you make based on information from FinFlowTrack. We recommend consulting a qualified
+              professional for advice specific to your business.
             </p>
           </div>
         </div>
@@ -363,15 +367,13 @@ const sections: TermsSection[] = [
     content: (
       <>
         <p>
-          You own the business information, financial records, and customer
-          data you enter into FinFlowTrack. We do not claim ownership over
-          your business data.
+          You own the business information, financial records, and customer data you enter into
+          FinFlowTrack. We do not claim ownership over your business data.
         </p>
         <p className="mt-3">
-          FinFlowTrack owns the software, platform technology, brand, and
-          interface that make the service possible. Nothing in these Terms
-          transfers ownership of our software or intellectual property to
-          you.
+          FinFlowTrack owns the software, platform technology, brand, and interface that make the
+          service possible. Nothing in these Terms transfers ownership of our software or
+          intellectual property to you.
         </p>
       </>
     ),
@@ -384,16 +386,14 @@ const sections: TermsSection[] = [
     content: (
       <>
         <p>
-          We apply reasonable security practices designed to protect your
-          account and data, including secure authentication, role-based
-          access controls, and encrypted communication between your browser
-          and our platform.
+          We apply reasonable security practices designed to protect your account and data,
+          including secure authentication, role-based access controls, and encrypted communication
+          between your browser and our platform.
         </p>
         <p className="mt-3">
-          No method of transmission or storage is completely secure, and we
-          cannot guarantee absolute security. We do not claim any specific
-          security certifications unless explicitly stated elsewhere on our
-          website. For more detail on how we protect your data, see our{" "}
+          No method of transmission or storage is completely secure, and we cannot guarantee
+          absolute security. We do not claim any specific security certifications unless explicitly
+          stated elsewhere on our website. For more detail on how we protect your data, see our{" "}
           <Link to="/security" className="font-medium text-emerald-700 hover:text-emerald-800">
             Security page
           </Link>{" "}
@@ -414,15 +414,13 @@ const sections: TermsSection[] = [
     content: (
       <>
         <p>
-          FinFlowTrack relies on trusted third-party providers to operate,
-          including services for hosting, authentication, payment
-          processing, and analytics. These providers process limited data on
-          our behalf as part of delivering the platform to you.
+          FinFlowTrack relies on trusted third-party providers to operate, including services for
+          hosting, authentication, payment processing, and analytics. These providers process
+          limited data on our behalf as part of delivering the platform to you.
         </p>
         <p className="mt-3">
-          Third-party providers maintain their own terms and privacy
-          policies, which govern their handling of data outside of
-          FinFlowTrack's direct control.
+          Third-party providers maintain their own terms and privacy policies, which govern their
+          handling of data outside of FinFlowTrack's direct control.
         </p>
       </>
     ),
@@ -434,11 +432,10 @@ const sections: TermsSection[] = [
     icon: ScrollText,
     content: (
       <p>
-        The FinFlowTrack name, logo, brand, software, source code, user
-        interface, and documentation are the property of FinFlowTrack and
-        are protected by applicable intellectual property laws. You may not
-        copy, modify, distribute, sell, or lease any part of our software or
-        brand without our prior written permission.
+        The FinFlowTrack name, logo, brand, software, source code, user interface, and documentation
+        are the property of FinFlowTrack and are protected by applicable intellectual property laws.
+        You may not copy, modify, distribute, sell, or lease any part of our software or brand
+        without our prior written permission.
       </p>
     ),
   },
@@ -449,11 +446,9 @@ const sections: TermsSection[] = [
     icon: Server,
     content: (
       <p>
-        We work to keep FinFlowTrack available and reliable, but the
-        platform may occasionally be unavailable due to scheduled
-        maintenance, updates, feature improvements, or circumstances outside
-        our control. We are not liable for reasonable, temporary
-        interruptions to service.
+        We work to keep FinFlowTrack available and reliable, but the platform may occasionally be
+        unavailable due to scheduled maintenance, updates, feature improvements, or circumstances
+        outside our control. We are not liable for reasonable, temporary interruptions to service.
       </p>
     ),
   },
@@ -465,8 +460,8 @@ const sections: TermsSection[] = [
     content: (
       <>
         <p>
-          We may suspend or terminate your access to FinFlowTrack, with or
-          without notice, in cases including:
+          We may suspend or terminate your access to FinFlowTrack, with or without notice, in cases
+          including:
         </p>
         <ul className="mt-3 space-y-2 text-sm text-slate-600">
           <li className="flex items-start gap-2.5">
@@ -486,10 +481,7 @@ const sections: TermsSection[] = [
             Non-payment or unresolved billing issues on a paid subscription.
           </li>
         </ul>
-        <p className="mt-4">
-          You may stop using FinFlowTrack and close your account at any
-          time.
-        </p>
+        <p className="mt-4">You may stop using FinFlowTrack and close your account at any time.</p>
       </>
     ),
   },
@@ -500,14 +492,12 @@ const sections: TermsSection[] = [
     icon: AlertTriangle,
     content: (
       <p>
-        To the fullest extent permitted by law, FinFlowTrack and its team
-        are not liable for indirect, incidental, special, or consequential
-        damages arising from your use of the platform, including loss of
-        profits, data, or business opportunities. Our total liability for
-        any claim relating to the service is limited to the amount you paid
-        us in the twelve months preceding the claim. FinFlowTrack is
-        provided on an "as is" and "as available" basis without warranties
-        of any kind, whether express or implied.
+        To the fullest extent permitted by law, FinFlowTrack and its team are not liable for
+        indirect, incidental, special, or consequential damages arising from your use of the
+        platform, including loss of profits, data, or business opportunities. Our total liability
+        for any claim relating to the service is limited to the amount you paid us in the twelve
+        months preceding the claim. FinFlowTrack is provided on an "as is" and "as available" basis
+        without warranties of any kind, whether express or implied.
       </p>
     ),
   },
@@ -518,12 +508,10 @@ const sections: TermsSection[] = [
     icon: RefreshCw,
     content: (
       <p>
-        We may update these Terms from time to time to reflect changes to
-        our services or legal requirements. When we make material changes,
-        we will update the "Last updated" date above and, where appropriate,
-        notify you by email or through the platform. Continuing to use
-        FinFlowTrack after changes take effect means you accept the revised
-        Terms.
+        We may update these Terms from time to time to reflect changes to our services or legal
+        requirements. When we make material changes, we will update the "Last updated" date above
+        and, where appropriate, notify you by email or through the platform. Continuing to use
+        FinFlowTrack after changes take effect means you accept the revised Terms.
       </p>
     ),
   },
@@ -538,10 +526,9 @@ const sections: TermsSection[] = [
         <span className="rounded bg-slate-100 px-1.5 py-0.5 font-medium text-slate-700">
           [Governing Jurisdiction — to be finalized upon legal entity registration]
         </span>
-        , without regard to conflict of law principles. Any disputes arising
-        from these Terms or your use of FinFlowTrack will be resolved in the
-        courts of that jurisdiction, unless otherwise required by applicable
-        law.
+        , without regard to conflict of law principles. Any disputes arising from these Terms or
+        your use of FinFlowTrack will be resolved in the courts of that jurisdiction, unless
+        otherwise required by applicable law.
       </p>
     ),
   },
@@ -585,8 +572,7 @@ function TermsPage() {
               Terms of Service
             </h1>
             <p className="mt-6 text-lg leading-relaxed text-slate-600">
-              Clear rules and guidelines for using FinFlowTrack accounting
-              software.
+              Clear rules and guidelines for using FinFlowTrack accounting software.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-2 text-sm text-slate-500 sm:flex-row sm:gap-6">
               <span>
@@ -604,7 +590,10 @@ function TermsPage() {
       {/* Table of contents */}
       <section aria-labelledby="toc-heading" className="border-b border-slate-100 bg-slate-50">
         <div className="mx-auto max-w-6xl px-6 py-10">
-          <h2 id="toc-heading" className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+          <h2
+            id="toc-heading"
+            className="text-sm font-semibold uppercase tracking-wide text-slate-500"
+          >
             On this page
           </h2>
           <nav aria-label="Table of contents" className="mt-4">
@@ -621,7 +610,10 @@ function TermsPage() {
                 </li>
               ))}
               <li>
-                <a href="#contact" className="flex items-center gap-2 text-slate-600 hover:text-emerald-700">
+                <a
+                  href="#contact"
+                  className="flex items-center gap-2 text-slate-600 hover:text-emerald-700"
+                >
                   <span className="text-xs font-semibold text-slate-400">18</span>
                   Contact
                 </a>
@@ -667,7 +659,10 @@ function TermsPage() {
       {/* FAQ */}
       <section aria-labelledby="faq-heading" className="border-t border-slate-100 bg-slate-50">
         <div className="mx-auto max-w-4xl px-6 py-20">
-          <h2 id="faq-heading" className="text-center text-3xl font-bold tracking-tight text-slate-900">
+          <h2
+            id="faq-heading"
+            className="text-center text-3xl font-bold tracking-tight text-slate-900"
+          >
             Frequently Asked Questions
           </h2>
           <div className="mt-12 space-y-6">
@@ -676,12 +671,8 @@ function TermsPage() {
                 key={faq.question}
                 className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
               >
-                <h3 className="text-base font-semibold text-slate-900">
-                  {faq.question}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                  {faq.answer}
-                </p>
+                <h3 className="text-base font-semibold text-slate-900">{faq.question}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">{faq.answer}</p>
               </article>
             ))}
           </div>
@@ -689,17 +680,23 @@ function TermsPage() {
       </section>
 
       {/* Contact Section */}
-      <section id="contact" aria-labelledby="contact-heading" className="scroll-mt-24 mx-auto max-w-4xl px-6 py-20">
+      <section
+        id="contact"
+        aria-labelledby="contact-heading"
+        className="scroll-mt-24 mx-auto max-w-4xl px-6 py-20"
+      >
         <article className="rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50">
             <Mail className="h-6 w-6 text-emerald-600" />
           </div>
-          <h2 id="contact-heading" className="mt-5 text-2xl font-bold tracking-tight text-slate-900">
+          <h2
+            id="contact-heading"
+            className="mt-5 text-2xl font-bold tracking-tight text-slate-900"
+          >
             Questions About These Terms?
           </h2>
           <p className="mt-3 text-slate-600">
-            If anything in these Terms of Service is unclear, our team is
-            happy to help explain it.
+            If anything in these Terms of Service is unclear, our team is happy to help explain it.
           </p>
           <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <a
@@ -725,13 +722,15 @@ function TermsPage() {
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-white/10">
             <Wrench className="h-6 w-6 text-white" />
           </div>
-          <h2 id="final-cta-heading" className="mt-5 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          <h2
+            id="final-cta-heading"
+            className="mt-5 text-3xl font-bold tracking-tight text-white sm:text-4xl"
+          >
             Built to Support Your Business
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-slate-300">
-            These Terms exist to keep FinFlowTrack fair, secure, and reliable
-            for every business that depends on it. If you have questions,
-            we're just an email away.
+            These Terms exist to keep FinFlowTrack fair, secure, and reliable for every business
+            that depends on it. If you have questions, we're just an email away.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <a

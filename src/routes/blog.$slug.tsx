@@ -74,8 +74,7 @@ export const Route = createFileRoute("/blog/$slug")({
     <div className="mx-auto max-w-2xl px-6 py-32 text-center">
       <h1 className="text-2xl font-bold text-slate-900">Article not found</h1>
       <p className="mt-3 text-slate-600">
-        We couldn't find the article you're looking for. It may have moved
-        or been renamed.
+        We couldn't find the article you're looking for. It may have moved or been renamed.
       </p>
       <Link
         to="/blog"
@@ -166,9 +165,7 @@ function BlogArticlePage() {
               </h2>
               <ul className="mt-4 space-y-4">
                 {relatedArticles.length === 0 ? (
-                  <li className="text-sm text-slate-500">
-                    More articles coming soon.
-                  </li>
+                  <li className="text-sm text-slate-500">More articles coming soon.</li>
                 ) : (
                   relatedArticles.map((related) => (
                     <li key={related.slug}>
@@ -207,12 +204,9 @@ function BlogArticlePage() {
 
             <div className="rounded-2xl border border-slate-200 bg-slate-900 p-6 text-white shadow-sm">
               <Mail className="h-5 w-5 text-emerald-400" />
-              <h2 className="mt-3 text-sm font-semibold">
-                Get Business Finance Insights
-              </h2>
+              <h2 className="mt-3 text-sm font-semibold">Get Business Finance Insights</h2>
               <p className="mt-2 text-xs leading-relaxed text-slate-300">
-                New articles on accounting and small business finance, sent
-                occasionally.
+                New articles on accounting and small business finance, sent occasionally.
               </p>
               <Link
                 to="/blog"
@@ -231,12 +225,8 @@ function BlogArticlePage() {
             <UserCircle2 className="h-7 w-7 text-emerald-600" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-slate-900">
-              {editorialTeam.name}
-            </h2>
-            <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
-              {editorialTeam.bio}
-            </p>
+            <h2 className="text-base font-bold text-slate-900">{editorialTeam.name}</h2>
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{editorialTeam.bio}</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {editorialTeam.expertise.map((tag) => (
                 <span
@@ -253,9 +243,7 @@ function BlogArticlePage() {
         {/* Bottom related content */}
         {relatedArticles.length > 0 && (
           <div className="mt-16">
-            <h2 className="text-xl font-bold text-slate-900">
-              Related Reading
-            </h2>
+            <h2 className="text-xl font-bold text-slate-900">Related Reading</h2>
             <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {relatedArticles.map((related) => (
                 <Link
@@ -267,12 +255,8 @@ function BlogArticlePage() {
                   <span className="w-fit rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
                     {formatCategoryName(related.categorySlug)}
                   </span>
-                  <h3 className="mt-3 text-sm font-semibold text-slate-900">
-                    {related.title}
-                  </h3>
-                  <p className="mt-2 text-xs leading-relaxed text-slate-600">
-                    {related.excerpt}
-                  </p>
+                  <h3 className="mt-3 text-sm font-semibold text-slate-900">{related.title}</h3>
+                  <p className="mt-2 text-xs leading-relaxed text-slate-600">{related.excerpt}</p>
                 </Link>
               ))}
             </div>
@@ -285,8 +269,7 @@ function BlogArticlePage() {
             Put This Into Practice in FinFlowTrack
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm text-slate-300">
-            Manage invoices, expenses, inventory, and reports in one
-            connected platform.
+            Manage invoices, expenses, inventory, and reports in one connected platform.
           </p>
           <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link

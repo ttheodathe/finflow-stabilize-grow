@@ -173,11 +173,7 @@ const helpCategories: HelpCategory[] = [
     title: "Reports & Analytics",
     icon: BarChart3,
     description: "Understand your business through your numbers.",
-    articles: [
-      "Generate financial reports",
-      "Understand dashboard metrics",
-      "Export reports",
-    ],
+    articles: ["Generate financial reports", "Understand dashboard metrics", "Export reports"],
   },
   {
     id: "troubleshooting",
@@ -195,13 +191,28 @@ const helpCategories: HelpCategory[] = [
 
 const onboardingSteps = [
   { title: "Create your account", description: "Sign up with your email in under a minute." },
-  { title: "Create your company workspace", description: "Set up the business you want to manage." },
+  {
+    title: "Create your company workspace",
+    description: "Set up the business you want to manage.",
+  },
   { title: "Add customers", description: "Build your customer list for invoicing and sales." },
-  { title: "Add products or services", description: "Define what you sell so it's ready for invoices." },
-  { title: "Create your first invoice", description: "Bill a customer and track its payment status." },
+  {
+    title: "Add products or services",
+    description: "Define what you sell so it's ready for invoices.",
+  },
+  {
+    title: "Create your first invoice",
+    description: "Bill a customer and track its payment status.",
+  },
   { title: "Record expenses", description: "Log business spending as it happens." },
-  { title: "Invite your team", description: "Bring in teammates with the right roles and permissions." },
-  { title: "View your reports", description: "See income, expenses, and business health at a glance." },
+  {
+    title: "Invite your team",
+    description: "Bring in teammates with the right roles and permissions.",
+  },
+  {
+    title: "View your reports",
+    description: "See income, expenses, and business health at a glance.",
+  },
 ];
 
 const documentationSections = [
@@ -264,7 +275,7 @@ function HelpCenterPage() {
       .map((category) => {
         const categoryMatches = category.title.toLowerCase().includes(trimmed);
         const matchingArticles = category.articles.filter((article) =>
-          article.toLowerCase().includes(trimmed)
+          article.toLowerCase().includes(trimmed),
         );
         if (categoryMatches) return category;
         if (matchingArticles.length > 0) {
@@ -289,8 +300,8 @@ function HelpCenterPage() {
               Welcome to the FinFlowTrack Help Center
             </h1>
             <p className="mt-6 text-lg leading-relaxed text-slate-600">
-              Find answers, learn how to use accounting features, manage your
-              business, and get the most from FinFlowTrack.
+              Find answers, learn how to use accounting features, manage your business, and get the
+              most from FinFlowTrack.
             </p>
 
             <div className="mt-10">
@@ -336,8 +347,7 @@ function HelpCenterPage() {
             Browse by Category
           </h2>
           <p className="mt-4 text-slate-600">
-            Explore guides organized around how you actually use
-            FinFlowTrack.
+            Explore guides organized around how you actually use FinFlowTrack.
           </p>
         </div>
 
@@ -364,12 +374,8 @@ function HelpCenterPage() {
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50">
                   <category.icon className="h-5 w-5 text-emerald-600" />
                 </div>
-                <h3 className="mt-4 text-base font-semibold text-slate-900">
-                  {category.title}
-                </h3>
-                <p className="mt-1.5 text-sm text-slate-600">
-                  {category.description}
-                </p>
+                <h3 className="mt-4 text-base font-semibold text-slate-900">{category.title}</h3>
+                <p className="mt-1.5 text-sm text-slate-600">{category.description}</p>
                 <ul className="mt-4 space-y-2">
                   {category.articles.map((article) => (
                     <li key={article}>
@@ -390,19 +396,24 @@ function HelpCenterPage() {
       </section>
 
       {/* Getting Started Guide */}
-      <section aria-labelledby="onboarding-heading" className="border-t border-slate-100 bg-slate-50">
+      <section
+        aria-labelledby="onboarding-heading"
+        className="border-t border-slate-100 bg-slate-50"
+      >
         <div className="mx-auto max-w-6xl px-6 py-20">
           <div className="mx-auto max-w-2xl text-center">
             <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-sm font-medium text-slate-600 shadow-sm">
               <Sparkles className="h-4 w-4 text-emerald-600" />
               Beginner Guide
             </span>
-            <h2 id="onboarding-heading" className="mt-6 text-3xl font-bold tracking-tight text-slate-900">
+            <h2
+              id="onboarding-heading"
+              className="mt-6 text-3xl font-bold tracking-tight text-slate-900"
+            >
               Start Using FinFlowTrack in 10 Minutes
             </h2>
             <p className="mt-4 text-slate-600">
-              Follow these steps to get your business up and running from
-              day one.
+              Follow these steps to get your business up and running from day one.
             </p>
           </div>
           <ol className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -415,12 +426,8 @@ function HelpCenterPage() {
                   {index + 1}
                 </span>
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-900">
-                    {step.title}
-                  </h3>
-                  <p className="mt-1 text-sm text-slate-600">
-                    {step.description}
-                  </p>
+                  <h3 className="text-sm font-semibold text-slate-900">{step.title}</h3>
+                  <p className="mt-1 text-sm text-slate-600">{step.description}</p>
                 </div>
               </li>
             ))}
@@ -455,7 +462,10 @@ function HelpCenterPage() {
       {/* FAQ */}
       <section aria-labelledby="faq-heading" className="border-t border-slate-100 bg-slate-50">
         <div className="mx-auto max-w-4xl px-6 py-20">
-          <h2 id="faq-heading" className="text-center text-3xl font-bold tracking-tight text-slate-900">
+          <h2
+            id="faq-heading"
+            className="text-center text-3xl font-bold tracking-tight text-slate-900"
+          >
             Frequently Asked Questions
           </h2>
           <div className="mt-12 space-y-6">
@@ -464,12 +474,8 @@ function HelpCenterPage() {
                 key={faq.question}
                 className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
               >
-                <h3 className="text-base font-semibold text-slate-900">
-                  {faq.question}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                  {faq.answer}
-                </p>
+                <h3 className="text-base font-semibold text-slate-900">{faq.question}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">{faq.answer}</p>
               </article>
             ))}
           </div>
@@ -483,9 +489,8 @@ function HelpCenterPage() {
             About FinFlowTrack
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-600">
-            FinFlowTrack is built to help freelancers, startups, and growing
-            businesses manage financial operations with simple, accessible
-            accounting tools.
+            FinFlowTrack is built to help freelancers, startups, and growing businesses manage
+            financial operations with simple, accessible accounting tools.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
@@ -523,12 +528,14 @@ function HelpCenterPage() {
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50">
               <Mail className="h-6 w-6 text-emerald-600" />
             </div>
-            <h2 id="contact-heading" className="mt-5 text-2xl font-bold tracking-tight text-slate-900">
+            <h2
+              id="contact-heading"
+              className="mt-5 text-2xl font-bold tracking-tight text-slate-900"
+            >
               Still Need Help?
             </h2>
             <p className="mt-3 text-slate-600">
-              Can't find what you're looking for? Our support team is ready
-              to help.
+              Can't find what you're looking for? Our support team is ready to help.
             </p>
             <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <a
@@ -552,13 +559,15 @@ function HelpCenterPage() {
       {/* Final CTA */}
       <section aria-labelledby="final-cta-heading" className="mx-auto max-w-6xl px-6 pb-20">
         <div className="rounded-3xl bg-slate-900 px-8 py-16 text-center sm:px-16">
-          <h2 id="final-cta-heading" className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          <h2
+            id="final-cta-heading"
+            className="text-3xl font-bold tracking-tight text-white sm:text-4xl"
+          >
             We're Here Whenever You Need Us
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-slate-300">
-            From your first invoice to your hundredth report, FinFlowTrack's
-            support team and documentation are built to keep your business
-            moving.
+            From your first invoice to your hundredth report, FinFlowTrack's support team and
+            documentation are built to keep your business moving.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <a

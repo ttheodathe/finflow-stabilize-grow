@@ -1,15 +1,28 @@
-import { useState } from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { RoleSelector } from './RoleSelector';
-import { MemberActions } from './MemberActions';
-import { TeamEmptyState } from './TeamEmptyState';
-import type { CompanyMember, Role, TeamInvitation } from '@/types/team.types';
-import { usePermissions } from '@/hooks/usePermissions';
-import { formatDistanceToNow } from 'date-fns';
+import { useState } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { RoleSelector } from "./RoleSelector";
+import { MemberActions } from "./MemberActions";
+import { TeamEmptyState } from "./TeamEmptyState";
+import type { CompanyMember, Role, TeamInvitation } from "@/types/team.types";
+import { usePermissions } from "@/hooks/usePermissions";
+import { formatDistanceToNow } from "date-fns";
 
 interface MembersTableProps {
   companyId: string;
@@ -25,18 +38,21 @@ interface MembersTableProps {
   onRevokeInvitation: (invitationId: string) => Promise<unknown>;
 }
 
-function statusBadge(status: CompanyMember['status'] | TeamInvitation['status']) {
-  const map: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
-    active: { label: 'Active', variant: 'default' },
-    invited: { label: 'Invited', variant: 'secondary' },
-    pending: { label: 'Pending', variant: 'secondary' },
-    suspended: { label: 'Suspended', variant: 'destructive' },
-    removed: { label: 'Removed', variant: 'outline' },
-    expired: { label: 'Expired', variant: 'outline' },
-    revoked: { label: 'Revoked', variant: 'outline' },
-    accepted: { label: 'Accepted', variant: 'default' },
+function statusBadge(status: CompanyMember["status"] | TeamInvitation["status"]) {
+  const map: Record<
+    string,
+    { label: string; variant: "default" | "secondary" | "outline" | "destructive" }
+  > = {
+    active: { label: "Active", variant: "default" },
+    invited: { label: "Invited", variant: "secondary" },
+    pending: { label: "Pending", variant: "secondary" },
+    suspended: { label: "Suspended", variant: "destructive" },
+    removed: { label: "Removed", variant: "outline" },
+    expired: { label: "Expired", variant: "outline" },
+    revoked: { label: "Revoked", variant: "outline" },
+    accepted: { label: "Accepted", variant: "default" },
   };
-  const cfg = map[status] ?? { label: status, variant: 'outline' as const };
+  const cfg = map[status] ?? { label: status, variant: "outline" as const };
   return <Badge variant={cfg.variant}>{cfg.label}</Badge>;
 }
 
@@ -59,7 +75,7 @@ export function MembersTable({
 
   const isEmpty = members.length === 0 && invitations.length === 0;
   if (isEmpty) {
-    return <TeamEmptyState onInviteClick={onInviteClick} canInvite={can('users.invite')} />;
+    return <TeamEmptyState onInviteClick={onInviteClick} canInvite={can("users.invite")} />;
   }
 
   return (
@@ -83,11 +99,13 @@ export function MembersTable({
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={member.profile?.avatar_url ?? undefined} />
                   <AvatarFallback>
-                    {(member.profile?.full_name ?? member.profile?.email ?? '?').slice(0, 2).toUpperCase()}
+                    {(member.profile?.full_name ?? member.profile?.email ?? "?")
+                      .slice(0, 2)
+                      .toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </TableCell>
-              <TableCell className="font-medium">{member.profile?.full_name ?? '—'}</TableCell>
+              <TableCell className="font-medium">{member.profile?.full_name ?? "—"}</TableCell>
               <TableCell className="text-muted-foreground">{member.profile?.email}</TableCell>
               <TableCell>
                 <Badge variant="outline">{member.role?.name}</Badge>
@@ -96,7 +114,7 @@ export function MembersTable({
               <TableCell className="text-sm text-muted-foreground">
                 {member.last_active_at
                   ? formatDistanceToNow(new Date(member.last_active_at), { addSuffix: true })
-                  : '—'}
+                  : "—"}
               </TableCell>
               <TableCell className="text-right">
                 <MemberActions
@@ -147,7 +165,8 @@ export function MembersTable({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              Change role for {roleDialogMember?.profile?.full_name ?? roleDialogMember?.profile?.email}
+              Change role for{" "}
+              {roleDialogMember?.profile?.full_name ?? roleDialogMember?.profile?.email}
             </DialogTitle>
           </DialogHeader>
           <div className="py-4">
