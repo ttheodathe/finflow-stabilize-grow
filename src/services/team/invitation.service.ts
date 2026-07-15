@@ -1,4 +1,5 @@
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as _sb } from '@/integrations/supabase/client';
+const supabase = _sb as any;
 import type { CompanyMember, TeamInvitation } from '@/types/team.types';
 import { TeamServiceError } from '@/types/team.types';
 import { mapRpcError } from './team.service';
