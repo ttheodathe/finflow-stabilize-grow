@@ -59,7 +59,7 @@ function JournalsPage() {
     setLoading(true);
     const [entRes, accRes] = await Promise.all([
       supabase
-        .from("journal_entries")
+        .from("journal_entries" as any)
         .select(
           "id,entry_date,reference,memo,source_type,journal_lines(id,account_id,debit,credit,description,accounts(code,name))",
         )
@@ -229,7 +229,7 @@ function NewEntryDialog({ accounts, onSaved }: { accounts: Account[]; onSaved: (
       return;
     }
     const { data: entry, error: e1 } = await supabase
-      .from("journal_entries")
+      .from("journal_entries" as any)
       .insert({
         user_id: uid,
         entry_date: date,
