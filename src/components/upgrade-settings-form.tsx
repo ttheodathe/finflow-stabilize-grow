@@ -104,7 +104,7 @@ const PLANS: Plan[] = [
 ];
 
 export function UpgradeSettingsForm({ settings, saving }: UpgradeSettingsFormProps) {
-  const currentPlan = (settings.plan as PlanId) ?? "free";
+  const currentPlan = ((settings as { plan?: PlanId }).plan as PlanId) ?? "free";
   const [checkoutLoadingPlan, setCheckoutLoadingPlan] = useState<PlanId | null>(null);
   const [provider, setProvider] = useState<BillingProvider>("paddle");
 
