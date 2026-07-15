@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { WorkspaceSettings } from "../../hooks/useSettings";
+import type { WorkspaceSettings } from "@/hooks/useSettings";
 
 interface Props {
   settings: WorkspaceSettings;

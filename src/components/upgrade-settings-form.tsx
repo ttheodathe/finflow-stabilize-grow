@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Settings } from "@/hooks/useSettings";
+import type { WorkspaceSettings as Settings } from "@/hooks/useSettings";
 
 interface UpgradeSettingsFormProps {
   settings: Settings;

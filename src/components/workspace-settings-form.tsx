@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { WorkspaceSettings } from "../../hooks/useSettings";
+import type { WorkspaceSettings } from "@/hooks/useSettings";
 
 const CURRENCIES = ["USD", "EUR", "GBP", "CAD", "AUD", "NGN", "ZAR", "KES"];
 const DATE_FORMATS: WorkspaceSettings["dateFormat"][] = ["MM/DD/YYYY", "DD/MM/YYYY", "YYYY-MM-DD"];
