@@ -219,7 +219,7 @@ function InvoicesPage() {
     } else {
       const { data, error } = await supabase.from("invoices").insert(payload).select("id").single();
       if (error || !data) return toast.error(error?.message ?? "Insert failed");
-      invoiceId = data.id;
+      invoiceId = (data as any).id;
     }
 
     if (invoiceId) {

@@ -92,7 +92,7 @@ function CalendarPage() {
     const today = format(new Date(), "yyyy-MM-dd");
     const evs: CalEvent[] = [];
 
-    for (const i of inv.data ?? []) {
+    for (const i of (inv.data ?? []) as any[]) {
       if (!i.due_date) continue;
       evs.push({
         id: i.id,
@@ -106,7 +106,7 @@ function CalendarPage() {
         linkTo: "/invoices",
       });
     }
-    for (const b of bills.data ?? []) {
+    for (const b of (bills.data ?? []) as any[]) {
       evs.push({
         id: b.id,
         date: b.due_date,
@@ -119,7 +119,7 @@ function CalendarPage() {
         linkTo: "/purchases/bills",
       });
     }
-    for (const r of recurring.data ?? []) {
+    for (const r of (recurring.data ?? []) as any[]) {
       const tpl = (r as any).invoices;
       evs.push({
         id: r.id,
