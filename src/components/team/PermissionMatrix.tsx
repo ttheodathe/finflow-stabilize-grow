@@ -7,7 +7,8 @@ import { listAllPermissions } from '@/services/team/permission.service';
 import { listRolesForCompany } from '@/services/team/role.service';
 import { updateRolePermissions } from '@/services/team/role.service';
 import type { Permission, Role } from '@/types/team.types';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as _sb } from '@/integrations/supabase/client';
+const supabase = _sb as any;
 
 interface PermissionMatrixProps {
   companyId: string;
