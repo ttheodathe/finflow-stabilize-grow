@@ -31,10 +31,10 @@ export const Route = createFileRoute("/")({
         content:
           "Modern, free accounting software for freelancers, small businesses, startups, NGOs, and African SMEs. Invoicing, expenses, multi-currency, AI bookkeeping. Free forever.",
       },
-      { property: "og:title", content: "FinFlow Track — 100% Free Accounting Software" },
+      { property: "og:title", content: "FinFlow Track — 100% Free Accounting Software for Small Businesses" },
       {
         property: "og:description",
-        content: "Beautiful, modern accounting for small businesses worldwide. Free forever.",
+        content: "Modern, free accounting software for freelancers, small businesses, startups, NGOs, and African SMEs. Invoicing, expenses, multi-currency, AI bookkeeping. Free forever.",
       },
     ],
   }),

@@ -81,42 +81,42 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Free Accounting — 100% Free Accounting Software for Small Businesses" },
+      { title: "FinFlow Track — 100% Free Accounting Software for Small Businesses" },
       {
         name: "description",
         content:
-          "Modern, free accounting software for freelancers, small businesses, startups, and NGOs. Invoicing, expenses, multi-currency, AI bookkeeping.",
+          "Modern, free accounting software for freelancers, small businesses, startups, NGOs, and African SMEs. Invoicing, expenses, multi-currency, AI bookkeeping. Free forever.",
       },
       { name: "author", content: "Free Accounting" },
       {
         property: "og:title",
-        content: "Free Accounting — 100% Free Accounting Software for Small Businesses",
+        content: "FinFlow Track — 100% Free Accounting Software for Small Businesses",
       },
       {
         property: "og:description",
         content:
-          "Modern, free accounting software for freelancers, small businesses, startups, and NGOs. Invoicing, expenses, multi-currency, AI bookkeeping.",
+          "Modern, free accounting software for freelancers, small businesses, startups, NGOs, and African SMEs. Invoicing, expenses, multi-currency, AI bookkeeping. Free forever.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       {
         name: "twitter:title",
-        content: "Free Accounting — 100% Free Accounting Software for Small Businesses",
+        content: "FinFlow Track — 100% Free Accounting Software for Small Businesses",
       },
       {
         name: "twitter:description",
         content:
-          "Modern, free accounting software for freelancers, small businesses, startups, and NGOs. Invoicing, expenses, multi-currency, AI bookkeeping.",
+          "Modern, free accounting software for freelancers, small businesses, startups, NGOs, and African SMEs. Invoicing, expenses, multi-currency, AI bookkeeping. Free forever.",
       },
       {
         property: "og:image",
         content:
-          "https://storage.googleapis.com/gpt-engineer-file-uploads/ChcAM0lO0jQTPQmi152pqaqfL872/social-images/social-1782549297088-ChatGPT_Image_Jun_27,_2026,_10_34_34_AM.webp",
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/KejLjbxTBUejhiLW6UCHkKwwaTT2/social-images/social-1784143006384-favicon.webp",
       },
       {
         name: "twitter:image",
         content:
-          "https://storage.googleapis.com/gpt-engineer-file-uploads/ChcAM0lO0jQTPQmi152pqaqfL872/social-images/social-1782549297088-ChatGPT_Image_Jun_27,_2026,_10_34_34_AM.webp",
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/KejLjbxTBUejhiLW6UCHkKwwaTT2/social-images/social-1784143006384-favicon.webp",
       },
     ],
     links: [
