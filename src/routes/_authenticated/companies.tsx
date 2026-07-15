@@ -129,7 +129,7 @@ async function loadActiveCompany(userIdArg: string) {
   async function save() {
     if (!userId) return;
     setSaving(true);
-    const payload = { ...company, user_id: userId };
+    const payload: any = { ...company, user_id: userId };
     let error;
     if (company.id) {
       ({ error } = await supabase.from("companies").update(payload).eq("id", company.id));

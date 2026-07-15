@@ -93,7 +93,7 @@ export function ItemsManager({
       supabase.from("item_categories").select("id,name").order("name"),
     ]);
     if (i.error) toast.error(i.error.message);
-    else setItems(i.data as Item[]);
+    else setItems(i.data as unknown as Item[]);
     if (c.data) setCategories(c.data as Category[]);
   }
   useEffect(() => {

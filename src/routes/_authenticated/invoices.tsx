@@ -107,7 +107,7 @@ function InvoicesPage() {
         .order("name"),
     ]);
     if (inv.error) toast.error(inv.error.message);
-    else setItems(inv.data as Invoice[]);
+    else setItems(inv.data as unknown as Invoice[]);
     if (cust.data) setCustomers(cust.data as Customer[]);
     if (cat.data) setCatalog(cat.data as CatalogItem[]);
   }

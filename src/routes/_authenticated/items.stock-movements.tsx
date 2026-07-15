@@ -80,7 +80,7 @@ function StockMovementsPage() {
         .order("name"),
     ]);
     if (mv.error) toast.error(mv.error.message);
-    const movements = (mv.data ?? []) as Movement[];
+    const movements = (mv.data ?? []) as unknown as Movement[];
     setRows(movements);
     if (it.data) setItems(it.data as ItemOpt[]);
 
