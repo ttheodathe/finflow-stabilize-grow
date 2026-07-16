@@ -9,7 +9,7 @@ import { getInvitationByToken, acceptInvitation } from "@/services/team/invitati
 import { supabase } from "@/integrations/supabase/client";
 import type { TeamInvitation } from "@/types/team.types";
 
-export const Route = createFileRoute("/$token")({
+export const Route = createFileRoute("/invite/$token")({
   component: InvitationAcceptPage,
   loader: async ({ params }) => {
     const invitation = await getInvitationByToken(params.token);

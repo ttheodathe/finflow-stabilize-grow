@@ -159,6 +159,7 @@ const navGroups: NavGroup[] = [
   { label: "Apps", icon: AppWindow, to: "/apps" },
   // Mapped to the existing External Sync route — rename if you want a dedicated /integrations page.
   { label: "Integrations", icon: Plug, to: "/sync" },
+  { label: "Team", icon: Users, to: "/team" },
   { label: "Settings", icon: SettingsIcon, to: "/settings" },
 ];
 
