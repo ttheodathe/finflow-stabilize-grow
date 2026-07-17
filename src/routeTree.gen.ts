@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SecurityRouteImport } from './routes/security'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -75,6 +76,11 @@ import { Route as ApiPublicHooksSyncExternalRouteImport } from './routes/api/pub
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SecurityRoute = SecurityRouteImport.update({
@@ -428,6 +434,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/security': typeof SecurityRoute
+  '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
   '/ai-bookkeeper': typeof AuthenticatedAiBookkeeperRoute
   '/apps': typeof AuthenticatedAppsRoute
@@ -491,6 +498,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/security': typeof SecurityRoute
+  '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
   '/ai-bookkeeper': typeof AuthenticatedAiBookkeeperRoute
   '/apps': typeof AuthenticatedAppsRoute
@@ -556,6 +564,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/security': typeof SecurityRoute
+  '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
   '/_authenticated/ai-bookkeeper': typeof AuthenticatedAiBookkeeperRoute
   '/_authenticated/apps': typeof AuthenticatedAppsRoute
@@ -621,6 +630,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/security'
+    | '/signup'
     | '/terms'
     | '/ai-bookkeeper'
     | '/apps'
@@ -684,6 +694,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/security'
+    | '/signup'
     | '/terms'
     | '/ai-bookkeeper'
     | '/apps'
@@ -748,6 +759,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/security'
+    | '/signup'
     | '/terms'
     | '/_authenticated/ai-bookkeeper'
     | '/_authenticated/apps'
@@ -813,6 +825,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SecurityRoute: typeof SecurityRoute
+  SignupRoute: typeof SignupRoute
   TermsRoute: typeof TermsRoute
   InviteTokenRoute: typeof InviteTokenRoute
   ApiPublicHooksSyncExternalRoute: typeof ApiPublicHooksSyncExternalRoute
@@ -825,6 +838,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/security': {
@@ -1377,6 +1397,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SecurityRoute: SecurityRoute,
+  SignupRoute: SignupRoute,
   TermsRoute: TermsRoute,
   InviteTokenRoute: InviteTokenRoute,
   ApiPublicHooksSyncExternalRoute: ApiPublicHooksSyncExternalRoute,
