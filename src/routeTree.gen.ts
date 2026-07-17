@@ -9,12 +9,16 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SecurityRouteImport } from './routes/security'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PressRouteImport } from './routes/press'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as IntegrationsRouteImport } from './routes/integrations'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as GuidesRouteImport } from './routes/guides'
@@ -72,9 +76,19 @@ import { Route as AuthenticatedAccountingJournalsRouteImport } from './routes/_a
 import { Route as AuthenticatedAccountingChartRouteImport } from './routes/_authenticated/accounting.chart'
 import { Route as ApiPublicHooksSyncExternalRouteImport } from './routes/api/public/hooks/sync-external'
 
+const VerifyEmailRoute = VerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SecurityRoute = SecurityRouteImport.update({
@@ -100,6 +114,16 @@ const PricingRoute = PricingRouteImport.update({
 const PressRoute = PressRouteImport.update({
   id: '/press',
   path: '/press',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IntegrationsRoute = IntegrationsRouteImport.update({
@@ -423,12 +447,16 @@ export interface FileRoutesByFullPath {
   '/guides': typeof GuidesRoute
   '/help': typeof HelpRoute
   '/integrations': typeof IntegrationsRoute
+  '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/press': typeof PressRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/security': typeof SecurityRoute
+  '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/ai-bookkeeper': typeof AuthenticatedAiBookkeeperRoute
   '/apps': typeof AuthenticatedAppsRoute
   '/calendar': typeof AuthenticatedCalendarRoute
@@ -486,12 +514,16 @@ export interface FileRoutesByTo {
   '/guides': typeof GuidesRoute
   '/help': typeof HelpRoute
   '/integrations': typeof IntegrationsRoute
+  '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/press': typeof PressRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/security': typeof SecurityRoute
+  '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/ai-bookkeeper': typeof AuthenticatedAiBookkeeperRoute
   '/apps': typeof AuthenticatedAppsRoute
   '/calendar': typeof AuthenticatedCalendarRoute
@@ -551,12 +583,16 @@ export interface FileRoutesById {
   '/guides': typeof GuidesRoute
   '/help': typeof HelpRoute
   '/integrations': typeof IntegrationsRoute
+  '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/press': typeof PressRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/security': typeof SecurityRoute
+  '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/_authenticated/ai-bookkeeper': typeof AuthenticatedAiBookkeeperRoute
   '/_authenticated/apps': typeof AuthenticatedAppsRoute
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
@@ -616,12 +652,16 @@ export interface FileRouteTypes {
     | '/guides'
     | '/help'
     | '/integrations'
+    | '/login'
+    | '/onboarding'
     | '/press'
     | '/pricing'
     | '/privacy'
     | '/reset-password'
     | '/security'
+    | '/signup'
     | '/terms'
+    | '/verify-email'
     | '/ai-bookkeeper'
     | '/apps'
     | '/calendar'
@@ -679,12 +719,16 @@ export interface FileRouteTypes {
     | '/guides'
     | '/help'
     | '/integrations'
+    | '/login'
+    | '/onboarding'
     | '/press'
     | '/pricing'
     | '/privacy'
     | '/reset-password'
     | '/security'
+    | '/signup'
     | '/terms'
+    | '/verify-email'
     | '/ai-bookkeeper'
     | '/apps'
     | '/calendar'
@@ -743,12 +787,16 @@ export interface FileRouteTypes {
     | '/guides'
     | '/help'
     | '/integrations'
+    | '/login'
+    | '/onboarding'
     | '/press'
     | '/pricing'
     | '/privacy'
     | '/reset-password'
     | '/security'
+    | '/signup'
     | '/terms'
+    | '/verify-email'
     | '/_authenticated/ai-bookkeeper'
     | '/_authenticated/apps'
     | '/_authenticated/calendar'
@@ -808,23 +856,41 @@ export interface RootRouteChildren {
   GuidesRoute: typeof GuidesRoute
   HelpRoute: typeof HelpRoute
   IntegrationsRoute: typeof IntegrationsRoute
+  LoginRoute: typeof LoginRoute
+  OnboardingRoute: typeof OnboardingRoute
   PressRoute: typeof PressRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SecurityRoute: typeof SecurityRoute
+  SignupRoute: typeof SignupRoute
   TermsRoute: typeof TermsRoute
+  VerifyEmailRoute: typeof VerifyEmailRoute
   InviteTokenRoute: typeof InviteTokenRoute
   ApiPublicHooksSyncExternalRoute: typeof ApiPublicHooksSyncExternalRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/verify-email': {
+      id: '/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof VerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms': {
       id: '/terms'
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/security': {
@@ -860,6 +926,20 @@ declare module '@tanstack/react-router' {
       path: '/press'
       fullPath: '/press'
       preLoaderRoute: typeof PressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/integrations': {
@@ -1372,12 +1452,16 @@ const rootRouteChildren: RootRouteChildren = {
   GuidesRoute: GuidesRoute,
   HelpRoute: HelpRoute,
   IntegrationsRoute: IntegrationsRoute,
+  LoginRoute: LoginRoute,
+  OnboardingRoute: OnboardingRoute,
   PressRoute: PressRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SecurityRoute: SecurityRoute,
+  SignupRoute: SignupRoute,
   TermsRoute: TermsRoute,
+  VerifyEmailRoute: VerifyEmailRoute,
   InviteTokenRoute: InviteTokenRoute,
   ApiPublicHooksSyncExternalRoute: ApiPublicHooksSyncExternalRoute,
 }

@@ -157,7 +157,11 @@ function PricingPage() {
                 ))}
               </ul>
 
-              <Link to="/signup" className="mt-10 block rounded-lg border px-6 py-3 text-center">
+              <Link
+                to="/signup"
+                search={{ plan: "free" }}
+                className="mt-10 block rounded-lg border px-6 py-3 text-center"
+              >
                 Start Free
               </Link>
             </div>
@@ -207,6 +211,7 @@ function PricingPage() {
 
               <Link
                 to="/signup"
+                search={{ plan: "pro" }}
                 className="mt-10 block rounded-lg bg-primary px-6 py-3 text-center text-primary-foreground"
               >
                 Start Professional
@@ -591,6 +596,7 @@ function PricingPage() {
           <div className="mt-12 flex flex-wrap justify-center gap-4">
             <Link
               to="/signup"
+              search={{ plan: "free" }}
               className="inline-flex items-center rounded-lg bg-primary px-8 py-4 text-primary-foreground"
             >
               Start Free

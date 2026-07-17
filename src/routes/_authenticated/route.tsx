@@ -5,9 +5,38 @@ import { AppSidebar } from "@/components/app-sidebar";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
-  beforeLoad: async () => {
+  beforeLoad: async ({ location }) => {
     const { data } = await supabase.auth.getUser();
-    if (!data.user) throw redirect({ to: "/auth", search: { mode: "login" } });
+    if (!data.user) {
+      throw redirect({
+        to: "/auth",
+        search: { mode: "login", next: location.pathname },
+      });
+    }
+    if (!data.user.email_confirmed_at) {
+      throw redirect({
+        to: "/verify-email",
+        search: { email: data.user.email ?? undefined },
+      });
+    }
+    // Onboarding gate — skip check on the onboarding route itself.
+    const [progress, membership] = await Promise.all([
+      supabase
+        .from("onboarding_progress")
+        .select("completed")
+        .eq("user_id", data.user.id)
+        .maybeSingle(),
+      supabase
+        .from("company_members")
+        .select("company_id")
+        .eq("user_id", data.user.id)
+        .limit(1)
+        .maybeSingle(),
+    ]);
+    const isComplete = progress.data?.completed === true && Boolean(membership.data);
+    if (!isComplete) {
+      throw redirect({ to: "/onboarding" });
+    }
     return { user: data.user };
   },
   component: AppShell,
