@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SecurityRouteImport } from './routes/security'
@@ -74,6 +75,11 @@ import { Route as AuthenticatedAccountingJournalsRouteImport } from './routes/_a
 import { Route as AuthenticatedAccountingChartRouteImport } from './routes/_authenticated/accounting.chart'
 import { Route as ApiPublicHooksSyncExternalRouteImport } from './routes/api/public/hooks/sync-external'
 
+const VerifyEmailRoute = VerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -443,6 +449,7 @@ export interface FileRoutesByFullPath {
   '/security': typeof SecurityRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/ai-bookkeeper': typeof AuthenticatedAiBookkeeperRoute
   '/apps': typeof AuthenticatedAppsRoute
   '/calendar': typeof AuthenticatedCalendarRoute
@@ -508,6 +515,7 @@ export interface FileRoutesByTo {
   '/security': typeof SecurityRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/ai-bookkeeper': typeof AuthenticatedAiBookkeeperRoute
   '/apps': typeof AuthenticatedAppsRoute
   '/calendar': typeof AuthenticatedCalendarRoute
@@ -575,6 +583,7 @@ export interface FileRoutesById {
   '/security': typeof SecurityRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/_authenticated/ai-bookkeeper': typeof AuthenticatedAiBookkeeperRoute
   '/_authenticated/apps': typeof AuthenticatedAppsRoute
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
@@ -642,6 +651,7 @@ export interface FileRouteTypes {
     | '/security'
     | '/signup'
     | '/terms'
+    | '/verify-email'
     | '/ai-bookkeeper'
     | '/apps'
     | '/calendar'
@@ -707,6 +717,7 @@ export interface FileRouteTypes {
     | '/security'
     | '/signup'
     | '/terms'
+    | '/verify-email'
     | '/ai-bookkeeper'
     | '/apps'
     | '/calendar'
@@ -773,6 +784,7 @@ export interface FileRouteTypes {
     | '/security'
     | '/signup'
     | '/terms'
+    | '/verify-email'
     | '/_authenticated/ai-bookkeeper'
     | '/_authenticated/apps'
     | '/_authenticated/calendar'
@@ -840,12 +852,20 @@ export interface RootRouteChildren {
   SecurityRoute: typeof SecurityRoute
   SignupRoute: typeof SignupRoute
   TermsRoute: typeof TermsRoute
+  VerifyEmailRoute: typeof VerifyEmailRoute
   InviteTokenRoute: typeof InviteTokenRoute
   ApiPublicHooksSyncExternalRoute: typeof ApiPublicHooksSyncExternalRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/verify-email': {
+      id: '/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof VerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms': {
       id: '/terms'
       path: '/terms'
@@ -1420,6 +1440,7 @@ const rootRouteChildren: RootRouteChildren = {
   SecurityRoute: SecurityRoute,
   SignupRoute: SignupRoute,
   TermsRoute: TermsRoute,
+  VerifyEmailRoute: VerifyEmailRoute,
   InviteTokenRoute: InviteTokenRoute,
   ApiPublicHooksSyncExternalRoute: ApiPublicHooksSyncExternalRoute,
 }
