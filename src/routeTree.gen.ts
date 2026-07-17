@@ -16,6 +16,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PressRouteImport } from './routes/press'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as IntegrationsRouteImport } from './routes/integrations'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as GuidesRouteImport } from './routes/guides'
@@ -106,6 +107,11 @@ const PricingRoute = PricingRouteImport.update({
 const PressRoute = PressRouteImport.update({
   id: '/press',
   path: '/press',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IntegrationsRoute = IntegrationsRouteImport.update({
@@ -429,6 +435,7 @@ export interface FileRoutesByFullPath {
   '/guides': typeof GuidesRoute
   '/help': typeof HelpRoute
   '/integrations': typeof IntegrationsRoute
+  '/login': typeof LoginRoute
   '/press': typeof PressRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -493,6 +500,7 @@ export interface FileRoutesByTo {
   '/guides': typeof GuidesRoute
   '/help': typeof HelpRoute
   '/integrations': typeof IntegrationsRoute
+  '/login': typeof LoginRoute
   '/press': typeof PressRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -559,6 +567,7 @@ export interface FileRoutesById {
   '/guides': typeof GuidesRoute
   '/help': typeof HelpRoute
   '/integrations': typeof IntegrationsRoute
+  '/login': typeof LoginRoute
   '/press': typeof PressRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -625,6 +634,7 @@ export interface FileRouteTypes {
     | '/guides'
     | '/help'
     | '/integrations'
+    | '/login'
     | '/press'
     | '/pricing'
     | '/privacy'
@@ -689,6 +699,7 @@ export interface FileRouteTypes {
     | '/guides'
     | '/help'
     | '/integrations'
+    | '/login'
     | '/press'
     | '/pricing'
     | '/privacy'
@@ -754,6 +765,7 @@ export interface FileRouteTypes {
     | '/guides'
     | '/help'
     | '/integrations'
+    | '/login'
     | '/press'
     | '/pricing'
     | '/privacy'
@@ -820,6 +832,7 @@ export interface RootRouteChildren {
   GuidesRoute: typeof GuidesRoute
   HelpRoute: typeof HelpRoute
   IntegrationsRoute: typeof IntegrationsRoute
+  LoginRoute: typeof LoginRoute
   PressRoute: typeof PressRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -880,6 +893,13 @@ declare module '@tanstack/react-router' {
       path: '/press'
       fullPath: '/press'
       preLoaderRoute: typeof PressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/integrations': {
@@ -1392,6 +1412,7 @@ const rootRouteChildren: RootRouteChildren = {
   GuidesRoute: GuidesRoute,
   HelpRoute: HelpRoute,
   IntegrationsRoute: IntegrationsRoute,
+  LoginRoute: LoginRoute,
   PressRoute: PressRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
