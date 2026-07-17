@@ -163,6 +163,14 @@ function LandingPage() {
 
 function Header() {
   const [open, setOpen] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSignedIn(Boolean(data.session)));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) =>
+      setSignedIn(Boolean(session)),
+    );
+    return () => sub.subscription.unsubscribe();
+  }, []);
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
@@ -199,16 +207,24 @@ function Header() {
           </a>
         </nav>
         <div className="hidden items-center gap-3 md:flex">
-          <Button asChild variant="ghost" size="sm">
-            <Link to="/auth" search={{ mode: "login" }}>
-              Sign in
-            </Link>
-          </Button>
-          <Button asChild size="sm" className="bg-gradient-hero shadow-glow hover:opacity-95">
-            <Link to="/auth" search={{ mode: "signup" }}>
-              Get started free
-            </Link>
-          </Button>
+          {signedIn ? (
+            <Button asChild size="sm" className="bg-gradient-hero shadow-glow hover:opacity-95">
+              <Link to="/dashboard">Go to dashboard</Link>
+            </Button>
+          ) : (
+            <>
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/auth" search={{ mode: "login" }}>
+                  Sign in
+                </Link>
+              </Button>
+              <Button asChild size="sm" className="bg-gradient-hero shadow-glow hover:opacity-95">
+                <Link to="/auth" search={{ mode: "signup" }}>
+                  Get started free
+                </Link>
+              </Button>
+            </>
+          )}
         </div>
         <button className="md:hidden" onClick={() => setOpen(!open)} aria-label="Toggle menu">
           {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -230,16 +246,24 @@ function Header() {
               Who it's for
             </a>
             <div className="mt-2 flex flex-col gap-2">
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/auth" search={{ mode: "login" }}>
-                  Sign in
-                </Link>
-              </Button>
-              <Button asChild size="sm" className="bg-gradient-hero">
-                <Link to="/auth" search={{ mode: "signup" }}>
-                  Get started free
-                </Link>
-              </Button>
+              {signedIn ? (
+                <Button asChild size="sm" className="bg-gradient-hero">
+                  <Link to="/dashboard">Go to dashboard</Link>
+                </Button>
+              ) : (
+                <>
+                  <Button asChild variant="ghost" size="sm">
+                    <Link to="/auth" search={{ mode: "login" }}>
+                      Sign in
+                    </Link>
+                  </Button>
+                  <Button asChild size="sm" className="bg-gradient-hero">
+                    <Link to="/auth" search={{ mode: "signup" }}>
+                      Get started free
+                    </Link>
+                  </Button>
+                </>
+              )}
             </div>
           </nav>
         </div>
