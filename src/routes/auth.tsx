@@ -9,6 +9,8 @@ import { toast } from "sonner";
 
 const searchSchema = z.object({
   mode: z.enum(["login", "signup"]).optional().default("login"),
+  plan: z.enum(["free", "starter", "pro", "business", "enterprise"]).optional(),
+  next: z.string().optional(),
 });
 
 export const Route = createFileRoute("/auth")({
@@ -18,7 +20,7 @@ export const Route = createFileRoute("/auth")({
 });
 
 function AuthPage() {
-  const { mode: initialMode } = Route.useSearch();
+  const { mode: initialMode, plan, next } = Route.useSearch();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"login" | "signup">(initialMode);
   const [email, setEmail] = useState("");
@@ -30,31 +32,44 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard" });
+      if (data.session) navigate({ to: (next as any) ?? "/dashboard" });
     });
-  }, [navigate]);
+  }, [navigate, next]);
+
+  // Persist plan chosen on Pricing across signup so onboarding picks it up.
+  useEffect(() => {
+    if (plan && typeof window !== "undefined") {
+      localStorage.setItem("pendingPlan", plan);
+    }
+  }, [plan]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`,
-            data: { full_name: fullName },
+            emailRedirectTo: `${window.location.origin}/onboarding`,
+            data: { full_name: fullName, plan: plan ?? "free" },
           },
         });
         if (error) throw error;
-        toast.success("Account created! You can sign in now.");
-        navigate({ to: "/dashboard" });
+        // If Supabase requires email confirmation there is no session yet.
+        if (!data.session) {
+          toast.success("Account created — check your email to verify.");
+          navigate({ to: "/verify-email", search: { email } });
+          return;
+        }
+        toast.success("Account created!");
+        navigate({ to: "/onboarding" });
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Welcome back!");
-        navigate({ to: "/dashboard" });
+        navigate({ to: (next as any) ?? "/dashboard" });
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Authentication failed");
