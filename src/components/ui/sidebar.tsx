@@ -190,16 +190,16 @@ const Sidebar = React.forwardRef<
       return (
         <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
           <SheetContent
-            data-sidebar="sidebar"
-            data-mobile="true"
-            className="w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
-            style={
-              {
-                "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
-              } as React.CSSProperties
-            }
-            side={side}
-          >
+  data-sidebar="sidebar"
+  data-mobile="true"
+  side={side}
+  className="z-[9999] w-(--sidebar-width) max-w-[85vw] bg-sidebar p-0 text-sidebar-foreground shadow-xl [&>button]:hidden"
+  style={
+    {
+      "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
+    } as React.CSSProperties
+  }
+>
             <SheetHeader className="sr-only">
               <SheetTitle>Sidebar</SheetTitle>
               <SheetDescription>Displays the mobile sidebar.</SheetDescription>
