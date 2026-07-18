@@ -405,6 +405,7 @@ export function AppSidebar() {
                   onClick={() => {
                     navigate({ to: r.to });
                     setSearch("");
+                    closeOnNav();
                   }}
                   className="w-full text-left px-3 py-2 text-sm hover:bg-sidebar-accent transition-colors truncate"
                 >
