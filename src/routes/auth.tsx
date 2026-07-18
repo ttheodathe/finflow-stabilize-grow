@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { resolveNextRoute } from "@/lib/auth-flow";
 
 const searchSchema = z.object({
   mode: z.enum(["login", "signup"]).optional().default("login"),
@@ -31,8 +32,14 @@ function AuthPage() {
   useEffect(() => setMode(initialMode), [initialMode]);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: (next as any) ?? "/dashboard" });
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (!data.user) return;
+      if (next) {
+        navigate({ to: next as any });
+        return;
+      }
+      const target = await resolveNextRoute(data.user);
+      navigate(target as any);
     });
   }, [navigate, next]);
 
@@ -66,10 +73,15 @@ function AuthPage() {
         toast.success("Account created!");
         navigate({ to: "/onboarding" });
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Welcome back!");
-        navigate({ to: (next as any) ?? "/dashboard" });
+        if (next) {
+          navigate({ to: next as any });
+        } else {
+          const target = await resolveNextRoute(data.user);
+          navigate(target as any);
+        }
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Authentication failed");
