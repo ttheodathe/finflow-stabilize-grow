@@ -2,6 +2,7 @@ import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
+import { hasCompletedOnboarding } from "@/lib/auth-flow";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -19,22 +20,12 @@ export const Route = createFileRoute("/_authenticated")({
         search: { email: data.user.email ?? undefined },
       });
     }
-    // Onboarding gate — skip check on the onboarding route itself.
-    const [progress, membership] = await Promise.all([
-      supabase
-        .from("onboarding_progress")
-        .select("completed")
-        .eq("user_id", data.user.id)
-        .maybeSingle(),
-      supabase
-        .from("company_members")
-        .select("company_id")
-        .eq("user_id", data.user.id)
-        .limit(1)
-        .maybeSingle(),
-    ]);
-    const isComplete = progress.data?.completed === true && Boolean(membership.data);
-    if (!isComplete) {
+    // Onboarding is complete iff the user has at least one company membership.
+    // `create_company` only inserts that row after all setup succeeds, so it's
+    // the ground truth — `onboarding_progress.completed` is a cache that we
+    // self-heal from this check.
+    const done = await hasCompletedOnboarding(data.user.id);
+    if (!done) {
       throw redirect({ to: "/onboarding" });
     }
     return { user: data.user };
