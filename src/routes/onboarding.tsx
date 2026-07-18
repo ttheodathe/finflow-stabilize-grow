@@ -343,6 +343,8 @@ function OnboardingPage() {
             </div>
           )}
         </div>
+          </>
+        )}
       </div>
     </div>
   );
