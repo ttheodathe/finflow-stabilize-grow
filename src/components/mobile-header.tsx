@@ -74,7 +74,7 @@ export function MobileHeader() {
         </div>
 
         <span className="truncate font-bold text-sm gradient-text">
-          FreeFlow
+          FinFlow Track
         </span>
       </Link>
 
