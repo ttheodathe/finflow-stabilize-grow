@@ -8,6 +8,7 @@ import { CurrencySelect } from "@/components/currency-select";
 import { PLANS, type PlanKey } from "@/components/Subscription_Plans";
 import { toast } from "sonner";
 import { Loader2, Check, ArrowRight, Building2, CreditCard, User } from "lucide-react";
+import { hasCompletedOnboarding } from "@/lib/auth-flow";
 
 export const Route = createFileRoute("/onboarding")({
   ssr: false,
@@ -18,6 +19,10 @@ export const Route = createFileRoute("/onboarding")({
     if (!data.user.email_confirmed_at) {
       throw redirect({ to: "/verify-email", search: { email: data.user.email ?? undefined } });
     }
+    // If onboarding is already complete (company membership exists), never
+    // show the wizard again — even after refresh, new tab, or re-login.
+    const done = await hasCompletedOnboarding(data.user.id);
+    if (done) throw redirect({ to: "/dashboard" });
     return { user: data.user };
   },
   component: OnboardingPage,
@@ -31,6 +36,7 @@ function OnboardingPage() {
 
   const [step, setStep] = useState<Step>("profile");
   const [saving, setSaving] = useState(false);
+  const [resuming, setResuming] = useState(true);
 
   const [fullName, setFullName] = useState<string>(
     (user.user_metadata?.full_name as string) ?? "",
@@ -45,17 +51,48 @@ function OnboardingPage() {
     ((user.user_metadata?.plan as PlanKey | undefined) ?? "free");
   const [plan, setPlan] = useState<PlanKey>(pendingPlan);
 
-  // If onboarding already complete, skip straight to dashboard.
+  // Resume from the last incomplete step instead of restarting.
   useEffect(() => {
+    let cancelled = false;
     (async () => {
-      const { data } = await supabase
-        .from("onboarding_progress")
-        .select("completed")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (data?.completed) navigate({ to: "/dashboard" });
+      const [progressRes, memberRes, profileRes] = await Promise.all([
+        supabase
+          .from("onboarding_progress")
+          .select("*")
+          .eq("user_id", user.id)
+          .maybeSingle(),
+        supabase
+          .from("company_members")
+          .select("company_id")
+          .eq("user_id", user.id)
+          .limit(1)
+          .maybeSingle(),
+        supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
+      ]);
+      if (cancelled) return;
+
+      if (memberRes.data) {
+        // Ground truth: user already has a company. Onboarding is done.
+        navigate({ to: "/dashboard" });
+        return;
+      }
+
+      if (profileRes.data?.full_name && !fullName) {
+        setFullName(profileRes.data.full_name);
+      }
+
+      const p = progressRes.data;
+      let nextStep: Step = "profile";
+      if (p?.company_completed) nextStep = "plan";
+      else if (p?.profile_completed || profileRes.data?.full_name) nextStep = "company";
+      setStep(nextStep);
+      setResuming(false);
     })();
-  }, [user.id, navigate]);
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user.id]);
 
   async function saveProfile() {
     setSaving(true);
@@ -137,8 +174,9 @@ function OnboardingPage() {
     );
     if (typeof window !== "undefined") localStorage.removeItem("pendingPlan");
     setSaving(false);
-    toast.success("You're all set!");
-    navigate({ to: "/dashboard" });
+    toast.success("Workspace ready");
+    // Head straight to the workspace — no dead-end "all set" screen.
+    navigate({ to: "/dashboard", replace: true });
   }
 
   const steps = useMemo(
@@ -154,6 +192,12 @@ function OnboardingPage() {
   return (
     <div className="min-h-screen bg-gradient-subtle px-4 py-10">
       <div className="mx-auto max-w-2xl">
+        {resuming ? (
+          <div className="flex items-center justify-center py-24 text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading your setup…
+          </div>
+        ) : (
+          <>
         <h1 className="text-center text-3xl font-bold mb-2">Welcome to FinFlow Track</h1>
         <p className="text-center text-muted-foreground mb-8">
           A few quick steps to set up your workspace.
