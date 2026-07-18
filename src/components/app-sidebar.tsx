@@ -167,8 +167,11 @@ type Company = { id: string; name: string; is_default: boolean };
 type Subscription = { plan: string; company_limit: number | null };
 
 export function AppSidebar() {
-  const { state } = useSidebar();
+  const { state, isMobile, setOpenMobile } = useSidebar();
   const collapsed = state === "collapsed";
+  const closeOnNav = () => {
+    if (isMobile) setOpenMobile(false);
+  };
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
 
@@ -422,7 +425,7 @@ export function AppSidebar() {
                   return (
                     <SidebarMenuItem key={g.label}>
                       <SidebarMenuButton asChild isActive={isActive(g.to!)} tooltip={g.label}>
-                        <Link to={g.to!}>
+                        <Link to={g.to!} onClick={closeOnNav}>
                           <g.icon className="h-4 w-4" />
                           <span>{g.label}</span>
                         </Link>
@@ -446,7 +449,7 @@ export function AppSidebar() {
                           {g.items.map((i) => (
                             <SidebarMenuSubItem key={i.to}>
                               <SidebarMenuSubButton asChild isActive={isActive(i.to)}>
-                                <Link to={i.to}>{i.label}</Link>
+                                <Link to={i.to} onClick={closeOnNav}>{i.label}</Link>
                               </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
                           ))}
