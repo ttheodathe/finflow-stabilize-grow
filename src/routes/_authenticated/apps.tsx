@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ComingSoon } from "@/components/coming-soon";
 export const Route = createFileRoute("/_authenticated/apps")({
-  head: () => ({ meta: [{ title: "Apps marketplace — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "Apps marketplace — FinFlow Track Track" }] }),
   component: () => (
     <ComingSoon
       title="Apps marketplace"
