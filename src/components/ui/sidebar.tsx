@@ -193,7 +193,7 @@ const Sidebar = React.forwardRef<
         data-sidebar="sidebar"
         data-mobile="true"
         side={side}
-        className="fixed inset-y-0 z-[100] w-[18rem] max-w-[85vw] bg-sidebar p-0 text-sidebar-foreground shadow-2xl [>button]:hidden"
+        className="fixed inset-y-0 left-0 z-[100] flex h-svh w-[18rem] max-w-[85vw] flex-col border-r bg-sidebar p-0 text-sidebar-foreground shadow-2xl [&>button]:hidden"
       >
         <SheetHeader className="sr-only">
           <SheetTitle>Sidebar</SheetTitle>
