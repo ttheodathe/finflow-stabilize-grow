@@ -61,7 +61,7 @@ export function MobileHeader() {
   }
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 flex h-14 items-center gap-2 border-b bg-background px-3 shadow-sm lg:hidden">
+    <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center gap-2 border-b bg-background px-3 shadow-sm lg:hidden">
 
       <SidebarTrigger className="z-[9999] h-9 w-9 shrink-0" />
 
