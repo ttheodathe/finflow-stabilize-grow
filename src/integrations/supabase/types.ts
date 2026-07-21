@@ -684,42 +684,70 @@ export type Database = {
         };
         Relationships: [];
       };
+      // NOTE: regenerate this block with `supabase gen types typescript`
+      // after applying 20260721120000_reconcile_paddle_subscriptions_schema.sql
+      // against the live project — these fields are added here by hand to
+      // match that migration in the meantime.
       subscriptions: {
         Row: {
+          billing_cycle: string | null;
           billing_interval: string;
+          cancel_at_period_end: boolean;
+          company_id: string | null;
           company_limit: number | null;
           created_at: string;
           current_period_end: string | null;
+          current_period_start: string | null;
           id: string;
           organization_id: string | null;
+          owner_id: string | null;
+          paddle_customer_id: string | null;
+          paddle_subscription_id: string | null;
           plan: string;
           plan_id: string | null;
+          price_id: string | null;
           status: string;
           updated_at: string;
           user_id: string;
         };
         Insert: {
+          billing_cycle?: string | null;
           billing_interval?: string;
+          cancel_at_period_end?: boolean;
+          company_id?: string | null;
           company_limit?: number | null;
           created_at?: string;
           current_period_end?: string | null;
+          current_period_start?: string | null;
           id?: string;
           organization_id?: string | null;
+          owner_id?: string | null;
+          paddle_customer_id?: string | null;
+          paddle_subscription_id?: string | null;
           plan?: string;
           plan_id?: string | null;
+          price_id?: string | null;
           status?: string;
           updated_at?: string;
           user_id: string;
         };
         Update: {
+          billing_cycle?: string | null;
           billing_interval?: string;
+          cancel_at_period_end?: boolean;
+          company_id?: string | null;
           company_limit?: number | null;
           created_at?: string;
           current_period_end?: string | null;
+          current_period_start?: string | null;
           id?: string;
           organization_id?: string | null;
+          owner_id?: string | null;
+          paddle_customer_id?: string | null;
+          paddle_subscription_id?: string | null;
           plan?: string;
           plan_id?: string | null;
+          price_id?: string | null;
           status?: string;
           updated_at?: string;
           user_id?: string;
