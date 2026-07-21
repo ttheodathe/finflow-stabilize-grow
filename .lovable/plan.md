@@ -6,9 +6,13 @@ Using pre-provisioned Paddle sandbox price IDs and API keys. Only `PADDLE_WEBHOO
 
 Store the Paddle env vars via `add_secret` (server-only). Also expose `VITE_PADDLE_CLIENT_TOKEN` and `VITE_PADDLE_ENV` for browser Paddle.js. Add placeholder for `PADDLE_WEBHOOK_SECRET` (user pastes after registering webhook in Paddle dashboard).
 
-## 2. Database migration (`supabase/paddle_billing.sql`)
+## 2. Database migration (`supabase/migrations/20260721120000_reconcile_paddle_subscriptions_schema.sql`)
 
-Create if missing (idempotent):
+`supabase/paddle_billing.sql` is superseded — it was never a tracked
+migration and its `create table if not exists` silently no-op'd against
+the `subscriptions` table already created by
+`20260709174725_create_subscriptions_table.sql`. Use the tracked
+migration instead. Add/alter (idempotent):
 
 - `subscriptions` — id, company_id (FK), owner_id (FK auth.users), paddle_customer_id, paddle_subscription_id (unique), price_id, plan (`free|pro|business|enterprise`), status, billing_cycle (`monthly|yearly|null`), current_period_start, current_period_end, cancel_at_period_end, timestamps.
 - `customers` — id, user_id, company_id, paddle_customer_id (unique), billing_email, created_at.
