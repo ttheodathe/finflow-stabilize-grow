@@ -11,13 +11,13 @@ interface SettingsPageProps {
   userId: string;
 }
 
-type Tab = "workspace" | "invoicing" | "notifications" | "upgrade";
+type Tab = "workspace" | "invoicing" | "notifications" | "billing";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "workspace", label: "Workspace" },
   { id: "invoicing", label: "Invoicing" },
   { id: "notifications", label: "Notifications" },
-  { id: "upgrade", label: "Upgrade" },
+  { id: "billing", label: "Billing" },
 ];
 
 export function SettingsPage({ supabase, userId }: SettingsPageProps) {
@@ -67,7 +67,7 @@ export function SettingsPage({ supabase, userId }: SettingsPageProps) {
         {activeTab === "notifications" && (
           <NotificationSettingsForm settings={settings} saving={saving} onSave={updateSettings} />
         )}
-        {activeTab === "upgrade" && (
+        {activeTab === "billing" && (
           <UpgradeSettingsForm settings={settings} saving={saving} onSave={updateSettings} />
         )}
       </div>

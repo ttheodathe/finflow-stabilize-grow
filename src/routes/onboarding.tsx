@@ -9,6 +9,9 @@ import { PLANS, type PlanKey } from "@/components/Subscription_Plans";
 import { toast } from "sonner";
 import { Loader2, Check, ArrowRight, Building2, CreditCard, User } from "lucide-react";
 import { hasCompletedOnboarding } from "@/lib/auth-flow";
+import { openCheckout } from "@/lib/paddle/client";
+import { getPriceId } from "@/lib/paddle/config";
+import { createFreeSubscription } from "@/lib/billing.functions";
 
 export const Route = createFileRoute("/onboarding")({
   ssr: false,
@@ -133,32 +136,48 @@ function OnboardingPage() {
 
   async function savePlan() {
     setSaving(true);
-    const { error } = await supabase.from("subscriptions").upsert(
-      {
-        user_id: user.id,
-        plan,
-        status: "active",
-        billing_interval: "monthly",
-      },
-      { onConflict: "user_id" },
-    );
-    if (error) {
-      // If unique constraint isn't user_id, fall back to insert-if-missing.
-      const { data: existing } = await supabase
-        .from("subscriptions")
-        .select("id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (!existing) {
-        const { error: e2 } = await supabase
-          .from("subscriptions")
-          .insert({ user_id: user.id, plan, status: "active", billing_interval: "monthly" });
-        if (e2) {
-          setSaving(false);
-          return toast.error(e2.message);
+    const companyId =
+      typeof window !== "undefined" ? localStorage.getItem("currentCompanyId") : null;
+
+    // Paid plans → open Paddle Checkout. Webhook activates the subscription.
+    if (plan === "pro" || plan === "business") {
+      const priceId = getPriceId(plan as "pro" | "business", "monthly");
+      if (!priceId || !companyId) {
+        setSaving(false);
+        toast.error("Missing plan configuration");
+        return;
+      }
+      try {
+        await openCheckout({
+          priceId,
+          customerEmail: user.email ?? undefined,
+          companyId,
+          userId: user.id,
+          plan: plan as "pro" | "business",
+          cycle: "monthly",
+          successUrl: `${window.location.origin}/dashboard`,
+        });
+      } catch (e) {
+        setSaving(false);
+        toast.error(e instanceof Error ? e.message : "Checkout failed");
+        return;
+      }
+      // Also create a placeholder free row so gating helpers don't 404 while
+      // waiting for the webhook to activate the paid plan.
+      if (companyId) {
+        try {
+          await createFreeSubscription({ data: { companyId } });
+        } catch {
+          // ignore — webhook will upsert real subscription
         }
-      } else {
-        await supabase.from("subscriptions").update({ plan, status: "active" }).eq("id", existing.id);
+      }
+    } else if (plan === "free" && companyId) {
+      try {
+        await createFreeSubscription({ data: { companyId } });
+      } catch (e) {
+        setSaving(false);
+        toast.error(e instanceof Error ? e.message : "Failed to create subscription");
+        return;
       }
     }
     await supabase.from("onboarding_progress").upsert(

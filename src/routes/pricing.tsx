@@ -10,6 +10,7 @@ import {
   Sparkles,
   Users,
 } from "lucide-react";
+import { PlanCheckoutButton } from "@/components/PlanCheckoutButton";
 
 export const Route = createFileRoute("/pricing")({
   component: PricingPage,
@@ -157,13 +158,13 @@ function PricingPage() {
                 ))}
               </ul>
 
-              <Link
-                to="/signup"
-                search={{ plan: "free" }}
-                className="mt-10 block rounded-lg border px-6 py-3 text-center"
+              <PlanCheckoutButton
+                plan="free"
+                fromMarketing
+                className="mt-10 block w-full rounded-lg border px-6 py-3 text-center"
               >
                 Start Free
-              </Link>
+              </PlanCheckoutButton>
             </div>
             {/* PROFESSIONAL */}
 
@@ -209,13 +210,13 @@ function PricingPage() {
                 ))}
               </ul>
 
-              <Link
-                to="/signup"
-                search={{ plan: "pro" }}
-                className="mt-10 block rounded-lg bg-primary px-6 py-3 text-center text-primary-foreground"
+              <PlanCheckoutButton
+                plan="pro"
+                fromMarketing
+                className="mt-10 block w-full rounded-lg bg-primary px-6 py-3 text-center text-primary-foreground"
               >
                 Start Professional
-              </Link>
+              </PlanCheckoutButton>
             </div>
 
             {/* BUSINESS */}
@@ -259,9 +260,13 @@ function PricingPage() {
                 ))}
               </ul>
 
-              <Link to="/contact" className="mt-10 block rounded-lg border px-6 py-3 text-center">
-                Contact Sales
-              </Link>
+              <PlanCheckoutButton
+                plan="business"
+                fromMarketing
+                className="mt-10 block w-full rounded-lg bg-primary px-6 py-3 text-center text-primary-foreground"
+              >
+                Start Business
+              </PlanCheckoutButton>
             </div>
 
             {/* ENTERPRISE */}
