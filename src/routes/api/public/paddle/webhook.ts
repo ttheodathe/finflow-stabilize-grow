@@ -16,19 +16,19 @@ export const Route = createFileRoute("/api/public/paddle/webhook")({
         }
         const { event } = verified;
 
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { supabaseAdmin: _admin } = await import("@/integrations/supabase/client.server");
+        // biome-ignore lint/suspicious/noExplicitAny: schema types don't yet include billing tables
+        const supabaseAdmin = _admin as any;
 
         // Idempotency: unique paddle_event_id short-circuits duplicates.
         const insertEvent = await supabaseAdmin
           .from("billing_events")
-          // biome-ignore lint/suspicious/noExplicitAny: dynamic Paddle payload
           .insert({
             paddle_event_id: event.event_id,
             event_type: event.event_type,
-            // biome-ignore lint/suspicious/noExplicitAny: jsonb column
-            payload: event as unknown as Record<string, unknown>,
+            payload: event,
             processed: false,
-          } as never)
+          })
           .select("id")
           .maybeSingle();
 
@@ -44,14 +44,14 @@ export const Route = createFileRoute("/api/public/paddle/webhook")({
           await handleEvent(event, supabaseAdmin);
           await supabaseAdmin
             .from("billing_events")
-            .update({ processed: true } as never)
+            .update({ processed: true })
             .eq("paddle_event_id", event.event_id);
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e);
           console.error("[paddle-webhook] handler failed:", msg);
           await supabaseAdmin
             .from("billing_events")
-            .update({ processed: false, error: msg } as never)
+            .update({ processed: false, error: msg })
             .eq("paddle_event_id", event.event_id);
           return new Response("Handler error", { status: 500 });
         }

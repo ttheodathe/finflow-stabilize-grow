@@ -75,6 +75,7 @@ import { Route as AuthenticatedAccountingTrialBalanceRouteImport } from './route
 import { Route as AuthenticatedAccountingLedgerRouteImport } from './routes/_authenticated/accounting.ledger'
 import { Route as AuthenticatedAccountingJournalsRouteImport } from './routes/_authenticated/accounting.journals'
 import { Route as AuthenticatedAccountingChartRouteImport } from './routes/_authenticated/accounting.chart'
+import { Route as ApiPublicPaddleWebhookRouteImport } from './routes/api/public/paddle/webhook'
 import { Route as ApiPublicHooksSyncExternalRouteImport } from './routes/api/public/hooks/sync-external'
 
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
@@ -433,6 +434,11 @@ const AuthenticatedAccountingChartRoute =
     path: '/accounting/chart',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicPaddleWebhookRoute = ApiPublicPaddleWebhookRouteImport.update({
+  id: '/api/public/paddle/webhook',
+  path: '/api/public/paddle/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksSyncExternalRoute =
   ApiPublicHooksSyncExternalRouteImport.update({
     id: '/api/public/hooks/sync-external',
@@ -507,6 +513,7 @@ export interface FileRoutesByFullPath {
   '/sales/payments': typeof AuthenticatedSalesPaymentsRoute
   '/sales/recurring': typeof AuthenticatedSalesRecurringRoute
   '/api/public/hooks/sync-external': typeof ApiPublicHooksSyncExternalRoute
+  '/api/public/paddle/webhook': typeof ApiPublicPaddleWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -575,6 +582,7 @@ export interface FileRoutesByTo {
   '/sales/payments': typeof AuthenticatedSalesPaymentsRoute
   '/sales/recurring': typeof AuthenticatedSalesRecurringRoute
   '/api/public/hooks/sync-external': typeof ApiPublicHooksSyncExternalRoute
+  '/api/public/paddle/webhook': typeof ApiPublicPaddleWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -645,6 +653,7 @@ export interface FileRoutesById {
   '/_authenticated/sales/payments': typeof AuthenticatedSalesPaymentsRoute
   '/_authenticated/sales/recurring': typeof AuthenticatedSalesRecurringRoute
   '/api/public/hooks/sync-external': typeof ApiPublicHooksSyncExternalRoute
+  '/api/public/paddle/webhook': typeof ApiPublicPaddleWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -715,6 +724,7 @@ export interface FileRouteTypes {
     | '/sales/payments'
     | '/sales/recurring'
     | '/api/public/hooks/sync-external'
+    | '/api/public/paddle/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -783,6 +793,7 @@ export interface FileRouteTypes {
     | '/sales/payments'
     | '/sales/recurring'
     | '/api/public/hooks/sync-external'
+    | '/api/public/paddle/webhook'
   id:
     | '__root__'
     | '/'
@@ -852,6 +863,7 @@ export interface FileRouteTypes {
     | '/_authenticated/sales/payments'
     | '/_authenticated/sales/recurring'
     | '/api/public/hooks/sync-external'
+    | '/api/public/paddle/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -881,6 +893,7 @@ export interface RootRouteChildren {
   VerifyEmailRoute: typeof VerifyEmailRoute
   InviteTokenRoute: typeof InviteTokenRoute
   ApiPublicHooksSyncExternalRoute: typeof ApiPublicHooksSyncExternalRoute
+  ApiPublicPaddleWebhookRoute: typeof ApiPublicPaddleWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1347,6 +1360,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAccountingChartRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/paddle/webhook': {
+      id: '/api/public/paddle/webhook'
+      path: '/api/public/paddle/webhook'
+      fullPath: '/api/public/paddle/webhook'
+      preLoaderRoute: typeof ApiPublicPaddleWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/sync-external': {
       id: '/api/public/hooks/sync-external'
       path: '/api/public/hooks/sync-external'
@@ -1485,6 +1505,7 @@ const rootRouteChildren: RootRouteChildren = {
   VerifyEmailRoute: VerifyEmailRoute,
   InviteTokenRoute: InviteTokenRoute,
   ApiPublicHooksSyncExternalRoute: ApiPublicHooksSyncExternalRoute,
+  ApiPublicPaddleWebhookRoute: ApiPublicPaddleWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

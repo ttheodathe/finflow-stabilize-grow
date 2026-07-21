@@ -154,6 +154,8 @@ export const listInvoices = createServerFn({ method: "POST" })
       { headers: { Authorization: `Bearer ${apiKey}` } },
     );
     if (!resp.ok) return { transactions: [] };
-    const json = (await resp.json()) as { data?: Array<Record<string, unknown>> };
-    return { transactions: json.data ?? [] };
+    const json = (await resp.json()) as { data?: unknown[] };
+    // Return as JSON string to preserve arbitrary Paddle payload without
+    // fighting TanStack's serializable-return type inference.
+    return { transactionsJson: JSON.stringify(json.data ?? []) };
   });
