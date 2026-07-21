@@ -141,11 +141,11 @@ export const listInvoices = createServerFn({ method: "POST" })
       .limit(1)
       .maybeSingle();
     const customerId = sub?.paddle_customer_id as string | undefined;
-    if (!customerId) return { transactions: [] as Array<Record<string, unknown>> };
+    if (!customerId) return { transactionsJson: "[]" };
 
     const apiKey = process.env.PADDLE_API_KEY;
     const env = process.env.PADDLE_ENV ?? "sandbox";
-    if (!apiKey) return { transactions: [] };
+    if (!apiKey) return { transactionsJson: "[]" };
     const base =
       env === "sandbox" ? "https://sandbox-api.paddle.com" : "https://api.paddle.com";
 
@@ -153,7 +153,7 @@ export const listInvoices = createServerFn({ method: "POST" })
       `${base}/transactions?customer_id=${encodeURIComponent(customerId)}&per_page=25`,
       { headers: { Authorization: `Bearer ${apiKey}` } },
     );
-    if (!resp.ok) return { transactions: [] };
+    if (!resp.ok) return { transactionsJson: "[]" };
     const json = (await resp.json()) as { data?: unknown[] };
     // Return as JSON string to preserve arbitrary Paddle payload without
     // fighting TanStack's serializable-return type inference.
