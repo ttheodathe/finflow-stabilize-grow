@@ -9,7 +9,7 @@ create table if not exists public.subscriptions (
   paddle_customer_id text,
   paddle_subscription_id text unique,
   price_id text,
-  plan text not null default 'free' check (plan in ('free','pro','business','enterprise')),
+  plan text not null default 'free' check (plan in ('free','professional','business','enterprise')),
   status text not null default 'active',
   billing_cycle text check (billing_cycle in ('monthly','yearly')),
   current_period_start timestamptz,
