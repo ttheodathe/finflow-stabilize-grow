@@ -11,7 +11,7 @@
  * through a server-fn config loader) and re-deploy.
  */
 
-export const PADDLE_ENV: "sandbox" | "production" = "production";
+export const PADDLE_ENV: "sandbox" | "production" = "sandbox";
 
 export const PADDLE_CLIENT_TOKEN = "live_eec1e36af01cc44ad8008a0d1ab";
 
