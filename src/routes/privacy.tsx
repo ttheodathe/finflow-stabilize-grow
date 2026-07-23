@@ -1,4 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
 import { ArrowRight, Database, Eye, Globe, Lock, Mail, ShieldCheck, UserCheck } from "lucide-react";
 
 export const Route = createFileRoute("/privacy")({
@@ -21,6 +23,7 @@ export const Route = createFileRoute("/privacy")({
 function PrivacyPage() {
   return (
     <div className="bg-background">
+      <SiteHeader />
       {/* HERO */}
 
       <section className="border-b">
@@ -498,6 +501,7 @@ function PrivacyPage() {
           </div>
         </div>
       </section>
+      <SiteFooter />
     </div>
   );
 }
