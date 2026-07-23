@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
 
 export const Route = createFileRoute("/testimonials")({
   component: TestimonialsPage,
@@ -67,6 +69,8 @@ function TestimonialsPage() {
 
   return (
     <div className="bg-background">
+      <SiteHeader />
+
       <section className="border-b">
         <div className="container mx-auto max-w-5xl px-6 py-20 text-center">
           <Badge variant="secondary" className="mb-4">
@@ -116,6 +120,8 @@ function TestimonialsPage() {
           )}
         </div>
       </section>
+
+      <SiteFooter />
     </div>
   );
 }
