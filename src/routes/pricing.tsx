@@ -1,4 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
 import {
   ArrowRight,
   BadgeCheck,
@@ -32,6 +34,7 @@ export const Route = createFileRoute("/pricing")({
 function PricingPage() {
   return (
     <div className="bg-background">
+      <SiteHeader />
       {/* HERO */}
 
       <section className="border-b">
@@ -614,6 +617,7 @@ function PricingPage() {
           </div>
         </div>
       </section>
+      <SiteFooter />
     </div>
   );
 }
