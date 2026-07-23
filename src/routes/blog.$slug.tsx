@@ -1,4 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
 import {
   ArrowLeft,
   ArrowRight,
@@ -97,6 +99,7 @@ function BlogArticlePage() {
 
   return (
     <div className="min-h-screen bg-white">
+      <SiteHeader />
       {/* Header */}
       <header className="border-b border-slate-200 bg-gradient-to-b from-slate-50 to-white">
         <div className="mx-auto max-w-4xl px-6 py-16 sm:py-20">
@@ -288,6 +291,7 @@ function BlogArticlePage() {
           </div>
         </div>
       </div>
+      <SiteFooter />
     </div>
   );
 }
