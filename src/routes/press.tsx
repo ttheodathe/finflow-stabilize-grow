@@ -1,4 +1,6 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
+import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
 
 export const Route = createFileRoute("/press")({
   component: PressPage,
@@ -19,6 +21,7 @@ export const Route = createFileRoute("/press")({
 function PressPage() {
   return (
     <main className="min-h-screen bg-background">
+      <SiteHeader />
       {/* Hero */}
       <section className="py-20 text-center">
         <div className="mx-auto max-w-4xl px-6">
@@ -232,6 +235,7 @@ function PressPage() {
           </Link>
         </div>
       </section>
+      <SiteFooter />
     </main>
   );
 }
