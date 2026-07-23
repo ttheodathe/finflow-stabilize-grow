@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
 import { Card, CardContent } from "@/components/ui/card";
 
 export const Route = createFileRoute("/refund")({
@@ -8,6 +10,7 @@ export const Route = createFileRoute("/refund")({
 function RefundPolicyPage() {
   return (
     <div className="container max-w-5xl mx-auto py-12 px-4">
+      <SiteHeader />
       <div className="space-y-10">
 
         <div className="space-y-4">
@@ -270,6 +273,7 @@ function RefundPolicyPage() {
         </Card>
 
       </div>
+      <SiteFooter />
     </div>
   );
 }
