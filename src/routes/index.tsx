@@ -652,6 +652,7 @@ function Footer() {
         { label: "Blog", to: "/blog" },
         { label: "Careers", to: "/careers" },
         { label: "Press", to: "/press" },
+        { label: "Testimonials", "/Testimonials" }
       ],
     },
     {
