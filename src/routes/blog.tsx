@@ -1,4 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
 import { useMemo, useState } from "react";
 import {
   ArrowRight,
@@ -133,6 +135,7 @@ function BlogPage() {
 
   return (
     <div className="min-h-screen bg-white">
+      <SiteHeader />
       {/* Hero */}
       <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-slate-50 to-white">
         <div className="mx-auto max-w-6xl px-6 py-20 sm:py-28">
@@ -519,6 +522,7 @@ function BlogPage() {
           </div>
         </div>
       </section>
+      <SiteFooter />
     </div>
   );
 }
