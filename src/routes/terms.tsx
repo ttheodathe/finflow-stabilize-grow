@@ -1,4 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
 import type { ReactNode } from "react";
 import {
   AlertTriangle,
@@ -560,6 +562,7 @@ const faqs = [
 function TermsPage() {
   return (
     <div className="min-h-screen bg-white">
+      <SiteHeader />
       {/* Hero */}
       <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-slate-50 to-white">
         <div className="mx-auto max-w-6xl px-6 py-20 sm:py-28">
@@ -749,6 +752,7 @@ function TermsPage() {
           </div>
         </div>
       </section>
+      <SiteFooter />
     </div>
   );
 }
