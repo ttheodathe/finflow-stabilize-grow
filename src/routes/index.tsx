@@ -105,7 +105,7 @@ const pricing = [
   },
   {
     name: "Business",
-    price: "$15",
+    price: "$19",
     period: "per month",
     tagline: "For growing teams that need more power",
     features: [
@@ -179,7 +179,7 @@ function Header() {
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-hero shadow-glow">
             <Wallet className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
           </div>
-          <span className="text-lg font-bold tracking-tight">Free Accounting</span>
+          <span className="text-lg font-bold tracking-tight">FinFlow Track</span>
         </Link>
         <nav className="hidden items-center gap-8 md:flex">
           <a
@@ -201,7 +201,7 @@ function Header() {
             Pricing
           </a>
           <a
-            href="audience"
+            href="#audience"
             className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             Who it's for
@@ -310,7 +310,7 @@ function Hero() {
             </Button>
           </div>
           <p className="mt-4 text-xs text-muted-foreground">
-            Join 100,000+ businesses · GDPR-ready · Bank-grade security
+            Join 100,000+ businesses · Ease of Use · Bank-grade security
           </p>
         </div>
 
@@ -484,7 +484,7 @@ function Audience() {
           From solo freelancer to growing NGO
         </h2>
         <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
-          Free Accounting scales with you — whether you're invoicing your first client or running a
+          FinFlow Track scales with you — whether you're invoicing your first client or running a
           multi-country operation.
         </p>
         <div className="mt-10 flex flex-wrap justify-center gap-3">
@@ -603,7 +603,7 @@ function CTA() {
             Run your books in minutes, not hours
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-primary-foreground/90">
-            Join 100,000+ businesses using Free Accounting. No credit card, no limits, free forever.
+            Join 100,000+ businesses using FinFlow Track. No credit card, no limits, free forever.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button
@@ -662,6 +662,7 @@ function Footer() {
         { label: "Contact", to: "/contact" },
         { label: "Privacy", to: "/privacy" },
         { label: "Terms", to: "/terms" },
+        { label: "Refund Policy", to: "/refund" },
       ],
     },
   ];
@@ -675,7 +676,7 @@ function Footer() {
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-hero">
                 <Wallet className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
               </div>
-              <span className="text-lg font-bold tracking-tight">Finflow Tracck</span>
+              <span className="text-lg font-bold tracking-tight">Finflow Track</span>
             </Link>
             <p className="mt-3 max-w-sm text-sm text-muted-foreground">
               100% free accounting software for small businesses worldwide. Built modern, built for
