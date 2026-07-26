@@ -21,9 +21,6 @@ export const POLAR_PRODUCTS: Record
   },
 };
 
-// Polar's free product — mainly useful if you ever route free-tier
-// signups through a Polar checkout too. Not used by the plan-mapping
-// logic below since 'free' is excluded from POLAR_PRODUCTS.
 export const POLAR_FREE_PRODUCT_ID = "a8df20fe-7979-4d74-bec6-48b4e310955b";
 
 export function getPolarProductId(
@@ -37,7 +34,7 @@ export function getPolarProductId(
 export function planFromPolarProductId(
   productId: string,
 ): { plan: PlanKey; cycle: BillingCycle } | null {
-  if (productId === POLAR_FREE_PRODUCT_ID) return null; // handled separately, no plan/cycle upgrade
+  if (productId === POLAR_FREE_PRODUCT_ID) return null;
   for (const plan of Object.keys(POLAR_PRODUCTS) as Array
     keyof typeof POLAR_PRODUCTS
   >) {
