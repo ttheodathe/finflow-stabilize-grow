@@ -18,10 +18,13 @@ export function BillingSettings() {
     enabled: Boolean(companyId),
   });
 
+  const sub = subQuery.data;
+  const hasBillingProvider = Boolean(sub?.paddle_customer_id || sub?.polar_customer_id);
+
   const invoicesQuery = useQuery({
     queryKey: ["billing-invoices", companyId],
     queryFn: () => listInvoices({ data: { companyId: companyId! } }),
-    enabled: Boolean(companyId) && Boolean(subQuery.data?.paddle_customer_id),
+    enabled: Boolean(companyId) && hasBillingProvider,
   });
 
   if (!companyId) {
@@ -40,9 +43,11 @@ export function BillingSettings() {
     );
   }
 
-  const sub = subQuery.data;
   const currentPlan: PlanKey = (sub?.plan as PlanKey | undefined) ?? "free";
   const currentCfg = PLANS[currentPlan];
+  const isPolar = Boolean(sub?.polar_subscription_id);
+  const subscriptionId = sub?.polar_subscription_id ?? sub?.paddle_subscription_id ?? null;
+  const customerId = sub?.polar_customer_id ?? sub?.paddle_customer_id ?? null;
 
   const invoices = (() => {
     const raw = invoicesQuery.data?.transactionsJson;
@@ -55,12 +60,12 @@ export function BillingSettings() {
   })();
 
   async function handleCancel() {
-    if (!sub?.paddle_subscription_id) return;
+    if (!subscriptionId) return;
     if (!confirm("Cancel subscription at end of current billing period?")) return;
     setCanceling(true);
     try {
       await cancelSubscription({
-        data: { subscriptionId: sub.paddle_subscription_id, atPeriodEnd: true },
+        data: { subscriptionId, atPeriodEnd: true },
       });
       toast.success("Subscription will cancel at period end");
       subQuery.refetch();
@@ -114,24 +119,24 @@ export function BillingSettings() {
               </dd>
             </div>
           )}
-          {sub?.paddle_customer_id && (
+          {customerId && (
             <div>
               <dt className="text-gray-500">Customer ID</dt>
               <dd className="mt-0.5 font-mono text-[11px] text-gray-700 break-all">
-                {sub.paddle_customer_id}
+                {customerId}
               </dd>
             </div>
           )}
-          {sub?.paddle_subscription_id && (
+          {subscriptionId && (
             <div>
               <dt className="text-gray-500">Subscription ID</dt>
               <dd className="mt-0.5 font-mono text-[11px] text-gray-700 break-all">
-                {sub.paddle_subscription_id}
+                {subscriptionId}
               </dd>
             </div>
           )}
         </dl>
-        {sub?.paddle_subscription_id && !sub.cancel_at_period_end && (
+        {subscriptionId && !sub?.cancel_at_period_end && (
           <button
             type="button"
             onClick={handleCancel}
@@ -240,19 +245,28 @@ export function BillingSettings() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {invoices.map((tx) => {
+                  // Polar orders: { id, created_at, amount, currency, status }
+                  // Paddle transactions: { id, billed_at, details: { totals }, status, invoice_id }
                   const details = tx.details as
                     | { totals?: { total?: string; currency_code?: string } }
                     | undefined;
+                  const date = (tx.billed_at ?? tx.created_at) as string | undefined;
+                  const amount = isPolar
+                    ? tx.amount != null
+                      ? `${(Number(tx.amount) / 100).toFixed(2)}`
+                      : "—"
+                    : (details?.totals?.total ?? "—");
+                  const currency = isPolar
+                    ? (tx.currency as string | undefined)?.toUpperCase()
+                    : details?.totals?.currency_code;
+
                   return (
                     <tr key={String(tx.id)}>
                       <td className="px-3 py-2 text-gray-700">
-                        {tx.billed_at
-                          ? new Date(String(tx.billed_at)).toLocaleDateString()
-                          : "—"}
+                        {date ? new Date(date).toLocaleDateString() : "—"}
                       </td>
                       <td className="px-3 py-2 text-gray-700">
-                        {details?.totals?.total ?? "—"}{" "}
-                        {details?.totals?.currency_code ?? ""}
+                        {amount} {currency ?? ""}
                       </td>
                       <td className="px-3 py-2 text-gray-700 capitalize">
                         {String(tx.status ?? "—")}
