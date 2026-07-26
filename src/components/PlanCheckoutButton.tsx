@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { openCheckout } from "@/lib/paddle/client";
-import { PLANS, getPriceId, type PlanKey, type BillingCycle } from "@/lib/paddle/config";
+import { PLANS, type PlanKey, type BillingCycle } from "@/lib/paddle/config";
+import { getPolarProductId } from "@/lib/polar/config";
 import { toast } from "sonner";
 
 interface Props {
@@ -10,17 +10,17 @@ interface Props {
   cycle?: BillingCycle;
   className?: string;
   children?: React.ReactNode;
-  /**
-   * When true, redirect anonymous users to /signup?plan=… instead of /auth.
-   * Used from the marketing pricing page.
-   */
   fromMarketing?: boolean;
 }
 
 /**
  * Shared checkout entry-point used by the pricing page, upgrade panel, and
  * onboarding. Handles: enterprise → contact, free → signup/dashboard,
- * pro/business → open Paddle Checkout (or route to auth first if signed out).
+ * pro/business → redirect to Polar-hosted checkout.
+ *
+ * Plan display metadata (name, description, price, features) still comes
+ * from paddle/config.ts — that's just the shared plan catalog, not tied to
+ * a billing provider. Only the actual checkout mechanism is Polar now.
  */
 export function PlanCheckoutButton({
   plan,
@@ -45,7 +45,6 @@ export function PlanCheckoutButton({
       } = await supabase.auth.getUser();
 
       if (!user) {
-        // Send anonymous visitors through signup with the chosen plan preserved.
         if (typeof window !== "undefined") localStorage.setItem("pendingPlan", plan);
         if (fromMarketing) {
           navigate({ to: "/signup", search: { plan } });
@@ -60,9 +59,9 @@ export function PlanCheckoutButton({
         return;
       }
 
-      const priceId = getPriceId(plan, cycle);
-      if (!priceId) {
-        toast.error(`No Paddle price configured for ${cfg.name} (${cycle})`);
+      const productId = getPolarProductId(plan, cycle);
+      if (!productId) {
+        toast.error(`No Polar product configured for ${cfg.name} (${cycle})`);
         return;
       }
 
@@ -75,18 +74,15 @@ export function PlanCheckoutButton({
         return;
       }
 
-      await openCheckout({
-        priceId,
-        customerEmail: user.email ?? undefined,
+      const params = new URLSearchParams({
+        productId,
         companyId,
         userId: user.id,
-        plan,
-        cycle,
       });
+      window.location.href = `/api/public/polar/checkout?${params.toString()}`;
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       toast.error(`Checkout failed: ${msg}`);
-    } finally {
       setLoading(false);
     }
   }
