@@ -13,9 +13,9 @@ export const Route = createFileRoute("/api/public/polar/checkout")({
         if (!productId) return new Response("Missing productId", { status: 400 });
 
         try {
-          const checkout = await polar.checkouts.create({
-            productId,
-            successUrl: `${url.origin}/settings?tab=billing`,
+         const checkout = await polar.checkouts.create({
+      products: [productId],
+      successUrl: `${url.origin}/settings?tab=billing`,
             metadata: { company_id: companyId ?? "", user_id: userId ?? "" },
           });
           return Response.redirect(checkout.url, 302);
