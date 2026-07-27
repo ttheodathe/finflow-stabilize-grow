@@ -63,6 +63,7 @@ export const createFreeSubscription = createServerFn({ method: "POST" })
       .insert({
         company_id: data.companyId,
         owner_id: context.userId,
+        user_id: context.userId,
         plan: "free",
         status: "active",
         billing_cycle: null,
