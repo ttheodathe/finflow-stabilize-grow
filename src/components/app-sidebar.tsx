@@ -1,4 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
+import { UpgradePlanModal } from "@/components/UpgradePlanModal";
 import {
   LayoutDashboard,
   Users,
