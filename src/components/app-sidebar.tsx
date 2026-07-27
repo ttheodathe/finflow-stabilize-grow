@@ -250,34 +250,15 @@ export function AppSidebar() {
     }
   }
 
-  // Demo upgrade flow: cycles to the next tier via the update_own_plan RPC,
-  // which is the only way plan changes are allowed to persist (see the
-  // migration — there's no client-side UPDATE policy on subscriptions).
-  // Replace this with your real Stripe/Flutterwave checkout + webhook once
-  // billing is built; the webhook should call the same RPC (or update the
-  // row directly with the service role).
-  async function handleUpgradeClick() {
-    const currentIndex = PLAN_ORDER.indexOf(planKey as (typeof PLAN_ORDER)[number]);
-    const nextPlan = PLAN_ORDER[currentIndex + 1];
-
-    if (!nextPlan) {
-      toast.info("You're already on the top tier.");
-      return;
-    }
-
-    setUpgrading(true);
-    const { data, error } = await supabase.rpc("update_own_plan", { new_plan: nextPlan });
-    setUpgrading(false);
-
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
+// Real billing lives on the Settings > Billing tab (Polar checkout).
+  // This just routes there instead of faking a plan change.
+  function handleUpgradeClick() {
+    navigate({ to: "/settings", search: { tab: "billing" } });
+  }
     if (data) {
       setSubscription({ plan: data.plan, company_limit: data.company_limit });
       toast.success(`Upgraded to ${PLAN_LABELS[data.plan]}`);
     }
-  }
 
   function switchCompany(id: string) {
     setCurrentCompanyId(id);
