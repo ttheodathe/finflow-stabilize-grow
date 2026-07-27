@@ -156,7 +156,6 @@ const navGroups: NavGroup[] = [
   { label: "Reports", icon: BarChart3, to: "/reports" },
   { label: "Calendar", icon: Calendar, to: "/calendar" },
   { label: "AI Bookkeeper", icon: Sparkles, to: "/ai-bookkeeper" },
-  { label: "Apps", icon: AppWindow, to: "/apps" },
   // Mapped to the existing External Sync route — rename if you want a dedicated /integrations page.
   { label: "Integrations", icon: Plug, to: "/sync" },
   { label: "Team", icon: Users, to: "/team" },
@@ -186,7 +185,6 @@ export function AppSidebar() {
   const [search, setSearch] = useState("");
 
   const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [upgrading, setUpgrading] = useState(false);
 
   const planKey = subscription?.plan ?? "free";
   const planLabel = PLAN_LABELS[planKey] ?? planKey;
@@ -250,15 +248,12 @@ export function AppSidebar() {
     }
   }
 
-// Real billing lives on the Settings > Billing tab (Polar checkout).
-  // This just routes there instead of faking a plan change.
+  // Real billing lives on the Settings > Billing tab (Polar checkout).
+  // This just routes there instead of faking a plan change like the old
+  // update_own_plan demo RPC used to.
   function handleUpgradeClick() {
     navigate({ to: "/settings", search: { tab: "billing" } });
   }
-    if (data) {
-      setSubscription({ plan: data.plan, company_limit: data.company_limit });
-      toast.success(`Upgraded to ${PLAN_LABELS[data.plan]}`);
-    }
 
   function switchCompany(id: string) {
     setCurrentCompanyId(id);
@@ -466,13 +461,8 @@ export function AppSidebar() {
                     {companiesUsed}/{companyLimit === null ? "∞" : companyLimit} companies
                   </p>
                   {planKey !== "enterprise" && (
-                    <Button
-                      size="sm"
-                      className="w-full h-7 text-xs"
-                      disabled={upgrading}
-                      onClick={handleUpgradeClick}
-                    >
-                      {upgrading ? "Upgrading…" : "Upgrade"}
+                    <Button size="sm" className="w-full h-7 text-xs" onClick={handleUpgradeClick}>
+                      Upgrade
                     </Button>
                   )}
                 </>
