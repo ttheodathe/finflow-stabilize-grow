@@ -250,11 +250,10 @@ export function AppSidebar() {
     }
   }
 
-  // Real billing lives on the Settings > Billing tab (Polar checkout).
-  // This just routes there instead of faking a plan change like the old
-  // update_own_plan demo RPC used to.
+// Opens the upgrade modal right here in the sidebar, instead of
+  // navigating to Settings > Billing.
   function handleUpgradeClick() {
-    navigate({ to: "/settings", search: { tab: "billing" } });
+    setUpgradeModalOpen(true);
   }
 
   function switchCompany(id: string) {
