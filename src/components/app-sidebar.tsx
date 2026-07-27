@@ -186,6 +186,7 @@ export function AppSidebar() {
   const [search, setSearch] = useState("");
 
   const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
 
   const planKey = subscription?.plan ?? "free";
   const planLabel = PLAN_LABELS[planKey] ?? planKey;
