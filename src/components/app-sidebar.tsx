@@ -361,6 +361,12 @@ export function AppSidebar() {
           switchCompany(newCompanyId);
         }}
       />
+      
+      <UpgradePlanModal
+        open={upgradeModalOpen}
+        onOpenChange={setUpgradeModalOpen}
+        currentPlan={planKey as PlanKey}
+      />
 
       {/* Search */}
       {!collapsed && (
