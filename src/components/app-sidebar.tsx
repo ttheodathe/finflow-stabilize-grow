@@ -23,6 +23,7 @@ import {
   ChevronsUpDown,
   Check,
   Plus,
+  Receipt,
 } from "lucide-react";
 import {
   Sidebar,
@@ -156,6 +157,16 @@ const navGroups: NavGroup[] = [
     ],
   },
   { label: "Reports", icon: BarChart3, to: "/reports" },
+  {
+    label: "Tax",
+    icon: Receipt,
+    items: [
+      { label: "Dashboard", to: "/tax/dashboard" },
+      { label: "Tax settings", to: "/tax/settings" },
+      { label: "Filing history", to: "/tax/returns" },
+      { label: "Tax calendar", to: "/tax/calendar" },
+    ],
+  },
   { label: "Calendar", icon: Calendar, to: "/calendar" },
   { label: "AI Bookkeeper", icon: Sparkles, to: "/ai-bookkeeper" },
   // Mapped to the existing External Sync route — rename if you want a dedicated /integrations page.
