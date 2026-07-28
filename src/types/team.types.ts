@@ -25,6 +25,10 @@ export type PermissionKey =
   | "reports.view"
   | "inventory.manage"
   | "payroll.manage"
+  | "tax.view"
+  | "tax.manage_settings"
+  | "tax.file"
+  | "tax.manage_payments"
   | (string & {});
 
 export interface Role {
