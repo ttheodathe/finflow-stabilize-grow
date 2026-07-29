@@ -1,246 +1,294 @@
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import { formatCurrency } from "./currencies";
+/**
+ * src/lib/invoice-pdf.ts
+ *
+ * Renders an invoice to a jsPDF document. This module is a pure renderer:
+ *
+ *   NEVER:
+ *     - fetch()
+ *     - FileReader
+ *     - Image()
+ *     - supabase.storage.createSignedUrl()
+ *     - import anything from an "@/integrations/supabase/*" path
+ *
+ *   ONLY:
+ *     - receives a fully-resolved `CompanyLogo | null` (see
+ *       src/lib/company-logo.ts) from its caller
+ *     - lays out text and calls `doc.addImage(...)`
+ *
+ * The caller (src/routes/_authenticated/invoices.tsx) owns resolving the
+ * logo via `getCompanyLogo()` before calling `generateInvoicePdf()`.
+ */
 
-export type PdfCompany = {
-  name?: string | null;
-  logo_url?: string | null;
-  email?: string | null;
-  phone?: string | null;
-  website?: string | null;
-  address?: string | null;
-  city?: string | null;
-  state?: string | null;
-  postal_code?: string | null;
-  country?: string | null;
-  tax_number?: string | null;
+import { jsPDF } from "jspdf";
+import type { CompanyLogo } from "@/lib/company-logo";
+import { renderDocumentHeader, type DocumentHeaderCompany } from "@/lib/pdf/document-header";
+
+// ---------------------------------------------------------------------------
+// Domain types
+// ---------------------------------------------------------------------------
+
+export type InvoiceLineItem = {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  taxRate?: number;
 };
 
-export type PdfCustomer = {
-  name?: string | null;
-  email?: string | null;
+export type InvoiceCompany = DocumentHeaderCompany;
+
+export type InvoiceCustomer = {
+  name: string;
   address?: string | null;
+  email?: string | null;
 };
 
-export type PdfInvoice = {
-  invoice_number: string;
-  issue_date: string;
-  due_date: string | null;
-  status: string;
+export type InvoiceDocument = {
+  invoiceNumber: string;
+  issueDate: string;
+  dueDate?: string | null;
   currency: string;
-  subtotal: number;
-  tax: number;
-  total: number;
+  lineItems: InvoiceLineItem[];
   notes?: string | null;
 };
 
-export type PdfLine = {
-  description: string;
-  quantity: number;
-  unit_price: number;
-  tax_rate: number;
-  tax_name?: string | null;
+export type GenerateInvoicePdfInput = {
+  company: InvoiceCompany;
+  companyLogo: CompanyLogo | null;
+  customer: InvoiceCustomer;
+  invoice: InvoiceDocument;
 };
 
-async function loadImageDataUrl(
-  url: string,
-): Promise<{ dataUrl: string; w: number; h: number } | null> {
+// ---------------------------------------------------------------------------
+// Layout constants
+// ---------------------------------------------------------------------------
+
+const MARGIN_MM = 15;
+const MAX_LOGO_WIDTH_MM = 110;
+const MAX_LOGO_HEIGHT_MM = 60;
+
+const TABLE_ROW_HEIGHT_MM = 7;
+const TABLE_HEADER_HEIGHT_MM = 8;
+
+// ---------------------------------------------------------------------------
+// Structured logging (rendering-stage failures only — networking/validation
+// failures are logged inside company-logo.ts, upstream of this module)
+// ---------------------------------------------------------------------------
+
+function logRenderError(stage: string, payload: Record<string, unknown>, error: unknown): void {
+  // eslint-disable-next-line no-console
+  console.error({
+    scope: "invoice-pdf",
+    stage,
+    ...payload,
+    error: error instanceof Error ? { name: error.name, message: error.message } : String(error),
+    timestamp: new Date().toISOString(),
+  });
+}
+
+function formatCurrency(amount: number, currency: string): string {
   try {
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const blob = await res.blob();
-    const dataUrl: string = await new Promise((resolve, reject) => {
-      const fr = new FileReader();
-      fr.onload = () => resolve(fr.result as string);
-      fr.onerror = reject;
-      fr.readAsDataURL(blob);
-    });
-    const dims: { w: number; h: number } = await new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
-      img.onerror = () => resolve({ w: 0, h: 0 });
-      img.src = dataUrl;
-    });
-    return { dataUrl, w: dims.w, h: dims.h };
-  } catch {
-    return null;
+    return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(amount);
+  } catch (error) {
+    logRenderError("format-currency", { amount, currency }, error);
+    return `${currency} ${amount.toFixed(2)}`;
   }
 }
 
-export async function generateInvoicePdf(opts: {
-  invoice: PdfInvoice;
-  lines: PdfLine[];
-  company: PdfCompany | null;
-  customer: PdfCustomer | null;
-}) {
-  const { invoice, lines, company, customer } = opts;
-  const doc = new jsPDF({ unit: "pt", format: "a4" });
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const margin = 40;
-  let cursorY = margin;
+// ---------------------------------------------------------------------------
+// Section renderers
+// ---------------------------------------------------------------------------
 
-  if (company?.logo_url) {
-    const img = await loadImageDataUrl(company.logo_url);
-    if (img && img.w && img.h) {
-      const maxW = 120,
-        maxH = 60;
-      const ratio = Math.min(maxW / img.w, maxH / img.h);
-      const w = img.w * ratio,
-        h = img.h * ratio;
-      try {
-        doc.addImage(img.dataUrl, "PNG", margin, cursorY, w, h);
-      } catch {}
-    }
-  }
+function renderCustomerBlock(doc: jsPDF, customer: InvoiceCustomer, startY: number): number {
+  let y = startY;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9.5);
+  doc.setTextColor(120, 120, 120);
+  doc.text("BILL TO", MARGIN_MM, y);
+  y += 5.5;
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
-  const rightX = pageWidth - margin;
-  let ry = cursorY;
-  if (company?.name) {
-    doc.text(company.name, rightX, ry, { align: "right" });
-    ry += 14;
-  }
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  const compLines = [
-    company?.address,
-    [company?.city, company?.state, company?.postal_code].filter(Boolean).join(", "),
-    company?.country,
-    company?.email,
-    company?.phone,
-    company?.website,
-    company?.tax_number ? `Tax #: ${company.tax_number}` : null,
-  ].filter((x): x is string => Boolean(x && x.trim()));
-  compLines.forEach((l) => {
-    doc.text(l, rightX, ry, { align: "right" });
-    ry += 12;
-  });
+  doc.setTextColor(20, 20, 20);
+  doc.text(customer.name, MARGIN_MM, y);
+  y += 5.5;
 
-  cursorY = Math.max(cursorY + 70, ry + 10);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9.5);
+  doc.setTextColor(90, 90, 90);
+
+  for (const line of [customer.address, customer.email].filter(
+    (l): l is string => Boolean(l && l.trim().length > 0),
+  )) {
+    doc.text(line, MARGIN_MM, y);
+    y += 5;
+  }
+
+  return y;
+}
+
+function renderInvoiceMetaBlock(doc: jsPDF, invoice: InvoiceDocument, startY: number): void {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const rightX = pageWidth - MARGIN_MM;
+  let y = startY;
+
+  const rows: Array<[string, string]> = [
+    ["Invoice #", invoice.invoiceNumber],
+    ["Issue Date", invoice.issueDate],
+  ];
+  if (invoice.dueDate) {
+    rows.push(["Due Date", invoice.dueDate]);
+  }
+
+  doc.setFontSize(9.5);
+  for (const [label, value] of rows) {
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(120, 120, 120);
+    doc.text(label, rightX - 55, y);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(20, 20, 20);
+    doc.text(value, rightX, y, { align: "right" });
+    y += 5.5;
+  }
+}
+
+function renderLineItemsTable(doc: jsPDF, invoice: InvoiceDocument, startY: number): number {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const tableRight = pageWidth - MARGIN_MM;
+  const colDescX = MARGIN_MM;
+  const colQtyX = tableRight - 85;
+  const colPriceX = tableRight - 55;
+  const colTotalX = tableRight;
+
+  let y = startY;
+
+  doc.setFillColor(245, 246, 248);
+  doc.rect(MARGIN_MM, y, tableRight - MARGIN_MM, TABLE_HEADER_HEIGHT_MM, "F");
 
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(22);
-  doc.text("INVOICE", margin, cursorY);
+  doc.setFontSize(9);
+  doc.setTextColor(100, 100, 100);
+  const headerY = y + TABLE_HEADER_HEIGHT_MM - 2.5;
+  doc.text("DESCRIPTION", colDescX + 2, headerY);
+  doc.text("QTY", colQtyX, headerY, { align: "right" });
+  doc.text("UNIT PRICE", colPriceX, headerY, { align: "right" });
+  doc.text("AMOUNT", colTotalX, headerY, { align: "right" });
+
+  y += TABLE_HEADER_HEIGHT_MM + 5;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9.5);
+  doc.setTextColor(40, 40, 40);
+
+  let subtotal = 0;
+  let taxTotal = 0;
+
+  for (const item of invoice.lineItems) {
+    const lineSubtotal = item.quantity * item.unitPrice;
+    const lineTax = lineSubtotal * ((item.taxRate ?? 0) / 100);
+    subtotal += lineSubtotal;
+    taxTotal += lineTax;
+
+    doc.text(item.description, colDescX, y, { maxWidth: colQtyX - colDescX - 10 });
+    doc.text(String(item.quantity), colQtyX, y, { align: "right" });
+    doc.text(formatCurrency(item.unitPrice, invoice.currency), colPriceX, y, { align: "right" });
+    doc.text(formatCurrency(lineSubtotal, invoice.currency), colTotalX, y, { align: "right" });
+    y += TABLE_ROW_HEIGHT_MM;
+  }
+
+  doc.setDrawColor(225, 225, 225);
+  doc.setLineWidth(0.3);
+  doc.line(MARGIN_MM, y + 1, tableRight, y + 1);
+  y += 7;
+
+  const total = subtotal + taxTotal;
+
+  const totalsRow = (label: string, value: string, bold = false) => {
+    doc.setFont("helvetica", bold ? "bold" : "normal");
+    doc.setFontSize(bold ? 11 : 9.5);
+    doc.setTextColor(bold ? 20 : 90, bold ? 20 : 90, bold ? 20 : 90);
+    doc.text(label, colPriceX, y);
+    doc.text(value, colTotalX, y, { align: "right" });
+    y += bold ? 7 : 5.5;
+  };
+
+  totalsRow("Subtotal", formatCurrency(subtotal, invoice.currency));
+  if (taxTotal > 0) {
+    totalsRow("Tax", formatCurrency(taxTotal, invoice.currency));
+  }
+  totalsRow("Total Due", formatCurrency(total, invoice.currency), true);
+
+  return y;
+}
+
+function renderNotes(doc: jsPDF, notes: string | null | undefined, startY: number): void {
+  if (!notes || notes.trim().length === 0) return;
+
+  let y = startY + 10;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9.5);
+  doc.setTextColor(120, 120, 120);
+  doc.text("NOTES", MARGIN_MM, y);
+  y += 5.5;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9.5);
+  doc.setTextColor(70, 70, 70);
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const wrapped = doc.splitTextToSize(notes, pageWidth - MARGIN_MM * 2);
+  doc.text(wrapped, MARGIN_MM, y);
+}
+
+// ---------------------------------------------------------------------------
+// Public entry point
+// ---------------------------------------------------------------------------
+
+/**
+ * Renders a complete invoice PDF and returns the jsPDF instance. Purely
+ * synchronous layout work — no I/O of any kind.
+ */
+export function generateInvoicePdf(input: GenerateInvoicePdfInput): jsPDF {
+  const { company, companyLogo, customer, invoice } = input;
+
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+
+  let cursorY: number;
+  try {
+    cursorY = renderDocumentHeader(doc, company, companyLogo, {
+      documentTitle: "INVOICE",
+      maxLogoWidth: MAX_LOGO_WIDTH_MM,
+      maxLogoHeight: MAX_LOGO_HEIGHT_MM,
+      marginMm: MARGIN_MM,
+    });
+  } catch (error) {
+    // renderDocumentHeader already falls back to text-only internally on
+    // addImage failures; this catch only guards against a truly unexpected
+    // layout exception so the invoice still renders with a minimal header
+    // rather than throwing away the whole PDF.
+    logRenderError("header", { invoiceNumber: invoice.invoiceNumber }, error);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.text("INVOICE", MARGIN_MM, 25);
+    cursorY = 35;
+  }
+
   cursorY += 8;
 
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  const metaY = cursorY + 16;
-  doc.text(`Invoice #: ${invoice.invoice_number}`, margin, metaY);
-  doc.text(`Issue date: ${invoice.issue_date}`, margin, metaY + 14);
-  if (invoice.due_date) doc.text(`Due date: ${invoice.due_date}`, margin, metaY + 28);
-  doc.text(`Status: ${invoice.status.toUpperCase()}`, rightX, metaY, { align: "right" });
+  const afterCustomerY = renderCustomerBlock(doc, customer, cursorY);
+  renderInvoiceMetaBlock(doc, invoice, cursorY);
 
-  let billY = metaY + 56;
-  doc.setFont("helvetica", "bold");
-  doc.text("Bill to", margin, billY);
-  doc.setFont("helvetica", "normal");
-  billY += 14;
-  if (customer?.name) {
-    doc.text(customer.name, margin, billY);
-    billY += 12;
-  }
-  if (customer?.email) {
-    doc.text(customer.email, margin, billY);
-    billY += 12;
-  }
-  if (customer?.address) {
-    customer.address.split("\n").forEach((l) => {
-      doc.text(l, margin, billY);
-      billY += 12;
-    });
-  }
+  const tableStartY = afterCustomerY + 10;
+  const afterTableY = renderLineItemsTable(doc, invoice, tableStartY);
 
-  const body = lines.map((l) => {
-    const amount = l.quantity * l.unit_price;
-    const withTax = amount + amount * (l.tax_rate / 100);
-    return [
-      l.description || "—",
-      String(l.quantity),
-      formatCurrency(l.unit_price, invoice.currency),
-      `${l.tax_rate || 0}%`,
-      formatCurrency(withTax, invoice.currency),
-    ];
-  });
+  renderNotes(doc, invoice.notes, afterTableY);
 
-  autoTable(doc, {
-    startY: billY + 12,
-    head: [["Description", "Qty", "Unit price", "Tax", "Amount"]],
-    body,
-    styles: { fontSize: 9, cellPadding: 6 },
-    headStyles: { fillColor: [37, 99, 235], textColor: 255 },
-    columnStyles: {
-      1: { halign: "right" },
-      2: { halign: "right" },
-      3: { halign: "right" },
-      4: { halign: "right" },
-    },
-    margin: { left: margin, right: margin },
-  });
+  return doc;
+}
 
-  const endY = (doc as any).lastAutoTable.finalY + 12;
-  const totalsX = pageWidth - margin;
-  const labelX = totalsX - 180;
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-  doc.text("Subtotal", labelX, endY);
-  doc.text(formatCurrency(invoice.subtotal, invoice.currency), totalsX, endY, { align: "right" });
-
-  // Tax breakdown by rate/name
-  const taxGroups = new Map<string, { name: string; rate: number; base: number; tax: number }>();
-  for (const l of lines) {
-    const rate = Number(l.tax_rate) || 0;
-    if (rate <= 0) continue;
-    const name = (l.tax_name && l.tax_name.trim()) || `Tax @ ${rate}%`;
-    const key = `${name}|${rate}`;
-    const base = (Number(l.quantity) || 0) * (Number(l.unit_price) || 0);
-    const tax = base * (rate / 100);
-    const g = taxGroups.get(key) ?? { name, rate, base: 0, tax: 0 };
-    g.base += base;
-    g.tax += tax;
-    taxGroups.set(key, g);
-  }
-
-  let ty = endY + 14;
-  if (taxGroups.size === 0) {
-    doc.text("Tax", labelX, ty);
-    doc.text(formatCurrency(invoice.tax, invoice.currency), totalsX, ty, { align: "right" });
-    ty += 14;
-  } else {
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.text("Tax breakdown", labelX, ty);
-    ty += 12;
-    doc.setFont("helvetica", "normal");
-    for (const g of taxGroups.values()) {
-      const label = `${g.name} (${g.rate}%) on ${formatCurrency(g.base, invoice.currency)}`;
-      const wrapped = doc.splitTextToSize(label, 180);
-      doc.text(wrapped, labelX, ty);
-      doc.text(formatCurrency(g.tax, invoice.currency), totalsX, ty, { align: "right" });
-      ty += 12 * wrapped.length;
-    }
-    doc.setFont("helvetica", "bold");
-    doc.text("Total tax", labelX, ty);
-    doc.text(formatCurrency(invoice.tax, invoice.currency), totalsX, ty, { align: "right" });
-    doc.setFont("helvetica", "normal");
-    ty += 14;
-  }
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.text("Total", labelX, ty + 4);
-  doc.text(formatCurrency(invoice.total, invoice.currency), totalsX, ty + 4, { align: "right" });
-
-  if (invoice.notes) {
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.text("Notes", margin, ty + 40);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    const wrapped = doc.splitTextToSize(invoice.notes, pageWidth - margin * 2);
-    doc.text(wrapped, margin, ty + 54);
-  }
-
-  doc.save(`invoice-${invoice.invoice_number}.pdf`);
+/**
+ * Convenience wrapper matching the common "generate and download" call site.
+ */
+export function downloadInvoicePdf(input: GenerateInvoicePdfInput, filename?: string): void {
+  const doc = generateInvoicePdf(input);
+  const name = filename ?? `invoice-${input.invoice.invoiceNumber}.pdf`;
+  doc.save(name);
 }
