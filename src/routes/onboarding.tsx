@@ -5,12 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CurrencySelect } from "@/components/currency-select";
-import { PLANS, type PlanKey } from "@/components/Subscription_Plans";
+import { PLANS, PLAN_ORDER, type PlanKey, formatPlanPrice, getPriceId } from "@/lib/paddle/config";
 import { toast } from "sonner";
 import { Loader2, Check, ArrowRight, Building2, CreditCard, User } from "lucide-react";
 import { hasCompletedOnboarding } from "@/lib/auth-flow";
 import { openCheckout } from "@/lib/paddle/client";
-import { getPriceId } from "@/lib/paddle/config";
 import { createFreeSubscription } from "@/lib/billing.functions";
 
 export const Route = createFileRoute("/onboarding")({
@@ -324,7 +323,8 @@ function OnboardingPage() {
                 Start on the plan you selected. You can upgrade anytime from settings.
               </p>
               <div className="grid gap-3">
-                {PLANS.filter((p) => !p.comingSoon).map((p) => {
+                {PLAN_ORDER.map((key) => {
+                  const p = PLANS[key];
                   const selected = plan === p.key;
                   return (
                     <button
@@ -343,12 +343,7 @@ function OnboardingPage() {
                           <div className="text-xs text-muted-foreground">{p.description}</div>
                         </div>
                         <div className="text-right">
-                          <div className="font-bold">
-                            {p.priceMonthly === 0 ? "Free" : `$${p.priceMonthly}`}
-                          </div>
-                          {p.priceMonthly > 0 && (
-                            <div className="text-xs text-muted-foreground">/month</div>
-                          )}
+                          <div className="font-bold">{formatPlanPrice(p)}</div>
                         </div>
                       </div>
                     </button>
