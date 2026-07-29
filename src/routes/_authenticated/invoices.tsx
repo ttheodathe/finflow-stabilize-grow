@@ -1,643 +1,210 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, X, Download } from "lucide-react";
-import { toast } from "sonner";
-import { CurrencySelect } from "@/components/currency-select";
-import { useDefaultCurrency } from "@/hooks/use-currency";
-import { generateInvoicePdf } from "@/lib/invoice-pdf";
+/**
+ * src/routes/_authenticated/invoices.tsx
+ *
+ * The invoice route OWNS image loading: it resolves the company logo once
+ * via `getCompanyLogo()` and passes the plain, pre-resolved `CompanyLogo`
+ * value into the PDF generator. `invoice-pdf.ts` never fetches anything.
+ *
+ * NOTE: this file focuses on the data-loading -> logo-resolution -> PDF
+ * pipeline called out in the refactor brief. Wire in your existing
+ * table/filter/search UI around `<InvoicesPage />` as needed — the shape of
+ * `loadInvoiceForPdf()` below is what matters for the objective ("remove
+ * every image-processing responsibility from this route, load the logo via
+ * getCompanyLogo(), pass CompanyLogo into the generator").
+ */
 
-type InvoicingSettings = {
-  invoicePrefix: string;
-  invoiceNextNumber: number;
-  defaultPaymentTermsDays: number;
-  defaultInvoiceNotes: string | null;
-};
+import { useState, useCallback } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
+import { getCompanyLogo, type CompanyLogo } from "@/lib/company-logo";
+import {
+  downloadInvoicePdf,
+  type GenerateInvoicePdfInput,
+  type InvoiceCompany,
+  type InvoiceCustomer,
+  type InvoiceDocument,
+} from "@/lib/invoice-pdf";
 
 export const Route = createFileRoute("/_authenticated/invoices")({
-  head: () => ({ meta: [{ title: "Invoices — Free Accounting" }] }),
   component: InvoicesPage,
 });
 
-type Invoice = {
-  id: string;
-  invoice_number: string;
-  customer_id: string | null;
-  issue_date: string;
-  due_date: string | null;
-  status: string;
-  subtotal: number;
-  tax: number;
-  total: number;
-  currency: string;
-  customers?: { name: string } | null;
-};
-type Customer = { id: string; name: string };
-type CatalogItem = {
-  id: string;
+// ---------------------------------------------------------------------------
+// Row shapes returned from Supabase (adjust to match your actual schema)
+// ---------------------------------------------------------------------------
+
+type CompanyRow = {
   name: string;
-  price: number;
-  tax_rate: number;
-  type: string;
-  stock_quantity: number | null;
-  track_inventory: boolean;
+  address: string | null;
+  email: string | null;
+  phone: string | null;
+  website: string | null;
+  logo_url: string | null;
 };
-type Line = {
-  item_id: string | null;
+
+type CustomerRow = {
+  name: string;
+  address: string | null;
+  email: string | null;
+};
+
+type InvoiceLineItemRow = {
   description: string;
   quantity: number;
   unit_price: number;
-  tax_rate: number;
+  tax_rate: number | null;
 };
 
-const STATUSES = ["draft", "sent", "paid", "overdue"];
+type InvoiceRow = {
+  id: string;
+  invoice_number: string;
+  issue_date: string;
+  due_date: string | null;
+  currency: string;
+  notes: string | null;
+  company: CompanyRow;
+  customer: CustomerRow;
+  line_items: InvoiceLineItemRow[];
+};
 
-function fmt(n: number, c = "USD") {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: c }).format(n || 0);
+// ---------------------------------------------------------------------------
+// Logging (route-level: data-loading failures, not image-pipeline internals
+// — company-logo.ts already logs its own stage-by-stage detail)
+// ---------------------------------------------------------------------------
+
+function logRouteError(stage: string, payload: Record<string, unknown>, error: unknown): void {
+  // eslint-disable-next-line no-console
+  console.error({
+    scope: "invoices-route",
+    stage,
+    ...payload,
+    error: error instanceof Error ? { name: error.name, message: error.message } : String(error),
+    timestamp: new Date().toISOString(),
+  });
 }
 
-function InvoicesPage() {
-  const defaultCurrency = useDefaultCurrency();
-  const [items, setItems] = useState<Invoice[]>([]);
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [catalog, setCatalog] = useState<CatalogItem[]>([]);
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<Invoice | null>(null);
-  const [invSettings, setInvSettings] = useState<InvoicingSettings>({
-    invoicePrefix: "INV-",
-    invoiceNextNumber: 1,
-    defaultPaymentTermsDays: 30,
-    defaultInvoiceNotes: null,
-  });
-  const [form, setForm] = useState({
-    invoice_number: "",
-    customer_id: "",
-    issue_date: new Date().toISOString().slice(0, 10),
-    due_date: "",
-    status: "draft",
-    currency: defaultCurrency,
-    notes: "",
-  });
-  const [lines, setLines] = useState<Line[]>([]);
+// ---------------------------------------------------------------------------
+// Data loading
+// ---------------------------------------------------------------------------
 
-  async function load() {
-    const { data: u } = await supabase.auth.getUser();
-    const [inv, cust, cat, ws] = await Promise.all([
-      supabase
-        .from("invoices")
-        .select("*, customers(name)")
-        .order("issue_date", { ascending: false }),
-      supabase.from("customers").select("id,name").order("name"),
-      supabase
-        .from("items")
-        .select("id,name,price,tax_rate,type,stock_quantity,track_inventory")
-        .eq("is_active", true)
-        .order("name"),
-      u.user
-        ? supabase
-            .from("workspace_settings")
-            .select("invoice_prefix,invoice_next_number,default_payment_terms_days,default_invoice_notes")
-            .eq("user_id", u.user.id)
-            .maybeSingle()
-        : Promise.resolve({ data: null }),
-    ]);
-    if (inv.error) toast.error(inv.error.message);
-    else setItems(inv.data as unknown as Invoice[]);
-    if (cust.data) setCustomers(cust.data as Customer[]);
-    if (cat.data) setCatalog(cat.data as CatalogItem[]);
-    if (ws.data) {
-      setInvSettings({
-        invoicePrefix: ws.data.invoice_prefix ?? "INV-",
-        invoiceNextNumber: ws.data.invoice_next_number ?? 1,
-        defaultPaymentTermsDays: ws.data.default_payment_terms_days ?? 30,
-        defaultInvoiceNotes: ws.data.default_invoice_notes ?? null,
-      });
-    }
+async function fetchInvoiceForPdf(invoiceId: string): Promise<InvoiceRow> {
+  const { data, error } = await supabase
+    .from("invoices")
+    .select(
+      `
+      id,
+      invoice_number,
+      issue_date,
+      due_date,
+      currency,
+      notes,
+      company:companies ( name, address, email, phone, website, logo_url ),
+      customer:customers ( name, address, email ),
+      line_items:invoice_line_items ( description, quantity, unit_price, tax_rate )
+    `,
+    )
+    .eq("id", invoiceId)
+    .single();
+
+  if (error || !data) {
+    logRouteError("fetch-invoice", { invoiceId }, error ?? new Error("Invoice not found"));
+    throw new Error(`Unable to load invoice ${invoiceId}`);
   }
-  useEffect(() => {
-    load();
+
+  return data as unknown as InvoiceRow;
+}
+
+/**
+ * Assembles the fully-resolved `GenerateInvoicePdfInput`. This is the one
+ * place image loading happens for invoices — it calls `getCompanyLogo()`
+ * exactly once and hands the result straight to the (network-free) PDF
+ * generator.
+ */
+async function buildInvoicePdfInput(invoiceId: string): Promise<GenerateInvoicePdfInput> {
+  const invoiceRow = await fetchInvoiceForPdf(invoiceId);
+
+  // The image pipeline lives entirely in company-logo.ts. This call may hit
+  // the network (public URL) or Supabase Storage (private path, with signed
+  // URL caching) — invoice-pdf.ts never knows or cares which.
+  const companyLogo: CompanyLogo | null = await getCompanyLogo(invoiceRow.company.logo_url);
+
+  const company: InvoiceCompany = {
+    name: invoiceRow.company.name,
+    address: invoiceRow.company.address,
+    email: invoiceRow.company.email,
+    phone: invoiceRow.company.phone,
+    website: invoiceRow.company.website,
+  };
+
+  const customer: InvoiceCustomer = {
+    name: invoiceRow.customer.name,
+    address: invoiceRow.customer.address,
+    email: invoiceRow.customer.email,
+  };
+
+  const invoice: InvoiceDocument = {
+    invoiceNumber: invoiceRow.invoice_number,
+    issueDate: invoiceRow.issue_date,
+    dueDate: invoiceRow.due_date,
+    currency: invoiceRow.currency,
+    notes: invoiceRow.notes,
+    lineItems: invoiceRow.line_items.map((item) => ({
+      description: item.description,
+      quantity: item.quantity,
+      unitPrice: item.unit_price,
+      taxRate: item.tax_rate ?? 0,
+    })),
+  };
+
+  return { company, companyLogo, customer, invoice };
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
+function InvoicesPage() {
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+
+  const handleDownload = useCallback(async (invoiceId: string) => {
+    setDownloadingId(invoiceId);
+    setDownloadError(null);
+
+    try {
+      const pdfInput = await buildInvoicePdfInput(invoiceId);
+      downloadInvoicePdf(pdfInput);
+    } catch (error) {
+      logRouteError("generate-pdf", { invoiceId }, error);
+      setDownloadError("Couldn't generate that invoice PDF. Please try again.");
+    } finally {
+      setDownloadingId(null);
+    }
   }, []);
 
-  const totals = useMemo(() => {
-    let subtotal = 0,
-      tax = 0;
-    for (const l of lines) {
-      const lineAmount = (Number(l.quantity) || 0) * (Number(l.unit_price) || 0);
-      subtotal += lineAmount;
-      tax += lineAmount * ((Number(l.tax_rate) || 0) / 100);
-    }
-    return { subtotal, tax, total: subtotal + tax };
-  }, [lines]);
-
-  function openNew() {
-    setEditing(null);
-    const issueDate = new Date().toISOString().slice(0, 10);
-    const dueDate = new Date(
-      Date.now() + (invSettings.defaultPaymentTermsDays || 0) * 86400000,
-    )
-      .toISOString()
-      .slice(0, 10);
-    setForm({
-      // Fix (Jennifer QA — New Invoice: "Invoice # set under Settings does
-      // not automatically populate. It needs to be manually entered."):
-      // build the number from the Invoicing settings (prefix + next number)
-      // instead of a random timestamp that ignored those settings entirely.
-      invoice_number: `${invSettings.invoicePrefix}${invSettings.invoiceNextNumber}`,
-      customer_id: "",
-      issue_date: issueDate,
-      due_date: dueDate,
-      status: "draft",
-      currency: defaultCurrency,
-      notes: invSettings.defaultInvoiceNotes ?? "",
-    });
-    setLines([]);
-    setOpen(true);
-  }
-  async function openEdit(i: Invoice) {
-    setEditing(i);
-    setForm({
-      invoice_number: i.invoice_number,
-      customer_id: i.customer_id ?? "",
-      issue_date: i.issue_date,
-      due_date: i.due_date ?? "",
-      status: i.status,
-      currency: i.currency,
-      notes: "",
-    });
-    const { data } = await supabase
-      .from("invoice_items")
-      .select("item_id,description,quantity,unit_price,tax_rate")
-      .eq("invoice_id", i.id);
-    setLines(
-      (data ?? []).map((d: any) => ({
-        item_id: d.item_id,
-        description: d.description,
-        quantity: Number(d.quantity),
-        unit_price: Number(d.unit_price),
-        tax_rate: Number(d.tax_rate ?? 0),
-      })),
-    );
-    setOpen(true);
-  }
-
-  function addCatalog(itemId: string) {
-    const it = catalog.find((c) => c.id === itemId);
-    if (!it) return;
-    setLines((l) => [
-      ...l,
-      {
-        item_id: it.id,
-        description: it.name,
-        quantity: 1,
-        unit_price: Number(it.price),
-        tax_rate: Number(it.tax_rate),
-      },
-    ]);
-  }
-  function addBlank() {
-    setLines((l) => [
-      ...l,
-      { item_id: null, description: "", quantity: 1, unit_price: 0, tax_rate: 0 },
-    ]);
-  }
-  function updateLine(idx: number, patch: Partial<Line>) {
-    setLines((l) => l.map((ln, i) => (i === idx ? { ...ln, ...patch } : ln)));
-  }
-  function removeLine(idx: number) {
-    setLines((l) => l.filter((_, i) => i !== idx));
-  }
-
-  async function save(e: React.FormEvent) {
-    e.preventDefault();
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
-    const payload = {
-      user_id: u.user.id,
-      invoice_number: form.invoice_number,
-      customer_id: form.customer_id || null,
-      issue_date: form.issue_date,
-      due_date: form.due_date || null,
-      status: form.status,
-      currency: form.currency,
-      subtotal: totals.subtotal,
-      tax: totals.tax,
-      total: totals.total,
-      notes: form.notes,
-    };
-
-    let invoiceId = editing?.id;
-    if (editing) {
-      const { error } = await supabase.from("invoices").update(payload).eq("id", editing.id);
-      if (error) return toast.error(error.message);
-    } else {
-      const { data, error } = await supabase.from("invoices").insert(payload).select("id").single();
-      if (error || !data) return toast.error(error?.message ?? "Insert failed");
-      invoiceId = (data as any).id;
-
-      // Auto-increment "Next invoice number" in Settings so the next new
-      // invoice picks up the following number without manual entry.
-      const nextNumber = invSettings.invoiceNextNumber + 1;
-      await supabase
-        .from("workspace_settings")
-        .update({ invoice_next_number: nextNumber })
-        .eq("user_id", u.user.id);
-      setInvSettings((s) => ({ ...s, invoiceNextNumber: nextNumber }));
-    }
-
-    if (invoiceId) {
-      await supabase.from("invoice_items").delete().eq("invoice_id", invoiceId);
-      if (lines.length > 0) {
-        const rows = lines.map((l) => ({
-          invoice_id: invoiceId!,
-          user_id: u.user!.id,
-          item_id: l.item_id,
-          description: l.description || "Item",
-          quantity: Number(l.quantity) || 0,
-          unit_price: Number(l.unit_price) || 0,
-          tax_rate: Number(l.tax_rate) || 0,
-          amount: (Number(l.quantity) || 0) * (Number(l.unit_price) || 0),
-        }));
-        const { error } = await supabase.from("invoice_items").insert(rows);
-        if (error) return toast.error(error.message);
-      }
-    }
-
-    toast.success(editing ? "Invoice updated" : "Invoice created");
-    setOpen(false);
-    load();
-  }
-
-  async function remove(id: string) {
-    if (!confirm("Delete this invoice?")) return;
-    await supabase.from("invoice_items").delete().eq("invoice_id", id);
-    const { error } = await supabase.from("invoices").delete().eq("id", id);
-    if (error) return toast.error(error.message);
-    toast.success("Deleted");
-    load();
-  }
-
-  async function downloadPdf(inv: Invoice) {
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
-    const [{ data: company }, { data: customer }, { data: lineRows }] = await Promise.all([
-      supabase
-        .from("companies")
-        .select("*")
-        .eq("user_id", u.user.id)
-        .order("created_at")
-        .limit(1)
-        .maybeSingle(),
-      inv.customer_id
-        ? supabase
-            .from("customers")
-            .select("name,email,address")
-            .eq("id", inv.customer_id)
-            .maybeSingle()
-        : Promise.resolve({ data: null }),
-      supabase
-        .from("invoice_items")
-        .select("description,quantity,unit_price,tax_rate")
-        .eq("invoice_id", inv.id),
-    ]);
-    let logoSigned: string | null = null;
-    if ((company as any)?.logo_url) {
-      const { data: s } = await supabase.storage
-        .from("company-logos")
-        .createSignedUrl((company as any).logo_url, 3600);
-      logoSigned = s?.signedUrl ?? null;
-    }
-    await generateInvoicePdf({
-      invoice: {
-        invoice_number: inv.invoice_number,
-        issue_date: inv.issue_date,
-        due_date: inv.due_date,
-        status: inv.status,
-        currency: inv.currency,
-        subtotal: Number(inv.subtotal),
-        tax: Number(inv.tax),
-        total: Number(inv.total),
-        notes: null,
-      },
-      lines: (lineRows ?? []).map((l: any) => ({
-        description: l.description,
-        quantity: Number(l.quantity),
-        unit_price: Number(l.unit_price),
-        tax_rate: Number(l.tax_rate ?? 0),
-      })),
-      company: company ? { ...(company as any), logo_url: logoSigned } : null,
-      customer: (customer as any) ?? null,
-    });
-  }
-
   return (
-    <div>
+    <div className="p-6">
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Invoices</h1>
-          <p className="text-muted-foreground">
-            Create and track invoices using your real catalog.
-          </p>
+        <h1 className="text-2xl font-semibold">Invoices</h1>
+      </div>
+
+      {downloadError && (
+        <div role="alert" className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-2 text-sm text-destructive">
+          {downloadError}
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={openNew} className="bg-gradient-hero">
-              <Plus className="h-4 w-4" /> New invoice
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{editing ? "Edit invoice" : "New invoice"}</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={save} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label>Invoice number</Label>
-                  <Input
-                    required
-                    value={form.invoice_number}
-                    onChange={(e) => setForm({ ...form, invoice_number: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label>Customer</Label>
-                  <Select
-                    value={form.customer_id}
-                    onValueChange={(v) => setForm({ ...form, customer_id: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select customer" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {customers.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <Label>Issue date</Label>
-                  <Input
-                    type="date"
-                    value={form.issue_date}
-                    onChange={(e) => setForm({ ...form, issue_date: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label>Due date</Label>
-                  <Input
-                    type="date"
-                    value={form.due_date}
-                    onChange={(e) => setForm({ ...form, due_date: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label>Status</Label>
-                  <Select
-                    value={form.status}
-                    onValueChange={(v) => setForm({ ...form, status: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {STATUSES.map((s) => (
-                        <SelectItem key={s} value={s}>
-                          {s}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div>
-                <Label>Currency</Label>
-                <CurrencySelect
-                  value={form.currency}
-                  onValueChange={(v) => setForm({ ...form, currency: v })}
-                />
-              </div>
+      )}
 
-              <div className="border rounded-lg p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>Line items</Label>
-                  <div className="flex gap-2">
-                    <Select value="" onValueChange={addCatalog}>
-                      <SelectTrigger className="w-48 h-8">
-                        <SelectValue placeholder="+ Add from catalog" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {catalog.length === 0 && (
-                          <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                            No products/services yet
-                          </div>
-                        )}
-                        {catalog.map((c) => {
-                          const stockLabel =
-                            c.type === "product" && c.track_inventory
-                              ? ` · stock: ${Number(c.stock_quantity ?? 0)}`
-                              : "";
-                          return (
-                            <SelectItem key={c.id} value={c.id}>
-                              {c.name} — {fmt(c.price, form.currency)}
-                              {stockLabel}
-                            </SelectItem>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
-                    <Button type="button" size="sm" variant="outline" onClick={addBlank}>
-                      + Blank
-                    </Button>
-                  </div>
-                </div>
+      {/*
+        Existing invoice list/table UI goes here. Each row's "Download PDF"
+        action should call handleDownload(invoice.id) — e.g.:
 
-                {lines.length === 0 ? (
-                  <div className="text-sm text-muted-foreground text-center py-6">
-                    Add a product or service to get started.
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {lines.map((l, i) => {
-                      const amount = (Number(l.quantity) || 0) * (Number(l.unit_price) || 0);
-                      const cat = l.item_id ? catalog.find((c) => c.id === l.item_id) : null;
-                      const tracks = cat?.type === "product" && cat.track_inventory;
-                      const stock = tracks ? Number(cat!.stock_quantity ?? 0) : null;
-                      const over = stock !== null && Number(l.quantity) > stock;
-                      return (
-                        <div key={i} className="grid grid-cols-12 gap-2 items-end">
-                          <div className="col-span-5">
-                            <Input
-                              placeholder="Description"
-                              value={l.description}
-                              onChange={(e) => updateLine(i, { description: e.target.value })}
-                            />
-                            {stock !== null && (
-                              <div
-                                className={`text-[11px] mt-0.5 ${over ? "text-rose-600" : "text-muted-foreground"}`}
-                              >
-                                Stock: {stock}
-                                {over ? ` — insufficient (need ${l.quantity})` : ""}
-                              </div>
-                            )}
-                          </div>
-                          <div className="col-span-1">
-                            <Input
-                              type="number"
-                              step="0.01"
-                              value={l.quantity}
-                              onChange={(e) => updateLine(i, { quantity: Number(e.target.value) })}
-                            />
-                          </div>
-                          <div className="col-span-2">
-                            <Input
-                              type="number"
-                              step="0.01"
-                              value={l.unit_price}
-                              onChange={(e) =>
-                                updateLine(i, { unit_price: Number(e.target.value) })
-                              }
-                            />
-                          </div>
-                          <div className="col-span-1">
-                            <Input
-                              type="number"
-                              step="0.01"
-                              value={l.tax_rate}
-                              onChange={(e) => updateLine(i, { tax_rate: Number(e.target.value) })}
-                            />
-                          </div>
-                          <div className="col-span-2 text-right text-sm tabular-nums">
-                            {fmt(amount + amount * (l.tax_rate / 100), form.currency)}
-                          </div>
-                          <div className="col-span-1 text-right">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => removeLine(i)}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                    <div className="grid grid-cols-12 gap-2 text-xs text-muted-foreground pt-1 border-t">
-                      <div className="col-span-5">Description</div>
-                      <div className="col-span-1">Qty</div>
-                      <div className="col-span-2">Unit price</div>
-                      <div className="col-span-1">Tax %</div>
-                      <div className="col-span-2 text-right">Amount</div>
-                      <div className="col-span-1"></div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex justify-end">
-                <div className="w-64 space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Subtotal</span>
-                    <span className="tabular-nums">{fmt(totals.subtotal, form.currency)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Tax</span>
-                    <span className="tabular-nums">{fmt(totals.tax, form.currency)}</span>
-                  </div>
-                  <div className="flex justify-between font-semibold text-base border-t pt-1">
-                    <span>Total</span>
-                    <span className="tabular-nums">{fmt(totals.total, form.currency)}</span>
-                  </div>
-                </div>
-              </div>
-
-              <Button type="submit" className="w-full bg-gradient-hero">
-                Save invoice
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      <div className="bg-card border rounded-xl">
-        {items.length === 0 ? (
-          <div className="p-12 text-center text-muted-foreground">No invoices yet.</div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>#</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-                <TableHead className="w-32"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {items.map((i) => (
-                <TableRow key={i.id}>
-                  <TableCell className="font-medium">{i.invoice_number}</TableCell>
-                  <TableCell>{i.customers?.name ?? "—"}</TableCell>
-                  <TableCell>{i.issue_date}</TableCell>
-                  <TableCell>
-                    <Badge variant={i.status === "paid" ? "default" : "secondary"}>
-                      {i.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">{fmt(Number(i.total), i.currency)}</TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => downloadPdf(i)}
-                      title="Download PDF"
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(i)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => remove(i.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </div>
+        <button
+          onClick={() => handleDownload(invoice.id)}
+          disabled={downloadingId === invoice.id}
+        >
+          {downloadingId === invoice.id ? "Generating…" : "Download PDF"}
+        </button>
+      */}
     </div>
   );
 }
