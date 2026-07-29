@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { setDefaultCurrency, setDefaultDateFormat } from "@/hooks/use-currency";
 
 export interface WorkspaceSettings {
   userId: string;
@@ -163,6 +164,14 @@ export function useSettings(supabase: SupabaseClient, userId: string | null): Us
       }
 
       setSettings(fromRow(data));
+
+      // Fix (Jennifer QA — currency/date format "does not change even after
+      // updating the Settings"): push the new values into the shared cache
+      // immediately so every open screen (invoices, journal entries,
+      // expenses, reports, etc.) reflects the change without a reload.
+      if (patch.currency) setDefaultCurrency(patch.currency);
+      if (patch.dateFormat) setDefaultDateFormat(patch.dateFormat);
+
       return { success: true };
     },
     [supabase, userId],
