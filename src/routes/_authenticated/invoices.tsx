@@ -33,6 +33,13 @@ import { CurrencySelect } from "@/components/currency-select";
 import { useDefaultCurrency } from "@/hooks/use-currency";
 import { generateInvoicePdf } from "@/lib/invoice-pdf";
 
+type InvoicingSettings = {
+  invoicePrefix: string;
+  invoiceNextNumber: number;
+  defaultPaymentTermsDays: number;
+  defaultInvoiceNotes: string | null;
+};
+
 export const Route = createFileRoute("/_authenticated/invoices")({
   head: () => ({ meta: [{ title: "Invoices — Free Accounting" }] }),
   component: InvoicesPage,
@@ -82,6 +89,12 @@ function InvoicesPage() {
   const [catalog, setCatalog] = useState<CatalogItem[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Invoice | null>(null);
+  const [invSettings, setInvSettings] = useState<InvoicingSettings>({
+    invoicePrefix: "INV-",
+    invoiceNextNumber: 1,
+    defaultPaymentTermsDays: 30,
+    defaultInvoiceNotes: null,
+  });
   const [form, setForm] = useState({
     invoice_number: "",
     customer_id: "",
@@ -94,7 +107,8 @@ function InvoicesPage() {
   const [lines, setLines] = useState<Line[]>([]);
 
   async function load() {
-    const [inv, cust, cat] = await Promise.all([
+    const { data: u } = await supabase.auth.getUser();
+    const [inv, cust, cat, ws] = await Promise.all([
       supabase
         .from("invoices")
         .select("*, customers(name)")
@@ -105,11 +119,26 @@ function InvoicesPage() {
         .select("id,name,price,tax_rate,type,stock_quantity,track_inventory")
         .eq("is_active", true)
         .order("name"),
+      u.user
+        ? supabase
+            .from("workspace_settings")
+            .select("invoice_prefix,invoice_next_number,default_payment_terms_days,default_invoice_notes")
+            .eq("user_id", u.user.id)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
     ]);
     if (inv.error) toast.error(inv.error.message);
     else setItems(inv.data as unknown as Invoice[]);
     if (cust.data) setCustomers(cust.data as Customer[]);
     if (cat.data) setCatalog(cat.data as CatalogItem[]);
+    if (ws.data) {
+      setInvSettings({
+        invoicePrefix: ws.data.invoice_prefix ?? "INV-",
+        invoiceNextNumber: ws.data.invoice_next_number ?? 1,
+        defaultPaymentTermsDays: ws.data.default_payment_terms_days ?? 30,
+        defaultInvoiceNotes: ws.data.default_invoice_notes ?? null,
+      });
+    }
   }
   useEffect(() => {
     load();
@@ -128,14 +157,24 @@ function InvoicesPage() {
 
   function openNew() {
     setEditing(null);
+    const issueDate = new Date().toISOString().slice(0, 10);
+    const dueDate = new Date(
+      Date.now() + (invSettings.defaultPaymentTermsDays || 0) * 86400000,
+    )
+      .toISOString()
+      .slice(0, 10);
     setForm({
-      invoice_number: `INV-${Date.now().toString().slice(-6)}`,
+      // Fix (Jennifer QA — New Invoice: "Invoice # set under Settings does
+      // not automatically populate. It needs to be manually entered."):
+      // build the number from the Invoicing settings (prefix + next number)
+      // instead of a random timestamp that ignored those settings entirely.
+      invoice_number: `${invSettings.invoicePrefix}${invSettings.invoiceNextNumber}`,
       customer_id: "",
-      issue_date: new Date().toISOString().slice(0, 10),
-      due_date: "",
+      issue_date: issueDate,
+      due_date: dueDate,
       status: "draft",
       currency: defaultCurrency,
-      notes: "",
+      notes: invSettings.defaultInvoiceNotes ?? "",
     });
     setLines([]);
     setOpen(true);
@@ -220,6 +259,15 @@ function InvoicesPage() {
       const { data, error } = await supabase.from("invoices").insert(payload).select("id").single();
       if (error || !data) return toast.error(error?.message ?? "Insert failed");
       invoiceId = (data as any).id;
+
+      // Auto-increment "Next invoice number" in Settings so the next new
+      // invoice picks up the following number without manual entry.
+      const nextNumber = invSettings.invoiceNextNumber + 1;
+      await supabase
+        .from("workspace_settings")
+        .update({ invoice_next_number: nextNumber })
+        .eq("user_id", u.user.id);
+      setInvSettings((s) => ({ ...s, invoiceNextNumber: nextNumber }));
     }
 
     if (invoiceId) {
