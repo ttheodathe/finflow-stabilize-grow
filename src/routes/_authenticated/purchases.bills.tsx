@@ -138,7 +138,6 @@ function BillsPage() {
       notes: "",
     });
     setLines([{ ...emptyLine, account_id: expenseAccounts[0]?.id ?? "" }]);
-    setOpen(true);
   }
   function pickVendor(id: string) {
     const v = vendors.find((x) => x.id === id);
@@ -258,9 +257,21 @@ function BillsPage() {
             Vendor bills, due dates, and payments. Ledger updates automatically.
           </p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog
+          open={open}
+          onOpenChange={(o) => {
+            // Fix (Jennifer QA — Bills: "+ New Bill- not clickable"): drive
+            // dialog open state from a single source of truth
+            // (onOpenChange) instead of relying on both Radix's internal
+            // trigger toggle AND a separate onClick handler racing each
+            // other. openNew() now runs from this single callback whenever
+            // the dialog is being opened.
+            if (o) openNew();
+            setOpen(o);
+          }}
+        >
           <DialogTrigger asChild>
-            <Button onClick={openNew} className="bg-gradient-hero">
+            <Button type="button" className="bg-gradient-hero">
               <Plus className="h-4 w-4" /> New bill
             </Button>
           </DialogTrigger>
