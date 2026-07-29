@@ -68,8 +68,46 @@ const emptyLine: Line = {
   tax_rate: 0,
   account_id: "",
 };
-const fmt = (n: number, c = "USD") =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: c }).format(n || 0);
+
+// Fix (currency field crash): the previous free-text currency <Input>
+// let partial/invalid ISO codes (e.g. "U", "US", "", "EU") reach
+// Intl.NumberFormat, which throws a RangeError on an invalid currency
+// code. Because the totals block re-rendered fmt() on every keystroke,
+// that throw happened mid-render with no error boundary, which made the
+// field look like it "wasn't accepting" changes. Switching to a
+// constrained Select removes the possibility of an invalid intermediate
+// value, and fmt() below is also hardened as a defensive fallback.
+const CURRENCIES = [
+  "USD",
+  "EUR",
+  "GBP",
+  "CAD",
+  "AUD",
+  "JPY",
+  "CHF",
+  "CNY",
+  "INR",
+  "NGN",
+  "ZAR",
+  "KES",
+  "RWF",
+];
+
+const fmt = (n: number, c = "USD") => {
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: c || "USD",
+    }).format(n || 0);
+  } catch {
+    // Fallback if an invalid/unsupported currency code ever slips through
+    // (e.g. legacy data saved before this fix).
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(n || 0);
+  }
+};
 
 function BillsPage() {
   const [bills, setBills] = useState<Bill[]>([]);
@@ -329,10 +367,25 @@ function BillsPage() {
                 </div>
                 <div>
                   <Label>Currency</Label>
-                  <Input
+                  {/* Fix: was a free-text Input that allowed invalid/partial
+                      ISO codes through to Intl.NumberFormat, which threw
+                      mid-render and made the field appear unresponsive.
+                      Constrained to a Select of known currency codes. */}
+                  <Select
                     value={form.currency}
-                    onChange={(e) => setForm({ ...form, currency: e.target.value.toUpperCase() })}
-                  />
+                    onValueChange={(v) => setForm({ ...form, currency: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Currency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CURRENCIES.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
