@@ -320,7 +320,7 @@ export function AppSidebar() {
             FF
           </div>
           {!collapsed && (
-            <span className="font-bold text-base gradient-text">FreeFlow Accounts</span>
+            <span className="font-bold text-base gradient-text">FinFlow Track</span>
           )}
         </Link>
       </SidebarHeader>
