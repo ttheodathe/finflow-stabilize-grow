@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
-import { useDefaultCurrency } from "@/hooks/use-currency";
+import { useDefaultCurrency, useDateFormat, formatDate } from "@/hooks/use-currency";
 import { formatCurrency } from "@/lib/currencies";
 
 export const Route = createFileRoute("/_authenticated/accounting/journals")({
@@ -47,8 +47,23 @@ type Entry = {
   }[];
 };
 
+// Fix (Jennifer QA — Journal Entry: "The Reference Number does not
+// auto-increment to the next sequence and must be entered manually"):
+// derive the next sequential reference from the highest numbered
+// "JE-######" reference already used, so a sensible default is prefilled
+// (still editable) instead of forcing manual entry every time.
+function nextJournalReference(entries: Entry[]): string {
+  let max = 0;
+  for (const e of entries) {
+    const m = /^JE-(\d+)$/.exec(e.reference ?? "");
+    if (m) max = Math.max(max, parseInt(m[1], 10));
+  }
+  return `JE-${String(max + 1).padStart(6, "0")}`;
+}
+
 function JournalsPage() {
   const currency = useDefaultCurrency();
+  const dateFormat = useDateFormat();
   const fmt = (n: number) => formatCurrency(n, currency);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -107,7 +122,9 @@ function JournalsPage() {
             </Button>
           </DialogTrigger>
           <NewEntryDialog
+            key={entries.length}
             accounts={accounts}
+            defaultReference={nextJournalReference(entries)}
             onSaved={() => {
               setOpen(false);
               load();
@@ -128,7 +145,7 @@ function JournalsPage() {
               <div key={e.id} className="bg-card border rounded-xl overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-3 border-b">
                   <div className="flex items-baseline gap-3">
-                    <span className="font-semibold">{e.entry_date}</span>
+                    <span className="font-semibold">{formatDate(e.entry_date, dateFormat)}</span>
                     {e.reference && (
                       <span className="text-sm text-muted-foreground">{e.reference}</span>
                     )}
@@ -183,9 +200,17 @@ function JournalsPage() {
 
 type LineDraft = { account_id: string; debit: string; credit: string; description: string };
 
-function NewEntryDialog({ accounts, onSaved }: { accounts: Account[]; onSaved: () => void }) {
+function NewEntryDialog({
+  accounts,
+  defaultReference,
+  onSaved,
+}: {
+  accounts: Account[];
+  defaultReference: string;
+  onSaved: () => void;
+}) {
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [reference, setReference] = useState("");
+  const [reference, setReference] = useState(defaultReference);
   const [memo, setMemo] = useState("");
   const [lines, setLines] = useState<LineDraft[]>([
     { account_id: "", debit: "", credit: "", description: "" },
