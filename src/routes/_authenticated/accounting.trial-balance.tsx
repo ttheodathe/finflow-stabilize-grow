@@ -19,7 +19,6 @@ type Row = {
   debit: number;
   credit: number;
 };
-const DEBIT_NORMAL = new Set(["asset", "expense"]);
 
 function TrialBalancePage() {
   const currency = useDefaultCurrency();
@@ -66,24 +65,24 @@ function TrialBalancePage() {
         .map((a) => {
           const t = totals.get(a.id) ?? { d: 0, c: 0 };
           const net = t.d - t.c;
-          const debitNormal = DEBIT_NORMAL.has(a.type);
-          const debit = debitNormal ? Math.max(net, 0) : Math.max(-net, 0) === 0 ? 0 : 0;
-          const credit = debitNormal ? Math.max(-net, 0) : Math.max(-net, 0);
-          // Correct: put net on natural side
-          const d = debitNormal ? Math.max(net, 0) : 0;
-          const c = debitNormal ? Math.max(-net, 0) : 0;
-          const d2 = !debitNormal ? Math.max(-net, 0) : 0;
-          const c2 = !debitNormal ? Math.max(net, 0) : 0;
+          // Fix (Jennifer QA — Trial Balance: "Owner's Capital is currently
+          // shown on the Debit side. It should normally appear on the
+          // Credit side."): a trial balance simply nets debit-credit per
+          // account and puts a positive net in the Debit column, a negative
+          // net in the Credit column — regardless of account type. The
+          // previous code additionally branched on account type and had the
+          // credit-normal branch's debit/credit assignment swapped, which
+          // pushed liability/equity/revenue balances into the wrong column.
+          const d = Math.max(net, 0);
+          const c = Math.max(-net, 0);
           return {
             account_id: a.id,
             code: a.code,
             name: a.name,
             type: a.type,
-            debit: d + d2,
-            credit: c + c2,
+            debit: d,
+            credit: c,
           };
-          void debit;
-          void credit;
         })
         .filter((r) => r.debit !== 0 || r.credit !== 0);
       setRows(built);
