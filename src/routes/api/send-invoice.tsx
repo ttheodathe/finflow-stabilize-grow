@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Resend } from "resend";
-import { InvoiceCreated } from "@/emails/InvoiceCreated";
+import InvoiceCreated from "@/emails/InvoiceCreated";
 
 const resend = new Resend(
   process.env.RESEND_API_KEY
