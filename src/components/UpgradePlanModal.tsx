@@ -90,4 +90,8 @@ export function UpgradePlanModal({ open, onOpenChange, currentPlan }: UpgradePla
       </DialogContent>
     </Dialog>
   );
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 5959176 (Update Polar config and sitemap)

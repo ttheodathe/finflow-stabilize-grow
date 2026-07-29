@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
+import { Route as TestimonialsRouteImport } from './routes/testimonials'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SecurityRouteImport } from './routes/security'
@@ -33,6 +34,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SitemapXmlRouteImport } from './routes/sitemap.xml'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
@@ -75,12 +77,19 @@ import { Route as AuthenticatedAccountingTrialBalanceRouteImport } from './route
 import { Route as AuthenticatedAccountingLedgerRouteImport } from './routes/_authenticated/accounting.ledger'
 import { Route as AuthenticatedAccountingJournalsRouteImport } from './routes/_authenticated/accounting.journals'
 import { Route as AuthenticatedAccountingChartRouteImport } from './routes/_authenticated/accounting.chart'
+import { Route as ApiPublicPolarWebhookRouteImport } from './routes/api/public/polar/webhook'
+import { Route as ApiPublicPolarCheckoutRouteImport } from './routes/api/public/polar/checkout'
 import { Route as ApiPublicPaddleWebhookRouteImport } from './routes/api/public/paddle/webhook'
 import { Route as ApiPublicHooksSyncExternalRouteImport } from './routes/api/public/hooks/sync-external'
 
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
   id: '/verify-email',
   path: '/verify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TestimonialsRoute = TestimonialsRouteImport.update({
+  id: '/testimonials',
+  path: '/testimonials',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -195,6 +204,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapXmlRoute = SitemapXmlRouteImport.update({
+  id: '/sitemap/xml',
+  path: '/sitemap/xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InviteTokenRoute = InviteTokenRouteImport.update({
@@ -434,6 +448,16 @@ const AuthenticatedAccountingChartRoute =
     path: '/accounting/chart',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicPolarWebhookRoute = ApiPublicPolarWebhookRouteImport.update({
+  id: '/api/public/polar/webhook',
+  path: '/api/public/polar/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicPolarCheckoutRoute = ApiPublicPolarCheckoutRouteImport.update({
+  id: '/api/public/polar/checkout',
+  path: '/api/public/polar/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPaddleWebhookRoute = ApiPublicPaddleWebhookRouteImport.update({
   id: '/api/public/paddle/webhook',
   path: '/api/public/paddle/webhook',
@@ -469,6 +493,7 @@ export interface FileRoutesByFullPath {
   '/security': typeof SecurityRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/testimonials': typeof TestimonialsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/ai-bookkeeper': typeof AuthenticatedAiBookkeeperRoute
   '/apps': typeof AuthenticatedAppsRoute
@@ -484,6 +509,7 @@ export interface FileRoutesByFullPath {
   '/team': typeof AuthenticatedTeamRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/sitemap/xml': typeof SitemapXmlRoute
   '/accounting/chart': typeof AuthenticatedAccountingChartRoute
   '/accounting/journals': typeof AuthenticatedAccountingJournalsRoute
   '/accounting/ledger': typeof AuthenticatedAccountingLedgerRoute
@@ -514,6 +540,8 @@ export interface FileRoutesByFullPath {
   '/sales/recurring': typeof AuthenticatedSalesRecurringRoute
   '/api/public/hooks/sync-external': typeof ApiPublicHooksSyncExternalRoute
   '/api/public/paddle/webhook': typeof ApiPublicPaddleWebhookRoute
+  '/api/public/polar/checkout': typeof ApiPublicPolarCheckoutRoute
+  '/api/public/polar/webhook': typeof ApiPublicPolarWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -538,6 +566,7 @@ export interface FileRoutesByTo {
   '/security': typeof SecurityRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/testimonials': typeof TestimonialsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/ai-bookkeeper': typeof AuthenticatedAiBookkeeperRoute
   '/apps': typeof AuthenticatedAppsRoute
@@ -553,6 +582,7 @@ export interface FileRoutesByTo {
   '/team': typeof AuthenticatedTeamRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/sitemap/xml': typeof SitemapXmlRoute
   '/accounting/chart': typeof AuthenticatedAccountingChartRoute
   '/accounting/journals': typeof AuthenticatedAccountingJournalsRoute
   '/accounting/ledger': typeof AuthenticatedAccountingLedgerRoute
@@ -583,6 +613,8 @@ export interface FileRoutesByTo {
   '/sales/recurring': typeof AuthenticatedSalesRecurringRoute
   '/api/public/hooks/sync-external': typeof ApiPublicHooksSyncExternalRoute
   '/api/public/paddle/webhook': typeof ApiPublicPaddleWebhookRoute
+  '/api/public/polar/checkout': typeof ApiPublicPolarCheckoutRoute
+  '/api/public/polar/webhook': typeof ApiPublicPolarWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -609,6 +641,7 @@ export interface FileRoutesById {
   '/security': typeof SecurityRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/testimonials': typeof TestimonialsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/_authenticated/ai-bookkeeper': typeof AuthenticatedAiBookkeeperRoute
   '/_authenticated/apps': typeof AuthenticatedAppsRoute
@@ -624,6 +657,7 @@ export interface FileRoutesById {
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/sitemap/xml': typeof SitemapXmlRoute
   '/_authenticated/accounting/chart': typeof AuthenticatedAccountingChartRoute
   '/_authenticated/accounting/journals': typeof AuthenticatedAccountingJournalsRoute
   '/_authenticated/accounting/ledger': typeof AuthenticatedAccountingLedgerRoute
@@ -654,6 +688,8 @@ export interface FileRoutesById {
   '/_authenticated/sales/recurring': typeof AuthenticatedSalesRecurringRoute
   '/api/public/hooks/sync-external': typeof ApiPublicHooksSyncExternalRoute
   '/api/public/paddle/webhook': typeof ApiPublicPaddleWebhookRoute
+  '/api/public/polar/checkout': typeof ApiPublicPolarCheckoutRoute
+  '/api/public/polar/webhook': typeof ApiPublicPolarWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -680,6 +716,7 @@ export interface FileRouteTypes {
     | '/security'
     | '/signup'
     | '/terms'
+    | '/testimonials'
     | '/verify-email'
     | '/ai-bookkeeper'
     | '/apps'
@@ -695,6 +732,7 @@ export interface FileRouteTypes {
     | '/team'
     | '/blog/$slug'
     | '/invite/$token'
+    | '/sitemap/xml'
     | '/accounting/chart'
     | '/accounting/journals'
     | '/accounting/ledger'
@@ -725,6 +763,8 @@ export interface FileRouteTypes {
     | '/sales/recurring'
     | '/api/public/hooks/sync-external'
     | '/api/public/paddle/webhook'
+    | '/api/public/polar/checkout'
+    | '/api/public/polar/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -749,6 +789,7 @@ export interface FileRouteTypes {
     | '/security'
     | '/signup'
     | '/terms'
+    | '/testimonials'
     | '/verify-email'
     | '/ai-bookkeeper'
     | '/apps'
@@ -764,6 +805,7 @@ export interface FileRouteTypes {
     | '/team'
     | '/blog/$slug'
     | '/invite/$token'
+    | '/sitemap/xml'
     | '/accounting/chart'
     | '/accounting/journals'
     | '/accounting/ledger'
@@ -794,6 +836,8 @@ export interface FileRouteTypes {
     | '/sales/recurring'
     | '/api/public/hooks/sync-external'
     | '/api/public/paddle/webhook'
+    | '/api/public/polar/checkout'
+    | '/api/public/polar/webhook'
   id:
     | '__root__'
     | '/'
@@ -819,6 +863,7 @@ export interface FileRouteTypes {
     | '/security'
     | '/signup'
     | '/terms'
+    | '/testimonials'
     | '/verify-email'
     | '/_authenticated/ai-bookkeeper'
     | '/_authenticated/apps'
@@ -834,6 +879,7 @@ export interface FileRouteTypes {
     | '/_authenticated/team'
     | '/blog/$slug'
     | '/invite/$token'
+    | '/sitemap/xml'
     | '/_authenticated/accounting/chart'
     | '/_authenticated/accounting/journals'
     | '/_authenticated/accounting/ledger'
@@ -864,6 +910,8 @@ export interface FileRouteTypes {
     | '/_authenticated/sales/recurring'
     | '/api/public/hooks/sync-external'
     | '/api/public/paddle/webhook'
+    | '/api/public/polar/checkout'
+    | '/api/public/polar/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -890,10 +938,14 @@ export interface RootRouteChildren {
   SecurityRoute: typeof SecurityRoute
   SignupRoute: typeof SignupRoute
   TermsRoute: typeof TermsRoute
+  TestimonialsRoute: typeof TestimonialsRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   InviteTokenRoute: typeof InviteTokenRoute
+  SitemapXmlRoute: typeof SitemapXmlRoute
   ApiPublicHooksSyncExternalRoute: typeof ApiPublicHooksSyncExternalRoute
   ApiPublicPaddleWebhookRoute: typeof ApiPublicPaddleWebhookRoute
+  ApiPublicPolarCheckoutRoute: typeof ApiPublicPolarCheckoutRoute
+  ApiPublicPolarWebhookRoute: typeof ApiPublicPolarWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -903,6 +955,13 @@ declare module '@tanstack/react-router' {
       path: '/verify-email'
       fullPath: '/verify-email'
       preLoaderRoute: typeof VerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/testimonials': {
+      id: '/testimonials'
+      path: '/testimonials'
+      fullPath: '/testimonials'
+      preLoaderRoute: typeof TestimonialsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -1064,6 +1123,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap/xml': {
+      id: '/sitemap/xml'
+      path: '/sitemap/xml'
+      fullPath: '/sitemap/xml'
+      preLoaderRoute: typeof SitemapXmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/invite/$token': {
@@ -1360,6 +1426,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAccountingChartRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/polar/webhook': {
+      id: '/api/public/polar/webhook'
+      path: '/api/public/polar/webhook'
+      fullPath: '/api/public/polar/webhook'
+      preLoaderRoute: typeof ApiPublicPolarWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/polar/checkout': {
+      id: '/api/public/polar/checkout'
+      path: '/api/public/polar/checkout'
+      fullPath: '/api/public/polar/checkout'
+      preLoaderRoute: typeof ApiPublicPolarCheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/paddle/webhook': {
       id: '/api/public/paddle/webhook'
       path: '/api/public/paddle/webhook'
@@ -1502,10 +1582,14 @@ const rootRouteChildren: RootRouteChildren = {
   SecurityRoute: SecurityRoute,
   SignupRoute: SignupRoute,
   TermsRoute: TermsRoute,
+  TestimonialsRoute: TestimonialsRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   InviteTokenRoute: InviteTokenRoute,
+  SitemapXmlRoute: SitemapXmlRoute,
   ApiPublicHooksSyncExternalRoute: ApiPublicHooksSyncExternalRoute,
   ApiPublicPaddleWebhookRoute: ApiPublicPaddleWebhookRoute,
+  ApiPublicPolarCheckoutRoute: ApiPublicPolarCheckoutRoute,
+  ApiPublicPolarWebhookRoute: ApiPublicPolarWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
