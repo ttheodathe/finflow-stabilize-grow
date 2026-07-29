@@ -7,7 +7,7 @@ import { useDefaultCurrency } from "@/hooks/use-currency";
 import { formatCurrency } from "@/lib/currencies";
 
 export const Route = createFileRoute("/_authenticated/accounting/trial-balance")({
-  head: () => ({ meta: [{ title: "Trial balance — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "Trial balance — FinFlow Track" }] }),
   component: TrialBalancePage,
 });
 
