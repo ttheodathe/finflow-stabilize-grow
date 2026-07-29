@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { Upload, Building, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/companies")({
-  head: () => ({ meta: [{ title: "Company settings — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "Company settings — Finflow Track" }] }),
   component: CompanyPage,
 });
 
@@ -65,21 +65,47 @@ function CompanyPage() {
     const activeId =
       typeof window !== "undefined" ? localStorage.getItem("currentCompanyId") : null;
 
-    const companyQuery = activeId
-      ? supabase.from("companies").select("*").eq("id", activeId).maybeSingle()
-      : supabase.from("companies").select("*").order("created_at").limit(1).maybeSingle();
+    let c: any = null;
+    if (activeId) {
+      const { data } = await supabase.from("companies").select("*").eq("id", activeId).maybeSingle();
+      c = data;
+      // Fix: "new row violates row-level security policy for table
+      // 'companies'" on Save. Root cause: a stale/orphaned company id was
+      // cached in localStorage (e.g. from an earlier signup attempt) that
+      // this user has no `company_members` row for. RLS silently returns
+      // no row for it, this page fell back to a blank "create new company"
+      // form, and Save then tried an INSERT — which has no matching RLS
+      // policy at all, hence the error. If the cached id doesn't resolve,
+      // clear it and fall back to a company the user actually belongs to.
+      if (!c && typeof window !== "undefined") {
+        localStorage.removeItem("currentCompanyId");
+      }
+    }
+    if (!c) {
+      const { data } = await supabase
+        .from("companies")
+        .select("*")
+        .order("created_at")
+        .limit(1)
+        .maybeSingle();
+      c = data;
+      if (c && typeof window !== "undefined") {
+        localStorage.setItem("currentCompanyId", c.id);
+      }
+    }
 
-    const [{ data: c }, { data: p }] = await Promise.all([
-      companyQuery,
-      supabase.from("profiles").select("default_currency").eq("id", userIdArg).maybeSingle(),
-    ]);
+    const { data: p } = await supabase
+      .from("profiles")
+      .select("default_currency")
+      .eq("id", userIdArg)
+      .maybeSingle();
 
     if (c) {
       setCompany({ ...EMPTY, ...c } as Company);
       refreshLogoDisplay((c as any).logo_url ?? null);
     } else {
-      // no companies at all yet (shouldn't normally happen post-signup, but
-      // don't silently keep showing stale state from a previous company)
+      // genuinely no accessible company yet — safe to show the blank form
+      // so Save creates one via create_company()
       setCompany(EMPTY);
       setLogoDisplay(null);
     }
@@ -125,18 +151,49 @@ function CompanyPage() {
   async function save() {
     if (!userId) return;
     setSaving(true);
-    const payload: any = { ...company, user_id: userId };
     let error;
     if (company.id) {
+      const payload: any = { ...company };
       ({ error } = await supabase.from("companies").update(payload).eq("id", company.id));
     } else {
+      // Fix: a brand-new company has no row in `company_members` yet, so it
+      // fails the "org admins manage companies" / "company admins update
+      // companies" RLS checks on a raw insert ("new row violates row-level
+      // security policy for table 'companies'"). `create_company()` is a
+      // SECURITY DEFINER function that creates the company row AND the
+      // owning `company_members` row in one atomic step, which is what a
+      // plain insert can never satisfy on its own.
       const { data, error: e } = await supabase
-        .from("companies")
-        .insert(payload)
-        .select("id")
+        .rpc("create_company", {
+          p_name: company.name,
+          p_email: company.email || null,
+          p_address: company.address || null,
+          p_currency: company.currency || "USD",
+          p_phone: company.phone || null,
+          p_website: company.website || null,
+          p_city: company.city || null,
+          p_state: company.state || null,
+          p_postal_code: company.postal_code || null,
+          p_country: company.country || null,
+          p_tax_number: company.tax_number || null,
+        })
         .single();
       error = e;
-      if (data) setCompany((c) => ({ ...c, id: data.id }));
+      if (data) {
+        const created = data as unknown as Company;
+        setCompany((c) => ({ ...c, id: created.id }));
+        if (typeof window !== "undefined" && created.id) {
+          localStorage.setItem("currentCompanyId", created.id);
+        }
+        // create_company() doesn't take a logo, so persist it separately if
+        // one was uploaded before the first save.
+        if (company.logo_url) {
+          await supabase
+            .from("companies")
+            .update({ logo_url: company.logo_url })
+            .eq("id", created.id);
+        }
+      }
     }
     if (!error) {
       await supabase
