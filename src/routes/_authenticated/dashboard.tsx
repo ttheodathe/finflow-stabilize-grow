@@ -35,7 +35,7 @@ import { useFxRates } from "@/hooks/use-fx";
 import { convert } from "@/lib/fx";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "Dashboard — FinFlow Track" }] }),
   component: Dashboard,
 });
 
