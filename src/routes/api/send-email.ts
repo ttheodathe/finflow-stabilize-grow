@@ -1,20 +1,56 @@
-import { Resend } from "resend";
+import { render } from "@react-email/render";
+import WelcomeEmail from "@/emails/Welcome";
+import { sendEmail } from "@/lib/email";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+interface SendEmailBody {
+  email: string;
+  firstName?: string;
+}
 
-export async function POST(req: Request) {
-  const body = await req.json();
+export async function POST(request: Request) {
+  try {
+    const body: SendEmailBody = await request.json();
 
-  const { data, error } = await resend.emails.send({
-    from: "FinFlowTrack <noreply@finflowtrack.com>",
-    to: body.email,
-    subject: "Welcome to FinFlowTrack",
-    html: "<h1>Welcome!</h1><p>Your account has been created successfully.</p>",
-  });
+    if (!body.email) {
+      return Response.json(
+        {
+          success: false,
+          message: "Email address is required.",
+        },
+        { status: 400 }
+      );
+    }
 
-  if (error) {
-    return Response.json(error, { status: 400 });
+    const html = await render(
+      WelcomeEmail({
+        firstName: body.firstName,
+        dashboardUrl:
+          process.env.APP_URL || "https://www.finflowtrack.com/dashboard",
+      })
+    );
+
+    const result = await sendEmail({
+      to: body.email,
+      subject: "Welcome to FinFlowTrack 🎉",
+      html,
+    });
+
+    return Response.json({
+      success: true,
+      message: "Email sent successfully.",
+      id: result?.id,
+    });
+  } catch (error: any) {
+    console.error(error);
+
+    return Response.json(
+      {
+        success: false,
+        message: error.message || "Unable to send email.",
+      },
+      {
+        status: 500,
+      }
+    );
   }
-
-  return Response.json(data);
 }
