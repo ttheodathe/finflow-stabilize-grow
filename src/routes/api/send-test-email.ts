@@ -22,13 +22,14 @@ export async function POST(request: Request) {
     }
 
     const appUrl =
-      process.env.APP_URL || "https://www.finflowtrack.com";
+      process.env.APP_URL ?? "https://www.finflowtrack.com";
 
+    // IMPORTANT: No JSX in a .ts file
     const html = await render(
-      <WelcomeEmail
-        firstName={body.firstName ?? "Theodathe"}
-        dashboardUrl={`${appUrl}/dashboard`}
-      />
+      WelcomeEmail({
+        firstName: body.firstName ?? "User",
+        dashboardUrl: `${appUrl}/dashboard`,
+      })
     );
 
     const result = await sendEmail({
@@ -36,26 +37,26 @@ export async function POST(request: Request) {
       subject: "✅ FinFlowTrack Email Test",
       html,
       text:
-        "Congratulations! Your FinFlowTrack email integration with Resend is working correctly.",
+        "Congratulations! Your FinFlowTrack email integration is working correctly.",
     });
 
     return Response.json({
       success: true,
       message: "Test email sent successfully.",
       resendId: result?.id ?? null,
-      recipient: body.email,
     });
-  } catch (error: any) {
-    console.error("Test Email Error:", error);
+  } catch (error) {
+    console.error(error);
 
     return Response.json(
       {
         success: false,
-        message: error?.message || "Unable to send test email.",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Unable to send test email.",
       },
-      {
-        status: 500,
-      }
+      { status: 500 }
     );
   }
 }
