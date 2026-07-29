@@ -36,8 +36,8 @@ export interface PlanConfig {
   key: PlanKey;
   name: string;
   description: string;
-  priceMonthly: number;
-  priceYearly: number;
+  priceMonthly: number | null; // null = custom pricing (Enterprise)
+  priceYearly: number | null; // null = custom pricing (Enterprise)
   monthlyPriceId: string | null;
   yearlyPriceId: string | null;
   features: string[];
@@ -150,8 +150,11 @@ export const PLANS: Record<PlanKey, PlanConfig> = {
     name: "Enterprise",
     description:
       "Tailored solutions for organizations requiring custom deployments, integrations, and enterprise support.",
-    priceMonthly: 0,
-    priceYearly: 0,
+    // Fix: was 0/0, which rendered as "$0/month" — the pricing page says
+    // "Custom Pricing" for this tier. null is the "ask sales" signal;
+    // formatPlanPrice() below renders it correctly.
+    priceMonthly: null,
+    priceYearly: null,
     monthlyPriceId: null,
     yearlyPriceId: null,
     features: [
@@ -204,4 +207,11 @@ export function getPriceId(plan: PlanKey, cycle: BillingCycle): string | null {
 export function getPlan(key: string | null | undefined): PlanConfig {
   if (!key) return PLANS.free;
   return (PLANS as Record<string, PlanConfig>)[key] ?? PLANS.free;
+}
+
+/** Formats a plan's monthly price for display, handling Enterprise's custom pricing. */
+export function formatPlanPrice(plan: PlanConfig): string {
+  if (plan.priceMonthly === null) return "Custom Pricing";
+  if (plan.priceMonthly === 0) return "$0/month";
+  return `$${plan.priceMonthly}/month`;
 }
