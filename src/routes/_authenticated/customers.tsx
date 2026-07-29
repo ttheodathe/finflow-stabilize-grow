@@ -33,13 +33,18 @@ type Customer = {
   email: string | null;
   phone: string | null;
   address: string | null;
+  // Fix (Jennifer QA — New Customer: "You may consider adding a field for
+  // the Tax Identification Number (TIN). Many businesses require this
+  // information for reporting and compliance with the Bureau of Internal
+  // Revenue (BIR)"):
+  tax_id: string | null;
 };
 
 function CustomersPage() {
   const [items, setItems] = useState<Customer[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Customer | null>(null);
-  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", tax_id: "" });
 
   async function load() {
     const { data, error } = await supabase
@@ -55,12 +60,18 @@ function CustomersPage() {
 
   function openNew() {
     setEditing(null);
-    setForm({ name: "", email: "", phone: "", address: "" });
+    setForm({ name: "", email: "", phone: "", address: "", tax_id: "" });
     setOpen(true);
   }
   function openEdit(c: Customer) {
     setEditing(c);
-    setForm({ name: c.name, email: c.email ?? "", phone: c.phone ?? "", address: c.address ?? "" });
+    setForm({
+      name: c.name,
+      email: c.email ?? "",
+      phone: c.phone ?? "",
+      address: c.address ?? "",
+      tax_id: c.tax_id ?? "",
+    });
     setOpen(true);
   }
 
@@ -134,6 +145,14 @@ function CustomersPage() {
                   onChange={(e) => setForm({ ...form, address: e.target.value })}
                 />
               </div>
+              <div>
+                <Label>Tax Identification Number (TIN)</Label>
+                <Input
+                  value={form.tax_id}
+                  onChange={(e) => setForm({ ...form, tax_id: e.target.value })}
+                  placeholder="e.g. 123-456-789-000"
+                />
+              </div>
               <Button type="submit" className="w-full bg-gradient-hero">
                 Save
               </Button>
@@ -154,6 +173,7 @@ function CustomersPage() {
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
+                <TableHead>TIN</TableHead>
                 <TableHead className="w-32"></TableHead>
               </TableRow>
             </TableHeader>
@@ -163,6 +183,7 @@ function CustomersPage() {
                   <TableCell className="font-medium">{c.name}</TableCell>
                   <TableCell>{c.email}</TableCell>
                   <TableCell>{c.phone}</TableCell>
+                  <TableCell className="text-muted-foreground">{c.tax_id ?? "—"}</TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon" onClick={() => openEdit(c)}>
                       <Pencil className="h-4 w-4" />
