@@ -30,6 +30,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/sales/payments")({
   head: () => ({ meta: [{ title: "Payments received — Free Accounting" }] }),
@@ -65,6 +66,7 @@ const fmt = (n: number, c = "USD") =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: c }).format(n || 0);
 
 function PaymentsPage() {
+  const companyId = useActiveCompanyId();
   const [items, setItems] = useState<Payment[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -81,20 +83,21 @@ function PaymentsPage() {
   const [paidMap, setPaidMap] = useState<Record<string, number>>({});
 
   async function load() {
+    if (!companyId) return;
     const [p, inv, acc] = await Promise.all([
       (supabase as any)
         .from("payments")
         .select(
           "*, invoices(invoice_number,total,status), customers(name), accounts:deposit_account_id(code,name)",
-        )
+        ).eq("company_id", companyId)
         .order("payment_date", { ascending: false }),
       supabase
         .from("invoices")
-        .select("id,invoice_number,customer_id,total,currency,status")
+        .select("id,invoice_number,customer_id,total,currency,status").eq("company_id", companyId)
         .order("issue_date", { ascending: false }),
       (supabase as any)
         .from("accounts")
-        .select("id,code,name,type")
+        .select("id,code,name,type").eq("company_id", companyId)
         .eq("type", "asset")
         .eq("is_active", true)
         .order("code"),
@@ -105,7 +108,7 @@ function PaymentsPage() {
     if (acc.data) setAccounts(acc.data as Account[]);
 
     // compute paid totals
-    const { data: sums } = await (supabase as any).from("payments").select("invoice_id, amount");
+    const { data: sums } = await (supabase as any).from("payments").select("invoice_id, amount").eq("company_id", companyId);
     const map: Record<string, number> = {};
     (sums ?? []).forEach((r: any) => {
       map[r.invoice_id] = (map[r.invoice_id] ?? 0) + Number(r.amount);
@@ -114,7 +117,7 @@ function PaymentsPage() {
   }
   useEffect(() => {
     load();
-  }, []);
+  }, [companyId]);
 
   function openNew() {
     const defaultBank = accounts.find((a) => a.code === "1010") ?? accounts[0];
