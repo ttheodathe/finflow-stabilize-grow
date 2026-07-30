@@ -21,6 +21,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { UploadCloud, FileSpreadsheet, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/banking/feeds")({
   head: () => ({ meta: [{ title: "Bank feeds — Free Accounting" }] }),
@@ -85,6 +86,7 @@ function toIsoDate(raw: string): string | null {
 }
 
 function BankFeedsPage() {
+  const companyId = useActiveCompanyId();
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [accountId, setAccountId] = useState("");
   const [rows, setRows] = useState<ParsedRow[]>([]);
@@ -94,16 +96,17 @@ function BankFeedsPage() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   async function load() {
+    if (!companyId) return;
     const { data } = await (supabase as any)
       .from("bank_accounts")
-      .select("id,name,currency")
+      .select("id,name,currency").eq("company_id", companyId)
       .eq("is_active", true)
       .order("name");
     if (data) setAccounts(data as BankAccount[]);
   }
   useEffect(() => {
     load();
-  }, []);
+  }, [companyId]);
 
   function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
