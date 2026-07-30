@@ -29,6 +29,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/banking/transactions")({
   head: () => ({ meta: [{ title: "Transactions — Free Accounting" }] }),
@@ -63,6 +64,7 @@ function fmt(n: number, c = "USD") {
 }
 
 function TransactionsPage() {
+  const companyId = useActiveCompanyId();
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [glAccounts, setGlAccounts] = useState<GlAccount[]>([]);
   const [accountId, setAccountId] = useState("");
@@ -73,15 +75,16 @@ function TransactionsPage() {
   const [loading, setLoading] = useState(false);
 
   async function loadAccounts() {
+    if (!companyId) return;
     const [a, g] = await Promise.all([
       (supabase as any)
         .from("bank_accounts")
-        .select("id,name,currency")
+        .select("id,name,currency").eq("company_id", companyId)
         .eq("is_active", true)
         .order("name"),
       (supabase as any)
         .from("accounts")
-        .select("id,code,name,type")
+        .select("id,code,name,type").eq("company_id", companyId)
         .eq("is_active", true)
         .in("type", ["expense", "revenue"])
         .order("code"),
@@ -93,18 +96,21 @@ function TransactionsPage() {
     if (g.data) setGlAccounts(g.data as GlAccount[]);
   }
   useEffect(() => {
+    setAccounts([]);
+    setGlAccounts([]);
+    setAccountId("");
     loadAccounts(); /* eslint-disable-next-line */
-  }, []);
+  }, [companyId]);
 
   async function loadTxns() {
-    if (!accountId) {
+    if (!companyId || !accountId) {
       setTxns([]);
       return;
     }
     setLoading(true);
     const { data, error } = await (supabase as any)
       .from("bank_transactions")
-      .select("*, accounts(code,name)")
+      .select("*, accounts(code,name)").eq("company_id", companyId)
       .eq("bank_account_id", accountId)
       .order("txn_date", { ascending: false })
       .order("created_at", { ascending: false })
@@ -115,7 +121,7 @@ function TransactionsPage() {
   }
   useEffect(() => {
     loadTxns(); /* eslint-disable-next-line */
-  }, [accountId]);
+  }, [accountId, companyId]);
 
   const visible = useMemo(
     () => (uncategorizedOnly ? txns.filter((t) => !t.category_account_id && !t.is_transfer) : txns),
