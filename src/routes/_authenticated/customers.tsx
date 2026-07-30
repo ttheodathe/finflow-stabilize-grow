@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/table";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/customers")({
   head: () => ({ meta: [{ title: "Customers — Free Accounting" }] }),
@@ -41,22 +42,24 @@ type Customer = {
 };
 
 function CustomersPage() {
+  const companyId = useActiveCompanyId();
   const [items, setItems] = useState<Customer[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Customer | null>(null);
   const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", tax_id: "" });
 
   async function load() {
+    if (!companyId) return;
     const { data, error } = await supabase
       .from("customers")
-      .select("*")
+      .select("*").eq("company_id", companyId)
       .order("created_at", { ascending: false });
     if (error) return toast.error(error.message);
     setItems(data as Customer[]);
   }
   useEffect(() => {
     load();
-  }, []);
+  }, [companyId]);
 
   function openNew() {
     setEditing(null);
