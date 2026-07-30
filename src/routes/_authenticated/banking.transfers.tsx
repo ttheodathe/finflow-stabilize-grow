@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { ArrowRight, Trash2, ArrowLeftRight } from "lucide-react";
 import { toast } from "sonner";
+import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/banking/transfers")({
   head: () => ({ meta: [{ title: "Transfers — Free Accounting" }] }),
@@ -45,6 +46,7 @@ function fmt(n: number, c = "USD") {
 }
 
 function TransfersPage() {
+  const companyId = useActiveCompanyId();
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [fromId, setFromId] = useState("");
@@ -56,16 +58,17 @@ function TransfersPage() {
   const [loading, setLoading] = useState(true);
 
   async function load() {
+    if (!companyId) return;
     setLoading(true);
     const [a, t] = await Promise.all([
       (supabase as any)
         .from("bank_accounts")
-        .select("id,name,currency,current_balance")
+        .select("id,name,currency,current_balance").eq("company_id", companyId)
         .eq("is_active", true)
         .order("name"),
       (supabase as any)
         .from("bank_transfers")
-        .select("*, from:bank_accounts!from_account_id(name), to:bank_accounts!to_account_id(name)")
+        .select("*, from:bank_accounts!from_account_id(name), to:bank_accounts!to_account_id(name)").eq("company_id", companyId)
         .order("transfer_date", { ascending: false })
         .order("created_at", { ascending: false })
         .limit(200),
@@ -76,7 +79,7 @@ function TransfersPage() {
   }
   useEffect(() => {
     load();
-  }, []);
+  }, [companyId]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
