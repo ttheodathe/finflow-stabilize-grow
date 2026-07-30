@@ -48,9 +48,20 @@ function InvitationAcceptPage() {
       }
 
       const { data: userRes } = await supabase.auth.getUser();
-      if (userRes?.user) {
-        // Already signed in — try to accept directly (email match enforced server-side).
+      const activeEmail = userRes?.user?.email?.toLowerCase();
+
+      if (activeEmail && activeEmail === invitation.email.toLowerCase()) {
+        // Already signed in as the invited user — accept directly.
         await tryAccept();
+      } else if (activeEmail) {
+        // Signed in, but as a different account than the one invited.
+        // Sign that session out and fall through to sign-in/up as the right person,
+        // instead of hitting a dead-end EMAIL_MISMATCH error.
+        await supabase.auth.signOut();
+        setErrorMessage(
+          `You were signed in as ${activeEmail}. Please continue as ${invitation.email} to accept this invitation.`
+        );
+        setStep("sign-up");
       } else {
         // Determine sign-in vs sign-up by checking if a profile with this email exists.
         // Simplest approach: default to sign-up; user can switch to "I already have an account".
@@ -137,6 +148,7 @@ function InvitationAcceptPage() {
   }
 
   if (step === "error") {
+    const isEmailMismatch = errorMessage?.toLowerCase().includes("sign in with");
     return (
       <CenteredCard>
         <Alert variant="destructive">
@@ -144,6 +156,19 @@ function InvitationAcceptPage() {
           <AlertTitle>Couldn't join company</AlertTitle>
           <AlertDescription>{errorMessage}</AlertDescription>
         </Alert>
+        {isEmailMismatch && (
+          <Button
+            className="mt-4 w-full"
+            variant="outline"
+            onClick={async () => {
+              await supabase.auth.signOut();
+              setErrorMessage(null);
+              setStep("sign-up");
+            }}
+          >
+            Sign out and continue as {invitation?.email}
+          </Button>
+        )}
       </CenteredCard>
     );
   }
