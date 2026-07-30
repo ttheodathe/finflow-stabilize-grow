@@ -23,6 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Pencil, Power, Plus } from "lucide-react";
+import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/accounting/chart")({
   head: () => ({ meta: [{ title: "Chart of accounts — Free Accounting" }] }),
@@ -50,29 +51,31 @@ const TYPE_LABELS: Record<AccountType, string> = {
 const TYPE_ORDER: AccountType[] = ["asset", "liability", "equity", "revenue", "expense"];
 
 function ChartPage() {
+  const companyId = useActiveCompanyId();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Account | null>(null);
   const [open, setOpen] = useState(false);
 
   async function load() {
+    if (!companyId) return;
     setLoading(true);
     const { data: userRes } = await supabase.auth.getUser();
     const uid = userRes.user?.id;
     if (!uid) return;
     // Seed if empty
-    const { count } = await supabase.from("accounts").select("*", { count: "exact", head: true });
+    const { count } = await supabase.from("accounts").select("*", { count: "exact", head: true }).eq("company_id", companyId);
     if (!count) {
       await supabase.rpc("seed_default_accounts", { _user_id: uid });
     }
-    const { data, error } = await supabase.from("accounts").select("*").order("code");
+    const { data, error } = await supabase.from("accounts").select("*").eq("company_id", companyId).order("code");
     if (error) toast.error(error.message);
     else setAccounts((data ?? []) as Account[]);
     setLoading(false);
   }
   useEffect(() => {
     load();
-  }, []);
+  }, [companyId]);
 
   const grouped = useMemo(() => {
     const g: Record<AccountType, Account[]> = {
