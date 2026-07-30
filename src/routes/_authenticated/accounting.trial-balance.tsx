@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useDefaultCurrency } from "@/hooks/use-currency";
 import { formatCurrency } from "@/lib/currencies";
+import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/accounting/trial-balance")({
   head: () => ({ meta: [{ title: "Trial balance — FinFlow Track" }] }),
@@ -23,6 +24,7 @@ type Row = {
 function TrialBalancePage() {
   const currency = useDefaultCurrency();
   const fmt = (n: number) => formatCurrency(n, currency);
+  const companyId = useActiveCompanyId();
   const [from, setFrom] = useState(() => {
     const d = new Date();
     d.setMonth(0, 1);
@@ -33,13 +35,14 @@ function TrialBalancePage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (!companyId) return;
     (async () => {
       setLoading(true);
       const [accRes, lineRes] = await Promise.all([
-        supabase.from("accounts").select("id,code,name,type").order("code"),
+        supabase.from("accounts").select("id,code,name,type").eq("company_id", companyId).order("code"),
         supabase
           .from("journal_lines")
-          .select("account_id,debit,credit,journal_entries!inner(entry_date)")
+          .select("account_id,debit,credit,journal_entries!inner(entry_date)").eq("company_id", companyId)
           .gte("journal_entries.entry_date", from)
           .lte("journal_entries.entry_date", to),
       ]);
@@ -88,7 +91,7 @@ function TrialBalancePage() {
       setRows(built);
       setLoading(false);
     })();
-  }, [from, to]);
+  }, [from, to, companyId]);
 
   const totals = useMemo(
     () => ({
