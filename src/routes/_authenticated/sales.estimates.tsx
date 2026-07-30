@@ -31,6 +31,7 @@ import { Plus, Pencil, Trash2, X, FileCheck } from "lucide-react";
 import { toast } from "sonner";
 import { CurrencySelect } from "@/components/currency-select";
 import { useDefaultCurrency } from "@/hooks/use-currency";
+import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/sales/estimates")({
   head: () => ({ meta: [{ title: "Estimates — Free Accounting" }] }),
@@ -66,6 +67,7 @@ const fmt = (n: number, c = "USD") =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: c }).format(n || 0);
 
 function EstimatesPage() {
+  const companyId = useActiveCompanyId();
   const navigate = useNavigate();
   const defaultCurrency = useDefaultCurrency();
   const [items, setItems] = useState<Estimate[]>([]);
@@ -85,13 +87,14 @@ function EstimatesPage() {
   const [lines, setLines] = useState<Line[]>([]);
 
   async function load() {
+    if (!companyId) return;
     const [est, cust, cat] = await Promise.all([
       (supabase as any)
         .from("estimates")
-        .select("*, customers(name)")
+        .select("*, customers(name)").eq("company_id", companyId)
         .order("issue_date", { ascending: false }),
-      supabase.from("customers").select("id,name").order("name"),
-      supabase.from("items").select("id,name,price,tax_rate").eq("is_active", true).order("name"),
+      supabase.from("customers").select("id,name").eq("company_id", companyId).order("name"),
+      supabase.from("items").select("id,name,price,tax_rate").eq("company_id", companyId).eq("is_active", true).order("name"),
     ]);
     if (est.error) toast.error(est.error.message);
     else setItems(est.data as Estimate[]);
@@ -100,7 +103,7 @@ function EstimatesPage() {
   }
   useEffect(() => {
     load();
-  }, []);
+  }, [companyId]);
 
   const totals = useMemo(() => {
     let subtotal = 0,
@@ -140,7 +143,7 @@ function EstimatesPage() {
     });
     const { data } = await (supabase as any)
       .from("estimate_items")
-      .select("item_id,description,quantity,unit_price,tax_rate")
+      .select("item_id,description,quantity,unit_price,tax_rate").eq("company_id", companyId)
       .eq("estimate_id", e.id);
     setLines(
       (data ?? []).map((d: any) => ({
@@ -249,7 +252,7 @@ function EstimatesPage() {
     if (!u.user) return;
     const { data: estLines } = await (supabase as any)
       .from("estimate_items")
-      .select("item_id,description,quantity,unit_price,tax_rate,amount")
+      .select("item_id,description,quantity,unit_price,tax_rate,amount").eq("company_id", companyId)
       .eq("estimate_id", est.id);
     const invPayload = {
       user_id: u.user.id,
