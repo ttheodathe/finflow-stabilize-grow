@@ -30,6 +30,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/sales/credit-notes")({
   head: () => ({ meta: [{ title: "Credit notes — Free Accounting" }] }),
@@ -60,6 +61,7 @@ const fmt = (n: number, c = "USD") =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: c }).format(n || 0);
 
 function CreditNotesPage() {
+  const companyId = useActiveCompanyId();
   const [items, setItems] = useState<CN[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [open, setOpen] = useState(false);
@@ -73,14 +75,15 @@ function CreditNotesPage() {
   });
 
   async function load() {
+    if (!companyId) return;
     const [cn, inv] = await Promise.all([
       (supabase as any)
         .from("credit_notes")
-        .select("*, invoices(invoice_number,total,currency), customers(name)")
+        .select("*, invoices(invoice_number,total,currency), customers(name)").eq("company_id", companyId)
         .order("issue_date", { ascending: false }),
       supabase
         .from("invoices")
-        .select("id,invoice_number,customer_id,total,currency")
+        .select("id,invoice_number,customer_id,total,currency").eq("company_id", companyId)
         .order("issue_date", { ascending: false }),
     ]);
     if (cn.error) toast.error(cn.error.message);
@@ -89,7 +92,7 @@ function CreditNotesPage() {
   }
   useEffect(() => {
     load();
-  }, []);
+  }, [companyId]);
 
   function openNew() {
     setForm({
