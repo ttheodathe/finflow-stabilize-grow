@@ -28,7 +28,7 @@ export const Route = createFileRoute("/api/send-invitation")({
           }
 
           const { data, error } = await resend.emails.send({
-            from: "FinFlowTrack <invites@finflowtrack.com>",
+            from: "FinFlowTrack <support@finflowtrack.com>",
             to: [email],
             subject: `You've been invited to join ${companyName || "a team"} on FinFlowTrack`,
             react: (
