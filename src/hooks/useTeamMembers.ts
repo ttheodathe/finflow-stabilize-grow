@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   listCompanyMembers,
   changeMemberRole,
@@ -63,7 +64,14 @@ export function useTeamMembers(companyId: string) {
 
   const resendInvitationMutation = useMutation({
     mutationFn: (invitationId: string) => resendInvitation(invitationId),
-    onSuccess: invalidate,
+    onSuccess: (invitation) => {
+      invalidate();
+      if (invitation.emailSent) {
+        toast.success(`Invitation resent to ${invitation.email}`);
+      } else {
+        toast.warning(`Could not resend the email to ${invitation.email}. Please try again shortly.`);
+      }
+    },
   });
 
   const revokeInvitationMutation = useMutation({
