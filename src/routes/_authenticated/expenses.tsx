@@ -29,7 +29,8 @@ import {
 } from "@/components/ui/select";
 import { Plus, Pencil, Trash2, Sparkles, Loader2, Wand2 } from "lucide-react";
 import { toast } from "sonner";
-import { parseReceipt } from "@/lib/ai-receipts.functions";
+import { extractDocument } from "@/lib/document-ai.functions";
+import { DocumentReviewWorkspace } from "@/components/document-review-workspace";
 import { categorizeExpenses } from "@/lib/ai-bookkeeper.functions";
 import { CurrencySelect } from "@/components/currency-select";
 import { useDefaultCurrency, useDateFormat, formatDate } from "@/hooks/use-currency";
@@ -68,15 +69,6 @@ function fmt(n: number, c = "USD") {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: c }).format(n || 0);
 }
 
-function fileToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(String(r.result));
-    r.onerror = reject;
-    r.readAsDataURL(file);
-  });
-}
-
 function ExpensesPage() {
   const companyId = useActiveCompanyId();
   const defaultCurrency = useDefaultCurrency();
@@ -97,9 +89,12 @@ function ExpensesPage() {
     currency: defaultCurrency,
     supplier_invoice_number: "",
   });
-  const runScan = useServerFn(parseReceipt);
+  const runScan = useServerFn(extractDocument);
   const runCategorize = useServerFn(categorizeExpenses);
   const [categorizing, setCategorizing] = useState(false);
+  const [reviewDocId, setReviewDocId] = useState<string | null>(null);
+  const [reviewFileUrl, setReviewFileUrl] = useState<string | null>(null);
+  const [reviewMimeType, setReviewMimeType] = useState<string | null>(null);
 
   const selectedVendor = useMemo(
     () => vendors.find((v) => v.id === form.vendor_id) ?? null,
@@ -223,36 +218,58 @@ function ExpensesPage() {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
-    if (file.size > 8 * 1024 * 1024) return toast.error("Receipt image must be under 8 MB.");
+    if (!companyId) return toast.error("Select a company first");
+    if (file.size > 8 * 1024 * 1024) return toast.error("File must be under 8 MB.");
+    if (!file.type.startsWith("image/")) {
+      return toast.error("Only image files (JPG/PNG/HEIC) are supported for AI extraction today.");
+    }
     setScanning(true);
-    const t = toast.loading("AI is reading your receipt…");
+    const t = toast.loading("Uploading document…");
     try {
-      const dataUrl = await fileToDataUrl(file);
-      const parsed = await runScan({ data: { imageDataUrl: dataUrl } });
-      const matchedVendor = parsed.vendor
-        ? vendors.find((v) => v.name.toLowerCase() === parsed.vendor!.toLowerCase())
-        : null;
-      const matchedAccount = parsed.category
-        ? accounts.find((a) => a.name.toLowerCase() === parsed.category!.toLowerCase())
-        : null;
-      setEditing(null);
-      setForm({
-        vendor_id: matchedVendor?.id ?? "",
-        account_id: matchedAccount?.id ?? "",
-        description: parsed.description ?? "",
-        amount: parsed.amount != null ? String(parsed.amount) : "0",
-        expense_date: parsed.expense_date ?? new Date().toISOString().slice(0, 10),
-        currency: parsed.currency || defaultCurrency,
-        supplier_invoice_number: "",
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) throw new Error("Not signed in");
+
+      // 1. Create the document record first so we have an id to build the
+      //    storage path from (path convention matches tax-documents: {company_id}/...).
+      const { data: doc, error: docErr } = await supabase
+        .from("documents")
+        .insert({
+          company_id: companyId,
+          uploaded_by: u.user.id,
+          doc_type: "receipt",
+          file_path: "",
+          file_name: file.name,
+          mime_type: file.type,
+          file_size_bytes: file.size,
+          status: "uploaded",
+        })
+        .select("id")
+        .single();
+      if (docErr || !doc) throw new Error(docErr?.message ?? "Could not create document record");
+
+      const ext = file.name.split(".").pop() || "bin";
+      const path = `${companyId}/${doc.id}/original.${ext}`;
+      const { error: upErr } = await supabase.storage.from("documents").upload(path, file, {
+        contentType: file.type,
+        upsert: true,
       });
-      setOpen(true);
-      if (!matchedVendor || !matchedAccount) {
-        toast.success("Receipt scanned — please confirm vendor & category, then save", { id: t });
-      } else {
-        toast.success("Receipt scanned — review and save", { id: t });
-      }
+      if (upErr) throw new Error(upErr.message);
+
+      await supabase.from("documents").update({ file_path: path }).eq("id", doc.id);
+
+      const { data: signed } = await supabase.storage.from("documents").createSignedUrl(path, 60 * 30);
+      setReviewFileUrl(signed?.signedUrl ?? null);
+      setReviewMimeType(file.type);
+      setReviewDocId(doc.id);
+
+      toast.success("Uploaded — AI is reading it now", { id: t });
+      // Fire extraction; the review workspace polls the document's status
+      // itself, so we don't need to block the UI on this promise.
+      runScan({ data: { documentId: doc.id } }).catch((err) => {
+        toast.error(err instanceof Error ? err.message : "Extraction failed", { id: t });
+      });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Couldn't scan that receipt", { id: t });
+      toast.error(err instanceof Error ? err.message : "Couldn't upload that document", { id: t });
     } finally {
       setScanning(false);
     }
@@ -452,6 +469,27 @@ function ExpensesPage() {
           </Table>
         )}
       </div>
+
+      <DocumentReviewWorkspace
+        open={!!reviewDocId}
+        documentId={reviewDocId}
+        fileUrl={reviewFileUrl}
+        mimeType={reviewMimeType}
+        vendors={vendors}
+        accounts={accounts}
+        defaultCurrency={defaultCurrency}
+        onClose={() => {
+          setReviewDocId(null);
+          setReviewFileUrl(null);
+          setReviewMimeType(null);
+        }}
+        onApproved={() => {
+          setReviewDocId(null);
+          setReviewFileUrl(null);
+          setReviewMimeType(null);
+          load();
+        }}
+      />
     </div>
   );
 }
