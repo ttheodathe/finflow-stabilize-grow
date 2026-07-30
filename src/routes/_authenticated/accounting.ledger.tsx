@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { useDefaultCurrency } from "@/hooks/use-currency";
 import { formatCurrency } from "@/lib/currencies";
+import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/accounting/ledger")({
   head: () => ({ meta: [{ title: "General ledger — Free Accounting" }] }),
@@ -37,6 +38,7 @@ const DEBIT_NORMAL = new Set(["asset", "expense"]);
 function LedgerPage() {
   const currency = useDefaultCurrency();
   const fmt = (n: number) => formatCurrency(n, currency);
+  const companyId = useActiveCompanyId();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [accountId, setAccountId] = useState<string>("");
   const [from, setFrom] = useState(() => {
@@ -49,22 +51,25 @@ function LedgerPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (!companyId) return;
+    setAccounts([]);
+    setAccountId("");
     (async () => {
-      const { data } = await supabase.from("accounts").select("id,code,name,type").order("code");
+      const { data } = await supabase.from("accounts").select("id,code,name,type").eq("company_id", companyId).order("code");
       setAccounts((data ?? []) as Account[]);
-      if (data && data.length && !accountId) setAccountId(data[0].id);
+      if (data && data.length) setAccountId(data[0].id);
     })();
-  }, []);
+  }, [companyId]);
 
   useEffect(() => {
-    if (!accountId) return;
+    if (!companyId || !accountId) return;
     (async () => {
       setLoading(true);
       const { data, error } = await supabase
         .from("journal_lines")
         .select(
           "id,debit,credit,description,journal_entries!inner(entry_date,reference,memo,source_type)",
-        )
+        ).eq("company_id", companyId)
         .eq("account_id", accountId)
         .gte("journal_entries.entry_date", from)
         .lte("journal_entries.entry_date", to)
@@ -72,7 +77,7 @@ function LedgerPage() {
       if (!error) setLines((data ?? []) as unknown as Line[]);
       setLoading(false);
     })();
-  }, [accountId, from, to]);
+  }, [accountId, from, to, companyId]);
 
   const account = accounts.find((a) => a.id === accountId);
   const debitNormal = account ? DEBIT_NORMAL.has(account.type) : true;
