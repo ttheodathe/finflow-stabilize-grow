@@ -30,6 +30,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, DollarSign } from "lucide-react";
 import { toast } from "sonner";
+import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/purchases/bills")({
   head: () => ({ meta: [{ title: "Bills — Free Accounting" }] }),
@@ -110,6 +111,7 @@ const fmt = (n: number, c = "USD") => {
 };
 
 function BillsPage() {
+  const companyId = useActiveCompanyId();
   const [bills, setBills] = useState<Bill[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -136,18 +138,19 @@ function BillsPage() {
   });
 
   async function load() {
+    if (!companyId) return;
     const [b, v, a, sums] = await Promise.all([
       (supabase as any)
         .from("bills")
-        .select("*, vendors(name)")
+        .select("*, vendors(name)").eq("company_id", companyId)
         .order("issue_date", { ascending: false }),
-      (supabase as any).from("vendors").select("id,name,payment_terms").order("name"),
+      (supabase as any).from("vendors").select("id,name,payment_terms").eq("company_id", companyId).order("name"),
       (supabase as any)
         .from("accounts")
-        .select("id,code,name,type")
+        .select("id,code,name,type").eq("company_id", companyId)
         .eq("is_active", true)
         .order("code"),
-      (supabase as any).from("bill_payments").select("bill_id,amount"),
+      (supabase as any).from("bill_payments").select("bill_id,amount").eq("company_id", companyId),
     ]);
     if (b.data) setBills(b.data as Bill[]);
     if (v.data) setVendors(v.data as Vendor[]);
@@ -160,7 +163,7 @@ function BillsPage() {
   }
   useEffect(() => {
     load();
-  }, []);
+  }, [companyId]);
 
   const expenseAccounts = useMemo(() => accounts.filter((a) => a.type === "expense"), [accounts]);
   const assetAccounts = useMemo(() => accounts.filter((a) => a.type === "asset"), [accounts]);
