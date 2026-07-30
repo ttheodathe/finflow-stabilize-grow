@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
 import { useDefaultCurrency, useDateFormat, formatDate } from "@/hooks/use-currency";
 import { formatCurrency } from "@/lib/currencies";
+import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/accounting/journals")({
   head: () => ({ meta: [{ title: "Journal entries — Free Accounting" }] }),
@@ -62,6 +63,7 @@ function nextJournalReference(entries: Entry[]): string {
 }
 
 function JournalsPage() {
+  const companyId = useActiveCompanyId();
   const currency = useDefaultCurrency();
   const dateFormat = useDateFormat();
   const fmt = (n: number) => formatCurrency(n, currency);
@@ -71,6 +73,7 @@ function JournalsPage() {
   const [open, setOpen] = useState(false);
 
   async function load() {
+    if (!companyId) return;
     setLoading(true);
     const [entRes, accRes] = await Promise.all([
       supabase
@@ -82,7 +85,7 @@ function JournalsPage() {
         .limit(200),
       supabase
         .from("accounts")
-        .select("id,code,name,is_active")
+        .select("id,code,name,is_active").eq("company_id", companyId)
         .eq("is_active", true)
         .order("code"),
     ]);
@@ -93,7 +96,7 @@ function JournalsPage() {
   }
   useEffect(() => {
     load();
-  }, []);
+  }, [companyId]);
 
   async function del(id: string) {
     if (!confirm("Delete this journal entry?")) return;
