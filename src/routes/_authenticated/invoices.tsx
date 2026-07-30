@@ -32,6 +32,7 @@ import { toast } from "sonner";
 import { CurrencySelect } from "@/components/currency-select";
 import { useDefaultCurrency } from "@/hooks/use-currency";
 import { generateInvoicePdf } from "@/lib/invoice-pdf";
+import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 type InvoicingSettings = {
   invoicePrefix: string;
@@ -83,6 +84,7 @@ function fmt(n: number, c = "USD") {
 }
 
 function InvoicesPage() {
+  const companyId = useActiveCompanyId();
   const defaultCurrency = useDefaultCurrency();
   const [items, setItems] = useState<Invoice[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -107,16 +109,17 @@ function InvoicesPage() {
   const [lines, setLines] = useState<Line[]>([]);
 
   async function load() {
+    if (!companyId) return;
     const { data: u } = await supabase.auth.getUser();
     const [inv, cust, cat, ws] = await Promise.all([
       supabase
         .from("invoices")
-        .select("*, customers(name)")
+        .select("*, customers(name)").eq("company_id", companyId)
         .order("issue_date", { ascending: false }),
-      supabase.from("customers").select("id,name").order("name"),
+      supabase.from("customers").select("id,name").eq("company_id", companyId).order("name"),
       supabase
         .from("items")
-        .select("id,name,price,tax_rate,type,stock_quantity,track_inventory")
+        .select("id,name,price,tax_rate,type,stock_quantity,track_inventory").eq("company_id", companyId)
         .eq("is_active", true)
         .order("name"),
       u.user
@@ -142,7 +145,7 @@ function InvoicesPage() {
   }
   useEffect(() => {
     load();
-  }, []);
+  }, [companyId]);
 
   const totals = useMemo(() => {
     let subtotal = 0,
@@ -180,6 +183,7 @@ function InvoicesPage() {
     setOpen(true);
   }
   async function openEdit(i: Invoice) {
+    if (!companyId) return;
     setEditing(i);
     setForm({
       invoice_number: i.invoice_number,
@@ -192,7 +196,7 @@ function InvoicesPage() {
     });
     const { data } = await supabase
       .from("invoice_items")
-      .select("item_id,description,quantity,unit_price,tax_rate")
+      .select("item_id,description,quantity,unit_price,tax_rate").eq("company_id", companyId)
       .eq("invoice_id", i.id);
     setLines(
       (data ?? []).map((d: any) => ({
@@ -303,6 +307,7 @@ function InvoicesPage() {
   }
 
   async function downloadPdf(inv: Invoice) {
+    if (!companyId) return;
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
     const [{ data: company }, { data: customer }, { data: lineRows }] = await Promise.all([
@@ -316,13 +321,13 @@ function InvoicesPage() {
       inv.customer_id
         ? supabase
             .from("customers")
-            .select("name,email,address")
+            .select("name,email,address").eq("company_id", companyId)
             .eq("id", inv.customer_id)
             .maybeSingle()
         : Promise.resolve({ data: null }),
       supabase
         .from("invoice_items")
-        .select("description,quantity,unit_price,tax_rate")
+        .select("description,quantity,unit_price,tax_rate").eq("company_id", companyId)
         .eq("invoice_id", inv.id),
     ]);
     let logoSigned: string | null = null;
