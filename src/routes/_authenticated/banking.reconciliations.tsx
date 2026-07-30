@@ -23,6 +23,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/banking/reconciliations")({
   head: () => ({ meta: [{ title: "Reconciliations — Free Accounting" }] }),
@@ -50,6 +51,7 @@ function fmt(n: number, c = "USD") {
 }
 
 function ReconciliationsPage() {
+  const companyId = useActiveCompanyId();
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [accountId, setAccountId] = useState("");
   const [txns, setTxns] = useState<Txn[]>([]);
@@ -58,9 +60,10 @@ function ReconciliationsPage() {
   const [loading, setLoading] = useState(false);
 
   async function loadAccounts() {
+    if (!companyId) return;
     const { data } = await (supabase as any)
       .from("bank_accounts")
-      .select("id,name,currency,current_balance,opening_balance")
+      .select("id,name,currency,current_balance,opening_balance").eq("company_id", companyId)
       .eq("is_active", true)
       .order("name");
     if (data) {
@@ -69,18 +72,20 @@ function ReconciliationsPage() {
     }
   }
   useEffect(() => {
+    setAccounts([]);
+    setAccountId("");
     loadAccounts(); /* eslint-disable-next-line */
-  }, []);
+  }, [companyId]);
 
   async function loadTxns() {
-    if (!accountId) {
+    if (!companyId || !accountId) {
       setTxns([]);
       return;
     }
     setLoading(true);
     const { data, error } = await (supabase as any)
       .from("bank_transactions")
-      .select("id,txn_date,description,amount,reconciled,is_transfer")
+      .select("id,txn_date,description,amount,reconciled,is_transfer").eq("company_id", companyId)
       .eq("bank_account_id", accountId)
       .order("txn_date", { ascending: false });
     if (error) toast.error(error.message);
@@ -89,7 +94,7 @@ function ReconciliationsPage() {
   }
   useEffect(() => {
     loadTxns(); /* eslint-disable-next-line */
-  }, [accountId]);
+  }, [accountId, companyId]);
 
   const account = accounts.find((a) => a.id === accountId);
   const currency = account?.currency ?? "USD";
