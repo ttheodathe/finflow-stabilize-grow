@@ -956,6 +956,162 @@ export type Database = {
           },
         ]
       }
+      document_extractions: {
+        Row: {
+          confidence: number
+          created_at: string
+          document_id: string
+          field_group: string
+          field_name: string
+          field_value: string | null
+          id: string
+          line_index: number | null
+          was_edited_by_user: boolean
+        }
+        Insert: {
+          confidence?: number
+          created_at?: string
+          document_id: string
+          field_group: string
+          field_name: string
+          field_value?: string | null
+          id?: string
+          line_index?: number | null
+          was_edited_by_user?: boolean
+        }
+        Update: {
+          confidence?: number
+          created_at?: string
+          document_id?: string
+          field_group?: string
+          field_name?: string
+          field_value?: string | null
+          id?: string
+          line_index?: number | null
+          was_edited_by_user?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_extractions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_validations: {
+        Row: {
+          check_name: string
+          created_at: string
+          document_id: string
+          id: string
+          message: string
+          severity: string
+        }
+        Insert: {
+          check_name: string
+          created_at?: string
+          document_id: string
+          id?: string
+          message: string
+          severity: string
+        }
+        Update: {
+          check_name?: string
+          created_at?: string
+          document_id?: string
+          id?: string
+          message?: string
+          severity?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_validations_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          ai_model: string | null
+          company_id: string
+          created_at: string
+          doc_type: string
+          error_message: string | null
+          extracted_at: string | null
+          file_name: string
+          file_path: string
+          file_size_bytes: number
+          id: string
+          linked_id: string | null
+          linked_table: string | null
+          mime_type: string
+          overall_confidence: number | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          uploaded_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          ai_model?: string | null
+          company_id: string
+          created_at?: string
+          doc_type: string
+          error_message?: string | null
+          extracted_at?: string | null
+          file_name: string
+          file_path: string
+          file_size_bytes: number
+          id?: string
+          linked_id?: string | null
+          linked_table?: string | null
+          mime_type: string
+          overall_confidence?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          ai_model?: string | null
+          company_id?: string
+          created_at?: string
+          doc_type?: string
+          error_message?: string | null
+          extracted_at?: string | null
+          file_name?: string
+          file_path?: string
+          file_size_bytes?: number
+          id?: string
+          linked_id?: string | null
+          linked_table?: string | null
+          mime_type?: string
+          overall_confidence?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       estimate_items: {
         Row: {
           amount: number
