@@ -31,6 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Pencil, Trash2, Landmark, Wallet, CreditCard } from "lucide-react";
 import { toast } from "sonner";
+import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/banking/accounts")({
   head: () => ({ meta: [{ title: "Bank accounts — Free Accounting" }] }),
@@ -77,6 +78,7 @@ function fmt(n: number, c = "USD") {
 }
 
 function BankAccountsPage() {
+  const companyId = useActiveCompanyId();
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [glAccounts, setGlAccounts] = useState<GlAccount[]>([]);
   const [open, setOpen] = useState(false);
@@ -85,12 +87,13 @@ function BankAccountsPage() {
   const [loading, setLoading] = useState(true);
 
   async function load() {
+    if (!companyId) return;
     setLoading(true);
     const [a, g] = await Promise.all([
-      (supabase as any).from("bank_accounts").select("*").order("name"),
+      (supabase as any).from("bank_accounts").select("*").eq("company_id", companyId).order("name"),
       (supabase as any)
         .from("accounts")
-        .select("id,code,name,type")
+        .select("id,code,name,type").eq("company_id", companyId)
         .eq("is_active", true)
         .order("code"),
     ]);
@@ -101,7 +104,7 @@ function BankAccountsPage() {
   }
   useEffect(() => {
     load();
-  }, []);
+  }, [companyId]);
 
   const totalsByType = useMemo(() => {
     const totals: Record<string, number> = { bank: 0, cash: 0, credit_card: 0 };
