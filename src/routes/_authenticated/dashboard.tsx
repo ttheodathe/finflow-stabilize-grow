@@ -33,6 +33,7 @@ import { useDefaultCurrency } from "@/hooks/use-currency";
 import { formatCurrency } from "@/lib/currencies";
 import { useFxRates } from "@/hooks/use-fx";
 import { convert } from "@/lib/fx";
+import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — FinFlow Track" }] }),
@@ -82,6 +83,7 @@ function Dashboard() {
   const { rates, loading: fxLoading } = useFxRates("USD");
   const fmt = (n: number) => formatCurrency(n, currency, { maximumFractionDigits: 0 });
   const conv = (amount: number, from: string) => convert(amount, from || currency, currency, rates);
+  const companyId = useActiveCompanyId();
   const [invoices, setInvoices] = useState<Inv[]>([]);
   const [expenses, setExpenses] = useState<Exp[]>([]);
   const [customers, setCustomers] = useState<{ id: string; name: string }[]>([]);
@@ -89,23 +91,47 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Wait until we know which company is active, and reset stale
+    // data from the previous company the moment the switch happens.
+    if (!companyId) return;
+    setLoading(true);
+    setInvoices([]);
+    setExpenses([]);
+    setCustomers([]);
+    setBankAccounts([]);
+
+    let cancelled = false;
     (async () => {
       const [i, e, c, b] = await Promise.all([
-        supabase.from("invoices").select("*").order("created_at", { ascending: false }),
-        supabase.from("expenses").select("*").order("created_at", { ascending: false }),
-        supabase.from("customers").select("id,name"),
+        supabase
+          .from("invoices")
+          .select("*")
+          .eq("company_id", companyId)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("expenses")
+          .select("*")
+          .eq("company_id", companyId)
+          .order("created_at", { ascending: false }),
+        supabase.from("customers").select("id,name").eq("company_id", companyId),
         (supabase as any)
           .from("bank_accounts")
           .select("id,current_balance,currency,is_active")
+          .eq("company_id", companyId)
           .eq("is_active", true),
       ]);
+      if (cancelled) return;
       setInvoices((i.data ?? []) as Inv[]);
       setExpenses((e.data ?? []) as Exp[]);
       setCustomers((c.data ?? []) as { id: string; name: string }[]);
       setBankAccounts((b.data ?? []) as BankAcct[]);
       setLoading(false);
     })();
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [companyId]);
 
   const stats = useMemo(() => {
     const revenue = invoices
