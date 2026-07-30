@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/items/categories")({
   head: () => ({ meta: [{ title: "Categories — Free Accounting" }] }),
@@ -31,19 +32,21 @@ export const Route = createFileRoute("/_authenticated/items/categories")({
 type Category = { id: string; name: string; description: string | null; color: string | null };
 
 function CategoriesPage() {
+  const companyId = useActiveCompanyId();
   const [items, setItems] = useState<Category[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
   const [form, setForm] = useState({ name: "", description: "", color: "#2563EB" });
 
   async function load() {
-    const { data, error } = await supabase.from("item_categories").select("*").order("name");
+    if (!companyId) return;
+    const { data, error } = await supabase.from("item_categories").select("*").eq("company_id", companyId).order("name");
     if (error) return toast.error(error.message);
     setItems(data as Category[]);
   }
   useEffect(() => {
     load();
-  }, []);
+  }, [companyId]);
 
   function openNew() {
     setEditing(null);
