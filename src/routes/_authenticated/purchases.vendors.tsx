@@ -24,6 +24,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/purchases/vendors")({
   head: () => ({ meta: [{ title: "Vendors — Free Accounting" }] }),
@@ -54,19 +55,21 @@ const empty = {
 };
 
 function VendorsPage() {
+  const companyId = useActiveCompanyId();
   const [items, setItems] = useState<Vendor[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState({ ...empty });
 
   async function load() {
-    const { data, error } = await (supabase as any).from("vendors").select("*").order("name");
+    if (!companyId) return;
+    const { data, error } = await (supabase as any).from("vendors").select("*").eq("company_id", companyId).order("name");
     if (error) toast.error(error.message);
     else setItems(data as Vendor[]);
   }
   useEffect(() => {
     load();
-  }, []);
+  }, [companyId]);
 
   function openNew() {
     setEditing(null);
