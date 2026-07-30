@@ -30,6 +30,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, CheckCircle2, PackageCheck, FileText } from "lucide-react";
 import { toast } from "sonner";
+import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/purchases/orders")({
   head: () => ({ meta: [{ title: "Purchase orders — Free Accounting" }] }),
@@ -72,6 +73,7 @@ const fmt = (n: number, c = "USD") =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: c }).format(n || 0);
 
 function POPage() {
+  const companyId = useActiveCompanyId();
   const navigate = useNavigate();
   const [items, setItems] = useState<PO[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
@@ -88,15 +90,16 @@ function POPage() {
   const [lines, setLines] = useState<Line[]>([{ ...emptyLine }]);
 
   async function load() {
+    if (!companyId) return;
     const [p, v, a] = await Promise.all([
       (supabase as any)
         .from("purchase_orders")
-        .select("*, vendors(name)")
+        .select("*, vendors(name)").eq("company_id", companyId)
         .order("order_date", { ascending: false }),
-      (supabase as any).from("vendors").select("id,name").order("name"),
+      (supabase as any).from("vendors").select("id,name").eq("company_id", companyId).order("name"),
       (supabase as any)
         .from("accounts")
-        .select("id,code,name,type")
+        .select("id,code,name,type").eq("company_id", companyId)
         .eq("is_active", true)
         .order("code"),
     ]);
@@ -106,7 +109,7 @@ function POPage() {
   }
   useEffect(() => {
     load();
-  }, []);
+  }, [companyId]);
 
   const expenseAccounts = useMemo(() => accounts.filter((a) => a.type === "expense"), [accounts]);
 
@@ -193,7 +196,7 @@ function POPage() {
     if (!u.user) return;
     const { data: poItems, error: e1 } = await (supabase as any)
       .from("purchase_order_items")
-      .select("*")
+      .select("*").eq("company_id", companyId)
       .eq("po_id", po.id);
     if (e1) return toast.error(e1.message);
     const defExp = expenseAccounts[0]?.id;
