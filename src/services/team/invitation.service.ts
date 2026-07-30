@@ -31,9 +31,11 @@ export interface CreateInvitationInput {
 
 /**
  * Creates an invitation (seat-limit checked server-side) and triggers the
- * invitation email via a Supabase Edge Function. The DB write and the email
- * send are deliberately separate: if the email send fails, the invitation
- * still exists and can be resent from the UI.
+ * invitation email via our own /api/send-invitation server route. The DB
+ * write and the email send are deliberately separate: if the email send
+ * fails, the invitation still exists and can be resent from the UI — but
+ * `emailSent` is set to false so the caller can warn the user instead of
+ * silently pretending it worked.
  */
 export async function createInvitation(input: CreateInvitationInput): Promise<TeamInvitation> {
   const { data, error } = await supabase.rpc("create_team_invitation", {
@@ -46,21 +48,53 @@ export async function createInvitation(input: CreateInvitationInput): Promise<Te
   if (error) throw mapRpcError(error);
   const invitation = data as TeamInvitation;
 
-  try {
-    await sendInvitationEmail(invitation.id);
-  } catch (emailError) {
-    // Non-fatal: invitation exists, surface a soft warning to the caller.
-    console.error("Invitation created but email failed to send", emailError);
-  }
+  invitation.emailSent = await sendInvitationEmail(invitation);
 
   return invitation;
 }
 
-async function sendInvitationEmail(invitationId: string): Promise<void> {
-  const { error } = await supabase.functions.invoke("send-team-invitation-email", {
-    body: { invitationId },
-  });
-  if (error) throw error;
+/**
+ * Looks up the company name and inviter's display name for the email copy,
+ * builds the accept-invite link, and posts to our own send-invitation
+ * server route (which sends via Resend). Returns false — instead of
+ * throwing — on any failure, so the invitation row is never at risk.
+ */
+async function sendInvitationEmail(invitation: TeamInvitation): Promise<boolean> {
+  try {
+    const [{ data: company, error: companyError }, { data: userRes }] = await Promise.all([
+      supabase.from("companies").select("name").eq("id", invitation.company_id).single(),
+      supabase.auth.getUser(),
+    ]);
+    if (companyError) throw companyError;
+
+    const inviterName =
+      (userRes?.user?.user_metadata?.full_name as string | undefined) ??
+      userRes?.user?.email ??
+      undefined;
+
+    const inviteUrl = `${window.location.origin}/invite/${invitation.token}`;
+
+    const response = await fetch("/api/send-invitation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: invitation.email,
+        inviterName,
+        companyName: company?.name,
+        inviteUrl,
+      }),
+    });
+
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      throw new Error(body?.error ?? `Send failed with status ${response.status}`);
+    }
+
+    return true;
+  } catch (emailError) {
+    console.error("Invitation created but email failed to send", emailError);
+    return false;
+  }
 }
 
 export async function resendInvitation(invitationId: string): Promise<TeamInvitation> {
@@ -69,7 +103,7 @@ export async function resendInvitation(invitationId: string): Promise<TeamInvita
   });
   if (error) throw mapRpcError(error);
   const invitation = data as TeamInvitation;
-  await sendInvitationEmail(invitation.id).catch((e) => console.error("Resend email failed", e));
+  invitation.emailSent = await sendInvitationEmail(invitation);
   return invitation;
 }
 
