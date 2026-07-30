@@ -88,6 +88,8 @@ export interface TeamInvitation {
   created_at: string;
   role?: Role;
   invited_by_profile?: Profile;
+  /** Not persisted — set in-memory by createInvitation/resendInvitation to report send outcome. */
+  emailSent?: boolean;
 }
 
 export interface SeatUsage {
