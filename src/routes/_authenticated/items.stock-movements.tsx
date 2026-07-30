@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
+import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/items/stock-movements")({
   head: () => ({ meta: [{ title: "Stock movements — Free Accounting" }] }),
@@ -56,6 +57,7 @@ function reasonVariant(r: string): "default" | "secondary" | "destructive" {
 }
 
 function StockMovementsPage() {
+  const companyId = useActiveCompanyId();
   const [rows, setRows] = useState<Movement[]>([]);
   const [items, setItems] = useState<ItemOpt[]>([]);
   const [profiles, setProfiles] = useState<ProfileMap>({});
@@ -63,10 +65,11 @@ function StockMovementsPage() {
   const [loading, setLoading] = useState(true);
 
   async function load() {
+    if (!companyId) return;
     setLoading(true);
     let q = supabase
       .from("stock_movements")
-      .select("*, items(name, sku), invoices(invoice_number)")
+      .select("*, items(name, sku), invoices(invoice_number)").eq("company_id", companyId)
       .order("created_at", { ascending: false })
       .limit(500);
     if (itemFilter !== "all") q = q.eq("item_id", itemFilter);
@@ -74,7 +77,7 @@ function StockMovementsPage() {
       q,
       supabase
         .from("items")
-        .select("id,name")
+        .select("id,name").eq("company_id", companyId)
         .eq("type", "product")
         .eq("track_inventory", true)
         .order("name"),
@@ -101,7 +104,7 @@ function StockMovementsPage() {
 
   useEffect(() => {
     load();
-  }, [itemFilter]);
+  }, [itemFilter, companyId]);
 
   function exportCsv() {
     if (rows.length === 0) {
