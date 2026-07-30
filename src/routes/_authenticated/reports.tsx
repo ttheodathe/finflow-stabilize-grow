@@ -5,9 +5,10 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useDefaultCurrency } from "@/hooks/use-currency";
 import { formatCurrency } from "@/lib/currencies";
+import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/reports")({
-  head: () => ({ meta: [{ title: "Reports — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "Reports — FinFlow Track" }] }),
   component: ReportsPage,
 });
 
@@ -57,6 +58,7 @@ function ReportsPage() {
 function ProfitAndLoss() {
   const currency = useDefaultCurrency();
   const fmt = (n: number) => formatCurrency(n, currency);
+  const companyId = useActiveCompanyId();
   const [from, setFrom] = useState(() => {
     const d = new Date();
     d.setMonth(0, 1);
@@ -69,17 +71,18 @@ function ProfitAndLoss() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (!companyId) return;
     (async () => {
       setLoading(true);
       const [inv, exp] = await Promise.all([
         supabase
           .from("invoices")
-          .select("total,status,issue_date,customers(name)")
+          .select("total,status,issue_date,customers(name)").eq("company_id", companyId)
           .gte("issue_date", from)
           .lte("issue_date", to),
         supabase
           .from("expenses")
-          .select("amount,category,vendor,expense_date")
+          .select("amount,category,vendor,expense_date").eq("company_id", companyId)
           .gte("expense_date", from)
           .lte("expense_date", to),
       ]);
@@ -119,7 +122,7 @@ function ProfitAndLoss() {
       setOutstanding(out);
       setLoading(false);
     })();
-  }, [from, to]);
+  }, [from, to, companyId]);
 
   const totalRevenue = revenueRows.reduce((s, r) => s + r.amount, 0);
   const totalExpenses = expenseRows.reduce((s, r) => s + r.amount, 0);
@@ -224,6 +227,7 @@ type LedgerRow = { code: string; name: string; amount: number };
 function BalanceSheet() {
   const currency = useDefaultCurrency();
   const fmt = (n: number) => formatCurrency(n, currency);
+  const companyId = useActiveCompanyId();
   const [asOf, setAsOf] = useState(() => new Date().toISOString().slice(0, 10));
   const [assets, setAssets] = useState<LedgerRow[]>([]);
   const [liabilities, setLiabilities] = useState<LedgerRow[]>([]);
@@ -232,13 +236,14 @@ function BalanceSheet() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (!companyId) return;
     (async () => {
       setLoading(true);
       const [accRes, lineRes] = await Promise.all([
-        supabase.from("accounts").select("id,code,name,type").order("code"),
+        supabase.from("accounts").select("id,code,name,type").eq("company_id", companyId).order("code"),
         supabase
           .from("journal_lines")
-          .select("account_id,debit,credit,journal_entries!inner(entry_date)")
+          .select("account_id,debit,credit,journal_entries!inner(entry_date)").eq("company_id", companyId)
           .lte("journal_entries.entry_date", asOf),
       ]);
       const accounts = (accRes.data ?? []) as {
@@ -289,7 +294,7 @@ function BalanceSheet() {
       setNetIncome(revenueTotal - expenseTotal);
       setLoading(false);
     })();
-  }, [asOf]);
+  }, [asOf, companyId]);
 
   const totalAssets = assets.reduce((s, r) => s + r.amount, 0);
   const totalLiabilities = liabilities.reduce((s, r) => s + r.amount, 0);
