@@ -503,6 +503,113 @@ export const approveDocument = createServerFn({ method: "POST" })
     return { ok: true as const, expenseId: expense.id as string };
   });
 
+const ApproveBillLineInput = z.object({
+  description: z.string().min(1),
+  quantity: z.number().positive(),
+  unit_price: z.number(),
+  tax_rate: z.number().default(0),
+  account_id: z.string().uuid(),
+});
+
+const ApproveBillInput = z.object({
+  documentId: z.string().uuid(),
+  bill: z.object({
+    vendor_id: z.string().uuid(),
+    bill_number: z.string().min(1),
+    reference: z.string().optional().nullable(),
+    issue_date: z.string(),
+    due_date: z.string().optional().nullable(),
+    currency: z.string().default("USD"),
+    notes: z.string().optional().nullable(),
+    lines: z.array(ApproveBillLineInput).min(1),
+  }),
+});
+
+// Bill counterpart to approveDocument. Bills are structurally different
+// from expenses — a header plus N line items, each needing its own expense
+// account — so this is a separate insert path rather than a shared one,
+// but reuses the exact same document status/link/audit-log mechanics.
+export const approveBillDocument = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => ApproveBillInput.parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { data: auth } = await supabase.auth.getUser();
+    if (!auth.user) throw new Error("Not authenticated");
+
+    const { data: doc, error: docErr } = await supabase
+      .from("documents")
+      .select("id, company_id, status")
+      .eq("id", data.documentId)
+      .single();
+    if (docErr || !doc) throw new Error("Document not found or you don't have access to it.");
+    if (doc.status === "approved") throw new Error("This document was already approved.");
+
+    const subtotal = data.bill.lines.reduce((s, l) => s + l.quantity * l.unit_price, 0);
+    const tax = data.bill.lines.reduce((s, l) => s + l.quantity * l.unit_price * (l.tax_rate / 100), 0);
+
+    const { data: bill, error: billErr } = await supabase
+      .from("bills")
+      .insert({
+        company_id: doc.company_id,
+        user_id: auth.user.id,
+        vendor_id: data.bill.vendor_id,
+        bill_number: data.bill.bill_number,
+        reference: data.bill.reference || null,
+        issue_date: data.bill.issue_date,
+        due_date: data.bill.due_date || null,
+        currency: data.bill.currency,
+        notes: data.bill.notes || null,
+        subtotal,
+        tax,
+        total: subtotal + tax,
+        status: "open",
+      } as never)
+      .select("id")
+      .single();
+    if (billErr || !bill) throw new Error(billErr?.message ?? "Failed to create bill");
+
+    const items = data.bill.lines.map((l) => ({
+      company_id: doc.company_id,
+      user_id: auth.user.id,
+      bill_id: (bill as { id: string }).id,
+      account_id: l.account_id,
+      description: l.description,
+      quantity: l.quantity,
+      unit_price: l.unit_price,
+      tax_rate: l.tax_rate,
+      amount: l.quantity * l.unit_price,
+    }));
+    const { error: itemsErr } = await supabase.from("bill_items").insert(items as never);
+    if (itemsErr) throw new Error(itemsErr.message);
+
+    // Touch the bill so the same status-change trigger that posts the
+    // journal entry for the manual "New bill" flow fires here too.
+    await supabase.from("bills").update({ status: "open" }).eq("id", (bill as { id: string }).id);
+
+    await supabase
+      .from("documents")
+      .update({
+        status: "approved",
+        linked_table: "bills",
+        linked_id: (bill as { id: string }).id,
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: auth.user.id,
+      })
+      .eq("id", doc.id);
+
+    await supabase.from("audit_logs").insert({
+      company_id: doc.company_id,
+      user_id: auth.user.id,
+      action: "document_approved",
+      entity_type: "documents",
+      entity_id: doc.id,
+      metadata: { linked_table: "bills", linked_id: (bill as { id: string }).id },
+    });
+
+    return { ok: true as const, billId: (bill as { id: string }).id };
+  });
+
 const RejectInput = z.object({ documentId: z.string().uuid(), reason: z.string().optional() });
 
 export const rejectDocument = createServerFn({ method: "POST" })
