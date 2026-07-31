@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,11 +27,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, X, FileCheck } from "lucide-react";
+import { Plus, Pencil, Trash2, X, FileCheck, ScanLine } from "lucide-react";
 import { toast } from "sonner";
 import { CurrencySelect } from "@/components/currency-select";
 import { useDefaultCurrency } from "@/hooks/use-currency";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
+import { useServerFn } from "@tanstack/react-start";
+import { extractDocument } from "@/lib/document-ai.functions";
+import { EstimateReviewWorkspace } from "@/components/estimate-review-workspace";
 
 export const Route = createFileRoute("/_authenticated/sales/estimates")({
   head: () => ({ meta: [{ title: "Estimates — Free Accounting" }] }),
@@ -85,6 +88,70 @@ function EstimatesPage() {
     notes: "",
   });
   const [lines, setLines] = useState<Line[]>([]);
+
+  const fileRef = useRef<HTMLInputElement>(null);
+  const runScan = useServerFn(extractDocument);
+  const [scanning, setScanning] = useState(false);
+  const [reviewDocId, setReviewDocId] = useState<string | null>(null);
+  const [reviewFileUrl, setReviewFileUrl] = useState<string | null>(null);
+  const [reviewMimeType, setReviewMimeType] = useState<string | null>(null);
+
+  async function onScan(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!companyId) return toast.error("Select a company first");
+    if (file.size > 8 * 1024 * 1024) return toast.error("File must be under 8 MB.");
+    if (!file.type.startsWith("image/") && file.type !== "application/pdf") {
+      return toast.error("Only image files (JPG/PNG/HEIC) or PDFs are supported for AI extraction.");
+    }
+    setScanning(true);
+    const t = toast.loading("Uploading document…");
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) throw new Error("Not signed in");
+
+      const { data: doc, error: docErr } = await supabase
+        .from("documents")
+        .insert({
+          company_id: companyId,
+          uploaded_by: u.user.id,
+          doc_type: "other",
+          file_path: "",
+          file_name: file.name,
+          mime_type: file.type,
+          file_size_bytes: file.size,
+          status: "uploaded",
+        })
+        .select("id")
+        .single();
+      if (docErr || !doc) throw new Error(docErr?.message ?? "Could not create document record");
+
+      const ext = file.name.split(".").pop() || "bin";
+      const path = `${companyId}/${doc.id}/original.${ext}`;
+      const { error: upErr } = await supabase.storage.from("documents").upload(path, file, {
+        contentType: file.type,
+        upsert: true,
+      });
+      if (upErr) throw new Error(upErr.message);
+
+      await supabase.from("documents").update({ file_path: path }).eq("id", doc.id);
+
+      const { data: signed } = await supabase.storage.from("documents").createSignedUrl(path, 60 * 30);
+      setReviewFileUrl(signed?.signedUrl ?? null);
+      setReviewMimeType(file.type);
+      setReviewDocId(doc.id);
+
+      toast.success("Uploaded — AI is reading it now", { id: t });
+      runScan({ data: { documentId: doc.id } }).catch((err) => {
+        toast.error(err instanceof Error ? err.message : "Extraction failed", { id: t });
+      });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Couldn't upload that document", { id: t });
+    } finally {
+      setScanning(false);
+    }
+  }
 
   async function load() {
     if (!companyId) return;
@@ -182,6 +249,7 @@ function EstimatesPage() {
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    if (!companyId) return toast.error("Select a company first");
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
     const payload: any = {
@@ -207,7 +275,7 @@ function EstimatesPage() {
     } else {
       const { data, error } = await (supabase as any)
         .from("estimates")
-        .insert(payload)
+        .insert({ ...payload, company_id: companyId })
         .select("id")
         .single();
       if (error || !data) return toast.error(error?.message ?? "Insert failed");
@@ -217,6 +285,7 @@ function EstimatesPage() {
       await (supabase as any).from("estimate_items").delete().eq("estimate_id", estId);
       if (lines.length > 0) {
         const rows = lines.map((l) => ({
+          company_id: companyId,
           estimate_id: estId,
           user_id: u.user!.id,
           item_id: l.item_id,
@@ -244,6 +313,7 @@ function EstimatesPage() {
   }
 
   async function convertToInvoice(est: Estimate) {
+    if (!companyId) return toast.error("Select a company first");
     if (est.converted_invoice_id) {
       toast.info("Already converted");
       return;
@@ -255,6 +325,7 @@ function EstimatesPage() {
       .select("item_id,description,quantity,unit_price,tax_rate,amount").eq("company_id", companyId)
       .eq("estimate_id", est.id);
     const invPayload = {
+      company_id: companyId,
       user_id: u.user.id,
       invoice_number: `INV-${Date.now().toString().slice(-6)}`,
       customer_id: est.customer_id,
@@ -275,6 +346,7 @@ function EstimatesPage() {
     if (error || !inv) return toast.error(error?.message ?? "Failed");
     if (estLines && estLines.length > 0) {
       const rows = estLines.map((l: any) => ({
+        company_id: companyId,
         invoice_id: inv.id,
         user_id: u.user!.id,
         item_id: l.item_id,
@@ -303,7 +375,12 @@ function EstimatesPage() {
             Send quotes and proposals; convert them to invoices in one click.
           </p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <div className="flex items-center gap-2">
+          <input ref={fileRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={onScan} />
+          <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} disabled={scanning}>
+            <ScanLine className="h-4 w-4" /> {scanning ? "Uploading…" : "Scan a customer order"}
+          </Button>
+          <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button onClick={openNew} className="bg-gradient-hero">
               <Plus className="h-4 w-4" /> New estimate
@@ -497,6 +574,7 @@ function EstimatesPage() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <div className="bg-card border rounded-xl">
@@ -549,6 +627,26 @@ function EstimatesPage() {
           </Table>
         )}
       </div>
+
+      <EstimateReviewWorkspace
+        open={!!reviewDocId}
+        documentId={reviewDocId}
+        fileUrl={reviewFileUrl}
+        mimeType={reviewMimeType}
+        customers={customers}
+        defaultCurrency={defaultCurrency}
+        onClose={() => {
+          setReviewDocId(null);
+          setReviewFileUrl(null);
+          setReviewMimeType(null);
+        }}
+        onApproved={() => {
+          setReviewDocId(null);
+          setReviewFileUrl(null);
+          setReviewMimeType(null);
+          load();
+        }}
+      />
     </div>
   );
 }
