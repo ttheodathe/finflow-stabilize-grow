@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,9 +28,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, ScanLine } from "lucide-react";
 import { toast } from "sonner";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
+import { useServerFn } from "@tanstack/react-start";
+import { extractDocument } from "@/lib/document-ai.functions";
+import { ItemsBulkReviewWorkspace } from "@/components/items-bulk-review-workspace";
 
 export type Item = {
   id: string;
@@ -84,6 +87,70 @@ export function ItemsManager({
     stock_quantity: "0",
     is_active: true,
   });
+
+  const fileRef = useRef<HTMLInputElement>(null);
+  const runScan = useServerFn(extractDocument);
+  const [scanning, setScanning] = useState(false);
+  const [reviewDocId, setReviewDocId] = useState<string | null>(null);
+  const [reviewFileUrl, setReviewFileUrl] = useState<string | null>(null);
+  const [reviewMimeType, setReviewMimeType] = useState<string | null>(null);
+
+  async function onScan(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!companyId) return toast.error("Select a company first");
+    if (file.size > 8 * 1024 * 1024) return toast.error("File must be under 8 MB.");
+    if (!file.type.startsWith("image/") && file.type !== "application/pdf") {
+      return toast.error("Only image files (JPG/PNG/HEIC) or PDFs are supported for AI extraction.");
+    }
+    setScanning(true);
+    const t = toast.loading("Uploading price list…");
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) throw new Error("Not signed in");
+
+      const { data: doc, error: docErr } = await supabase
+        .from("documents")
+        .insert({
+          company_id: companyId,
+          uploaded_by: u.user.id,
+          doc_type: "other",
+          file_path: "",
+          file_name: file.name,
+          mime_type: file.type,
+          file_size_bytes: file.size,
+          status: "uploaded",
+        })
+        .select("id")
+        .single();
+      if (docErr || !doc) throw new Error(docErr?.message ?? "Could not create document record");
+
+      const ext = file.name.split(".").pop() || "bin";
+      const path = `${companyId}/${doc.id}/original.${ext}`;
+      const { error: upErr } = await supabase.storage.from("documents").upload(path, file, {
+        contentType: file.type,
+        upsert: true,
+      });
+      if (upErr) throw new Error(upErr.message);
+
+      await supabase.from("documents").update({ file_path: path }).eq("id", doc.id);
+
+      const { data: signed } = await supabase.storage.from("documents").createSignedUrl(path, 60 * 30);
+      setReviewFileUrl(signed?.signedUrl ?? null);
+      setReviewMimeType(file.type);
+      setReviewDocId(doc.id);
+
+      toast.success("Uploaded — AI is reading it now", { id: t });
+      runScan({ data: { documentId: doc.id } }).catch((err) => {
+        toast.error(err instanceof Error ? err.message : "Extraction failed", { id: t });
+      });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Couldn't upload that document", { id: t });
+    } finally {
+      setScanning(false);
+    }
+  }
 
   async function load() {
     if (!companyId) return;
@@ -147,6 +214,7 @@ export function ItemsManager({
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    if (!companyId) return toast.error("Select a company first");
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
     const payload = {
@@ -167,7 +235,7 @@ export function ItemsManager({
     };
     const { error } = editing
       ? await supabase.from("items").update(payload).eq("id", editing.id)
-      : await supabase.from("items").insert(payload);
+      : await supabase.from("items").insert({ ...payload, company_id: companyId });
     if (error) return toast.error(error.message);
     toast.success(editing ? `${title} updated` : `${title} created`);
     setOpen(false);
@@ -189,7 +257,12 @@ export function ItemsManager({
           <h1 className="text-3xl font-bold">{title}</h1>
           <p className="text-muted-foreground">{description}</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <div className="flex items-center gap-2">
+          <input ref={fileRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={onScan} />
+          <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} disabled={scanning}>
+            <ScanLine className="h-4 w-4" /> {scanning ? "Uploading…" : "Scan a price list"}
+          </Button>
+          <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button onClick={openNew} className="bg-gradient-hero">
               <Plus className="h-4 w-4" /> New {title.toLowerCase().replace(/s$/, "")}
@@ -333,6 +406,7 @@ export function ItemsManager({
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <div className="bg-card border rounded-xl">
@@ -384,6 +458,27 @@ export function ItemsManager({
           </Table>
         )}
       </div>
+
+      <ItemsBulkReviewWorkspace
+        open={!!reviewDocId}
+        documentId={reviewDocId}
+        fileUrl={reviewFileUrl}
+        mimeType={reviewMimeType}
+        categories={categories}
+        defaultType={type}
+        defaultCurrency="USD"
+        onClose={() => {
+          setReviewDocId(null);
+          setReviewFileUrl(null);
+          setReviewMimeType(null);
+        }}
+        onApproved={() => {
+          setReviewDocId(null);
+          setReviewFileUrl(null);
+          setReviewMimeType(null);
+          load();
+        }}
+      />
     </div>
   );
 }
