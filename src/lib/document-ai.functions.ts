@@ -691,6 +691,107 @@ export const approveItemsDocument = createServerFn({ method: "POST" })
     return { ok: true as const, count: rows.length };
   });
 
+const ApproveEstimateLineInput = z.object({
+  description: z.string().min(1),
+  quantity: z.number().positive(),
+  unit_price: z.number(),
+  tax_rate: z.number().default(0),
+});
+
+const ApproveEstimateInput = z.object({
+  documentId: z.string().uuid(),
+  estimate: z.object({
+    customer_id: z.string().uuid(),
+    estimate_number: z.string().min(1),
+    issue_date: z.string(),
+    expiry_date: z.string().optional().nullable(),
+    currency: z.string().default("USD"),
+    notes: z.string().optional().nullable(),
+    lines: z.array(ApproveEstimateLineInput).min(1),
+  }),
+});
+
+// Sales counterpart to approveBillDocument. Where a scanned vendor bill
+// produces a `bills` record, a scanned customer PO / order document
+// produces an `estimates` record (a draft quote/order you can then send or
+// convert to an invoice) — customers don't get billed automatically just
+// because their PO was scanned.
+export const approveEstimateDocument = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => ApproveEstimateInput.parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { data: auth } = await supabase.auth.getUser();
+    if (!auth.user) throw new Error("Not authenticated");
+
+    const { data: doc, error: docErr } = await supabase
+      .from("documents")
+      .select("id, company_id, status")
+      .eq("id", data.documentId)
+      .single();
+    if (docErr || !doc) throw new Error("Document not found or you don't have access to it.");
+    if (doc.status === "approved") throw new Error("This document was already approved.");
+
+    const subtotal = data.estimate.lines.reduce((s, l) => s + l.quantity * l.unit_price, 0);
+    const tax = data.estimate.lines.reduce((s, l) => s + l.quantity * l.unit_price * (l.tax_rate / 100), 0);
+
+    const { data: estimate, error: estErr } = await supabase
+      .from("estimates")
+      .insert({
+        company_id: doc.company_id,
+        user_id: auth.user.id,
+        customer_id: data.estimate.customer_id,
+        estimate_number: data.estimate.estimate_number,
+        issue_date: data.estimate.issue_date,
+        expiry_date: data.estimate.expiry_date || null,
+        status: "draft",
+        currency: data.estimate.currency,
+        notes: data.estimate.notes || null,
+        subtotal,
+        tax,
+        total: subtotal + tax,
+      } as never)
+      .select("id")
+      .single();
+    if (estErr || !estimate) throw new Error(estErr?.message ?? "Failed to create estimate");
+
+    const items = data.estimate.lines.map((l) => ({
+      company_id: doc.company_id,
+      user_id: auth.user.id,
+      estimate_id: (estimate as { id: string }).id,
+      item_id: null,
+      description: l.description,
+      quantity: l.quantity,
+      unit_price: l.unit_price,
+      tax_rate: l.tax_rate,
+      amount: l.quantity * l.unit_price,
+    }));
+    const { error: itemsErr } = await supabase.from("estimate_items").insert(items as never);
+    if (itemsErr) throw new Error(itemsErr.message);
+
+    await supabase
+      .from("documents")
+      .update({
+        status: "approved",
+        linked_table: "estimates",
+        linked_id: (estimate as { id: string }).id,
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: auth.user.id,
+      })
+      .eq("id", doc.id);
+
+    await supabase.from("audit_logs").insert({
+      company_id: doc.company_id,
+      user_id: auth.user.id,
+      action: "document_approved",
+      entity_type: "documents",
+      entity_id: doc.id,
+      metadata: { linked_table: "estimates", linked_id: (estimate as { id: string }).id },
+    });
+
+    return { ok: true as const, estimateId: (estimate as { id: string }).id };
+  });
+
 export const rejectDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => RejectInput.parse(d))
