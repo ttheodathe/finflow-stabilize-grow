@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,9 +28,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, DollarSign } from "lucide-react";
+import { Plus, Trash2, DollarSign, ScanLine } from "lucide-react";
 import { toast } from "sonner";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
+import { useServerFn } from "@tanstack/react-start";
+import { extractDocument } from "@/lib/document-ai.functions";
+import { BillReviewWorkspace } from "@/components/bill-review-workspace";
 
 export const Route = createFileRoute("/_authenticated/purchases/bills")({
   head: () => ({ meta: [{ title: "Bills — Free Accounting" }] }),
@@ -137,6 +140,70 @@ function BillsPage() {
     notes: "",
   });
 
+  const fileRef = useRef<HTMLInputElement>(null);
+  const runScan = useServerFn(extractDocument);
+  const [scanning, setScanning] = useState(false);
+  const [reviewDocId, setReviewDocId] = useState<string | null>(null);
+  const [reviewFileUrl, setReviewFileUrl] = useState<string | null>(null);
+  const [reviewMimeType, setReviewMimeType] = useState<string | null>(null);
+
+  async function onScan(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!companyId) return toast.error("Select a company first");
+    if (file.size > 8 * 1024 * 1024) return toast.error("File must be under 8 MB.");
+    if (!file.type.startsWith("image/") && file.type !== "application/pdf") {
+      return toast.error("Only image files (JPG/PNG/HEIC) or PDFs are supported for AI extraction.");
+    }
+    setScanning(true);
+    const t = toast.loading("Uploading bill…");
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) throw new Error("Not signed in");
+
+      const { data: doc, error: docErr } = await supabase
+        .from("documents")
+        .insert({
+          company_id: companyId,
+          uploaded_by: u.user.id,
+          doc_type: "bill",
+          file_path: "",
+          file_name: file.name,
+          mime_type: file.type,
+          file_size_bytes: file.size,
+          status: "uploaded",
+        })
+        .select("id")
+        .single();
+      if (docErr || !doc) throw new Error(docErr?.message ?? "Could not create document record");
+
+      const ext = file.name.split(".").pop() || "bin";
+      const path = `${companyId}/${doc.id}/original.${ext}`;
+      const { error: upErr } = await supabase.storage.from("documents").upload(path, file, {
+        contentType: file.type,
+        upsert: true,
+      });
+      if (upErr) throw new Error(upErr.message);
+
+      await supabase.from("documents").update({ file_path: path }).eq("id", doc.id);
+
+      const { data: signed } = await supabase.storage.from("documents").createSignedUrl(path, 60 * 30);
+      setReviewFileUrl(signed?.signedUrl ?? null);
+      setReviewMimeType(file.type);
+      setReviewDocId(doc.id);
+
+      toast.success("Uploaded — AI is reading it now", { id: t });
+      runScan({ data: { documentId: doc.id } }).catch((err) => {
+        toast.error(err instanceof Error ? err.message : "Extraction failed", { id: t });
+      });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Couldn't upload that bill", { id: t });
+    } finally {
+      setScanning(false);
+    }
+  }
+
   async function load() {
     if (!companyId) return;
     const [b, v, a, sums] = await Promise.all([
@@ -201,6 +268,7 @@ function BillsPage() {
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    if (!companyId) return toast.error("Select a company first");
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
     if (!form.vendor_id) return toast.error("Pick a vendor");
@@ -209,6 +277,7 @@ function BillsPage() {
     const { data: bill, error } = await (supabase as any)
       .from("bills")
       .insert({
+        company_id: companyId,
         user_id: u.user.id,
         vendor_id: form.vendor_id,
         bill_number: form.bill_number,
@@ -226,6 +295,7 @@ function BillsPage() {
       .single();
     if (error) return toast.error(error.message);
     const items = lines.map((l) => ({
+      company_id: companyId,
       user_id: u.user.id,
       bill_id: bill.id,
       account_id: l.account_id,
@@ -268,10 +338,12 @@ function BillsPage() {
   async function savePay(e: React.FormEvent) {
     e.preventDefault();
     if (!payOpen) return;
+    if (!companyId) return toast.error("Select a company first");
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
     if (pay.amount <= 0) return toast.error("Amount must be positive");
     const { error } = await (supabase as any).from("bill_payments").insert({
+      company_id: companyId,
       user_id: u.user.id,
       bill_id: payOpen.id,
       vendor_id: payOpen.vendor_id,
@@ -298,7 +370,12 @@ function BillsPage() {
             Vendor bills, due dates, and payments. Ledger updates automatically.
           </p>
         </div>
-        <Dialog
+        <div className="flex items-center gap-2">
+          <input ref={fileRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={onScan} />
+          <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} disabled={scanning}>
+            <ScanLine className="h-4 w-4" /> {scanning ? "Uploading…" : "Scan a bill"}
+          </Button>
+          <Dialog
           open={open}
           onOpenChange={(o) => {
             // Fix (Jennifer QA — Bills: "+ New Bill- not clickable"): drive
@@ -528,6 +605,7 @@ function BillsPage() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <div className="bg-card border rounded-xl">
@@ -673,6 +751,27 @@ function BillsPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <BillReviewWorkspace
+        open={!!reviewDocId}
+        documentId={reviewDocId}
+        fileUrl={reviewFileUrl}
+        mimeType={reviewMimeType}
+        vendors={vendors}
+        expenseAccounts={expenseAccounts}
+        defaultCurrency="USD"
+        onClose={() => {
+          setReviewDocId(null);
+          setReviewFileUrl(null);
+          setReviewMimeType(null);
+        }}
+        onApproved={() => {
+          setReviewDocId(null);
+          setReviewFileUrl(null);
+          setReviewMimeType(null);
+          load();
+        }}
+      />
     </div>
   );
 }
