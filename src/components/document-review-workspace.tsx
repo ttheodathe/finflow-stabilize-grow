@@ -11,7 +11,7 @@ import { AlertTriangle, CircleAlert, Info, Loader2, CheckCircle2 } from "lucide-
 import { toast } from "sonner";
 import { approveDocument, rejectDocument } from "@/lib/document-ai.functions";
 
-type ExtractionRow = {
+export type ExtractionRow = {
   field_group: string;
   field_name: string;
   line_index: number | null;
@@ -19,7 +19,7 @@ type ExtractionRow = {
   confidence: number;
 };
 
-type ValidationRow = {
+export type ValidationRow = {
   check_name: string;
   severity: "info" | "warning" | "error";
   message: string;
@@ -28,7 +28,7 @@ type ValidationRow = {
 type Vendor = { id: string; name: string };
 type Account = { id: string; code: string; name: string };
 
-function ConfidenceBadge({ confidence }: { confidence: number }) {
+export function ConfidenceBadge({ confidence }: { confidence: number }) {
   const pct = Math.round(confidence * 100);
   const variant: "default" | "secondary" | "destructive" =
     confidence >= 0.8 ? "default" : confidence >= 0.6 ? "secondary" : "destructive";
@@ -39,7 +39,7 @@ function ConfidenceBadge({ confidence }: { confidence: number }) {
   );
 }
 
-function ValidationBanner({ v }: { v: ValidationRow }) {
+export function ValidationBanner({ v }: { v: ValidationRow }) {
   const Icon = v.severity === "error" ? CircleAlert : v.severity === "warning" ? AlertTriangle : Info;
   const color =
     v.severity === "error"
