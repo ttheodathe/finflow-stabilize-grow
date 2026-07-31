@@ -612,6 +612,85 @@ export const approveBillDocument = createServerFn({ method: "POST" })
 
 const RejectInput = z.object({ documentId: z.string().uuid(), reason: z.string().optional() });
 
+const ApproveItemsInput = z.object({
+  documentId: z.string().uuid(),
+  items: z
+    .array(
+      z.object({
+        type: z.enum(["product", "service"]),
+        name: z.string().min(1),
+        sku: z.string().optional().nullable(),
+        category_id: z.string().uuid().optional().nullable(),
+        price: z.number().nonnegative(),
+        cost: z.number().nonnegative().default(0),
+        tax_rate: z.number().nonnegative().default(0),
+        currency: z.string().default("USD"),
+      }),
+    )
+    .min(1),
+});
+
+// Bulk counterpart to approveDocument/approveBillDocument: a scanned price
+// list or catalog produces N new items rather than one accounting record,
+// so this is a bulk insert rather than a single row. linked_id stays null
+// on the document (there's no single record to point at); the created
+// item count and ids go in the audit log instead.
+export const approveItemsDocument = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => ApproveItemsInput.parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { data: auth } = await supabase.auth.getUser();
+    if (!auth.user) throw new Error("Not authenticated");
+
+    const { data: doc, error: docErr } = await supabase
+      .from("documents")
+      .select("id, company_id, status")
+      .eq("id", data.documentId)
+      .single();
+    if (docErr || !doc) throw new Error("Document not found or you don't have access to it.");
+    if (doc.status === "approved") throw new Error("This document was already approved.");
+
+    const rows = data.items.map((it) => ({
+      company_id: doc.company_id,
+      user_id: auth.user.id,
+      type: it.type,
+      name: it.name,
+      sku: it.sku || null,
+      category_id: it.category_id || null,
+      price: it.price,
+      cost: it.cost,
+      tax_rate: it.tax_rate,
+      currency: it.currency,
+    }));
+    const { data: created, error: itemsErr } = await supabase
+      .from("items")
+      .insert(rows as never)
+      .select("id");
+    if (itemsErr) throw new Error(itemsErr.message);
+
+    await supabase
+      .from("documents")
+      .update({
+        status: "approved",
+        linked_table: "items",
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: auth.user.id,
+      })
+      .eq("id", doc.id);
+
+    await supabase.from("audit_logs").insert({
+      company_id: doc.company_id,
+      user_id: auth.user.id,
+      action: "document_approved",
+      entity_type: "documents",
+      entity_id: doc.id,
+      metadata: { linked_table: "items", item_ids: (created ?? []).map((r: any) => r.id), count: rows.length },
+    });
+
+    return { ok: true as const, count: rows.length };
+  });
+
 export const rejectDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => RejectInput.parse(d))
