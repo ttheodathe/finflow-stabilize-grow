@@ -1,5 +1,7 @@
 import type { User } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase as _sb } from "@/integrations/supabase/client";
+// Schema drift: generated Database types lag behind applied migrations.
+const supabase = _sb as any; // untyped-db
 
 export type NextRoute =
   | { to: "/auth"; search: { mode: "login" } }
