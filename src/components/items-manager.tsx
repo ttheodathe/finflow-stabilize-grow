@@ -28,12 +28,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, ScanLine } from "lucide-react";
+import { Plus, Pencil, Trash2, ScanLine, Layers } from "lucide-react";
 import { toast } from "sonner";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 import { useServerFn } from "@tanstack/react-start";
 import { extractDocument } from "@/lib/document-ai.functions";
 import { ItemsBulkReviewWorkspace } from "@/components/items-bulk-review-workspace";
+import { ProductVariantsDialog } from "@/components/product-variants-dialog";
 
 export type Item = {
   id: string;
@@ -94,6 +95,7 @@ export function ItemsManager({
   const [reviewDocId, setReviewDocId] = useState<string | null>(null);
   const [reviewFileUrl, setReviewFileUrl] = useState<string | null>(null);
   const [reviewMimeType, setReviewMimeType] = useState<string | null>(null);
+  const [variantsFor, setVariantsFor] = useState<Item | null>(null);
 
   async function onScan(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -445,6 +447,16 @@ export function ItemsManager({
                     {!it.is_active && <Badge variant="secondary">Inactive</Badge>}
                   </TableCell>
                   <TableCell className="text-right">
+                    {type === "product" && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Manage variants"
+                        onClick={() => setVariantsFor(it)}
+                      >
+                        <Layers className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button variant="ghost" size="icon" onClick={() => openEdit(it)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -479,6 +491,17 @@ export function ItemsManager({
           load();
         }}
       />
+
+      {variantsFor && companyId && (
+        <ProductVariantsDialog
+          open={!!variantsFor}
+          onOpenChange={(o) => !o && setVariantsFor(null)}
+          companyId={companyId}
+          parentItemId={variantsFor.id}
+          parentName={variantsFor.name}
+          currency={variantsFor.currency}
+        />
+      )}
     </div>
   );
 }
