@@ -2371,7 +2371,6 @@ export type Database = {
           item_id: string | null
           po_id: string
           quantity: number
-          received_quantity: number
           tax_rate: number
           unit_price: number
           user_id: string
@@ -2386,7 +2385,6 @@ export type Database = {
           item_id?: string | null
           po_id: string
           quantity?: number
-          received_quantity?: number
           tax_rate?: number
           unit_price?: number
           user_id: string
@@ -2401,7 +2399,6 @@ export type Database = {
           item_id?: string | null
           po_id?: string
           quantity?: number
-          received_quantity?: number
           tax_rate?: number
           unit_price?: number
           user_id?: string
@@ -2659,9 +2656,6 @@ export type Database = {
           note: string | null
           quantity_change: number
           reason: string
-          reference_id: string | null
-          reference_type: string | null
-          unit_cost: number | null
           user_id: string
           warehouse_id: string | null
         }
@@ -2676,9 +2670,6 @@ export type Database = {
           note?: string | null
           quantity_change: number
           reason: string
-          reference_id?: string | null
-          reference_type?: string | null
-          unit_cost?: number | null
           user_id: string
           warehouse_id?: string | null
         }
@@ -2693,9 +2684,6 @@ export type Database = {
           note?: string | null
           quantity_change?: number
           reason?: string
-          reference_id?: string | null
-          reference_type?: string | null
-          unit_cost?: number | null
           user_id?: string
           warehouse_id?: string | null
         }
@@ -3654,113 +3642,6 @@ export type Database = {
       recalc_invoice_status: {
         Args: { _invoice_id: string }
         Returns: undefined
-      }
-      adjust_stock: {
-        Args: {
-          p_company_id: string
-          p_item_id: string
-          p_location_id?: string | null
-          p_note?: string | null
-          p_offset_account_id?: string | null
-          p_quantity_delta: number
-          p_reason: string
-          p_warehouse_id: string
-        }
-        Returns: {
-          balance_after: number | null
-          company_id: string
-          created_at: string
-          id: string
-          invoice_id: string | null
-          item_id: string
-          location_id: string | null
-          note: string | null
-          quantity_change: number
-          reason: string
-          reference_id: string | null
-          reference_type: string | null
-          unit_cost: number | null
-          user_id: string
-          warehouse_id: string | null
-        }
-      }
-      receive_stock: {
-        Args: {
-          p_company_id: string
-          p_item_id: string
-          p_location_id?: string | null
-          p_note?: string | null
-          p_offset_account_id?: string | null
-          p_po_item_id?: string | null
-          p_quantity: number
-          p_unit_cost: number
-          p_warehouse_id: string
-        }
-        Returns: {
-          balance_after: number | null
-          company_id: string
-          created_at: string
-          id: string
-          invoice_id: string | null
-          item_id: string
-          location_id: string | null
-          note: string | null
-          quantity_change: number
-          reason: string
-          reference_id: string | null
-          reference_type: string | null
-          unit_cost: number | null
-          user_id: string
-          warehouse_id: string | null
-        }
-      }
-      transfer_stock: {
-        Args: {
-          p_company_id: string
-          p_from_location_id?: string | null
-          p_from_warehouse_id: string
-          p_item_id: string
-          p_note?: string | null
-          p_quantity: number
-          p_to_location_id?: string | null
-          p_to_warehouse_id: string
-        }
-        Returns: {
-          movement_out: {
-            balance_after: number | null
-            company_id: string
-            created_at: string
-            id: string
-            invoice_id: string | null
-            item_id: string
-            location_id: string | null
-            note: string | null
-            quantity_change: number
-            reason: string
-            reference_id: string | null
-            reference_type: string | null
-            unit_cost: number | null
-            user_id: string
-            warehouse_id: string | null
-          }
-          movement_in: {
-            balance_after: number | null
-            company_id: string
-            created_at: string
-            id: string
-            invoice_id: string | null
-            item_id: string
-            location_id: string | null
-            note: string | null
-            quantity_change: number
-            reason: string
-            reference_id: string | null
-            reference_type: string | null
-            unit_cost: number | null
-            user_id: string
-            warehouse_id: string | null
-          }
-        }[]
       }
       record_session: {
         Args: {
