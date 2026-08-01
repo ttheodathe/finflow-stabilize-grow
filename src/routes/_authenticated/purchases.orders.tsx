@@ -28,9 +28,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, CheckCircle2, PackageCheck, FileText } from "lucide-react";
+import { Plus, Trash2, CheckCircle2, PackageCheck, PackageSearch, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
+import { ReceivePODialog } from "@/components/receive-po-dialog";
 
 export const Route = createFileRoute("/_authenticated/purchases/orders")({
   head: () => ({ meta: [{ title: "Purchase orders — Free Accounting" }] }),
@@ -88,6 +89,7 @@ function POPage() {
     notes: "",
   });
   const [lines, setLines] = useState<Line[]>([{ ...emptyLine }]);
+  const [receivingPO, setReceivingPO] = useState<PO | null>(null);
 
   async function load() {
     if (!companyId) return;
@@ -521,6 +523,11 @@ function POPage() {
                         <PackageCheck className="h-3 w-3" /> Receive
                       </Button>
                     )}
+                    {(p.status === "approved" || p.status === "received") && (
+                      <Button size="sm" variant="outline" onClick={() => setReceivingPO(p)}>
+                        <PackageSearch className="h-3 w-3" /> Receive stock
+                      </Button>
+                    )}
                     {(p.status === "approved" || p.status === "received") &&
                       !p.converted_bill_id && (
                         <Button size="sm" onClick={() => convertToBill(p)}>
@@ -537,6 +544,17 @@ function POPage() {
           </Table>
         )}
       </div>
+
+      {receivingPO && companyId && (
+        <ReceivePODialog
+          open={!!receivingPO}
+          onOpenChange={(o) => !o && setReceivingPO(null)}
+          companyId={companyId}
+          poId={receivingPO.id}
+          poNumber={receivingPO.po_number}
+          onReceived={load}
+        />
+      )}
     </div>
   );
 }
