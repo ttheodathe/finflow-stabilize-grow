@@ -35,7 +35,7 @@ import { toast } from "sonner";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/hr/leave")({
-  head: () => ({ meta: [{ title: "Leave Management — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "Leave Management — FinFlow Track" }] }),
   component: LeavePage,
 });
 
