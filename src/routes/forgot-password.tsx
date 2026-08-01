@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/forgot-password")({
-  head: () => ({ meta: [{ title: "Reset password — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "Reset password — FinFlow Track" }] }),
   component: ForgotPassword,
 });
 
