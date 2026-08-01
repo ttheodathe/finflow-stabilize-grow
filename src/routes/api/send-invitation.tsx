@@ -2,7 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Resend } from "resend";
 import Invitation from "@/emails/Invitation";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy: process.env is only populated per-request in the worker runtime.
+let _resend: Resend | undefined;
+function getResend(): Resend {
+  if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY);
+  return _resend;
+}
 
 export const Route = createFileRoute("/api/send-invitation")({
   server: {
@@ -27,7 +32,7 @@ export const Route = createFileRoute("/api/send-invitation")({
             );
           }
 
-          const { data, error } = await resend.emails.send({
+          const { data, error } = await getResend().emails.send({
             from: "FinFlowTrack <support@finflowtrack.com>",
             to: [email],
             subject: `You've been invited to join ${companyName || "a team"} on FinFlowTrack`,

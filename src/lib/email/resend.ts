@@ -1,6 +1,13 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy: process.env is per-request in the worker runtime. Constructing at
+// module scope throws "Missing API key" and breaks SSR for the whole app.
+let _resend: Resend | undefined;
+
+function getResend(): Resend {
+  if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY);
+  return _resend;
+}
 
 export async function sendEmail({
   to,
@@ -13,7 +20,7 @@ export async function sendEmail({
   html: string;
   from?: string;
 }) {
-  const { data, error } = await resend.emails.send({
+  const { data, error } = await getResend().emails.send({
     from,
     to,
     subject,

@@ -195,7 +195,7 @@ export function BillingSettings() {
                 <h3 className="text-sm font-semibold text-gray-900">{p.name}</h3>
                 <div className="mt-2 text-lg font-semibold text-gray-900">
                   {price}
-                  {k !== "enterprise" && p.priceMonthly > 0 && (
+                  {k !== "enterprise" && (p.priceMonthly ?? 0) > 0 && (
                     <span className="text-xs font-normal text-gray-500">
                       /{cycle === "monthly" ? "mo" : "yr"}
                     </span>

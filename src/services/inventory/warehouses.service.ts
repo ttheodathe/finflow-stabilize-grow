@@ -1,4 +1,7 @@
-import { supabase } from "@/integrations/supabase/client";
+import { supabase as _sb } from "@/integrations/supabase/client";
+// Tables are provisioned by supabase/*.sql migrations that are not reflected in
+// the generated Database types yet; use an untyped client until types are regenerated.
+const supabase = _sb as any;
 import { InventoryServiceError } from "./inventoryServiceError";
 import type { Warehouse } from "@/types/inventory.types";
 

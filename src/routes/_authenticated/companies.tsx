@@ -166,16 +166,16 @@ function CompanyPage() {
       const { data, error: e } = await supabase
         .rpc("create_company", {
           p_name: company.name,
-          p_email: company.email || null,
-          p_address: company.address || null,
+          p_email: company.email || undefined,
+          p_address: company.address || undefined,
           p_currency: company.currency || "USD",
-          p_phone: company.phone || null,
-          p_website: company.website || null,
-          p_city: company.city || null,
-          p_state: company.state || null,
-          p_postal_code: company.postal_code || null,
-          p_country: company.country || null,
-          p_tax_number: company.tax_number || null,
+          p_phone: company.phone || undefined,
+          p_website: company.website || undefined,
+          p_city: company.city || undefined,
+          p_state: company.state || undefined,
+          p_postal_code: company.postal_code || undefined,
+          p_country: company.country || undefined,
+          p_tax_number: company.tax_number || undefined,
         })
         .single();
       error = e;
@@ -187,7 +187,7 @@ function CompanyPage() {
         }
         // create_company() doesn't take a logo, so persist it separately if
         // one was uploaded before the first save.
-        if (company.logo_url) {
+        if (company.logo_url && created.id) {
           await supabase
             .from("companies")
             .update({ logo_url: company.logo_url })

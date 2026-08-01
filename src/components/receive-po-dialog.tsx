@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase as _sb } from "@/integrations/supabase/client";
+// Schema drift: generated Database types lag behind applied migrations.
+const supabase = _sb as any; // untyped-db
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -70,7 +72,7 @@ export function ReceivePODialog({
       .from("purchase_order_items")
       .select("id, item_id, description, quantity, unit_price, received_quantity")
       .eq("po_id", poId)
-      .then(({ data, error }) => {
+      .then(({ data, error }: { data: POLine[] | null; error: { message: string } | null }) => {
         if (error) {
           toast.error(error.message);
           setLoadingLines(false);
