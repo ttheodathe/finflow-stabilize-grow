@@ -1,16 +1,28 @@
 import { Resend } from "resend";
 
-const apiKey = process.env.RESEND_API_KEY;
+/**
+ * Lazily construct the Resend client.
+ *
+ * IMPORTANT: `process.env` is injected per-request in the worker runtime, so
+ * reading it at module scope yields `undefined` and `new Resend(undefined)`
+ * throws "Missing API key" while the module graph is being loaded — which
+ * crashes SSR for every route that transitively imports this file.
+ */
+let _resend: Resend | undefined;
 
-if (!apiKey) {
-  throw new Error("Missing RESEND_API_KEY environment variable.");
+export function getResend(): Resend {
+  if (_resend) return _resend;
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    throw new Error("Missing RESEND_API_KEY environment variable.");
+  }
+  _resend = new Resend(apiKey);
+  return _resend;
 }
 
-export const resend = new Resend(apiKey);
-
-export const EMAIL_FROM =
-  process.env.EMAIL_FROM ||
-  "FinFlowTrack <noreply@finflowtrack.com>";
+export function getEmailFrom(): string {
+  return process.env.EMAIL_FROM || "FinFlowTrack <noreply@finflowtrack.com>";
+}
 
 export interface SendEmailOptions {
   to: string | string[];
@@ -32,15 +44,15 @@ export async function sendEmail({
   replyTo,
   attachments,
 }: SendEmailOptions) {
-  const { data, error } = await resend.emails.send({
-    from: EMAIL_FROM,
+  const { data, error } = await getResend().emails.send({
+    from: getEmailFrom(),
     to,
     subject,
     html,
     text,
     replyTo,
     attachments,
-  });
+  } as Parameters<Resend["emails"]["send"]>[0]);
 
   if (error) {
     console.error("Resend Error:", error);
