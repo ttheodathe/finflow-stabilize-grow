@@ -90,6 +90,7 @@ const navGroups: NavGroup[] = [
       { label: "Services", to: "/items/services" },
       { label: "Categories", to: "/items/categories" },
       { label: "Inventory", to: "/items/inventory" },
+      { label: "Warehouses", to: "/items/warehouses" },
       { label: "Stock movements", to: "/items/stock-movements" },
     ],
   },
@@ -262,7 +263,7 @@ export function AppSidebar() {
     }
   }
 
-// Opens the upgrade modal right here in the sidebar, instead of
+  // Opens the upgrade modal right here in the sidebar, instead of
   // navigating to Settings > Billing.
   function handleUpgradeClick() {
     setUpgradeModalOpen(true);
@@ -319,9 +320,7 @@ export function AppSidebar() {
           <div className="h-8 w-8 rounded-lg bg-gradient-hero flex items-center justify-center text-white font-bold text-sm shrink-0">
             FF
           </div>
-          {!collapsed && (
-            <span className="font-bold text-base gradient-text">FinFlow Track</span>
-          )}
+          {!collapsed && <span className="font-bold text-base gradient-text">FinFlow Track</span>}
         </Link>
       </SidebarHeader>
 
@@ -373,7 +372,7 @@ export function AppSidebar() {
           switchCompany(newCompanyId);
         }}
       />
-      
+
       <UpgradePlanModal
         open={upgradeModalOpen}
         onOpenChange={setUpgradeModalOpen}
@@ -445,7 +444,9 @@ export function AppSidebar() {
                           {g.items.map((i) => (
                             <SidebarMenuSubItem key={i.to}>
                               <SidebarMenuSubButton asChild isActive={isActive(i.to)}>
-                                <Link to={i.to} onClick={closeOnNav}>{i.label}</Link>
+                                <Link to={i.to} onClick={closeOnNav}>
+                                  {i.label}
+                                </Link>
                               </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
                           ))}
