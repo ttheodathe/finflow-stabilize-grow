@@ -72,7 +72,7 @@ export function ReceivePODialog({
       .from("purchase_order_items")
       .select("id, item_id, description, quantity, unit_price, received_quantity")
       .eq("po_id", poId)
-      .then(({ data, error }) => {
+      .then(({ data, error }: { data: POLine[] | null; error: { message: string } | null }) => {
         if (error) {
           toast.error(error.message);
           setLoadingLines(false);

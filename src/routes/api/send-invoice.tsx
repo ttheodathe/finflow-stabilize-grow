@@ -44,7 +44,7 @@ export const Route = createFileRoute(
 
 
           const { data, error } =
-            await resend.emails.send({
+            await getResend().emails.send({
               from:
                 "FinFlowTrack <invoices@finflowtrack.com>",
 
