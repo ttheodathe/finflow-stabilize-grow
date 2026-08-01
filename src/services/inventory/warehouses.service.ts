@@ -14,15 +14,6 @@ export async function listWarehouses(companyId: string): Promise<Warehouse[]> {
   return (data ?? []) as Warehouse[];
 }
 
-/** Fetches a single warehouse by id — for detail views, so callers don't
- *  need to pull the full company list just to look up one record. */
-export async function getWarehouse(id: string): Promise<Warehouse | null> {
-  const { data, error } = await supabase.from("warehouses").select("*").eq("id", id).maybeSingle();
-
-  if (error) throw new InventoryServiceError("FETCH_WAREHOUSE_FAILED", error.message);
-  return (data as Warehouse) ?? null;
-}
-
 export interface CreateWarehouseInput {
   companyId: string;
   code: string;
