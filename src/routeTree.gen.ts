@@ -9,187 +9,94 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as VerifyEmailRouteImport } from './routes/verify-email'
-import { Route as TestimonialsRouteImport } from './routes/testimonials'
-import { Route as TermsRouteImport } from './routes/terms'
-import { Route as SignupRouteImport } from './routes/signup'
-import { Route as SecurityRouteImport } from './routes/security'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as RefundRouteImport } from './routes/refund'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as PricingRouteImport } from './routes/pricing'
-import { Route as PressRouteImport } from './routes/press'
-import { Route as OnboardingRouteImport } from './routes/onboarding'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as IntegrationsRouteImport } from './routes/integrations'
-import { Route as HelpRouteImport } from './routes/help'
-import { Route as GuidesRouteImport } from './routes/guides'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
-import { Route as FeaturesRouteImport } from './routes/features'
-import { Route as ContactRouteImport } from './routes/contact'
-import { Route as ChangelogRouteImport } from './routes/changelog'
-import { Route as CareersRouteImport } from './routes/careers'
-import { Route as BlogRouteImport } from './routes/blog'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AboutRouteImport } from './routes/about'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as SitemapXmlRouteImport } from './routes/sitemap.xml'
-import { Route as InviteTokenRouteImport } from './routes/invite.$token'
-import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
-import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
-import { Route as AuthenticatedSyncRouteImport } from './routes/_authenticated/sync'
-import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
-import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
-import { Route as AuthenticatedInvoicesRouteImport } from './routes/_authenticated/invoices'
-import { Route as AuthenticatedExpensesRouteImport } from './routes/_authenticated/expenses'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedCustomersRouteImport } from './routes/_authenticated/customers'
-import { Route as AuthenticatedCompaniesRouteImport } from './routes/_authenticated/companies'
-import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
-import { Route as AuthenticatedAppsRouteImport } from './routes/_authenticated/apps'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AboutRouteImport } from './routes/about'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BlogRouteImport } from './routes/blog'
+import { Route as CareersRouteImport } from './routes/careers'
+import { Route as ChangelogRouteImport } from './routes/changelog'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as FeaturesRouteImport } from './routes/features'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as GuidesRouteImport } from './routes/guides'
+import { Route as HelpRouteImport } from './routes/help'
+import { Route as IntegrationsRouteImport } from './routes/integrations'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as PressRouteImport } from './routes/press'
+import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as RefundRouteImport } from './routes/refund'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SecurityRouteImport } from './routes/security'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as TestimonialsRouteImport } from './routes/testimonials'
+import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AuthenticatedAiBookkeeperRouteImport } from './routes/_authenticated/ai-bookkeeper'
-import { Route as AuthenticatedSalesRecurringRouteImport } from './routes/_authenticated/sales.recurring'
-import { Route as AuthenticatedSalesPaymentsRouteImport } from './routes/_authenticated/sales.payments'
-import { Route as AuthenticatedSalesEstimatesRouteImport } from './routes/_authenticated/sales.estimates'
-import { Route as AuthenticatedSalesCreditNotesRouteImport } from './routes/_authenticated/sales.credit-notes'
-import { Route as AuthenticatedPurchasesVendorsRouteImport } from './routes/_authenticated/purchases.vendors'
-import { Route as AuthenticatedPurchasesOrdersRouteImport } from './routes/_authenticated/purchases.orders'
-import { Route as AuthenticatedPurchasesBillsRouteImport } from './routes/_authenticated/purchases.bills'
-import { Route as AuthenticatedPayrollSettingsRouteImport } from './routes/_authenticated/payroll.settings'
-import { Route as AuthenticatedPayrollPayslipsRouteImport } from './routes/_authenticated/payroll.payslips'
-import { Route as AuthenticatedPayrollPayRunsRouteImport } from './routes/_authenticated/payroll.pay-runs'
-import { Route as AuthenticatedItemsStockMovementsRouteImport } from './routes/_authenticated/items.stock-movements'
-import { Route as AuthenticatedItemsServicesRouteImport } from './routes/_authenticated/items.services'
-import { Route as AuthenticatedItemsProductsRouteImport } from './routes/_authenticated/items.products'
-import { Route as AuthenticatedItemsInventoryRouteImport } from './routes/_authenticated/items.inventory'
-import { Route as AuthenticatedItemsCategoriesRouteImport } from './routes/_authenticated/items.categories'
-import { Route as AuthenticatedHrLeaveRouteImport } from './routes/_authenticated/hr.leave'
-import { Route as AuthenticatedHrEmployeesRouteImport } from './routes/_authenticated/hr.employees'
-import { Route as AuthenticatedHrDepartmentsRouteImport } from './routes/_authenticated/hr.departments'
-import { Route as AuthenticatedHrClaimsRouteImport } from './routes/_authenticated/hr.claims'
-import { Route as AuthenticatedBankingTransfersRouteImport } from './routes/_authenticated/banking.transfers'
-import { Route as AuthenticatedBankingTransactionsRouteImport } from './routes/_authenticated/banking.transactions'
-import { Route as AuthenticatedBankingReconciliationsRouteImport } from './routes/_authenticated/banking.reconciliations'
-import { Route as AuthenticatedBankingFeedsRouteImport } from './routes/_authenticated/banking.feeds'
-import { Route as AuthenticatedBankingAccountsRouteImport } from './routes/_authenticated/banking.accounts'
-import { Route as AuthenticatedAccountingTrialBalanceRouteImport } from './routes/_authenticated/accounting.trial-balance'
-import { Route as AuthenticatedAccountingLedgerRouteImport } from './routes/_authenticated/accounting.ledger'
-import { Route as AuthenticatedAccountingJournalsRouteImport } from './routes/_authenticated/accounting.journals'
+import { Route as AuthenticatedAppsRouteImport } from './routes/_authenticated/apps'
+import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
+import { Route as AuthenticatedCompaniesRouteImport } from './routes/_authenticated/companies'
+import { Route as AuthenticatedCustomersRouteImport } from './routes/_authenticated/customers'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedExpensesRouteImport } from './routes/_authenticated/expenses'
+import { Route as AuthenticatedInvoicesRouteImport } from './routes/_authenticated/invoices'
+import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedSyncRouteImport } from './routes/_authenticated/sync'
+import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
+import { Route as ApiSendInvitationRouteImport } from './routes/api/send-invitation'
+import { Route as ApiSendInvoiceRouteImport } from './routes/api/send-invoice'
+import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
+import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as AuthenticatedAccountingChartRouteImport } from './routes/_authenticated/accounting.chart'
-import { Route as ApiPublicPolarWebhookRouteImport } from './routes/api/public/polar/webhook'
-import { Route as ApiPublicPolarCheckoutRouteImport } from './routes/api/public/polar/checkout'
-import { Route as ApiPublicPaddleWebhookRouteImport } from './routes/api/public/paddle/webhook'
+import { Route as AuthenticatedAccountingJournalsRouteImport } from './routes/_authenticated/accounting.journals'
+import { Route as AuthenticatedAccountingLedgerRouteImport } from './routes/_authenticated/accounting.ledger'
+import { Route as AuthenticatedAccountingTrialBalanceRouteImport } from './routes/_authenticated/accounting.trial-balance'
+import { Route as AuthenticatedBankingAccountsRouteImport } from './routes/_authenticated/banking.accounts'
+import { Route as AuthenticatedBankingFeedsRouteImport } from './routes/_authenticated/banking.feeds'
+import { Route as AuthenticatedBankingReconciliationsRouteImport } from './routes/_authenticated/banking.reconciliations'
+import { Route as AuthenticatedBankingTransactionsRouteImport } from './routes/_authenticated/banking.transactions'
+import { Route as AuthenticatedBankingTransfersRouteImport } from './routes/_authenticated/banking.transfers'
+import { Route as AuthenticatedHrClaimsRouteImport } from './routes/_authenticated/hr.claims'
+import { Route as AuthenticatedHrDepartmentsRouteImport } from './routes/_authenticated/hr.departments'
+import { Route as AuthenticatedHrEmployeesRouteImport } from './routes/_authenticated/hr.employees'
+import { Route as AuthenticatedHrLeaveRouteImport } from './routes/_authenticated/hr.leave'
+import { Route as AuthenticatedItemsCategoriesRouteImport } from './routes/_authenticated/items.categories'
+import { Route as AuthenticatedItemsInventoryRouteImport } from './routes/_authenticated/items.inventory'
+import { Route as AuthenticatedItemsProductsRouteImport } from './routes/_authenticated/items.products'
+import { Route as AuthenticatedItemsServicesRouteImport } from './routes/_authenticated/items.services'
+import { Route as AuthenticatedItemsStockMovementsRouteImport } from './routes/_authenticated/items.stock-movements'
+import { Route as AuthenticatedItemsWarehousesRouteImport } from './routes/_authenticated/items.warehouses'
+import { Route as AuthenticatedPayrollPayRunsRouteImport } from './routes/_authenticated/payroll.pay-runs'
+import { Route as AuthenticatedPayrollPayslipsRouteImport } from './routes/_authenticated/payroll.payslips'
+import { Route as AuthenticatedPayrollSettingsRouteImport } from './routes/_authenticated/payroll.settings'
+import { Route as AuthenticatedPurchasesBillsRouteImport } from './routes/_authenticated/purchases.bills'
+import { Route as AuthenticatedPurchasesOrdersRouteImport } from './routes/_authenticated/purchases.orders'
+import { Route as AuthenticatedPurchasesVendorsRouteImport } from './routes/_authenticated/purchases.vendors'
+import { Route as AuthenticatedSalesCreditNotesRouteImport } from './routes/_authenticated/sales.credit-notes'
+import { Route as AuthenticatedSalesEstimatesRouteImport } from './routes/_authenticated/sales.estimates'
+import { Route as AuthenticatedSalesPaymentsRouteImport } from './routes/_authenticated/sales.payments'
+import { Route as AuthenticatedSalesRecurringRouteImport } from './routes/_authenticated/sales.recurring'
+import { Route as AuthenticatedTaxCalendarRouteImport } from './routes/_authenticated/tax.calendar'
+import { Route as AuthenticatedTaxDashboardRouteImport } from './routes/_authenticated/tax.dashboard'
+import { Route as AuthenticatedTaxReturnsRouteImport } from './routes/_authenticated/tax.returns'
+import { Route as AuthenticatedTaxSettingsRouteImport } from './routes/_authenticated/tax.settings'
+import { Route as AuthenticatedTaxReturnsReturnIdRouteImport } from './routes/_authenticated/tax.returns.$returnId'
 import { Route as ApiPublicHooksSyncExternalRouteImport } from './routes/api/public/hooks/sync-external'
+import { Route as ApiPublicPaddleWebhookRouteImport } from './routes/api/public/paddle/webhook'
+import { Route as ApiPublicPolarCheckoutRouteImport } from './routes/api/public/polar/checkout'
+import { Route as ApiPublicPolarWebhookRouteImport } from './routes/api/public/polar/webhook'
 
-const VerifyEmailRoute = VerifyEmailRouteImport.update({
-  id: '/verify-email',
-  path: '/verify-email',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TestimonialsRoute = TestimonialsRouteImport.update({
-  id: '/testimonials',
-  path: '/testimonials',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TermsRoute = TermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SignupRoute = SignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SecurityRoute = SecurityRouteImport.update({
-  id: '/security',
-  path: '/security',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RefundRoute = RefundRouteImport.update({
-  id: '/refund',
-  path: '/refund',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PricingRoute = PricingRouteImport.update({
-  id: '/pricing',
-  path: '/pricing',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PressRoute = PressRouteImport.update({
-  id: '/press',
-  path: '/press',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OnboardingRoute = OnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IntegrationsRoute = IntegrationsRouteImport.update({
-  id: '/integrations',
-  path: '/integrations',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HelpRoute = HelpRouteImport.update({
-  id: '/help',
-  path: '/help',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GuidesRoute = GuidesRouteImport.update({
-  id: '/guides',
-  path: '/guides',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FeaturesRoute = FeaturesRouteImport.update({
-  id: '/features',
-  path: '/features',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContactRoute = ContactRouteImport.update({
-  id: '/contact',
-  path: '/contact',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ChangelogRoute = ChangelogRouteImport.update({
-  id: '/changelog',
-  path: '/changelog',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CareersRoute = CareersRouteImport.update({
-  id: '/careers',
-  path: '/careers',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BlogRoute = BlogRouteImport.update({
-  id: '/blog',
-  path: '/blog',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -197,84 +104,120 @@ const AboutRoute = AboutRouteImport.update({
   path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const BlogRoute = BlogRouteImport.update({
+  id: '/blog',
+  path: '/blog',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SitemapXmlRoute = SitemapXmlRouteImport.update({
-  id: '/sitemap/xml',
-  path: '/sitemap/xml',
+const CareersRoute = CareersRouteImport.update({
+  id: '/careers',
+  path: '/careers',
   getParentRoute: () => rootRouteImport,
 } as any)
-const InviteTokenRoute = InviteTokenRouteImport.update({
-  id: '/invite/$token',
-  path: '/invite/$token',
+const ChangelogRoute = ChangelogRouteImport.update({
+  id: '/changelog',
+  path: '/changelog',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BlogSlugRoute = BlogSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => BlogRoute,
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedTeamRoute = AuthenticatedTeamRouteImport.update({
-  id: '/team',
-  path: '/team',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const FeaturesRoute = FeaturesRouteImport.update({
+  id: '/features',
+  path: '/features',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedSyncRoute = AuthenticatedSyncRouteImport.update({
-  id: '/sync',
-  path: '/sync',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const GuidesRoute = GuidesRouteImport.update({
+  id: '/guides',
+  path: '/guides',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const HelpRoute = HelpRouteImport.update({
+  id: '/help',
+  path: '/help',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedInvoicesRoute = AuthenticatedInvoicesRouteImport.update({
-  id: '/invoices',
-  path: '/invoices',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const IntegrationsRoute = IntegrationsRouteImport.update({
+  id: '/integrations',
+  path: '/integrations',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedExpensesRoute = AuthenticatedExpensesRouteImport.update({
-  id: '/expenses',
-  path: '/expenses',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedCustomersRoute = AuthenticatedCustomersRouteImport.update({
-  id: '/customers',
-  path: '/customers',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const PressRoute = PressRouteImport.update({
+  id: '/press',
+  path: '/press',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedCompaniesRoute = AuthenticatedCompaniesRouteImport.update({
-  id: '/companies',
-  path: '/companies',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedCalendarRoute = AuthenticatedCalendarRouteImport.update({
-  id: '/calendar',
-  path: '/calendar',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedAppsRoute = AuthenticatedAppsRouteImport.update({
-  id: '/apps',
-  path: '/apps',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const RefundRoute = RefundRouteImport.update({
+  id: '/refund',
+  path: '/refund',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SecurityRoute = SecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TestimonialsRoute = TestimonialsRouteImport.update({
+  id: '/testimonials',
+  path: '/testimonials',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerifyEmailRoute = VerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAiBookkeeperRoute =
   AuthenticatedAiBookkeeperRouteImport.update({
@@ -282,158 +225,85 @@ const AuthenticatedAiBookkeeperRoute =
     path: '/ai-bookkeeper',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedSalesRecurringRoute =
-  AuthenticatedSalesRecurringRouteImport.update({
-    id: '/sales/recurring',
-    path: '/sales/recurring',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedSalesPaymentsRoute =
-  AuthenticatedSalesPaymentsRouteImport.update({
-    id: '/sales/payments',
-    path: '/sales/payments',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedSalesEstimatesRoute =
-  AuthenticatedSalesEstimatesRouteImport.update({
-    id: '/sales/estimates',
-    path: '/sales/estimates',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedSalesCreditNotesRoute =
-  AuthenticatedSalesCreditNotesRouteImport.update({
-    id: '/sales/credit-notes',
-    path: '/sales/credit-notes',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedPurchasesVendorsRoute =
-  AuthenticatedPurchasesVendorsRouteImport.update({
-    id: '/purchases/vendors',
-    path: '/purchases/vendors',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedPurchasesOrdersRoute =
-  AuthenticatedPurchasesOrdersRouteImport.update({
-    id: '/purchases/orders',
-    path: '/purchases/orders',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedPurchasesBillsRoute =
-  AuthenticatedPurchasesBillsRouteImport.update({
-    id: '/purchases/bills',
-    path: '/purchases/bills',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedPayrollSettingsRoute =
-  AuthenticatedPayrollSettingsRouteImport.update({
-    id: '/payroll/settings',
-    path: '/payroll/settings',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedPayrollPayslipsRoute =
-  AuthenticatedPayrollPayslipsRouteImport.update({
-    id: '/payroll/payslips',
-    path: '/payroll/payslips',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedPayrollPayRunsRoute =
-  AuthenticatedPayrollPayRunsRouteImport.update({
-    id: '/payroll/pay-runs',
-    path: '/payroll/pay-runs',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedItemsStockMovementsRoute =
-  AuthenticatedItemsStockMovementsRouteImport.update({
-    id: '/items/stock-movements',
-    path: '/items/stock-movements',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedItemsServicesRoute =
-  AuthenticatedItemsServicesRouteImport.update({
-    id: '/items/services',
-    path: '/items/services',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedItemsProductsRoute =
-  AuthenticatedItemsProductsRouteImport.update({
-    id: '/items/products',
-    path: '/items/products',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedItemsInventoryRoute =
-  AuthenticatedItemsInventoryRouteImport.update({
-    id: '/items/inventory',
-    path: '/items/inventory',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedItemsCategoriesRoute =
-  AuthenticatedItemsCategoriesRouteImport.update({
-    id: '/items/categories',
-    path: '/items/categories',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedHrLeaveRoute = AuthenticatedHrLeaveRouteImport.update({
-  id: '/hr/leave',
-  path: '/hr/leave',
+const AuthenticatedAppsRoute = AuthenticatedAppsRouteImport.update({
+  id: '/apps',
+  path: '/apps',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedHrEmployeesRoute =
-  AuthenticatedHrEmployeesRouteImport.update({
-    id: '/hr/employees',
-    path: '/hr/employees',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedHrDepartmentsRoute =
-  AuthenticatedHrDepartmentsRouteImport.update({
-    id: '/hr/departments',
-    path: '/hr/departments',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedHrClaimsRoute = AuthenticatedHrClaimsRouteImport.update({
-  id: '/hr/claims',
-  path: '/hr/claims',
+const AuthenticatedCalendarRoute = AuthenticatedCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedBankingTransfersRoute =
-  AuthenticatedBankingTransfersRouteImport.update({
-    id: '/banking/transfers',
-    path: '/banking/transfers',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedBankingTransactionsRoute =
-  AuthenticatedBankingTransactionsRouteImport.update({
-    id: '/banking/transactions',
-    path: '/banking/transactions',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedBankingReconciliationsRoute =
-  AuthenticatedBankingReconciliationsRouteImport.update({
-    id: '/banking/reconciliations',
-    path: '/banking/reconciliations',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedBankingFeedsRoute =
-  AuthenticatedBankingFeedsRouteImport.update({
-    id: '/banking/feeds',
-    path: '/banking/feeds',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedBankingAccountsRoute =
-  AuthenticatedBankingAccountsRouteImport.update({
-    id: '/banking/accounts',
-    path: '/banking/accounts',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedAccountingTrialBalanceRoute =
-  AuthenticatedAccountingTrialBalanceRouteImport.update({
-    id: '/accounting/trial-balance',
-    path: '/accounting/trial-balance',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedAccountingLedgerRoute =
-  AuthenticatedAccountingLedgerRouteImport.update({
-    id: '/accounting/ledger',
-    path: '/accounting/ledger',
+const AuthenticatedCompaniesRoute = AuthenticatedCompaniesRouteImport.update({
+  id: '/companies',
+  path: '/companies',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCustomersRoute = AuthenticatedCustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedExpensesRoute = AuthenticatedExpensesRouteImport.update({
+  id: '/expenses',
+  path: '/expenses',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedInvoicesRoute = AuthenticatedInvoicesRouteImport.update({
+  id: '/invoices',
+  path: '/invoices',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSyncRoute = AuthenticatedSyncRouteImport.update({
+  id: '/sync',
+  path: '/sync',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTeamRoute = AuthenticatedTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiSendInvitationRoute = ApiSendInvitationRouteImport.update({
+  id: '/api/send-invitation',
+  path: '/api/send-invitation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSendInvoiceRoute = ApiSendInvoiceRouteImport.update({
+  id: '/api/send-invoice',
+  path: '/api/send-invoice',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => BlogRoute,
+} as any)
+const InviteTokenRoute = InviteTokenRouteImport.update({
+  id: '/invite/$token',
+  path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAccountingChartRoute =
+  AuthenticatedAccountingChartRouteImport.update({
+    id: '/accounting/chart',
+    path: '/accounting/chart',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAccountingJournalsRoute =
@@ -442,15 +312,204 @@ const AuthenticatedAccountingJournalsRoute =
     path: '/accounting/journals',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAccountingChartRoute =
-  AuthenticatedAccountingChartRouteImport.update({
-    id: '/accounting/chart',
-    path: '/accounting/chart',
+const AuthenticatedAccountingLedgerRoute =
+  AuthenticatedAccountingLedgerRouteImport.update({
+    id: '/accounting/ledger',
+    path: '/accounting/ledger',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const ApiPublicPolarWebhookRoute = ApiPublicPolarWebhookRouteImport.update({
-  id: '/api/public/polar/webhook',
-  path: '/api/public/polar/webhook',
+const AuthenticatedAccountingTrialBalanceRoute =
+  AuthenticatedAccountingTrialBalanceRouteImport.update({
+    id: '/accounting/trial-balance',
+    path: '/accounting/trial-balance',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedBankingAccountsRoute =
+  AuthenticatedBankingAccountsRouteImport.update({
+    id: '/banking/accounts',
+    path: '/banking/accounts',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedBankingFeedsRoute =
+  AuthenticatedBankingFeedsRouteImport.update({
+    id: '/banking/feeds',
+    path: '/banking/feeds',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedBankingReconciliationsRoute =
+  AuthenticatedBankingReconciliationsRouteImport.update({
+    id: '/banking/reconciliations',
+    path: '/banking/reconciliations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedBankingTransactionsRoute =
+  AuthenticatedBankingTransactionsRouteImport.update({
+    id: '/banking/transactions',
+    path: '/banking/transactions',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedBankingTransfersRoute =
+  AuthenticatedBankingTransfersRouteImport.update({
+    id: '/banking/transfers',
+    path: '/banking/transfers',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedHrClaimsRoute = AuthenticatedHrClaimsRouteImport.update({
+  id: '/hr/claims',
+  path: '/hr/claims',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedHrDepartmentsRoute =
+  AuthenticatedHrDepartmentsRouteImport.update({
+    id: '/hr/departments',
+    path: '/hr/departments',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedHrEmployeesRoute =
+  AuthenticatedHrEmployeesRouteImport.update({
+    id: '/hr/employees',
+    path: '/hr/employees',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedHrLeaveRoute = AuthenticatedHrLeaveRouteImport.update({
+  id: '/hr/leave',
+  path: '/hr/leave',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedItemsCategoriesRoute =
+  AuthenticatedItemsCategoriesRouteImport.update({
+    id: '/items/categories',
+    path: '/items/categories',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedItemsInventoryRoute =
+  AuthenticatedItemsInventoryRouteImport.update({
+    id: '/items/inventory',
+    path: '/items/inventory',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedItemsProductsRoute =
+  AuthenticatedItemsProductsRouteImport.update({
+    id: '/items/products',
+    path: '/items/products',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedItemsServicesRoute =
+  AuthenticatedItemsServicesRouteImport.update({
+    id: '/items/services',
+    path: '/items/services',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedItemsStockMovementsRoute =
+  AuthenticatedItemsStockMovementsRouteImport.update({
+    id: '/items/stock-movements',
+    path: '/items/stock-movements',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedItemsWarehousesRoute =
+  AuthenticatedItemsWarehousesRouteImport.update({
+    id: '/items/warehouses',
+    path: '/items/warehouses',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPayrollPayRunsRoute =
+  AuthenticatedPayrollPayRunsRouteImport.update({
+    id: '/payroll/pay-runs',
+    path: '/payroll/pay-runs',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPayrollPayslipsRoute =
+  AuthenticatedPayrollPayslipsRouteImport.update({
+    id: '/payroll/payslips',
+    path: '/payroll/payslips',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPayrollSettingsRoute =
+  AuthenticatedPayrollSettingsRouteImport.update({
+    id: '/payroll/settings',
+    path: '/payroll/settings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPurchasesBillsRoute =
+  AuthenticatedPurchasesBillsRouteImport.update({
+    id: '/purchases/bills',
+    path: '/purchases/bills',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPurchasesOrdersRoute =
+  AuthenticatedPurchasesOrdersRouteImport.update({
+    id: '/purchases/orders',
+    path: '/purchases/orders',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPurchasesVendorsRoute =
+  AuthenticatedPurchasesVendorsRouteImport.update({
+    id: '/purchases/vendors',
+    path: '/purchases/vendors',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSalesCreditNotesRoute =
+  AuthenticatedSalesCreditNotesRouteImport.update({
+    id: '/sales/credit-notes',
+    path: '/sales/credit-notes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSalesEstimatesRoute =
+  AuthenticatedSalesEstimatesRouteImport.update({
+    id: '/sales/estimates',
+    path: '/sales/estimates',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSalesPaymentsRoute =
+  AuthenticatedSalesPaymentsRouteImport.update({
+    id: '/sales/payments',
+    path: '/sales/payments',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSalesRecurringRoute =
+  AuthenticatedSalesRecurringRouteImport.update({
+    id: '/sales/recurring',
+    path: '/sales/recurring',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedTaxCalendarRoute =
+  AuthenticatedTaxCalendarRouteImport.update({
+    id: '/tax/calendar',
+    path: '/tax/calendar',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedTaxDashboardRoute =
+  AuthenticatedTaxDashboardRouteImport.update({
+    id: '/tax/dashboard',
+    path: '/tax/dashboard',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedTaxReturnsRoute = AuthenticatedTaxReturnsRouteImport.update({
+  id: '/tax/returns',
+  path: '/tax/returns',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTaxSettingsRoute =
+  AuthenticatedTaxSettingsRouteImport.update({
+    id: '/tax/settings',
+    path: '/tax/settings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedTaxReturnsReturnIdRoute =
+  AuthenticatedTaxReturnsReturnIdRouteImport.update({
+    id: '/$returnId',
+    path: '/$returnId',
+    getParentRoute: () => AuthenticatedTaxReturnsRoute,
+  } as any)
+const ApiPublicHooksSyncExternalRoute =
+  ApiPublicHooksSyncExternalRouteImport.update({
+    id: '/api/public/hooks/sync-external',
+    path: '/api/public/hooks/sync-external',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPaddleWebhookRoute = ApiPublicPaddleWebhookRouteImport.update({
+  id: '/api/public/paddle/webhook',
+  path: '/api/public/paddle/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicPolarCheckoutRoute = ApiPublicPolarCheckoutRouteImport.update({
@@ -458,17 +517,11 @@ const ApiPublicPolarCheckoutRoute = ApiPublicPolarCheckoutRouteImport.update({
   path: '/api/public/polar/checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicPaddleWebhookRoute = ApiPublicPaddleWebhookRouteImport.update({
-  id: '/api/public/paddle/webhook',
-  path: '/api/public/paddle/webhook',
+const ApiPublicPolarWebhookRoute = ApiPublicPolarWebhookRouteImport.update({
+  id: '/api/public/polar/webhook',
+  path: '/api/public/polar/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicHooksSyncExternalRoute =
-  ApiPublicHooksSyncExternalRouteImport.update({
-    id: '/api/public/hooks/sync-external',
-    path: '/api/public/hooks/sync-external',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -492,6 +545,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/security': typeof SecurityRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/testimonials': typeof TestimonialsRoute
   '/verify-email': typeof VerifyEmailRoute
@@ -507,9 +561,10 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/sync': typeof AuthenticatedSyncRoute
   '/team': typeof AuthenticatedTeamRoute
+  '/api/send-invitation': typeof ApiSendInvitationRoute
+  '/api/send-invoice': typeof ApiSendInvoiceRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/invite/$token': typeof InviteTokenRoute
-  '/sitemap/xml': typeof SitemapXmlRoute
   '/accounting/chart': typeof AuthenticatedAccountingChartRoute
   '/accounting/journals': typeof AuthenticatedAccountingJournalsRoute
   '/accounting/ledger': typeof AuthenticatedAccountingLedgerRoute
@@ -528,6 +583,7 @@ export interface FileRoutesByFullPath {
   '/items/products': typeof AuthenticatedItemsProductsRoute
   '/items/services': typeof AuthenticatedItemsServicesRoute
   '/items/stock-movements': typeof AuthenticatedItemsStockMovementsRoute
+  '/items/warehouses': typeof AuthenticatedItemsWarehousesRoute
   '/payroll/pay-runs': typeof AuthenticatedPayrollPayRunsRoute
   '/payroll/payslips': typeof AuthenticatedPayrollPayslipsRoute
   '/payroll/settings': typeof AuthenticatedPayrollSettingsRoute
@@ -538,6 +594,11 @@ export interface FileRoutesByFullPath {
   '/sales/estimates': typeof AuthenticatedSalesEstimatesRoute
   '/sales/payments': typeof AuthenticatedSalesPaymentsRoute
   '/sales/recurring': typeof AuthenticatedSalesRecurringRoute
+  '/tax/calendar': typeof AuthenticatedTaxCalendarRoute
+  '/tax/dashboard': typeof AuthenticatedTaxDashboardRoute
+  '/tax/returns': typeof AuthenticatedTaxReturnsRouteWithChildren
+  '/tax/settings': typeof AuthenticatedTaxSettingsRoute
+  '/tax/returns/$returnId': typeof AuthenticatedTaxReturnsReturnIdRoute
   '/api/public/hooks/sync-external': typeof ApiPublicHooksSyncExternalRoute
   '/api/public/paddle/webhook': typeof ApiPublicPaddleWebhookRoute
   '/api/public/polar/checkout': typeof ApiPublicPolarCheckoutRoute
@@ -565,6 +626,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/security': typeof SecurityRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/testimonials': typeof TestimonialsRoute
   '/verify-email': typeof VerifyEmailRoute
@@ -580,9 +642,10 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/sync': typeof AuthenticatedSyncRoute
   '/team': typeof AuthenticatedTeamRoute
+  '/api/send-invitation': typeof ApiSendInvitationRoute
+  '/api/send-invoice': typeof ApiSendInvoiceRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/invite/$token': typeof InviteTokenRoute
-  '/sitemap/xml': typeof SitemapXmlRoute
   '/accounting/chart': typeof AuthenticatedAccountingChartRoute
   '/accounting/journals': typeof AuthenticatedAccountingJournalsRoute
   '/accounting/ledger': typeof AuthenticatedAccountingLedgerRoute
@@ -601,6 +664,7 @@ export interface FileRoutesByTo {
   '/items/products': typeof AuthenticatedItemsProductsRoute
   '/items/services': typeof AuthenticatedItemsServicesRoute
   '/items/stock-movements': typeof AuthenticatedItemsStockMovementsRoute
+  '/items/warehouses': typeof AuthenticatedItemsWarehousesRoute
   '/payroll/pay-runs': typeof AuthenticatedPayrollPayRunsRoute
   '/payroll/payslips': typeof AuthenticatedPayrollPayslipsRoute
   '/payroll/settings': typeof AuthenticatedPayrollSettingsRoute
@@ -611,6 +675,11 @@ export interface FileRoutesByTo {
   '/sales/estimates': typeof AuthenticatedSalesEstimatesRoute
   '/sales/payments': typeof AuthenticatedSalesPaymentsRoute
   '/sales/recurring': typeof AuthenticatedSalesRecurringRoute
+  '/tax/calendar': typeof AuthenticatedTaxCalendarRoute
+  '/tax/dashboard': typeof AuthenticatedTaxDashboardRoute
+  '/tax/returns': typeof AuthenticatedTaxReturnsRouteWithChildren
+  '/tax/settings': typeof AuthenticatedTaxSettingsRoute
+  '/tax/returns/$returnId': typeof AuthenticatedTaxReturnsReturnIdRoute
   '/api/public/hooks/sync-external': typeof ApiPublicHooksSyncExternalRoute
   '/api/public/paddle/webhook': typeof ApiPublicPaddleWebhookRoute
   '/api/public/polar/checkout': typeof ApiPublicPolarCheckoutRoute
@@ -640,6 +709,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/security': typeof SecurityRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/testimonials': typeof TestimonialsRoute
   '/verify-email': typeof VerifyEmailRoute
@@ -655,9 +725,10 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/sync': typeof AuthenticatedSyncRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
+  '/api/send-invitation': typeof ApiSendInvitationRoute
+  '/api/send-invoice': typeof ApiSendInvoiceRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/invite/$token': typeof InviteTokenRoute
-  '/sitemap/xml': typeof SitemapXmlRoute
   '/_authenticated/accounting/chart': typeof AuthenticatedAccountingChartRoute
   '/_authenticated/accounting/journals': typeof AuthenticatedAccountingJournalsRoute
   '/_authenticated/accounting/ledger': typeof AuthenticatedAccountingLedgerRoute
@@ -676,6 +747,7 @@ export interface FileRoutesById {
   '/_authenticated/items/products': typeof AuthenticatedItemsProductsRoute
   '/_authenticated/items/services': typeof AuthenticatedItemsServicesRoute
   '/_authenticated/items/stock-movements': typeof AuthenticatedItemsStockMovementsRoute
+  '/_authenticated/items/warehouses': typeof AuthenticatedItemsWarehousesRoute
   '/_authenticated/payroll/pay-runs': typeof AuthenticatedPayrollPayRunsRoute
   '/_authenticated/payroll/payslips': typeof AuthenticatedPayrollPayslipsRoute
   '/_authenticated/payroll/settings': typeof AuthenticatedPayrollSettingsRoute
@@ -686,6 +758,11 @@ export interface FileRoutesById {
   '/_authenticated/sales/estimates': typeof AuthenticatedSalesEstimatesRoute
   '/_authenticated/sales/payments': typeof AuthenticatedSalesPaymentsRoute
   '/_authenticated/sales/recurring': typeof AuthenticatedSalesRecurringRoute
+  '/_authenticated/tax/calendar': typeof AuthenticatedTaxCalendarRoute
+  '/_authenticated/tax/dashboard': typeof AuthenticatedTaxDashboardRoute
+  '/_authenticated/tax/returns': typeof AuthenticatedTaxReturnsRouteWithChildren
+  '/_authenticated/tax/settings': typeof AuthenticatedTaxSettingsRoute
+  '/_authenticated/tax/returns/$returnId': typeof AuthenticatedTaxReturnsReturnIdRoute
   '/api/public/hooks/sync-external': typeof ApiPublicHooksSyncExternalRoute
   '/api/public/paddle/webhook': typeof ApiPublicPaddleWebhookRoute
   '/api/public/polar/checkout': typeof ApiPublicPolarCheckoutRoute
@@ -715,6 +792,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/security'
     | '/signup'
+    | '/sitemap.xml'
     | '/terms'
     | '/testimonials'
     | '/verify-email'
@@ -730,9 +808,10 @@ export interface FileRouteTypes {
     | '/settings'
     | '/sync'
     | '/team'
+    | '/api/send-invitation'
+    | '/api/send-invoice'
     | '/blog/$slug'
     | '/invite/$token'
-    | '/sitemap/xml'
     | '/accounting/chart'
     | '/accounting/journals'
     | '/accounting/ledger'
@@ -751,6 +830,7 @@ export interface FileRouteTypes {
     | '/items/products'
     | '/items/services'
     | '/items/stock-movements'
+    | '/items/warehouses'
     | '/payroll/pay-runs'
     | '/payroll/payslips'
     | '/payroll/settings'
@@ -761,6 +841,11 @@ export interface FileRouteTypes {
     | '/sales/estimates'
     | '/sales/payments'
     | '/sales/recurring'
+    | '/tax/calendar'
+    | '/tax/dashboard'
+    | '/tax/returns'
+    | '/tax/settings'
+    | '/tax/returns/$returnId'
     | '/api/public/hooks/sync-external'
     | '/api/public/paddle/webhook'
     | '/api/public/polar/checkout'
@@ -788,6 +873,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/security'
     | '/signup'
+    | '/sitemap.xml'
     | '/terms'
     | '/testimonials'
     | '/verify-email'
@@ -803,9 +889,10 @@ export interface FileRouteTypes {
     | '/settings'
     | '/sync'
     | '/team'
+    | '/api/send-invitation'
+    | '/api/send-invoice'
     | '/blog/$slug'
     | '/invite/$token'
-    | '/sitemap/xml'
     | '/accounting/chart'
     | '/accounting/journals'
     | '/accounting/ledger'
@@ -824,6 +911,7 @@ export interface FileRouteTypes {
     | '/items/products'
     | '/items/services'
     | '/items/stock-movements'
+    | '/items/warehouses'
     | '/payroll/pay-runs'
     | '/payroll/payslips'
     | '/payroll/settings'
@@ -834,6 +922,11 @@ export interface FileRouteTypes {
     | '/sales/estimates'
     | '/sales/payments'
     | '/sales/recurring'
+    | '/tax/calendar'
+    | '/tax/dashboard'
+    | '/tax/returns'
+    | '/tax/settings'
+    | '/tax/returns/$returnId'
     | '/api/public/hooks/sync-external'
     | '/api/public/paddle/webhook'
     | '/api/public/polar/checkout'
@@ -862,6 +955,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/security'
     | '/signup'
+    | '/sitemap.xml'
     | '/terms'
     | '/testimonials'
     | '/verify-email'
@@ -877,9 +971,10 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/sync'
     | '/_authenticated/team'
+    | '/api/send-invitation'
+    | '/api/send-invoice'
     | '/blog/$slug'
     | '/invite/$token'
-    | '/sitemap/xml'
     | '/_authenticated/accounting/chart'
     | '/_authenticated/accounting/journals'
     | '/_authenticated/accounting/ledger'
@@ -898,6 +993,7 @@ export interface FileRouteTypes {
     | '/_authenticated/items/products'
     | '/_authenticated/items/services'
     | '/_authenticated/items/stock-movements'
+    | '/_authenticated/items/warehouses'
     | '/_authenticated/payroll/pay-runs'
     | '/_authenticated/payroll/payslips'
     | '/_authenticated/payroll/settings'
@@ -908,6 +1004,11 @@ export interface FileRouteTypes {
     | '/_authenticated/sales/estimates'
     | '/_authenticated/sales/payments'
     | '/_authenticated/sales/recurring'
+    | '/_authenticated/tax/calendar'
+    | '/_authenticated/tax/dashboard'
+    | '/_authenticated/tax/returns'
+    | '/_authenticated/tax/settings'
+    | '/_authenticated/tax/returns/$returnId'
     | '/api/public/hooks/sync-external'
     | '/api/public/paddle/webhook'
     | '/api/public/polar/checkout'
@@ -937,11 +1038,13 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SecurityRoute: typeof SecurityRoute
   SignupRoute: typeof SignupRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   TestimonialsRoute: typeof TestimonialsRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
+  ApiSendInvitationRoute: typeof ApiSendInvitationRoute
+  ApiSendInvoiceRoute: typeof ApiSendInvoiceRoute
   InviteTokenRoute: typeof InviteTokenRoute
-  SitemapXmlRoute: typeof SitemapXmlRoute
   ApiPublicHooksSyncExternalRoute: typeof ApiPublicHooksSyncExternalRoute
   ApiPublicPaddleWebhookRoute: typeof ApiPublicPaddleWebhookRoute
   ApiPublicPolarCheckoutRoute: typeof ApiPublicPolarCheckoutRoute
@@ -950,165 +1053,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/verify-email': {
-      id: '/verify-email'
-      path: '/verify-email'
-      fullPath: '/verify-email'
-      preLoaderRoute: typeof VerifyEmailRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/testimonials': {
-      id: '/testimonials'
-      path: '/testimonials'
-      fullPath: '/testimonials'
-      preLoaderRoute: typeof TestimonialsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/terms': {
-      id: '/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof TermsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/signup': {
-      id: '/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof SignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/security': {
-      id: '/security'
-      path: '/security'
-      fullPath: '/security'
-      preLoaderRoute: typeof SecurityRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/refund': {
-      id: '/refund'
-      path: '/refund'
-      fullPath: '/refund'
-      preLoaderRoute: typeof RefundRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pricing': {
-      id: '/pricing'
-      path: '/pricing'
-      fullPath: '/pricing'
-      preLoaderRoute: typeof PricingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/press': {
-      id: '/press'
-      path: '/press'
-      fullPath: '/press'
-      preLoaderRoute: typeof PressRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/onboarding': {
-      id: '/onboarding'
-      path: '/onboarding'
-      fullPath: '/onboarding'
-      preLoaderRoute: typeof OnboardingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/integrations': {
-      id: '/integrations'
-      path: '/integrations'
-      fullPath: '/integrations'
-      preLoaderRoute: typeof IntegrationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/help': {
-      id: '/help'
-      path: '/help'
-      fullPath: '/help'
-      preLoaderRoute: typeof HelpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/guides': {
-      id: '/guides'
-      path: '/guides'
-      fullPath: '/guides'
-      preLoaderRoute: typeof GuidesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/forgot-password': {
-      id: '/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof ForgotPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/features': {
-      id: '/features'
-      path: '/features'
-      fullPath: '/features'
-      preLoaderRoute: typeof FeaturesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contact': {
-      id: '/contact'
-      path: '/contact'
-      fullPath: '/contact'
-      preLoaderRoute: typeof ContactRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/changelog': {
-      id: '/changelog'
-      path: '/changelog'
-      fullPath: '/changelog'
-      preLoaderRoute: typeof ChangelogRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/careers': {
-      id: '/careers'
-      path: '/careers'
-      fullPath: '/careers'
-      preLoaderRoute: typeof CareersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/blog': {
-      id: '/blog'
-      path: '/blog'
-      fullPath: '/blog'
-      preLoaderRoute: typeof BlogRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -1118,102 +1067,179 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/sitemap/xml': {
-      id: '/sitemap/xml'
-      path: '/sitemap/xml'
-      fullPath: '/sitemap/xml'
-      preLoaderRoute: typeof SitemapXmlRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/invite/$token': {
-      id: '/invite/$token'
-      path: '/invite/$token'
-      fullPath: '/invite/$token'
-      preLoaderRoute: typeof InviteTokenRouteImport
+    '/blog': {
+      id: '/blog'
+      path: '/blog'
+      fullPath: '/blog'
+      preLoaderRoute: typeof BlogRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/blog/$slug': {
-      id: '/blog/$slug'
-      path: '/$slug'
-      fullPath: '/blog/$slug'
-      preLoaderRoute: typeof BlogSlugRouteImport
-      parentRoute: typeof BlogRoute
+    '/careers': {
+      id: '/careers'
+      path: '/careers'
+      fullPath: '/careers'
+      preLoaderRoute: typeof CareersRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/team': {
-      id: '/_authenticated/team'
-      path: '/team'
-      fullPath: '/team'
-      preLoaderRoute: typeof AuthenticatedTeamRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/changelog': {
+      id: '/changelog'
+      path: '/changelog'
+      fullPath: '/changelog'
+      preLoaderRoute: typeof ChangelogRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/sync': {
-      id: '/_authenticated/sync'
-      path: '/sync'
-      fullPath: '/sync'
-      preLoaderRoute: typeof AuthenticatedSyncRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/settings': {
-      id: '/_authenticated/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/features': {
+      id: '/features'
+      path: '/features'
+      fullPath: '/features'
+      preLoaderRoute: typeof FeaturesRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/reports': {
-      id: '/_authenticated/reports'
-      path: '/reports'
-      fullPath: '/reports'
-      preLoaderRoute: typeof AuthenticatedReportsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/invoices': {
-      id: '/_authenticated/invoices'
-      path: '/invoices'
-      fullPath: '/invoices'
-      preLoaderRoute: typeof AuthenticatedInvoicesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/guides': {
+      id: '/guides'
+      path: '/guides'
+      fullPath: '/guides'
+      preLoaderRoute: typeof GuidesRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/expenses': {
-      id: '/_authenticated/expenses'
-      path: '/expenses'
-      fullPath: '/expenses'
-      preLoaderRoute: typeof AuthenticatedExpensesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/help': {
+      id: '/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof HelpRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/integrations': {
+      id: '/integrations'
+      path: '/integrations'
+      fullPath: '/integrations'
+      preLoaderRoute: typeof IntegrationsRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/customers': {
-      id: '/_authenticated/customers'
-      path: '/customers'
-      fullPath: '/customers'
-      preLoaderRoute: typeof AuthenticatedCustomersRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/companies': {
-      id: '/_authenticated/companies'
-      path: '/companies'
-      fullPath: '/companies'
-      preLoaderRoute: typeof AuthenticatedCompaniesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/calendar': {
-      id: '/_authenticated/calendar'
-      path: '/calendar'
-      fullPath: '/calendar'
-      preLoaderRoute: typeof AuthenticatedCalendarRouteImport
+    '/press': {
+      id: '/press'
+      path: '/press'
+      fullPath: '/press'
+      preLoaderRoute: typeof PressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/refund': {
+      id: '/refund'
+      path: '/refund'
+      fullPath: '/refund'
+      preLoaderRoute: typeof RefundRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/security': {
+      id: '/security'
+      path: '/security'
+      fullPath: '/security'
+      preLoaderRoute: typeof SecurityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/testimonials': {
+      id: '/testimonials'
+      path: '/testimonials'
+      fullPath: '/testimonials'
+      preLoaderRoute: typeof TestimonialsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verify-email': {
+      id: '/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof VerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/ai-bookkeeper': {
+      id: '/_authenticated/ai-bookkeeper'
+      path: '/ai-bookkeeper'
+      fullPath: '/ai-bookkeeper'
+      preLoaderRoute: typeof AuthenticatedAiBookkeeperRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/apps': {
@@ -1223,193 +1249,109 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/ai-bookkeeper': {
-      id: '/_authenticated/ai-bookkeeper'
-      path: '/ai-bookkeeper'
-      fullPath: '/ai-bookkeeper'
-      preLoaderRoute: typeof AuthenticatedAiBookkeeperRouteImport
+    '/_authenticated/calendar': {
+      id: '/_authenticated/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof AuthenticatedCalendarRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/sales/recurring': {
-      id: '/_authenticated/sales/recurring'
-      path: '/sales/recurring'
-      fullPath: '/sales/recurring'
-      preLoaderRoute: typeof AuthenticatedSalesRecurringRouteImport
+    '/_authenticated/companies': {
+      id: '/_authenticated/companies'
+      path: '/companies'
+      fullPath: '/companies'
+      preLoaderRoute: typeof AuthenticatedCompaniesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/sales/payments': {
-      id: '/_authenticated/sales/payments'
-      path: '/sales/payments'
-      fullPath: '/sales/payments'
-      preLoaderRoute: typeof AuthenticatedSalesPaymentsRouteImport
+    '/_authenticated/customers': {
+      id: '/_authenticated/customers'
+      path: '/customers'
+      fullPath: '/customers'
+      preLoaderRoute: typeof AuthenticatedCustomersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/sales/estimates': {
-      id: '/_authenticated/sales/estimates'
-      path: '/sales/estimates'
-      fullPath: '/sales/estimates'
-      preLoaderRoute: typeof AuthenticatedSalesEstimatesRouteImport
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/sales/credit-notes': {
-      id: '/_authenticated/sales/credit-notes'
-      path: '/sales/credit-notes'
-      fullPath: '/sales/credit-notes'
-      preLoaderRoute: typeof AuthenticatedSalesCreditNotesRouteImport
+    '/_authenticated/expenses': {
+      id: '/_authenticated/expenses'
+      path: '/expenses'
+      fullPath: '/expenses'
+      preLoaderRoute: typeof AuthenticatedExpensesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/purchases/vendors': {
-      id: '/_authenticated/purchases/vendors'
-      path: '/purchases/vendors'
-      fullPath: '/purchases/vendors'
-      preLoaderRoute: typeof AuthenticatedPurchasesVendorsRouteImport
+    '/_authenticated/invoices': {
+      id: '/_authenticated/invoices'
+      path: '/invoices'
+      fullPath: '/invoices'
+      preLoaderRoute: typeof AuthenticatedInvoicesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/purchases/orders': {
-      id: '/_authenticated/purchases/orders'
-      path: '/purchases/orders'
-      fullPath: '/purchases/orders'
-      preLoaderRoute: typeof AuthenticatedPurchasesOrdersRouteImport
+    '/_authenticated/reports': {
+      id: '/_authenticated/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AuthenticatedReportsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/purchases/bills': {
-      id: '/_authenticated/purchases/bills'
-      path: '/purchases/bills'
-      fullPath: '/purchases/bills'
-      preLoaderRoute: typeof AuthenticatedPurchasesBillsRouteImport
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/payroll/settings': {
-      id: '/_authenticated/payroll/settings'
-      path: '/payroll/settings'
-      fullPath: '/payroll/settings'
-      preLoaderRoute: typeof AuthenticatedPayrollSettingsRouteImport
+    '/_authenticated/sync': {
+      id: '/_authenticated/sync'
+      path: '/sync'
+      fullPath: '/sync'
+      preLoaderRoute: typeof AuthenticatedSyncRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/payroll/payslips': {
-      id: '/_authenticated/payroll/payslips'
-      path: '/payroll/payslips'
-      fullPath: '/payroll/payslips'
-      preLoaderRoute: typeof AuthenticatedPayrollPayslipsRouteImport
+    '/_authenticated/team': {
+      id: '/_authenticated/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof AuthenticatedTeamRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/payroll/pay-runs': {
-      id: '/_authenticated/payroll/pay-runs'
-      path: '/payroll/pay-runs'
-      fullPath: '/payroll/pay-runs'
-      preLoaderRoute: typeof AuthenticatedPayrollPayRunsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/api/send-invitation': {
+      id: '/api/send-invitation'
+      path: '/api/send-invitation'
+      fullPath: '/api/send-invitation'
+      preLoaderRoute: typeof ApiSendInvitationRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/items/stock-movements': {
-      id: '/_authenticated/items/stock-movements'
-      path: '/items/stock-movements'
-      fullPath: '/items/stock-movements'
-      preLoaderRoute: typeof AuthenticatedItemsStockMovementsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/api/send-invoice': {
+      id: '/api/send-invoice'
+      path: '/api/send-invoice'
+      fullPath: '/api/send-invoice'
+      preLoaderRoute: typeof ApiSendInvoiceRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/items/services': {
-      id: '/_authenticated/items/services'
-      path: '/items/services'
-      fullPath: '/items/services'
-      preLoaderRoute: typeof AuthenticatedItemsServicesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
+      parentRoute: typeof BlogRoute
     }
-    '/_authenticated/items/products': {
-      id: '/_authenticated/items/products'
-      path: '/items/products'
-      fullPath: '/items/products'
-      preLoaderRoute: typeof AuthenticatedItemsProductsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/invite/$token': {
+      id: '/invite/$token'
+      path: '/invite/$token'
+      fullPath: '/invite/$token'
+      preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/items/inventory': {
-      id: '/_authenticated/items/inventory'
-      path: '/items/inventory'
-      fullPath: '/items/inventory'
-      preLoaderRoute: typeof AuthenticatedItemsInventoryRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/items/categories': {
-      id: '/_authenticated/items/categories'
-      path: '/items/categories'
-      fullPath: '/items/categories'
-      preLoaderRoute: typeof AuthenticatedItemsCategoriesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/hr/leave': {
-      id: '/_authenticated/hr/leave'
-      path: '/hr/leave'
-      fullPath: '/hr/leave'
-      preLoaderRoute: typeof AuthenticatedHrLeaveRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/hr/employees': {
-      id: '/_authenticated/hr/employees'
-      path: '/hr/employees'
-      fullPath: '/hr/employees'
-      preLoaderRoute: typeof AuthenticatedHrEmployeesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/hr/departments': {
-      id: '/_authenticated/hr/departments'
-      path: '/hr/departments'
-      fullPath: '/hr/departments'
-      preLoaderRoute: typeof AuthenticatedHrDepartmentsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/hr/claims': {
-      id: '/_authenticated/hr/claims'
-      path: '/hr/claims'
-      fullPath: '/hr/claims'
-      preLoaderRoute: typeof AuthenticatedHrClaimsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/banking/transfers': {
-      id: '/_authenticated/banking/transfers'
-      path: '/banking/transfers'
-      fullPath: '/banking/transfers'
-      preLoaderRoute: typeof AuthenticatedBankingTransfersRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/banking/transactions': {
-      id: '/_authenticated/banking/transactions'
-      path: '/banking/transactions'
-      fullPath: '/banking/transactions'
-      preLoaderRoute: typeof AuthenticatedBankingTransactionsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/banking/reconciliations': {
-      id: '/_authenticated/banking/reconciliations'
-      path: '/banking/reconciliations'
-      fullPath: '/banking/reconciliations'
-      preLoaderRoute: typeof AuthenticatedBankingReconciliationsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/banking/feeds': {
-      id: '/_authenticated/banking/feeds'
-      path: '/banking/feeds'
-      fullPath: '/banking/feeds'
-      preLoaderRoute: typeof AuthenticatedBankingFeedsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/banking/accounts': {
-      id: '/_authenticated/banking/accounts'
-      path: '/banking/accounts'
-      fullPath: '/banking/accounts'
-      preLoaderRoute: typeof AuthenticatedBankingAccountsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/accounting/trial-balance': {
-      id: '/_authenticated/accounting/trial-balance'
-      path: '/accounting/trial-balance'
-      fullPath: '/accounting/trial-balance'
-      preLoaderRoute: typeof AuthenticatedAccountingTrialBalanceRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/accounting/ledger': {
-      id: '/_authenticated/accounting/ledger'
-      path: '/accounting/ledger'
-      fullPath: '/accounting/ledger'
-      preLoaderRoute: typeof AuthenticatedAccountingLedgerRouteImport
+    '/_authenticated/accounting/chart': {
+      id: '/_authenticated/accounting/chart'
+      path: '/accounting/chart'
+      fullPath: '/accounting/chart'
+      preLoaderRoute: typeof AuthenticatedAccountingChartRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/accounting/journals': {
@@ -1419,25 +1361,235 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAccountingJournalsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/accounting/chart': {
-      id: '/_authenticated/accounting/chart'
-      path: '/accounting/chart'
-      fullPath: '/accounting/chart'
-      preLoaderRoute: typeof AuthenticatedAccountingChartRouteImport
+    '/_authenticated/accounting/ledger': {
+      id: '/_authenticated/accounting/ledger'
+      path: '/accounting/ledger'
+      fullPath: '/accounting/ledger'
+      preLoaderRoute: typeof AuthenticatedAccountingLedgerRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/public/polar/webhook': {
-      id: '/api/public/polar/webhook'
-      path: '/api/public/polar/webhook'
-      fullPath: '/api/public/polar/webhook'
-      preLoaderRoute: typeof ApiPublicPolarWebhookRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_authenticated/accounting/trial-balance': {
+      id: '/_authenticated/accounting/trial-balance'
+      path: '/accounting/trial-balance'
+      fullPath: '/accounting/trial-balance'
+      preLoaderRoute: typeof AuthenticatedAccountingTrialBalanceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/public/polar/checkout': {
-      id: '/api/public/polar/checkout'
-      path: '/api/public/polar/checkout'
-      fullPath: '/api/public/polar/checkout'
-      preLoaderRoute: typeof ApiPublicPolarCheckoutRouteImport
+    '/_authenticated/banking/accounts': {
+      id: '/_authenticated/banking/accounts'
+      path: '/banking/accounts'
+      fullPath: '/banking/accounts'
+      preLoaderRoute: typeof AuthenticatedBankingAccountsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/banking/feeds': {
+      id: '/_authenticated/banking/feeds'
+      path: '/banking/feeds'
+      fullPath: '/banking/feeds'
+      preLoaderRoute: typeof AuthenticatedBankingFeedsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/banking/reconciliations': {
+      id: '/_authenticated/banking/reconciliations'
+      path: '/banking/reconciliations'
+      fullPath: '/banking/reconciliations'
+      preLoaderRoute: typeof AuthenticatedBankingReconciliationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/banking/transactions': {
+      id: '/_authenticated/banking/transactions'
+      path: '/banking/transactions'
+      fullPath: '/banking/transactions'
+      preLoaderRoute: typeof AuthenticatedBankingTransactionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/banking/transfers': {
+      id: '/_authenticated/banking/transfers'
+      path: '/banking/transfers'
+      fullPath: '/banking/transfers'
+      preLoaderRoute: typeof AuthenticatedBankingTransfersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/hr/claims': {
+      id: '/_authenticated/hr/claims'
+      path: '/hr/claims'
+      fullPath: '/hr/claims'
+      preLoaderRoute: typeof AuthenticatedHrClaimsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/hr/departments': {
+      id: '/_authenticated/hr/departments'
+      path: '/hr/departments'
+      fullPath: '/hr/departments'
+      preLoaderRoute: typeof AuthenticatedHrDepartmentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/hr/employees': {
+      id: '/_authenticated/hr/employees'
+      path: '/hr/employees'
+      fullPath: '/hr/employees'
+      preLoaderRoute: typeof AuthenticatedHrEmployeesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/hr/leave': {
+      id: '/_authenticated/hr/leave'
+      path: '/hr/leave'
+      fullPath: '/hr/leave'
+      preLoaderRoute: typeof AuthenticatedHrLeaveRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/items/categories': {
+      id: '/_authenticated/items/categories'
+      path: '/items/categories'
+      fullPath: '/items/categories'
+      preLoaderRoute: typeof AuthenticatedItemsCategoriesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/items/inventory': {
+      id: '/_authenticated/items/inventory'
+      path: '/items/inventory'
+      fullPath: '/items/inventory'
+      preLoaderRoute: typeof AuthenticatedItemsInventoryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/items/products': {
+      id: '/_authenticated/items/products'
+      path: '/items/products'
+      fullPath: '/items/products'
+      preLoaderRoute: typeof AuthenticatedItemsProductsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/items/services': {
+      id: '/_authenticated/items/services'
+      path: '/items/services'
+      fullPath: '/items/services'
+      preLoaderRoute: typeof AuthenticatedItemsServicesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/items/stock-movements': {
+      id: '/_authenticated/items/stock-movements'
+      path: '/items/stock-movements'
+      fullPath: '/items/stock-movements'
+      preLoaderRoute: typeof AuthenticatedItemsStockMovementsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/items/warehouses': {
+      id: '/_authenticated/items/warehouses'
+      path: '/items/warehouses'
+      fullPath: '/items/warehouses'
+      preLoaderRoute: typeof AuthenticatedItemsWarehousesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/payroll/pay-runs': {
+      id: '/_authenticated/payroll/pay-runs'
+      path: '/payroll/pay-runs'
+      fullPath: '/payroll/pay-runs'
+      preLoaderRoute: typeof AuthenticatedPayrollPayRunsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/payroll/payslips': {
+      id: '/_authenticated/payroll/payslips'
+      path: '/payroll/payslips'
+      fullPath: '/payroll/payslips'
+      preLoaderRoute: typeof AuthenticatedPayrollPayslipsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/payroll/settings': {
+      id: '/_authenticated/payroll/settings'
+      path: '/payroll/settings'
+      fullPath: '/payroll/settings'
+      preLoaderRoute: typeof AuthenticatedPayrollSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/purchases/bills': {
+      id: '/_authenticated/purchases/bills'
+      path: '/purchases/bills'
+      fullPath: '/purchases/bills'
+      preLoaderRoute: typeof AuthenticatedPurchasesBillsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/purchases/orders': {
+      id: '/_authenticated/purchases/orders'
+      path: '/purchases/orders'
+      fullPath: '/purchases/orders'
+      preLoaderRoute: typeof AuthenticatedPurchasesOrdersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/purchases/vendors': {
+      id: '/_authenticated/purchases/vendors'
+      path: '/purchases/vendors'
+      fullPath: '/purchases/vendors'
+      preLoaderRoute: typeof AuthenticatedPurchasesVendorsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sales/credit-notes': {
+      id: '/_authenticated/sales/credit-notes'
+      path: '/sales/credit-notes'
+      fullPath: '/sales/credit-notes'
+      preLoaderRoute: typeof AuthenticatedSalesCreditNotesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sales/estimates': {
+      id: '/_authenticated/sales/estimates'
+      path: '/sales/estimates'
+      fullPath: '/sales/estimates'
+      preLoaderRoute: typeof AuthenticatedSalesEstimatesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sales/payments': {
+      id: '/_authenticated/sales/payments'
+      path: '/sales/payments'
+      fullPath: '/sales/payments'
+      preLoaderRoute: typeof AuthenticatedSalesPaymentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sales/recurring': {
+      id: '/_authenticated/sales/recurring'
+      path: '/sales/recurring'
+      fullPath: '/sales/recurring'
+      preLoaderRoute: typeof AuthenticatedSalesRecurringRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tax/calendar': {
+      id: '/_authenticated/tax/calendar'
+      path: '/tax/calendar'
+      fullPath: '/tax/calendar'
+      preLoaderRoute: typeof AuthenticatedTaxCalendarRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tax/dashboard': {
+      id: '/_authenticated/tax/dashboard'
+      path: '/tax/dashboard'
+      fullPath: '/tax/dashboard'
+      preLoaderRoute: typeof AuthenticatedTaxDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tax/returns': {
+      id: '/_authenticated/tax/returns'
+      path: '/tax/returns'
+      fullPath: '/tax/returns'
+      preLoaderRoute: typeof AuthenticatedTaxReturnsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tax/settings': {
+      id: '/_authenticated/tax/settings'
+      path: '/tax/settings'
+      fullPath: '/tax/settings'
+      preLoaderRoute: typeof AuthenticatedTaxSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tax/returns/$returnId': {
+      id: '/_authenticated/tax/returns/$returnId'
+      path: '/$returnId'
+      fullPath: '/tax/returns/$returnId'
+      preLoaderRoute: typeof AuthenticatedTaxReturnsReturnIdRouteImport
+      parentRoute: typeof AuthenticatedTaxReturnsRoute
+    }
+    '/api/public/hooks/sync-external': {
+      id: '/api/public/hooks/sync-external'
+      path: '/api/public/hooks/sync-external'
+      fullPath: '/api/public/hooks/sync-external'
+      preLoaderRoute: typeof ApiPublicHooksSyncExternalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/paddle/webhook': {
@@ -1447,15 +1599,36 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaddleWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/hooks/sync-external': {
-      id: '/api/public/hooks/sync-external'
-      path: '/api/public/hooks/sync-external'
-      fullPath: '/api/public/hooks/sync-external'
-      preLoaderRoute: typeof ApiPublicHooksSyncExternalRouteImport
+    '/api/public/polar/checkout': {
+      id: '/api/public/polar/checkout'
+      path: '/api/public/polar/checkout'
+      fullPath: '/api/public/polar/checkout'
+      preLoaderRoute: typeof ApiPublicPolarCheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/polar/webhook': {
+      id: '/api/public/polar/webhook'
+      path: '/api/public/polar/webhook'
+      fullPath: '/api/public/polar/webhook'
+      preLoaderRoute: typeof ApiPublicPolarWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
 }
+
+interface AuthenticatedTaxReturnsRouteChildren {
+  AuthenticatedTaxReturnsReturnIdRoute: typeof AuthenticatedTaxReturnsReturnIdRoute
+}
+
+const AuthenticatedTaxReturnsRouteChildren: AuthenticatedTaxReturnsRouteChildren =
+  {
+    AuthenticatedTaxReturnsReturnIdRoute: AuthenticatedTaxReturnsReturnIdRoute,
+  }
+
+const AuthenticatedTaxReturnsRouteWithChildren =
+  AuthenticatedTaxReturnsRoute._addFileChildren(
+    AuthenticatedTaxReturnsRouteChildren,
+  )
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAiBookkeeperRoute: typeof AuthenticatedAiBookkeeperRoute
@@ -1488,6 +1661,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedItemsProductsRoute: typeof AuthenticatedItemsProductsRoute
   AuthenticatedItemsServicesRoute: typeof AuthenticatedItemsServicesRoute
   AuthenticatedItemsStockMovementsRoute: typeof AuthenticatedItemsStockMovementsRoute
+  AuthenticatedItemsWarehousesRoute: typeof AuthenticatedItemsWarehousesRoute
   AuthenticatedPayrollPayRunsRoute: typeof AuthenticatedPayrollPayRunsRoute
   AuthenticatedPayrollPayslipsRoute: typeof AuthenticatedPayrollPayslipsRoute
   AuthenticatedPayrollSettingsRoute: typeof AuthenticatedPayrollSettingsRoute
@@ -1498,6 +1672,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSalesEstimatesRoute: typeof AuthenticatedSalesEstimatesRoute
   AuthenticatedSalesPaymentsRoute: typeof AuthenticatedSalesPaymentsRoute
   AuthenticatedSalesRecurringRoute: typeof AuthenticatedSalesRecurringRoute
+  AuthenticatedTaxCalendarRoute: typeof AuthenticatedTaxCalendarRoute
+  AuthenticatedTaxDashboardRoute: typeof AuthenticatedTaxDashboardRoute
+  AuthenticatedTaxReturnsRoute: typeof AuthenticatedTaxReturnsRouteWithChildren
+  AuthenticatedTaxSettingsRoute: typeof AuthenticatedTaxSettingsRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -1533,6 +1711,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedItemsProductsRoute: AuthenticatedItemsProductsRoute,
   AuthenticatedItemsServicesRoute: AuthenticatedItemsServicesRoute,
   AuthenticatedItemsStockMovementsRoute: AuthenticatedItemsStockMovementsRoute,
+  AuthenticatedItemsWarehousesRoute: AuthenticatedItemsWarehousesRoute,
   AuthenticatedPayrollPayRunsRoute: AuthenticatedPayrollPayRunsRoute,
   AuthenticatedPayrollPayslipsRoute: AuthenticatedPayrollPayslipsRoute,
   AuthenticatedPayrollSettingsRoute: AuthenticatedPayrollSettingsRoute,
@@ -1543,6 +1722,10 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSalesEstimatesRoute: AuthenticatedSalesEstimatesRoute,
   AuthenticatedSalesPaymentsRoute: AuthenticatedSalesPaymentsRoute,
   AuthenticatedSalesRecurringRoute: AuthenticatedSalesRecurringRoute,
+  AuthenticatedTaxCalendarRoute: AuthenticatedTaxCalendarRoute,
+  AuthenticatedTaxDashboardRoute: AuthenticatedTaxDashboardRoute,
+  AuthenticatedTaxReturnsRoute: AuthenticatedTaxReturnsRouteWithChildren,
+  AuthenticatedTaxSettingsRoute: AuthenticatedTaxSettingsRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -1581,11 +1764,13 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SecurityRoute: SecurityRoute,
   SignupRoute: SignupRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   TestimonialsRoute: TestimonialsRoute,
   VerifyEmailRoute: VerifyEmailRoute,
+  ApiSendInvitationRoute: ApiSendInvitationRoute,
+  ApiSendInvoiceRoute: ApiSendInvoiceRoute,
   InviteTokenRoute: InviteTokenRoute,
-  SitemapXmlRoute: SitemapXmlRoute,
   ApiPublicHooksSyncExternalRoute: ApiPublicHooksSyncExternalRoute,
   ApiPublicPaddleWebhookRoute: ApiPublicPaddleWebhookRoute,
   ApiPublicPolarCheckoutRoute: ApiPublicPolarCheckoutRoute,
