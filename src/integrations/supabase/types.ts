@@ -1481,64 +1481,106 @@ export type Database = {
       }
       items: {
         Row: {
+          barcode: string | null
+          brand_id: string | null
           category_id: string | null
+          cogs_account_id: string | null
           company_id: string
           cost: number
           created_at: string
           currency: string
+          default_warehouse_id: string | null
           description: string | null
           id: string
+          inventory_account_id: string | null
           is_active: boolean
+          lead_time_days: number
+          max_stock: number | null
           name: string
+          parent_item_id: string | null
           price: number
+          qr_code_value: string | null
+          reorder_level: number
+          revenue_account_id: string | null
+          safety_stock: number
           sku: string | null
           stock_quantity: number
           tax_rate: number
           track_inventory: boolean
           type: string
           unit: string | null
+          uom_id: string | null
           updated_at: string
           user_id: string
+          variant_attributes: Json
         }
         Insert: {
+          barcode?: string | null
+          brand_id?: string | null
           category_id?: string | null
+          cogs_account_id?: string | null
           company_id: string
           cost?: number
           created_at?: string
           currency?: string
+          default_warehouse_id?: string | null
           description?: string | null
           id?: string
+          inventory_account_id?: string | null
           is_active?: boolean
+          lead_time_days?: number
+          max_stock?: number | null
           name: string
+          parent_item_id?: string | null
           price?: number
+          qr_code_value?: string | null
+          reorder_level?: number
+          revenue_account_id?: string | null
+          safety_stock?: number
           sku?: string | null
           stock_quantity?: number
           tax_rate?: number
           track_inventory?: boolean
           type?: string
           unit?: string | null
+          uom_id?: string | null
           updated_at?: string
           user_id: string
+          variant_attributes?: Json
         }
         Update: {
+          barcode?: string | null
+          brand_id?: string | null
           category_id?: string | null
+          cogs_account_id?: string | null
           company_id?: string
           cost?: number
           created_at?: string
           currency?: string
+          default_warehouse_id?: string | null
           description?: string | null
           id?: string
+          inventory_account_id?: string | null
           is_active?: boolean
+          lead_time_days?: number
+          max_stock?: number | null
           name?: string
+          parent_item_id?: string | null
           price?: number
+          qr_code_value?: string | null
+          reorder_level?: number
+          revenue_account_id?: string | null
+          safety_stock?: number
           sku?: string | null
           stock_quantity?: number
           tax_rate?: number
           track_inventory?: boolean
           type?: string
           unit?: string | null
+          uom_id?: string | null
           updated_at?: string
           user_id?: string
+          variant_attributes?: Json
         }
         Relationships: [
           {
@@ -1553,6 +1595,309 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "items_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "items_uom_id_fkey"
+            columns: ["uom_id"]
+            isOneToOne: false
+            referencedRelation: "units_of_measure"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "items_default_warehouse_id_fkey"
+            columns: ["default_warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "items_parent_item_id_fkey"
+            columns: ["parent_item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brands: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brands_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      units_of_measure: {
+        Row: {
+          base_unit_id: string | null
+          category: string
+          code: string
+          company_id: string | null
+          conversion_factor: number
+          created_at: string
+          id: string
+          is_system: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          base_unit_id?: string | null
+          category?: string
+          code: string
+          company_id?: string | null
+          conversion_factor?: number
+          created_at?: string
+          id?: string
+          is_system?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          base_unit_id?: string | null
+          category?: string
+          code?: string
+          company_id?: string | null
+          conversion_factor?: number
+          created_at?: string
+          id?: string
+          is_system?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "units_of_measure_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "units_of_measure_base_unit_id_fkey"
+            columns: ["base_unit_id"]
+            isOneToOne: false
+            referencedRelation: "units_of_measure"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      warehouses: {
+        Row: {
+          address: string | null
+          city: string | null
+          code: string
+          company_id: string
+          country: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          is_default: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          code: string
+          company_id: string
+          country?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          code?: string
+          company_id?: string
+          country?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "warehouses_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      warehouse_locations: {
+        Row: {
+          barcode: string | null
+          code: string
+          company_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          location_type: string
+          name: string | null
+          parent_location_id: string | null
+          updated_at: string
+          warehouse_id: string
+        }
+        Insert: {
+          barcode?: string | null
+          code: string
+          company_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          location_type?: string
+          name?: string | null
+          parent_location_id?: string | null
+          updated_at?: string
+          warehouse_id: string
+        }
+        Update: {
+          barcode?: string | null
+          code?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          location_type?: string
+          name?: string | null
+          parent_location_id?: string | null
+          updated_at?: string
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "warehouse_locations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "warehouse_locations_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "warehouse_locations_parent_location_id_fkey"
+            columns: ["parent_location_id"]
+            isOneToOne: false
+            referencedRelation: "warehouse_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_balances: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          item_id: string
+          location_id: string | null
+          quantity_available: number
+          quantity_incoming: number
+          quantity_on_hand: number
+          quantity_reserved: number
+          updated_at: string
+          warehouse_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          item_id: string
+          location_id?: string | null
+          quantity_incoming?: number
+          quantity_on_hand?: number
+          quantity_reserved?: number
+          updated_at?: string
+          warehouse_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          item_id?: string
+          location_id?: string | null
+          quantity_incoming?: number
+          quantity_on_hand?: number
+          quantity_reserved?: number
+          updated_at?: string
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_balances_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_balances_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_balances_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_balances_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "warehouse_locations"
             referencedColumns: ["id"]
           },
         ]
@@ -2026,6 +2371,7 @@ export type Database = {
           item_id: string | null
           po_id: string
           quantity: number
+          received_quantity: number
           tax_rate: number
           unit_price: number
           user_id: string
@@ -2040,6 +2386,7 @@ export type Database = {
           item_id?: string | null
           po_id: string
           quantity?: number
+          received_quantity?: number
           tax_rate?: number
           unit_price?: number
           user_id: string
@@ -2054,6 +2401,7 @@ export type Database = {
           item_id?: string | null
           po_id?: string
           quantity?: number
+          received_quantity?: number
           tax_rate?: number
           unit_price?: number
           user_id?: string
@@ -2307,10 +2655,15 @@ export type Database = {
           id: string
           invoice_id: string | null
           item_id: string
+          location_id: string | null
           note: string | null
           quantity_change: number
           reason: string
+          reference_id: string | null
+          reference_type: string | null
+          unit_cost: number | null
           user_id: string
+          warehouse_id: string | null
         }
         Insert: {
           balance_after?: number | null
@@ -2319,10 +2672,15 @@ export type Database = {
           id?: string
           invoice_id?: string | null
           item_id: string
+          location_id?: string | null
           note?: string | null
           quantity_change: number
           reason: string
+          reference_id?: string | null
+          reference_type?: string | null
+          unit_cost?: number | null
           user_id: string
+          warehouse_id?: string | null
         }
         Update: {
           balance_after?: number | null
@@ -2331,10 +2689,15 @@ export type Database = {
           id?: string
           invoice_id?: string | null
           item_id?: string
+          location_id?: string | null
           note?: string | null
           quantity_change?: number
           reason?: string
+          reference_id?: string | null
+          reference_type?: string | null
+          unit_cost?: number | null
           user_id?: string
+          warehouse_id?: string | null
         }
         Relationships: [
           {
@@ -2356,6 +2719,20 @@ export type Database = {
             columns: ["item_id"]
             isOneToOne: false
             referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "warehouse_locations"
             referencedColumns: ["id"]
           },
         ]
@@ -3277,6 +3654,113 @@ export type Database = {
       recalc_invoice_status: {
         Args: { _invoice_id: string }
         Returns: undefined
+      }
+      adjust_stock: {
+        Args: {
+          p_company_id: string
+          p_item_id: string
+          p_location_id?: string | null
+          p_note?: string | null
+          p_offset_account_id?: string | null
+          p_quantity_delta: number
+          p_reason: string
+          p_warehouse_id: string
+        }
+        Returns: {
+          balance_after: number | null
+          company_id: string
+          created_at: string
+          id: string
+          invoice_id: string | null
+          item_id: string
+          location_id: string | null
+          note: string | null
+          quantity_change: number
+          reason: string
+          reference_id: string | null
+          reference_type: string | null
+          unit_cost: number | null
+          user_id: string
+          warehouse_id: string | null
+        }
+      }
+      receive_stock: {
+        Args: {
+          p_company_id: string
+          p_item_id: string
+          p_location_id?: string | null
+          p_note?: string | null
+          p_offset_account_id?: string | null
+          p_po_item_id?: string | null
+          p_quantity: number
+          p_unit_cost: number
+          p_warehouse_id: string
+        }
+        Returns: {
+          balance_after: number | null
+          company_id: string
+          created_at: string
+          id: string
+          invoice_id: string | null
+          item_id: string
+          location_id: string | null
+          note: string | null
+          quantity_change: number
+          reason: string
+          reference_id: string | null
+          reference_type: string | null
+          unit_cost: number | null
+          user_id: string
+          warehouse_id: string | null
+        }
+      }
+      transfer_stock: {
+        Args: {
+          p_company_id: string
+          p_from_location_id?: string | null
+          p_from_warehouse_id: string
+          p_item_id: string
+          p_note?: string | null
+          p_quantity: number
+          p_to_location_id?: string | null
+          p_to_warehouse_id: string
+        }
+        Returns: {
+          movement_out: {
+            balance_after: number | null
+            company_id: string
+            created_at: string
+            id: string
+            invoice_id: string | null
+            item_id: string
+            location_id: string | null
+            note: string | null
+            quantity_change: number
+            reason: string
+            reference_id: string | null
+            reference_type: string | null
+            unit_cost: number | null
+            user_id: string
+            warehouse_id: string | null
+          }
+          movement_in: {
+            balance_after: number | null
+            company_id: string
+            created_at: string
+            id: string
+            invoice_id: string | null
+            item_id: string
+            location_id: string | null
+            note: string | null
+            quantity_change: number
+            reason: string
+            reference_id: string | null
+            reference_type: string | null
+            unit_cost: number | null
+            user_id: string
+            warehouse_id: string | null
+          }
+        }[]
       }
       record_session: {
         Args: {
