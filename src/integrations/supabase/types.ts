@@ -1721,6 +1721,126 @@ export type Database = {
           },
         ]
       }
+      leave_requests: {
+        Row: {
+          company_id: string
+          created_at: string
+          days_requested: number
+          employee_id: string
+          end_date: string
+          id: string
+          leave_type_id: string
+          reason: string | null
+          requested_by: string | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          start_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          days_requested: number
+          employee_id: string
+          end_date: string
+          id?: string
+          leave_type_id: string
+          reason?: string | null
+          requested_by?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          start_date: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          days_requested?: number
+          employee_id?: string
+          end_date?: string
+          id?: string
+          leave_type_id?: string
+          reason?: string | null
+          requested_by?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          start_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_requests_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leave_requests_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leave_requests_leave_type_id_fkey"
+            columns: ["leave_type_id"]
+            isOneToOne: false
+            referencedRelation: "leave_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leave_types: {
+        Row: {
+          annual_allocation_days: number
+          color: string
+          company_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          is_paid: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          annual_allocation_days?: number
+          color?: string
+          company_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_paid?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          annual_allocation_days?: number
+          color?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_paid?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_types_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       journal_entries: {
         Row: {
           company_id: string
@@ -2118,6 +2238,103 @@ export type Database = {
             columns: ["invoice_id"]
             isOneToOne: false
             referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_statutory_contributions: {
+        Row: {
+          affects_paye_base: boolean
+          company_id: string
+          created_at: string
+          effective_from: string
+          effective_to: string | null
+          employee_rate: number
+          employer_rate: number
+          id: string
+          is_active: boolean
+          name: string
+          source_note: string | null
+        }
+        Insert: {
+          affects_paye_base?: boolean
+          company_id: string
+          created_at?: string
+          effective_from?: string
+          effective_to?: string | null
+          employee_rate?: number
+          employer_rate?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          source_note?: string | null
+        }
+        Update: {
+          affects_paye_base?: boolean
+          company_id?: string
+          created_at?: string
+          effective_from?: string
+          effective_to?: string | null
+          employee_rate?: number
+          employer_rate?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          source_note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_statutory_contributions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_tax_brackets: {
+        Row: {
+          company_id: string
+          created_at: string
+          effective_from: string
+          effective_to: string | null
+          employee_category: string
+          id: string
+          max_income: number | null
+          min_income: number
+          rate: number
+          source_note: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          effective_from?: string
+          effective_to?: string | null
+          employee_category?: string
+          id?: string
+          max_income?: number | null
+          min_income?: number
+          rate: number
+          source_note?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          effective_from?: string
+          effective_to?: string | null
+          employee_category?: string
+          id?: string
+          max_income?: number | null
+          min_income?: number
+          rate?: number
+          source_note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_tax_brackets_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
