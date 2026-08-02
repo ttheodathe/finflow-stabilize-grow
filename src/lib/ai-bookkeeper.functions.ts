@@ -17,14 +17,18 @@ const CATEGORIES = [
   "Other",
 ];
 
-async function callGemini(messages: any[], key: string) {
+async function callGemini(messages: any[], key: string, jsonMode = false) {
   const res = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${key}`,
     },
-    body: JSON.stringify({ model: "gemini-3.6-flash", messages }),
+    body: JSON.stringify({
+      model: "gemini-3.6-flash",
+      ...(jsonMode ? { response_format: { type: "json_object" } } : {}),
+      messages,
+    }),
   });
   if (!res.ok) {
     const body = await res.text();
@@ -88,12 +92,13 @@ export const categorizeExpenses = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     if (!rows || rows.length === 0) return { updated: 0 };
 
-    const prompt = `Classify each expense into ONE category from this list: ${CATEGORIES.join(", ")}. Reply with ONLY a JSON array of {id, category}. No prose.\n\nEXPENSES:\n${JSON.stringify(rows)}`;
-    const text = await callGemini([{ role: "user", content: prompt }], key);
+    const prompt = `Classify each expense into ONE category from this list: ${CATEGORIES.join(", ")}. Reply with ONLY a JSON object shaped like {"results": [{"id": string, "category": string}]}. No prose.\n\nEXPENSES:\n${JSON.stringify(rows)}`;
+    const text = await callGemini([{ role: "user", content: prompt }], key, true);
     const cleaned = text.replace(/```json\s*|```/g, "").trim();
     let parsed: { id: string; category: string }[] = [];
     try {
-      parsed = JSON.parse(cleaned);
+      const obj = JSON.parse(cleaned);
+      parsed = Array.isArray(obj) ? obj : (obj?.results ?? []);
     } catch {
       const m = cleaned.match(/\[[\s\S]*\]/);
       if (m) parsed = JSON.parse(m[0]);
