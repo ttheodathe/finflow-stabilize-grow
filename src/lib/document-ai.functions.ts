@@ -1,4 +1,4 @@
-import { getLovableApiKey } from "@/lib/ai-key";
+import { getGeminiApiKey } from "@/lib/ai-key";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
@@ -48,15 +48,14 @@ const FIELD_GROUPS: Record<string, string[]> = {
 };
 
 async function callGeminiVision(imageDataUrls: string[], prompt: string, key: string) {
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const res = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Lovable-API-Key": key,
-      "X-Lovable-AIG-SDK": "vercel-ai-sdk",
+      Authorization: `Bearer ${key}`,
     },
     body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
+      model: "gemini-2.5-flash",
       messages: [
         { role: "system", content: prompt },
         {
@@ -122,15 +121,14 @@ async function extractPdfText(pdfBuffer: Buffer): Promise<string> {
 }
 
 async function callGeminiText(documentText: string, prompt: string, key: string) {
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const res = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Lovable-API-Key": key,
-      "X-Lovable-AIG-SDK": "vercel-ai-sdk",
+      Authorization: `Bearer ${key}`,
     },
     body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
+      model: "gemini-2.5-flash",
       messages: [
         { role: "system", content: prompt },
         { role: "user", content: `Extract structured data from this document's text:\n\n${documentText}` },
@@ -274,7 +272,7 @@ export const extractDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => ExtractInput.parse(d))
   .handler(async ({ data, context }) => {
-    const key = getLovableApiKey();
+    const key = getGeminiApiKey();
     const { supabase } = context;
 
     // RLS (is_company_member) scopes this to documents the caller can see.
@@ -405,7 +403,7 @@ export const extractDocument = createServerFn({ method: "POST" })
         .from("documents")
         .update({
           status: "needs_review",
-          ai_model: "google/gemini-3-flash-preview",
+          ai_model: "gemini-2.5-flash",
           overall_confidence: overallConfidence,
           extracted_at: new Date().toISOString(),
           error_message: null,
