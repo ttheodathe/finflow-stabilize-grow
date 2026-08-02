@@ -2162,6 +2162,90 @@ export type Database = {
         }
         Relationships: []
       }
+      pay_runs: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          id: string
+          journal_entry_id: string | null
+          notes: string | null
+          paid_at: string | null
+          pay_date: string
+          period_end: string
+          period_start: string
+          status: string
+          total_employee_deductions: number
+          total_employer_contributions: number
+          total_employer_cost: number
+          total_gross: number
+          total_net: number
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          id?: string
+          journal_entry_id?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          pay_date: string
+          period_end: string
+          period_start: string
+          status?: string
+          total_employee_deductions?: number
+          total_employer_contributions?: number
+          total_employer_cost?: number
+          total_gross?: number
+          total_net?: number
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          id?: string
+          journal_entry_id?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          pay_date?: string
+          period_end?: string
+          period_start?: string
+          status?: string
+          total_employee_deductions?: number
+          total_employer_contributions?: number
+          total_employer_cost?: number
+          total_gross?: number
+          total_net?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pay_runs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pay_runs_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount: number
@@ -2335,6 +2419,146 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payslip_contributions: {
+        Row: {
+          employee_amount: number
+          employer_amount: number
+          id: string
+          name: string
+          payslip_id: string
+        }
+        Insert: {
+          employee_amount?: number
+          employer_amount?: number
+          id?: string
+          name: string
+          payslip_id: string
+        }
+        Update: {
+          employee_amount?: number
+          employer_amount?: number
+          id?: string
+          name?: string
+          payslip_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payslip_contributions_payslip_id_fkey"
+            columns: ["payslip_id"]
+            isOneToOne: false
+            referencedRelation: "payslips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payslip_line_items: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          kind: string
+          label: string
+          payslip_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          kind: string
+          label: string
+          payslip_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          kind?: string
+          label?: string
+          payslip_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payslip_line_items_payslip_id_fkey"
+            columns: ["payslip_id"]
+            isOneToOne: false
+            referencedRelation: "payslips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payslips: {
+        Row: {
+          base_salary: number
+          company_id: string
+          created_at: string
+          currency: string
+          employee_id: string
+          gross_salary: number
+          id: string
+          net_pay: number
+          paye: number
+          pay_run_id: string
+          taxable_income: number
+          total_employee_deductions: number
+          total_employer_contributions: number
+          total_employer_cost: number
+        }
+        Insert: {
+          base_salary: number
+          company_id: string
+          created_at?: string
+          currency?: string
+          employee_id: string
+          gross_salary: number
+          id?: string
+          net_pay?: number
+          paye?: number
+          pay_run_id: string
+          taxable_income: number
+          total_employee_deductions?: number
+          total_employer_contributions?: number
+          total_employer_cost?: number
+        }
+        Update: {
+          base_salary?: number
+          company_id?: string
+          created_at?: string
+          currency?: string
+          employee_id?: string
+          gross_salary?: number
+          id?: string
+          net_pay?: number
+          paye?: number
+          pay_run_id?: string
+          taxable_income?: number
+          total_employee_deductions?: number
+          total_employer_contributions?: number
+          total_employer_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payslips_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payslips_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payslips_pay_run_id_fkey"
+            columns: ["pay_run_id"]
+            isOneToOne: false
+            referencedRelation: "pay_runs"
             referencedColumns: ["id"]
           },
         ]
