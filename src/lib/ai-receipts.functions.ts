@@ -1,4 +1,4 @@
-import { getGeminiApiKey } from "@/lib/ai-key";
+import { getGeminiApiKey, callGeminiChatCompletion } from "@/lib/ai-key";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -20,13 +20,8 @@ export const parseReceipt = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<ParsedReceipt> => {
     const key = getGeminiApiKey();
 
-    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${key}`,
-      },
-      body: JSON.stringify({
+    const text = await callGeminiChatCompletion(
+      {
         model: "gemini-3.6-flash",
         response_format: { type: "json_object" },
         messages: [
@@ -43,19 +38,10 @@ export const parseReceipt = createServerFn({ method: "POST" })
             ],
           },
         ],
-      }),
-    });
+      },
+      key,
+    );
 
-    if (!res.ok) {
-      const body = await res.text();
-      if (res.status === 429) throw new Error("AI rate limit reached. Please retry in a moment.");
-      if (res.status === 402)
-        throw new Error("AI credits exhausted. Upgrade your plan to continue scanning receipts.");
-      throw new Error(`AI gateway error (${res.status}): ${body.slice(0, 200)}`);
-    }
-
-    const json = await res.json();
-    const text: string = json.choices?.[0]?.message?.content ?? "";
     const cleaned = text.replace(/```json\s*|```/g, "").trim();
     let parsed: Partial<ParsedReceipt> = {};
     try {
