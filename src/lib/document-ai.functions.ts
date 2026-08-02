@@ -1,4 +1,4 @@
-import { getGeminiApiKey } from "@/lib/ai-key";
+import { getGeminiApiKey, callGeminiChatCompletion } from "@/lib/ai-key";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
@@ -48,13 +48,8 @@ const FIELD_GROUPS: Record<string, string[]> = {
 };
 
 async function callGeminiVision(imageDataUrls: string[], prompt: string, key: string) {
-  const res = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${key}`,
-    },
-    body: JSON.stringify({
+  return callGeminiChatCompletion(
+    {
       model: "gemini-3.6-flash",
       response_format: { type: "json_object" },
       max_tokens: 8000,
@@ -74,23 +69,9 @@ async function callGeminiVision(imageDataUrls: string[], prompt: string, key: st
           ],
         },
       ],
-    }),
-  });
-  if (!res.ok) {
-    const body = await res.text();
-    if (res.status === 429) throw new Error("AI rate limit reached. Please retry in a moment.");
-    if (res.status === 402)
-      throw new Error("AI credits exhausted. Upgrade your plan to continue processing documents.");
-    throw new Error(`AI gateway error (${res.status}): ${body.slice(0, 200)}`);
-  }
-  const json = await res.json();
-  const choice = json.choices?.[0];
-  if (choice?.finish_reason === "length") {
-    throw new Error(
-      "The document was too large for the AI to finish extracting in one response. Try a shorter document or fewer pages.",
-    );
-  }
-  return String(choice?.message?.content ?? "");
+    },
+    key,
+  );
 }
 
 const MAX_PDF_PAGES = 10;
@@ -129,13 +110,8 @@ async function extractPdfText(pdfBuffer: Buffer): Promise<string> {
 }
 
 async function callGeminiText(documentText: string, prompt: string, key: string) {
-  const res = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${key}`,
-    },
-    body: JSON.stringify({
+  return callGeminiChatCompletion(
+    {
       model: "gemini-3.6-flash",
       response_format: { type: "json_object" },
       max_tokens: 8000,
@@ -143,23 +119,9 @@ async function callGeminiText(documentText: string, prompt: string, key: string)
         { role: "system", content: prompt },
         { role: "user", content: `Extract structured data from this document's text:\n\n${documentText}` },
       ],
-    }),
-  });
-  if (!res.ok) {
-    const body = await res.text();
-    if (res.status === 429) throw new Error("AI rate limit reached. Please retry in a moment.");
-    if (res.status === 402)
-      throw new Error("AI credits exhausted. Upgrade your plan to continue processing documents.");
-    throw new Error(`AI gateway error (${res.status}): ${body.slice(0, 200)}`);
-  }
-  const json = await res.json();
-  const choice = json.choices?.[0];
-  if (choice?.finish_reason === "length") {
-    throw new Error(
-      "The document was too large for the AI to finish extracting in one response. Try a shorter document or fewer pages.",
-    );
-  }
-  return String(choice?.message?.content ?? "");
+    },
+    key,
+  );
 }
 
 function extractJson(text: string): any {
