@@ -27,13 +27,14 @@ import { toast } from "sonner";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/payroll/payslips")({
-  head: () => ({ meta: [{ title: "Payslips — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "Payslips — FinFlow Track" }] }),
   component: PayslipsPage,
 });
 
 type Payslip = {
   id: string;
   employee_id: string;
+  base_salary: number;
   gross_salary: number;
   taxable_income: number;
   paye: number;
@@ -48,6 +49,7 @@ type Payslip = {
 };
 type Employee = { id: string; first_name: string; last_name: string };
 type Contribution = { name: string; employee_amount: number; employer_amount: number };
+type LineItem = { kind: "addition" | "deduction"; label: string; amount: number };
 
 function fmt(n: number, c = "USD") {
   try {
@@ -66,6 +68,7 @@ function PayslipsPage() {
 
   const [detail, setDetail] = useState<Payslip | null>(null);
   const [contributions, setContributions] = useState<Contribution[]>([]);
+  const [lineItems, setLineItems] = useState<LineItem[]>([]);
 
   async function load() {
     if (!companyId) return;
@@ -96,12 +99,13 @@ function PayslipsPage() {
 
   async function openDetail(slip: Payslip) {
     setDetail(slip);
-    const { data, error } = await supabase
-      .from("payslip_contributions")
-      .select("name,employee_amount,employer_amount")
-      .eq("payslip_id", slip.id);
-    if (error) toast.error(error.message);
-    setContributions((data ?? []) as Contribution[]);
+    const [c, l] = await Promise.all([
+      supabase.from("payslip_contributions").select("name,employee_amount,employer_amount").eq("payslip_id", slip.id),
+      supabase.from("payslip_line_items").select("kind,label,amount").eq("payslip_id", slip.id),
+    ]);
+    if (c.error) toast.error(c.error.message);
+    setContributions((c.data ?? []) as Contribution[]);
+    setLineItems((l.data ?? []) as LineItem[]);
   }
 
   return (
@@ -177,6 +181,16 @@ function PayslipsPage() {
                 <span>{detail.pay_runs?.period_start} → {detail.pay_runs?.period_end}</span>
               </div>
               <div className="border-t pt-3 flex justify-between">
+                <span className="text-muted-foreground">Base salary</span>
+                <span>{fmt(detail.base_salary, detail.currency)}</span>
+              </div>
+              {lineItems.filter((l) => l.kind === "addition").map((l, i) => (
+                <div key={`add-${i}`} className="flex justify-between">
+                  <span className="text-muted-foreground">{l.label}</span>
+                  <span>+{fmt(l.amount, detail.currency)}</span>
+                </div>
+              ))}
+              <div className="flex justify-between">
                 <span className="text-muted-foreground">Gross salary</span>
                 <span>{fmt(detail.gross_salary, detail.currency)}</span>
               </div>
@@ -188,6 +202,12 @@ function PayslipsPage() {
                 <div key={c.name} className="flex justify-between">
                   <span className="text-muted-foreground">{c.name} (employee)</span>
                   <span>-{fmt(c.employee_amount, detail.currency)}</span>
+                </div>
+              ))}
+              {lineItems.filter((l) => l.kind === "deduction").map((l, i) => (
+                <div key={`ded-${i}`} className="flex justify-between">
+                  <span className="text-muted-foreground">{l.label}</span>
+                  <span>-{fmt(l.amount, detail.currency)}</span>
                 </div>
               ))}
               <div className="border-t pt-3 flex justify-between font-semibold">
