@@ -28,6 +28,7 @@ export const parseReceipt = createServerFn({ method: "POST" })
       },
       body: JSON.stringify({
         model: "gemini-3.6-flash",
+        response_format: { type: "json_object" },
         messages: [
           {
             role: "system",
