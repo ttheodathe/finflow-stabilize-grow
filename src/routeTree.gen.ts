@@ -51,7 +51,6 @@ import { Route as AuthenticatedCompaniesRouteImport } from './routes/_authentica
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedAppsRouteImport } from './routes/_authenticated/apps'
 import { Route as AuthenticatedAiBookkeeperRouteImport } from './routes/_authenticated/ai-bookkeeper'
-import { Route as ApiPublicEnvcheckRouteImport } from './routes/api/public/envcheck'
 import { Route as AuthenticatedTaxSettingsRouteImport } from './routes/_authenticated/tax.settings'
 import { Route as AuthenticatedTaxReturnsRouteImport } from './routes/_authenticated/tax.returns'
 import { Route as AuthenticatedTaxDashboardRouteImport } from './routes/_authenticated/tax.dashboard'
@@ -301,11 +300,6 @@ const AuthenticatedAiBookkeeperRoute =
     path: '/ai-bookkeeper',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const ApiPublicEnvcheckRoute = ApiPublicEnvcheckRouteImport.update({
-  id: '/api/public/envcheck',
-  path: '/api/public/envcheck',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthenticatedTaxSettingsRoute =
   AuthenticatedTaxSettingsRouteImport.update({
     id: '/tax/settings',
@@ -604,7 +598,6 @@ export interface FileRoutesByFullPath {
   '/tax/dashboard': typeof AuthenticatedTaxDashboardRoute
   '/tax/returns': typeof AuthenticatedTaxReturnsRouteWithChildren
   '/tax/settings': typeof AuthenticatedTaxSettingsRoute
-  '/api/public/envcheck': typeof ApiPublicEnvcheckRoute
   '/tax/returns/$returnId': typeof AuthenticatedTaxReturnsReturnIdRoute
   '/api/public/hooks/sync-external': typeof ApiPublicHooksSyncExternalRoute
   '/api/public/paddle/webhook': typeof ApiPublicPaddleWebhookRoute
@@ -686,7 +679,6 @@ export interface FileRoutesByTo {
   '/tax/dashboard': typeof AuthenticatedTaxDashboardRoute
   '/tax/returns': typeof AuthenticatedTaxReturnsRouteWithChildren
   '/tax/settings': typeof AuthenticatedTaxSettingsRoute
-  '/api/public/envcheck': typeof ApiPublicEnvcheckRoute
   '/tax/returns/$returnId': typeof AuthenticatedTaxReturnsReturnIdRoute
   '/api/public/hooks/sync-external': typeof ApiPublicHooksSyncExternalRoute
   '/api/public/paddle/webhook': typeof ApiPublicPaddleWebhookRoute
@@ -770,7 +762,6 @@ export interface FileRoutesById {
   '/_authenticated/tax/dashboard': typeof AuthenticatedTaxDashboardRoute
   '/_authenticated/tax/returns': typeof AuthenticatedTaxReturnsRouteWithChildren
   '/_authenticated/tax/settings': typeof AuthenticatedTaxSettingsRoute
-  '/api/public/envcheck': typeof ApiPublicEnvcheckRoute
   '/_authenticated/tax/returns/$returnId': typeof AuthenticatedTaxReturnsReturnIdRoute
   '/api/public/hooks/sync-external': typeof ApiPublicHooksSyncExternalRoute
   '/api/public/paddle/webhook': typeof ApiPublicPaddleWebhookRoute
@@ -854,7 +845,6 @@ export interface FileRouteTypes {
     | '/tax/dashboard'
     | '/tax/returns'
     | '/tax/settings'
-    | '/api/public/envcheck'
     | '/tax/returns/$returnId'
     | '/api/public/hooks/sync-external'
     | '/api/public/paddle/webhook'
@@ -936,7 +926,6 @@ export interface FileRouteTypes {
     | '/tax/dashboard'
     | '/tax/returns'
     | '/tax/settings'
-    | '/api/public/envcheck'
     | '/tax/returns/$returnId'
     | '/api/public/hooks/sync-external'
     | '/api/public/paddle/webhook'
@@ -1019,7 +1008,6 @@ export interface FileRouteTypes {
     | '/_authenticated/tax/dashboard'
     | '/_authenticated/tax/returns'
     | '/_authenticated/tax/settings'
-    | '/api/public/envcheck'
     | '/_authenticated/tax/returns/$returnId'
     | '/api/public/hooks/sync-external'
     | '/api/public/paddle/webhook'
@@ -1057,7 +1045,6 @@ export interface RootRouteChildren {
   ApiSendInvitationRoute: typeof ApiSendInvitationRoute
   ApiSendInvoiceRoute: typeof ApiSendInvoiceRoute
   InviteTokenRoute: typeof InviteTokenRoute
-  ApiPublicEnvcheckRoute: typeof ApiPublicEnvcheckRoute
   ApiPublicHooksSyncExternalRoute: typeof ApiPublicHooksSyncExternalRoute
   ApiPublicPaddleWebhookRoute: typeof ApiPublicPaddleWebhookRoute
   ApiPublicPolarCheckoutRoute: typeof ApiPublicPolarCheckoutRoute
@@ -1359,13 +1346,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/ai-bookkeeper'
       preLoaderRoute: typeof AuthenticatedAiBookkeeperRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/api/public/envcheck': {
-      id: '/api/public/envcheck'
-      path: '/api/public/envcheck'
-      fullPath: '/api/public/envcheck'
-      preLoaderRoute: typeof ApiPublicEnvcheckRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/tax/settings': {
       id: '/_authenticated/tax/settings'
@@ -1791,7 +1771,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSendInvitationRoute: ApiSendInvitationRoute,
   ApiSendInvoiceRoute: ApiSendInvoiceRoute,
   InviteTokenRoute: InviteTokenRoute,
-  ApiPublicEnvcheckRoute: ApiPublicEnvcheckRoute,
   ApiPublicHooksSyncExternalRoute: ApiPublicHooksSyncExternalRoute,
   ApiPublicPaddleWebhookRoute: ApiPublicPaddleWebhookRoute,
   ApiPublicPolarCheckoutRoute: ApiPublicPolarCheckoutRoute,
