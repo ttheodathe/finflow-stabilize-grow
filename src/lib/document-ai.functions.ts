@@ -345,7 +345,6 @@ export const extractDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => ExtractInput.parse(d))
   .handler(async ({ data, context }) => {
-    const provider = resolveAiProvider();
     const { supabase } = context;
 
     // RLS (is_company_member) scopes this to documents the caller can see.
@@ -370,6 +369,14 @@ export const extractDocument = createServerFn({ method: "POST" })
     await supabase.from("documents").update({ status: "processing" }).eq("id", doc.id);
 
     try {
+      // Resolved INSIDE the try block deliberately: if no AI provider is
+      // configured, this must still land in the catch below and mark the
+      // document 'failed'. When this lived above the try (an earlier bug),
+      // a missing key made this throw before the document ever left
+      // 'uploaded' — the review workspace would then poll forever waiting
+      // for a status change that could never come, showing an endless
+      // "AI is reading the document…" spinner with no error surfaced.
+      const provider = resolveAiProvider();
       const { data: file, error: dlErr } = await supabase.storage
         .from("documents")
         .download(doc.file_path);
