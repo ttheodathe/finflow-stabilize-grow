@@ -24,7 +24,7 @@ async function callGemini(messages: any[], key: string) {
       "Content-Type": "application/json",
       Authorization: `Bearer ${key}`,
     },
-    body: JSON.stringify({ model: "gemini-2.5-flash", messages }),
+    body: JSON.stringify({ model: "gemini-3.6-flash", messages }),
   });
   if (!res.ok) {
     const body = await res.text();
