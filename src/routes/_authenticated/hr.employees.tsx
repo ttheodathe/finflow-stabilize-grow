@@ -115,7 +115,7 @@ function EmployeesPage() {
     const [e, d] = await Promise.all([
       supabase
         .from("employees")
-        .select("*, departments(name)")
+        .select("*, departments!employees_department_id_fkey(name)")
         .eq("company_id", companyId)
         .order("first_name"),
       supabase.from("departments").select("id,name").eq("company_id", companyId).eq("is_active", true).order("name"),
