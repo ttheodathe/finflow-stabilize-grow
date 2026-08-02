@@ -1,3 +1,4 @@
+import { getLovableApiKey } from "@/lib/ai-key";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -17,8 +18,7 @@ export type ParsedReceipt = {
 export const parseReceipt = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => Input.parse(data))
   .handler(async ({ data }): Promise<ParsedReceipt> => {
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("Missing LOVABLE_API_KEY");
+    const key = getLovableApiKey();
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

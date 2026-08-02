@@ -1,3 +1,4 @@
+import { getLovableApiKey } from "@/lib/ai-key";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
@@ -44,8 +45,7 @@ export const askBookkeeper = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => ChatInput.parse(d))
   .handler(async ({ data, context }) => {
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("Missing LOVABLE_API_KEY");
+    const key = getLovableApiKey();
     const { supabase } = context;
 
     const [inv, exp, cust, items] = await Promise.all([
@@ -79,8 +79,7 @@ export const askBookkeeper = createServerFn({ method: "POST" })
 export const categorizeExpenses = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("Missing LOVABLE_API_KEY");
+    const key = getLovableApiKey();
     const { supabase } = context;
     const { data: rows, error } = await supabase
       .from("expenses")
