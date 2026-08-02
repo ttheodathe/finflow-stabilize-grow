@@ -1,4 +1,4 @@
-import { getLovableApiKey } from "@/lib/ai-key";
+import { getGeminiApiKey } from "@/lib/ai-key";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
@@ -18,14 +18,13 @@ const CATEGORIES = [
 ];
 
 async function callGemini(messages: any[], key: string) {
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const res = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Lovable-API-Key": key,
-      "X-Lovable-AIG-SDK": "vercel-ai-sdk",
+      Authorization: `Bearer ${key}`,
     },
-    body: JSON.stringify({ model: "google/gemini-3-flash-preview", messages }),
+    body: JSON.stringify({ model: "gemini-2.5-flash", messages }),
   });
   if (!res.ok) {
     const body = await res.text();
@@ -45,7 +44,7 @@ export const askBookkeeper = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => ChatInput.parse(d))
   .handler(async ({ data, context }) => {
-    const key = getLovableApiKey();
+    const key = getGeminiApiKey();
     const { supabase } = context;
 
     const [inv, exp, cust, items] = await Promise.all([
@@ -79,7 +78,7 @@ export const askBookkeeper = createServerFn({ method: "POST" })
 export const categorizeExpenses = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const key = getLovableApiKey();
+    const key = getGeminiApiKey();
     const { supabase } = context;
     const { data: rows, error } = await supabase
       .from("expenses")
