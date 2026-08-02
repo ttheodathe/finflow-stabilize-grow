@@ -1,4 +1,3 @@
-import { getGeminiApiKey, callGeminiChatCompletion } from "@/lib/ai-key";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
@@ -47,31 +46,101 @@ const FIELD_GROUPS: Record<string, string[]> = {
   payment: ["payment_method", "bank_details", "mobile_money", "reference_number"],
 };
 
-async function callGeminiVision(imageDataUrls: string[], prompt: string, key: string) {
-  return callGeminiChatCompletion(
-    {
-      model: "gemini-3.6-flash",
-      response_format: { type: "json_object" },
-      max_tokens: 8000,
-      messages: [
-        { role: "system", content: prompt },
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text:
-                imageDataUrls.length > 1
-                  ? `Extract structured data from this ${imageDataUrls.length}-page document. Treat all pages as one document; put line items from every page into a single line_items array in reading order.`
-                  : "Extract structured data from this document.",
-            },
-            ...imageDataUrls.map((url) => ({ type: "image_url" as const, image_url: { url } })),
-          ],
-        },
-      ],
-    },
-    key,
+// AI provider: prefers Lovable's gateway (OpenAI-compatible shape, proxies
+// to Gemini) if LOVABLE_API_KEY is set; falls back to calling Google's
+// Gemini API directly with GEMINI_API_KEY otherwise — a genuinely free
+// option (ai.google.dev, no credit card required as of this writing) for
+// anyone who doesn't have/want a Lovable subscription. The two APIs have
+// different request/response shapes entirely, so this isn't just a
+// different URL — every call site goes through these two functions so the
+// rest of the pipeline never needs to know which provider is in use.
+type AiProvider = { kind: "lovable"; key: string } | { kind: "gemini-direct"; key: string };
+
+function resolveAiProvider(): AiProvider {
+  const lovableKey = process.env.LOVABLE_API_KEY;
+  if (lovableKey) return { kind: "lovable", key: lovableKey };
+  const geminiKey = process.env.GEMINI_API_KEY;
+  if (geminiKey) return { kind: "gemini-direct", key: geminiKey };
+  throw new Error(
+    "No AI provider configured. Set LOVABLE_API_KEY (Lovable AI gateway) or GEMINI_API_KEY " +
+      "(free tier at ai.google.dev — no credit card required) in your environment variables.",
   );
+}
+
+function handleProviderError(res: Response, body: string, providerName: string): never {
+  if (res.status === 429) throw new Error(`${providerName} rate limit reached. Please retry in a moment.`);
+  if (res.status === 402)
+    throw new Error(`${providerName} credits exhausted. Upgrade your plan to continue processing documents.`);
+  throw new Error(`${providerName} error (${res.status}): ${body.slice(0, 200)}`);
+}
+
+async function callGeminiVision(imageDataUrls: string[], prompt: string, provider: AiProvider) {
+  const userText =
+    imageDataUrls.length > 1
+      ? `Extract structured data from this ${imageDataUrls.length}-page document. Treat all pages as one document; put line items from every page into a single line_items array in reading order.`
+      : "Extract structured data from this document.";
+
+  if (provider.kind === "lovable") {
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Lovable-API-Key": provider.key,
+        "X-Lovable-AIG-SDK": "vercel-ai-sdk",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: prompt },
+          {
+            role: "user",
+            content: [
+              { type: "text", text: userText },
+              ...imageDataUrls.map((url) => ({ type: "image_url" as const, image_url: { url } })),
+            ],
+          },
+        ],
+      }),
+    });
+    if (!res.ok) handleProviderError(res, await res.text(), "AI gateway");
+    const json = await res.json();
+    return String(json.choices?.[0]?.message?.content ?? "");
+  }
+
+  // Direct Google Gemini API — native request/response shape, not the
+  // OpenAI-style one Lovable's gateway exposes. Field names are snake_case
+  // here deliberately: that's what the raw REST API takes (confirmed
+  // against ai.google.dev's curl examples) — inlineData/mimeType/
+  // systemInstruction are camelCase convenience names the JS/Python SDKs
+  // convert before sending, not what goes over the wire when calling
+  // fetch() directly like this.
+  const model = process.env.GEMINI_MODEL || "gemini-3.5-flash";
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": provider.key },
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: prompt }] },
+        contents: [
+          {
+            role: "user",
+            parts: [
+              { text: userText },
+              ...imageDataUrls.map((url) => {
+                const [meta, base64] = url.split(",");
+                const mimeType = meta.match(/data:(.*?);base64/)?.[1] ?? "image/png";
+                return { inline_data: { mime_type: mimeType, data: base64 } };
+              }),
+            ],
+          },
+        ],
+      }),
+    },
+  );
+  if (!res.ok) handleProviderError(res, await res.text(), "Gemini API");
+  const json = await res.json();
+  return String(json.candidates?.[0]?.content?.parts?.[0]?.text ?? "");
 }
 
 const MAX_PDF_PAGES = 10;
@@ -109,47 +178,55 @@ async function extractPdfText(pdfBuffer: Buffer): Promise<string> {
   return pages.map((t, i) => (pages.length > 1 ? `--- Page ${i + 1} ---\n${t}` : t)).join("\n\n");
 }
 
-async function callGeminiText(documentText: string, prompt: string, key: string) {
-  return callGeminiChatCompletion(
+async function callGeminiText(documentText: string, prompt: string, provider: AiProvider) {
+  const userText = `Extract structured data from this document's text:\n\n${documentText}`;
+
+  if (provider.kind === "lovable") {
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Lovable-API-Key": provider.key,
+        "X-Lovable-AIG-SDK": "vercel-ai-sdk",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: prompt },
+          { role: "user", content: userText },
+        ],
+      }),
+    });
+    if (!res.ok) handleProviderError(res, await res.text(), "AI gateway");
+    const json = await res.json();
+    return String(json.choices?.[0]?.message?.content ?? "");
+  }
+
+  const model = process.env.GEMINI_MODEL || "gemini-3.5-flash";
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
     {
-      model: "gemini-3.6-flash",
-      response_format: { type: "json_object" },
-      max_tokens: 8000,
-      messages: [
-        { role: "system", content: prompt },
-        { role: "user", content: `Extract structured data from this document's text:\n\n${documentText}` },
-      ],
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": provider.key },
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: prompt }] },
+        contents: [{ role: "user", parts: [{ text: userText }] }],
+      }),
     },
-    key,
   );
+  if (!res.ok) handleProviderError(res, await res.text(), "Gemini API");
+  const json = await res.json();
+  return String(json.candidates?.[0]?.content?.parts?.[0]?.text ?? "");
 }
 
 function extractJson(text: string): any {
   const cleaned = text.replace(/```json\s*|```/g, "").trim();
-  // Strip trailing commas before a closing ] or } — the single most common
-  // way an LLM produces near-valid-but-not-quite JSON.
-  const repair = (s: string) => s.replace(/,(\s*[}\]])/g, "$1");
   try {
     return JSON.parse(cleaned);
   } catch {
-    try {
-      return JSON.parse(repair(cleaned));
-    } catch {
-      const m = cleaned.match(/\{[\s\S]*\}/);
-      if (m) {
-        try {
-          return JSON.parse(m[0]);
-        } catch {
-          try {
-            return JSON.parse(repair(m[0]));
-          } catch {
-            // fall through to the error below
-          }
-        }
-      }
-      const at = cleaned.slice(0, 300);
-      throw new Error(`AI response was not valid JSON. First 300 chars: ${at}`);
-    }
+    const m = cleaned.match(/\{[\s\S]*\}/);
+    if (m) return JSON.parse(m[0]);
+    throw new Error("AI response was not valid JSON");
   }
 }
 
@@ -268,7 +345,7 @@ export const extractDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => ExtractInput.parse(d))
   .handler(async ({ data, context }) => {
-    const key = getGeminiApiKey();
+    const provider = resolveAiProvider();
     const { supabase } = context;
 
     // RLS (is_company_member) scopes this to documents the caller can see.
@@ -309,10 +386,10 @@ export const extractDocument = createServerFn({ method: "POST" })
               "Please upload it as a JPG or PNG instead so it can go through image extraction.",
           );
         }
-        raw = await callGeminiText(text, EXTRACTION_PROMPT, key);
+        raw = await callGeminiText(text, EXTRACTION_PROMPT, provider);
       } else {
         const imageDataUrl = `data:${doc.mime_type};base64,${buf.toString("base64")}`;
-        raw = await callGeminiVision([imageDataUrl], EXTRACTION_PROMPT, key);
+        raw = await callGeminiVision([imageDataUrl], EXTRACTION_PROMPT, provider);
       }
 
       const parsed = extractJson(raw);
@@ -399,7 +476,7 @@ export const extractDocument = createServerFn({ method: "POST" })
         .from("documents")
         .update({
           status: "needs_review",
-          ai_model: "gemini-3.6-flash",
+          ai_model: "google/gemini-3-flash-preview",
           overall_confidence: overallConfidence,
           extracted_at: new Date().toISOString(),
           error_message: null,
