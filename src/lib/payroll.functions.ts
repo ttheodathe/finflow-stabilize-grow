@@ -12,6 +12,8 @@ import { calculatePayroll, type TaxBracket, type StatutoryContribution } from "@
 // extraction/approval pipeline.
 // ---------------------------------------------------------------------------
 
+const AdjustmentLine = z.object({ label: z.string().min(1), amount: z.number().positive() });
+
 const GenerateInput = z.object({
   companyId: z.string().uuid(),
   periodStart: z.string(),
@@ -19,6 +21,13 @@ const GenerateInput = z.object({
   payDate: z.string(),
   employeeIds: z.array(z.string().uuid()).min(1),
   notes: z.string().optional().nullable(),
+  // Keyed by employee id. Additions (bonuses/allowances) are taxable and
+  // added to gross before PAYE/statutory are computed. Deductions (loan
+  // repayments etc.) are post-tax and subtracted from net pay directly.
+  adjustments: z
+    .record(z.object({ additions: z.array(AdjustmentLine).default([]), deductions: z.array(AdjustmentLine).default([]) }))
+    .optional()
+    .default({}),
 });
 
 export const generatePayRun = createServerFn({ method: "POST" })
@@ -93,7 +102,14 @@ export const generatePayRun = createServerFn({ method: "POST" })
     for (const emp of employees) {
       const category = emp.employment_type === "contract" ? "secondary_employer" : "permanent";
       const brackets = allBrackets.filter((b) => b.employee_category === category);
-      const result = calculatePayroll(Number(emp.salary), brackets, statutory);
+
+      const empAdjustments = data.adjustments[emp.id] ?? { additions: [], deductions: [] };
+      const additionsTotal = empAdjustments.additions.reduce((s, a) => s + a.amount, 0);
+      const deductionsTotal = empAdjustments.deductions.reduce((s, d) => s + d.amount, 0);
+      const effectiveGross = Number(emp.salary) + additionsTotal;
+
+      const result = calculatePayroll(effectiveGross, brackets, statutory);
+      const finalNetPay = round2(result.netPay - deductionsTotal);
 
       const { data: payslip, error: slipErr } = await supabase
         .from("payslips")
@@ -101,23 +117,25 @@ export const generatePayRun = createServerFn({ method: "POST" })
           company_id: data.companyId,
           pay_run_id: payRunId,
           employee_id: emp.id,
+          base_salary: Number(emp.salary),
           gross_salary: result.grossSalary,
           taxable_income: result.taxableIncome,
           paye: result.paye,
-          total_employee_deductions: result.totalEmployeeDeductions,
-          net_pay: result.netPay,
+          total_employee_deductions: round2(result.totalEmployeeDeductions + deductionsTotal),
+          net_pay: finalNetPay,
           total_employer_contributions: result.totalEmployerContributions,
-          total_employer_cost: result.totalEmployerCost,
+          total_employer_cost: round2(result.totalEmployerCost),
           currency: emp.salary_currency,
         } as never)
         .select("id")
         .single();
       if (slipErr || !payslip) throw new Error(slipErr?.message ?? "Failed to create payslip");
+      const payslipId = (payslip as { id: string }).id;
 
       if (result.contributions.length > 0) {
         await supabase.from("payslip_contributions").insert(
           result.contributions.map((c) => ({
-            payslip_id: (payslip as { id: string }).id,
+            payslip_id: payslipId,
             name: c.name,
             employee_amount: c.employeeAmount,
             employer_amount: c.employerAmount,
@@ -125,9 +143,17 @@ export const generatePayRun = createServerFn({ method: "POST" })
         );
       }
 
+      const lineItems = [
+        ...empAdjustments.additions.map((a) => ({ payslip_id: payslipId, kind: "addition" as const, label: a.label, amount: a.amount })),
+        ...empAdjustments.deductions.map((d) => ({ payslip_id: payslipId, kind: "deduction" as const, label: d.label, amount: d.amount })),
+      ];
+      if (lineItems.length > 0) {
+        await supabase.from("payslip_line_items").insert(lineItems as never);
+      }
+
       totalGross += result.grossSalary;
-      totalEmployeeDeductions += result.totalEmployeeDeductions;
-      totalNet += result.netPay;
+      totalEmployeeDeductions += result.totalEmployeeDeductions + deductionsTotal;
+      totalNet += finalNetPay;
       totalEmployerContributions += result.totalEmployerContributions;
       totalEmployerCost += result.totalEmployerCost;
     }
