@@ -1,4 +1,4 @@
-import { getGeminiApiKey } from "@/lib/ai-key";
+import { getGeminiApiKey, callGeminiChatCompletion } from "@/lib/ai-key";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
@@ -18,26 +18,14 @@ const CATEGORIES = [
 ];
 
 async function callGemini(messages: any[], key: string, jsonMode = false) {
-  const res = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${key}`,
-    },
-    body: JSON.stringify({
+  return callGeminiChatCompletion(
+    {
       model: "gemini-3.6-flash",
       ...(jsonMode ? { response_format: { type: "json_object" } } : {}),
       messages,
-    }),
-  });
-  if (!res.ok) {
-    const body = await res.text();
-    if (res.status === 429) throw new Error("AI rate limit reached. Try again shortly.");
-    if (res.status === 402) throw new Error("AI credits exhausted. Upgrade your plan to continue.");
-    throw new Error(`AI error (${res.status}): ${body.slice(0, 200)}`);
-  }
-  const j = await res.json();
-  return String(j.choices?.[0]?.message?.content ?? "");
+    },
+    key,
+  );
 }
 
 const ChatInput = z.object({
