@@ -1,4 +1,4 @@
-import { getLovableApiKey } from "@/lib/ai-key";
+import { getGeminiApiKey } from "@/lib/ai-key";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -18,17 +18,16 @@ export type ParsedReceipt = {
 export const parseReceipt = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => Input.parse(data))
   .handler(async ({ data }): Promise<ParsedReceipt> => {
-    const key = getLovableApiKey();
+    const key = getGeminiApiKey();
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Lovable-API-Key": key,
-        "X-Lovable-AIG-SDK": "vercel-ai-sdk",
+        Authorization: `Bearer ${key}`,
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "gemini-2.5-flash",
         messages: [
           {
             role: "system",
