@@ -56,6 +56,8 @@ async function callGeminiVision(imageDataUrls: string[], prompt: string, key: st
     },
     body: JSON.stringify({
       model: "gemini-3.6-flash",
+      response_format: { type: "json_object" },
+      max_tokens: 8000,
       messages: [
         { role: "system", content: prompt },
         {
@@ -82,7 +84,13 @@ async function callGeminiVision(imageDataUrls: string[], prompt: string, key: st
     throw new Error(`AI gateway error (${res.status}): ${body.slice(0, 200)}`);
   }
   const json = await res.json();
-  return String(json.choices?.[0]?.message?.content ?? "");
+  const choice = json.choices?.[0];
+  if (choice?.finish_reason === "length") {
+    throw new Error(
+      "The document was too large for the AI to finish extracting in one response. Try a shorter document or fewer pages.",
+    );
+  }
+  return String(choice?.message?.content ?? "");
 }
 
 const MAX_PDF_PAGES = 10;
@@ -129,6 +137,8 @@ async function callGeminiText(documentText: string, prompt: string, key: string)
     },
     body: JSON.stringify({
       model: "gemini-3.6-flash",
+      response_format: { type: "json_object" },
+      max_tokens: 8000,
       messages: [
         { role: "system", content: prompt },
         { role: "user", content: `Extract structured data from this document's text:\n\n${documentText}` },
@@ -143,17 +153,41 @@ async function callGeminiText(documentText: string, prompt: string, key: string)
     throw new Error(`AI gateway error (${res.status}): ${body.slice(0, 200)}`);
   }
   const json = await res.json();
-  return String(json.choices?.[0]?.message?.content ?? "");
+  const choice = json.choices?.[0];
+  if (choice?.finish_reason === "length") {
+    throw new Error(
+      "The document was too large for the AI to finish extracting in one response. Try a shorter document or fewer pages.",
+    );
+  }
+  return String(choice?.message?.content ?? "");
 }
 
 function extractJson(text: string): any {
   const cleaned = text.replace(/```json\s*|```/g, "").trim();
+  // Strip trailing commas before a closing ] or } — the single most common
+  // way an LLM produces near-valid-but-not-quite JSON.
+  const repair = (s: string) => s.replace(/,(\s*[}\]])/g, "$1");
   try {
     return JSON.parse(cleaned);
   } catch {
-    const m = cleaned.match(/\{[\s\S]*\}/);
-    if (m) return JSON.parse(m[0]);
-    throw new Error("AI response was not valid JSON");
+    try {
+      return JSON.parse(repair(cleaned));
+    } catch {
+      const m = cleaned.match(/\{[\s\S]*\}/);
+      if (m) {
+        try {
+          return JSON.parse(m[0]);
+        } catch {
+          try {
+            return JSON.parse(repair(m[0]));
+          } catch {
+            // fall through to the error below
+          }
+        }
+      }
+      const at = cleaned.slice(0, 300);
+      throw new Error(`AI response was not valid JSON. First 300 chars: ${at}`);
+    }
   }
 }
 
