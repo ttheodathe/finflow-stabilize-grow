@@ -27,7 +27,7 @@ export const parseReceipt = createServerFn({ method: "POST" })
         Authorization: `Bearer ${key}`,
       },
       body: JSON.stringify({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.6-flash",
         messages: [
           {
             role: "system",
