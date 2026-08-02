@@ -55,7 +55,7 @@ async function callGeminiVision(imageDataUrls: string[], prompt: string, key: st
       Authorization: `Bearer ${key}`,
     },
     body: JSON.stringify({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.6-flash",
       messages: [
         { role: "system", content: prompt },
         {
@@ -128,7 +128,7 @@ async function callGeminiText(documentText: string, prompt: string, key: string)
       Authorization: `Bearer ${key}`,
     },
     body: JSON.stringify({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.6-flash",
       messages: [
         { role: "system", content: prompt },
         { role: "user", content: `Extract structured data from this document's text:\n\n${documentText}` },
@@ -403,7 +403,7 @@ export const extractDocument = createServerFn({ method: "POST" })
         .from("documents")
         .update({
           status: "needs_review",
-          ai_model: "gemini-2.5-flash",
+          ai_model: "gemini-3.6-flash",
           overall_confidence: overallConfidence,
           extracted_at: new Date().toISOString(),
           error_message: null,
