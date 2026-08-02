@@ -54,6 +54,7 @@ type PayRun = {
   total_employer_cost: number;
 };
 type Employee = { id: string; first_name: string; last_name: string; salary: number; salary_currency: string; employment_status: string };
+type AdjLine = { label: string; amount: number };
 type Account = { id: string; code: string; name: string; type: string };
 type Payslip = {
   id: string;
@@ -111,6 +112,10 @@ function PayRuns() {
     notes: "",
   });
   const [selectedEmployees, setSelectedEmployees] = useState<Set<string>>(new Set());
+  const [adjustments, setAdjustments] = useState<Record<string, { additions: AdjLine[]; deductions: AdjLine[] }>>({});
+  const [expandedEmployee, setExpandedEmployee] = useState<string | null>(null);
+  const [adjDraft, setAdjDraft] = useState({ kind: "addition" as "addition" | "deduction", label: "", amount: "" });
+  const [unpaidLeaveDays, setUnpaidLeaveDays] = useState<Record<string, number>>({});
 
   const [payOpen, setPayOpen] = useState<PayRun | null>(null);
   const [payAccounts, setPayAccounts] = useState({
@@ -156,7 +161,58 @@ function PayRuns() {
   function openNew() {
     setNewForm({ period_start: firstOfMonth(), period_end: lastOfMonth(), pay_date: lastOfMonth(), notes: "" });
     setSelectedEmployees(new Set(employees.map((e) => e.id)));
+    setAdjustments({});
+    setExpandedEmployee(null);
     setNewOpen(true);
+    loadUnpaidLeave(firstOfMonth(), lastOfMonth());
+  }
+
+  // Approved leave from an unpaid leave type that overlaps the pay period —
+  // shown as information so whoever's running payroll can decide on a
+  // deduction manually via the adjustments below. Deliberately not
+  // auto-computing a deduction amount: that needs a "working days"
+  // definition (weekends? holidays?) that doesn't exist yet, and a wrong
+  // automatic number on a paycheck is worse than a missing one.
+  async function loadUnpaidLeave(start: string, end: string) {
+    if (!companyId) return;
+    const { data, error } = await supabase
+      .from("leave_requests")
+      .select("employee_id, days_requested, leave_types!inner(is_paid)")
+      .eq("company_id", companyId)
+      .eq("status", "approved")
+      .eq("leave_types.is_paid", false)
+      .lte("start_date", end)
+      .gte("end_date", start);
+    if (error) return; // non-critical, just skip the hint
+    const totals: Record<string, number> = {};
+    for (const row of (data ?? []) as any[]) {
+      totals[row.employee_id] = (totals[row.employee_id] ?? 0) + Number(row.days_requested);
+    }
+    setUnpaidLeaveDays(totals);
+  }
+
+  function addAdjustment() {
+    if (!expandedEmployee) return;
+    if (!adjDraft.label.trim()) return toast.error("Enter a label");
+    const amount = Number(adjDraft.amount);
+    if (!amount || amount <= 0) return toast.error("Enter a positive amount");
+    setAdjustments((prev) => {
+      const current = prev[expandedEmployee] ?? { additions: [], deductions: [] };
+      const key = adjDraft.kind === "addition" ? "additions" : "deductions";
+      return {
+        ...prev,
+        [expandedEmployee]: { ...current, [key]: [...current[key], { label: adjDraft.label.trim(), amount }] },
+      };
+    });
+    setAdjDraft({ kind: "addition", label: "", amount: "" });
+  }
+
+  function removeAdjustment(employeeId: string, kind: "additions" | "deductions", index: number) {
+    setAdjustments((prev) => {
+      const current = prev[employeeId];
+      if (!current) return prev;
+      return { ...prev, [employeeId]: { ...current, [kind]: current[kind].filter((_, i) => i !== index) } };
+    });
   }
 
   function toggleEmployee(id: string) {
@@ -182,6 +238,7 @@ function PayRuns() {
           payDate: newForm.pay_date,
           employeeIds: Array.from(selectedEmployees),
           notes: newForm.notes || null,
+          adjustments,
         },
       });
       toast.success(`Pay run created — ${res.employeeCount} payslip${res.employeeCount > 1 ? "s" : ""} generated`);
@@ -283,11 +340,11 @@ function PayRuns() {
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <Label>Period start</Label>
-                  <Input type="date" value={newForm.period_start} onChange={(e) => setNewForm({ ...newForm, period_start: e.target.value })} required />
+                  <Input type="date" value={newForm.period_start} onChange={(e) => { const v = e.target.value; setNewForm({ ...newForm, period_start: v }); loadUnpaidLeave(v, newForm.period_end); }} required />
                 </div>
                 <div>
                   <Label>Period end</Label>
-                  <Input type="date" value={newForm.period_end} onChange={(e) => setNewForm({ ...newForm, period_end: e.target.value })} required />
+                  <Input type="date" value={newForm.period_end} onChange={(e) => { const v = e.target.value; setNewForm({ ...newForm, period_end: v }); loadUnpaidLeave(newForm.period_start, v); }} required />
                 </div>
                 <div>
                   <Label>Pay date</Label>
@@ -296,19 +353,87 @@ function PayRuns() {
               </div>
               <div>
                 <Label>Employees ({selectedEmployees.size} of {employees.length} selected)</Label>
-                <div className="border rounded-md max-h-56 overflow-y-auto divide-y">
+                <div className="border rounded-md max-h-72 overflow-y-auto divide-y">
                   {employees.length === 0 ? (
                     <p className="p-3 text-sm text-muted-foreground">No active employees found.</p>
                   ) : (
-                    employees.map((emp) => (
-                      <label key={emp.id} className="flex items-center justify-between gap-2 px-3 py-2 text-sm cursor-pointer">
-                        <span className="flex items-center gap-2">
-                          <Checkbox checked={selectedEmployees.has(emp.id)} onCheckedChange={() => toggleEmployee(emp.id)} />
-                          {emp.first_name} {emp.last_name}
-                        </span>
-                        <span className="text-muted-foreground">{fmt(emp.salary, emp.salary_currency)}</span>
-                      </label>
-                    ))
+                    employees.map((emp) => {
+                      const adj = adjustments[emp.id];
+                      const addTotal = adj?.additions.reduce((s, a) => s + a.amount, 0) ?? 0;
+                      const dedTotal = adj?.deductions.reduce((s, d) => s + d.amount, 0) ?? 0;
+                      const unpaidDays = unpaidLeaveDays[emp.id];
+                      const isExpanded = expandedEmployee === emp.id;
+                      return (
+                        <div key={emp.id} className="text-sm">
+                          <div className="flex items-center justify-between gap-2 px-3 py-2">
+                            <label className="flex items-center gap-2 cursor-pointer flex-1">
+                              <Checkbox checked={selectedEmployees.has(emp.id)} onCheckedChange={() => toggleEmployee(emp.id)} />
+                              {emp.first_name} {emp.last_name}
+                              {unpaidDays ? (
+                                <Badge variant="secondary" className="text-[10px]">{unpaidDays} unpaid leave day{unpaidDays > 1 ? "s" : ""}</Badge>
+                              ) : null}
+                            </label>
+                            <span className="text-muted-foreground">
+                              {fmt(emp.salary + addTotal - dedTotal, emp.salary_currency)}
+                              {(addTotal > 0 || dedTotal > 0) && (
+                                <span className="text-[10px] ml-1">(base {fmt(emp.salary, emp.salary_currency)})</span>
+                              )}
+                            </span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setExpandedEmployee(isExpanded ? null : emp.id)}
+                            >
+                              {isExpanded ? "Close" : "Adjust"}
+                            </Button>
+                          </div>
+                          {isExpanded && (
+                            <div className="px-3 pb-3 space-y-2 bg-muted/30">
+                              {[...(adj?.additions ?? []).map((a, i) => ({ ...a, kind: "additions" as const, i })),
+                                ...(adj?.deductions ?? []).map((d, i) => ({ ...d, kind: "deductions" as const, i }))]
+                                .map((line) => (
+                                  <div key={`${line.kind}-${line.i}`} className="flex items-center justify-between text-xs">
+                                    <span>{line.kind === "additions" ? "+ " : "− "}{line.label}: {fmt(line.amount, emp.salary_currency)}</span>
+                                    <Button type="button" variant="ghost" size="sm" className="h-5 px-1" onClick={() => removeAdjustment(emp.id, line.kind, line.i)}>
+                                      Remove
+                                    </Button>
+                                  </div>
+                                ))}
+                              <div className="flex items-center gap-1.5">
+                                <Select value={adjDraft.kind} onValueChange={(v: "addition" | "deduction") => setAdjDraft({ ...adjDraft, kind: v })}>
+                                  <SelectTrigger className="w-28 h-8 text-xs"><SelectValue /></SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="addition">Bonus (+)</SelectItem>
+                                    <SelectItem value="deduction">Deduction (−)</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <Input
+                                  placeholder="Label"
+                                  className="h-8 text-xs"
+                                  value={adjDraft.label}
+                                  onChange={(e) => setAdjDraft({ ...adjDraft, label: e.target.value })}
+                                />
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  placeholder="Amount"
+                                  className="h-8 text-xs w-28"
+                                  value={adjDraft.amount}
+                                  onChange={(e) => setAdjDraft({ ...adjDraft, amount: e.target.value })}
+                                />
+                                <Button type="button" size="sm" className="h-8" onClick={addAdjustment}>Add</Button>
+                              </div>
+                              {unpaidDays ? (
+                                <p className="text-[11px] text-muted-foreground">
+                                  {unpaidDays} unpaid leave day{unpaidDays > 1 ? "s" : ""} in this period — add a deduction above if it should reduce this payslip.
+                                </p>
+                              ) : null}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
                   )}
                 </div>
               </div>
