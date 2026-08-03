@@ -12,7 +12,7 @@ import { getPolarProductId } from "@/lib/polar/config";
 import { toast } from "sonner";
 import { Loader2, Check, ArrowRight, Building2, CreditCard, User } from "lucide-react";
 import { hasCompletedOnboarding } from "@/lib/auth-flow";
-import { createFreeSubscription } from "@/lib/billing.functions";
+import { createFreeSubscription, createPendingSubscription } from "@/lib/billing.functions";
 
 export const Route = createFileRoute("/onboarding")({
   ssr: false,
@@ -149,21 +149,26 @@ function OnboardingPage() {
         toast.error("Missing plan configuration");
         return;
       }
-      // Also create a placeholder free row so gating helpers don't 404 while
-      // waiting for the webhook to activate the paid plan.
+      // Record intent as "pending" (not free, not active) so gating helpers
+      // have a row to read, but the auth gate keeps this user out of the
+      // dashboard until the Polar webhook confirms payment.
       try {
-        await createFreeSubscription({ data: { companyId } });
-      } catch {
-        // ignore — webhook will upsert real subscription
+        await createPendingSubscription({ data: { companyId, plan, cycle: "monthly" } });
+      } catch (e) {
+        setSaving(false);
+        toast.error(e instanceof Error ? e.message : "Failed to save plan selection");
+        return;
       }
       await supabase.from("onboarding_progress").upsert(
         {
           user_id: user.id,
           financial_completed: true,
           branding_completed: true,
-          completed: true,
-          completed_at: new Date().toISOString(),
-          current_step: "done",
+          // Intentionally not "completed" yet — payment isn't done. The
+          // ground-truth gate is the subscriptions row, but keep this flag
+          // consistent so anything else reading onboarding_progress agrees.
+          completed: false,
+          current_step: "payment",
         },
         { onConflict: "user_id" },
       );
