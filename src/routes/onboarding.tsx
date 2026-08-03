@@ -7,11 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CurrencySelect } from "@/components/currency-select";
-import { PLANS, PLAN_ORDER, type PlanKey, formatPlanPrice, getPriceId } from "@/lib/paddle/config";
+import { PLANS, PLAN_ORDER, type PlanKey, formatPlanPrice } from "@/lib/paddle/config";
+import { getPolarProductId } from "@/lib/polar/config";
 import { toast } from "sonner";
 import { Loader2, Check, ArrowRight, Building2, CreditCard, User } from "lucide-react";
 import { hasCompletedOnboarding } from "@/lib/auth-flow";
-import { openCheckout } from "@/lib/paddle/client";
 import { createFreeSubscription } from "@/lib/billing.functions";
 
 export const Route = createFileRoute("/onboarding")({
@@ -140,38 +140,43 @@ function OnboardingPage() {
     const companyId =
       typeof window !== "undefined" ? localStorage.getItem("currentCompanyId") : null;
 
-    // Paid plans → open Paddle Checkout. Webhook activates the subscription.
+    // Paid plans → redirect to Polar-hosted checkout. Webhook activates the
+    // subscription on return (see src/routes/api/public/polar/webhook.ts).
     if (plan === "pro" || plan === "business") {
-      const priceId = getPriceId(plan as "pro" | "business", "monthly");
-      if (!priceId || !companyId) {
+      const productId = getPolarProductId(plan as "pro" | "business", "monthly");
+      if (!productId || !companyId) {
         setSaving(false);
         toast.error("Missing plan configuration");
         return;
       }
-      try {
-        await openCheckout({
-          priceId,
-          customerEmail: user.email ?? undefined,
-          companyId,
-          userId: user.id,
-          plan: plan as "pro" | "business",
-          cycle: "monthly",
-          successUrl: `${window.location.origin}/dashboard`,
-        });
-      } catch (e) {
-        setSaving(false);
-        toast.error(e instanceof Error ? e.message : "Checkout failed");
-        return;
-      }
       // Also create a placeholder free row so gating helpers don't 404 while
       // waiting for the webhook to activate the paid plan.
-      if (companyId) {
-        try {
-          await createFreeSubscription({ data: { companyId } });
-        } catch {
-          // ignore — webhook will upsert real subscription
-        }
+      try {
+        await createFreeSubscription({ data: { companyId } });
+      } catch {
+        // ignore — webhook will upsert real subscription
       }
+      await supabase.from("onboarding_progress").upsert(
+        {
+          user_id: user.id,
+          financial_completed: true,
+          branding_completed: true,
+          completed: true,
+          completed_at: new Date().toISOString(),
+          current_step: "done",
+        },
+        { onConflict: "user_id" },
+      );
+      if (typeof window !== "undefined") localStorage.removeItem("pendingPlan");
+      const params = new URLSearchParams({
+        productId,
+        companyId,
+        userId: user.id,
+      });
+      // Full navigation (not the router) — this leaves the SPA for the
+      // Polar-hosted checkout page and returns to /settings?tab=billing.
+      window.location.href = `/api/public/polar/checkout?${params.toString()}`;
+      return;
     } else if (plan === "free" && companyId) {
       try {
         await createFreeSubscription({ data: { companyId } });
