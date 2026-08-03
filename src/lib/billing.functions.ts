@@ -43,6 +43,12 @@ export const getMySubscription = createServerFn({ method: "POST" })
     } | null;
   });
 
+/**
+ * subscriptions has UNIQUE(user_id) — every account has exactly one row.
+ * Always upsert on user_id rather than select-then-insert, so re-running
+ * this (e.g. switching plan choice, or retrying onboarding) never collides
+ * with an existing row for the same user.
+ */
 export const createFreeSubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { companyId: string }) =>
@@ -51,27 +57,65 @@ export const createFreeSubscription = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     // biome-ignore lint/suspicious/noExplicitAny: dynamic schema
     const sb = context.supabase as any;
-    const { data: existing } = await sb
-      .from("subscriptions")
-      .select("id")
-      .eq("company_id", data.companyId)
-      .eq("owner_id", context.userId)
-      .maybeSingle();
-    if (existing?.id) return { id: existing.id as string, plan: "free" as const };
     const { data: row, error } = await sb
       .from("subscriptions")
-      .insert({
-        company_id: data.companyId,
-        owner_id: context.userId,
-        user_id: context.userId,
-        plan: "free",
-        status: "active",
-        billing_cycle: null,
-      })
+      .upsert(
+        {
+          user_id: context.userId,
+          owner_id: context.userId,
+          company_id: data.companyId,
+          plan: "free",
+          status: "active",
+          billing_cycle: null,
+          polar_subscription_id: null,
+        },
+        { onConflict: "user_id" },
+      )
       .select("id")
       .single();
     if (error) throw new Error(error.message);
     return { id: row.id as string, plan: "free" as const };
+  });
+
+/**
+ * Called when the user picks a paid plan but hasn't finished checkout yet.
+ * Records the *intended* plan with status "pending" (never "active"/"free")
+ * so nothing downstream — dashboard access, feature gating — treats this
+ * account as paid or as free until the Polar webhook confirms payment and
+ * flips status to "active".
+ */
+export const createPendingSubscription = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { companyId: string; plan: "pro" | "business"; cycle: "monthly" | "yearly" }) =>
+    z
+      .object({
+        companyId: z.string().uuid(),
+        plan: z.enum(["pro", "business"]),
+        cycle: z.enum(["monthly", "yearly"]),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    // biome-ignore lint/suspicious/noExplicitAny: dynamic schema
+    const sb = context.supabase as any;
+    const { data: row, error } = await sb
+      .from("subscriptions")
+      .upsert(
+        {
+          user_id: context.userId,
+          owner_id: context.userId,
+          company_id: data.companyId,
+          plan: data.plan,
+          status: "pending",
+          billing_cycle: data.cycle,
+          polar_subscription_id: null,
+        },
+        { onConflict: "user_id" },
+      )
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    return { id: row.id as string, plan: data.plan, status: "pending" as const };
   });
 
 /**
