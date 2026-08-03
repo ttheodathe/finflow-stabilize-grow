@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { MobileHeader } from "@/components/mobile-header";
-import { hasCompletedOnboarding } from "@/lib/auth-flow";
+import { hasCompletedOnboarding, getPendingPlan } from "@/lib/auth-flow";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -43,6 +43,13 @@ export const Route = createFileRoute("/_authenticated")({
       throw redirect({
         to: "/onboarding",
       });
+    }
+
+    // Chose a paid plan but never finished checkout — keep them out of the
+    // dashboard (and every other authenticated page) until payment clears.
+    const pending = await getPendingPlan(user.id);
+    if (pending) {
+      throw redirect({ to: "/complete-payment" });
     }
 
     return { user };
