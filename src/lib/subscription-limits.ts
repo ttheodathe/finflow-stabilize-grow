@@ -48,7 +48,8 @@ export function useSubscriptionLimits(companyId: string | null) {
     enabled: Boolean(companyId),
     staleTime: 30_000,
   });
-  const plan: PlanKey = (query.data?.plan as PlanKey | undefined) ?? "free";
+  const isEntitled = query.data?.status === "active" || query.data?.status === "trialing";
+  const plan: PlanKey = isEntitled ? ((query.data?.plan as PlanKey | undefined) ?? "free") : "free";
   const limits = limitsForPlan(plan);
   return {
     subscription: query.data,
