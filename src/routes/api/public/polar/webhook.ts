@@ -82,7 +82,20 @@ async function handleEvent(event: { type: string; data: Record<string, unknown> 
     let status = sub.status;
     if (t === "subscription.canceled" || t === "subscription.revoked") status = "canceled";
 
+    if (!ownerId) {
+      // No user_id in checkout metadata — can't attribute this event to an
+      // account. Log and skip rather than writing an orphaned row.
+      console.warn("[polar-webhook] subscription event missing user_id metadata, skipping");
+      return;
+    }
+
+    // subscriptions has UNIQUE(user_id) — every account has at most one row,
+    // created up-front (as "pending" during checkout, or "active"/free at
+    // signup). Upsert on user_id so this always updates that row in place;
+    // upserting on polar_subscription_id would instead try to INSERT a
+    // second row for the same user and fail on the user_id constraint.
     const row = {
+      user_id: ownerId,
       polar_subscription_id: sub.polar_subscription_id,
       polar_customer_id: sub.polar_customer_id,
       price_id: sub.price_id,
@@ -98,7 +111,7 @@ async function handleEvent(event: { type: string; data: Record<string, unknown> 
     };
     const { error } = await admin
       .from("subscriptions")
-      .upsert(row, { onConflict: "polar_subscription_id" });
+      .upsert(row, { onConflict: "user_id" });
     if (error) throw new Error(`subscriptions upsert: ${error.message}`);
 
     if (sub.polar_customer_id) {
