@@ -34,7 +34,7 @@ import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 import { ReceivePODialog } from "@/components/receive-po-dialog";
 
 export const Route = createFileRoute("/_authenticated/purchases/orders")({
-  head: () => ({ meta: [{ title: "Purchase orders — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "Purchase orders — Finflow Track" }] }),
   component: POPage,
 });
 
