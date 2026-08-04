@@ -37,7 +37,7 @@ import { extractDocument } from "@/lib/document-ai.functions";
 import { EstimateReviewWorkspace } from "@/components/estimate-review-workspace";
 
 export const Route = createFileRoute("/_authenticated/sales/estimates")({
-  head: () => ({ meta: [{ title: "Estimates — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "Estimates — Finflow Track" }] }),
   component: EstimatesPage,
 });
 
