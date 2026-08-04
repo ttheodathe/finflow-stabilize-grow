@@ -5,7 +5,7 @@ export const Route = createFileRoute("/_authenticated/apps")({
   component: () => (
     <ComingSoon
       title="Apps marketplace"
-      description="Extend Free Accounting with payments, payroll, CRM, e-commerce, and tax integrations."
+      description="Extend Finflow Track with payments, payroll, CRM, e-commerce, and tax integrations."
       items={["Stripe", "PayPal", "Shopify", "Slack", "Google Drive", "Zapier"]}
     />
   ),
