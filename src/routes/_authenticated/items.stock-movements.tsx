@@ -31,7 +31,7 @@ import { useStockMovements } from "@/hooks/useStockMovements";
 import type { AdjustmentReason, StockMovement } from "@/types/inventory.types";
 
 export const Route = createFileRoute("/_authenticated/items/stock-movements")({
-  head: () => ({ meta: [{ title: "Stock movements — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "Stock movements — Finflow Track" }] }),
   component: StockMovementsPage,
 });
 
