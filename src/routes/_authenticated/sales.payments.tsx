@@ -33,7 +33,7 @@ import { toast } from "sonner";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/sales/payments")({
-  head: () => ({ meta: [{ title: "Payments received — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "Payments received — Finflow Track" }] }),
   component: PaymentsPage,
 });
 
