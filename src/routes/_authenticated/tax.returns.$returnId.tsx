@@ -17,7 +17,7 @@ import {
 } from "@/services/tax/taxDocuments.service";
 
 export const Route = createFileRoute("/_authenticated/tax/returns/$returnId")({
-  head: () => ({ meta: [{ title: "Tax Return — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "Tax Return — Finflow Track" }] }),
   component: TaxReturnDetailPage,
 });
 
