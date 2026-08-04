@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Loader2, RefreshCw, Database } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/sync")({
-  head: () => ({ meta: [{ title: "External Sync — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "External Sync — Finflow Track" }] }),
   component: SyncPage,
 });
 
