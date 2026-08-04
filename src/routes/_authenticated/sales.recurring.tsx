@@ -34,7 +34,7 @@ import { Plus, Trash2, Play } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/sales/recurring")({
-  head: () => ({ meta: [{ title: "Recurring invoices — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "Recurring invoices — Finflow Track" }] }),
   component: RecurringPage,
 });
 
