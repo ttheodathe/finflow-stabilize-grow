@@ -10,6 +10,7 @@ import { getMySubscription } from "./billing.functions";
 
 export type FeatureKey =
   | "inventory"
+  | "warehouses"
   | "purchaseOrders"
   | "bankReconciliation"
   | "advancedReports"
@@ -17,7 +18,8 @@ export type FeatureKey =
   | "crm"
   | "projects"
   | "auditLogs"
-  | "apiAccess";
+  | "apiAccess"
+  | "aiBookkeeper";
 
 export function limitsForPlan(plan: PlanKey): PlanLimits {
   return PLANS[plan]?.limits ?? PLANS.free.limits;
@@ -58,6 +60,7 @@ export function useSubscriptionLimits(companyId: string | null) {
     isLoading: query.isLoading,
     can: {
       inventory: canUseInventory(plan),
+      warehouses: hasFeature(plan, "warehouses"),
       payroll: canUsePayroll(plan),
       crm: canUseCRM(plan),
       projects: canUseProjects(plan),
@@ -66,6 +69,7 @@ export function useSubscriptionLimits(companyId: string | null) {
       advancedReports: hasFeature(plan, "advancedReports"),
       purchaseOrders: hasFeature(plan, "purchaseOrders"),
       auditLogs: hasFeature(plan, "auditLogs"),
+      aiBookkeeper: hasFeature(plan, "aiBookkeeper"),
     },
     canCreateCompany: (currentCount: number) => canCreateCompany(plan, currentCount),
     canInviteUser: (currentSeats: number) => canInviteUser(plan, currentSeats),
