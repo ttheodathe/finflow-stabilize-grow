@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ComingSoon } from "@/components/coming-soon";
 export const Route = createFileRoute("/_authenticated/hr/claims")({
-  head: () => ({ meta: [{ title: "Expense claims — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "Expense claims — Finflow Track" }] }),
   component: () => (
     <ComingSoon
       title="Expense claims"
