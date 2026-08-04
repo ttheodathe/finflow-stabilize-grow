@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Settings, FileText } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/tax/dashboard")({
-  head: () => ({ meta: [{ title: "Tax — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "Tax — Finflow Track" }] }),
   component: TaxDashboardPage,
 });
 
