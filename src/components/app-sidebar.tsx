@@ -1,6 +1,7 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { UpgradePlanModal } from "@/components/UpgradePlanModal";
 import type { PlanKey } from "@/lib/paddle/config";
+import { limitsForPlan } from "@/lib/subscription-limits";
 import {
   LayoutDashboard,
   Users,
@@ -68,8 +69,12 @@ type NavGroup = {
   items?: NavItem[];
 };
 
-// Plan tiers. The source of truth is now the `subscriptions` table
-// (company_limit = null means unlimited / enterprise).
+// Plan tiers. Source of truth is subscriptions.plan + subscriptions.status
+// (an active/trialing row entitles the account to that plan; anything
+// else — pending, canceled, missing — is treated as free). Limits come
+// from the shared PLANS catalog (paddle/config.ts), not from the
+// subscriptions.company_limit column, which is legacy/unused: it's only
+// ever written by update_own_plan(), an RPC nothing in the app calls.
 const PLAN_ORDER = ["free", "pro", "business", "enterprise"] as const;
 
 const PLAN_LABELS: Record<string, string> = {
@@ -177,7 +182,7 @@ const navGroups: NavGroup[] = [
 ];
 
 type Company = { id: string; name: string; is_default: boolean };
-type Subscription = { plan: string; company_limit: number | null };
+type Subscription = { plan: string; status: string };
 
 export function AppSidebar() {
   const { state, isMobile, setOpenMobile } = useSidebar();
@@ -201,9 +206,11 @@ export function AppSidebar() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
 
-  const planKey = subscription?.plan ?? "free";
+  const isEntitled = subscription?.status === "active" || subscription?.status === "trialing";
+  const planKey = isEntitled ? subscription?.plan ?? "free" : "free";
   const planLabel = PLAN_LABELS[planKey] ?? planKey;
-  const companyLimit = subscription?.company_limit ?? null; // null = unlimited
+  const rawCompanyLimit = limitsForPlan(planKey as PlanKey).companyLimit;
+  const companyLimit = Number.isFinite(rawCompanyLimit) ? rawCompanyLimit : null; // null = unlimited
   const companiesUsed = companies.length;
   const usagePct =
     companyLimit === null ? 100 : Math.min(100, (companiesUsed / companyLimit) * 100);
@@ -230,7 +237,7 @@ export function AppSidebar() {
         .order("created_at", { referencedTable: "companies", ascending: true }),
       supabase
         .from("subscriptions")
-        .select("plan, company_limit")
+        .select("plan, status")
         .eq("user_id", user.id)
         .maybeSingle(),
     ]);
@@ -250,14 +257,14 @@ export function AppSidebar() {
     if (subRow) {
       setSubscription(subRow);
     } else {
-      // Safety net: the subscriptions table has a trigger that creates a
-      // free row for every new signup, but if this account predates that
-      // trigger (or the row was somehow deleted), create it here instead
-      // of leaving the plan section blank.
+      // Safety net: every account should already have a subscriptions row
+      // (created at signup), but if this one predates that or was somehow
+      // deleted, create a free/active one here instead of leaving the plan
+      // section blank.
       const { data: created } = await supabase
         .from("subscriptions")
-        .upsert({ user_id: user.id, plan: "free", company_limit: 1 }, { onConflict: "user_id" })
-        .select("plan, company_limit")
+        .upsert({ user_id: user.id, plan: "free", status: "active" }, { onConflict: "user_id" })
+        .select("plan, status")
         .single();
       if (created) setSubscription(created);
     }
