@@ -27,7 +27,7 @@ import { toast } from "sonner";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/purchases/vendors")({
-  head: () => ({ meta: [{ title: "Vendors — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "Vendors — Finflow Track" }] }),
   component: VendorsPage,
 });
 
