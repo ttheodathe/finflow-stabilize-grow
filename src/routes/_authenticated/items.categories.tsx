@@ -27,7 +27,7 @@ import { toast } from "sonner";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/items/categories")({
-  head: () => ({ meta: [{ title: "Categories — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "Categories — Finflow Track" }] }),
   component: CategoriesPage,
 });
 
