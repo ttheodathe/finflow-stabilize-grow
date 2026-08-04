@@ -42,20 +42,26 @@ export function normalizePolarSubscription(data: Record<string, unknown>): {
   cancel_at_period_end: boolean;
   custom_data: Record<string, unknown> | null;
 } {
-  const productId = (data.product_id as string | undefined) ?? null;
+  // Polar's actual webhook payload uses camelCase (productId, customerId,
+  // currentPeriodStart/End, cancelAtPeriodEnd) — confirmed against real
+  // logged events in billing_events. The previous snake_case reads
+  // (product_id, customer_id, ...) were always undefined, which is why
+  // every paid subscription silently recorded plan="free" with null
+  // customer/period data regardless of what was actually purchased.
+  const productId = (data.productId as string | undefined) ?? null;
   const mapped = productId ? planFromPolarProductId(productId) : null;
   const custom = (data.metadata as Record<string, unknown> | null) ?? null;
 
   return {
     polar_subscription_id: String(data.id),
-    polar_customer_id: (data.customer_id as string | null) ?? null,
+    polar_customer_id: (data.customerId as string | null) ?? null,
     price_id: productId,
     plan: mapped?.plan ?? (custom?.plan as PlanKey | undefined) ?? "free",
     billing_cycle: mapped?.cycle ?? (custom?.cycle as BillingCycle | undefined) ?? null,
     status: (data.status as string) ?? "unknown",
-    current_period_start: (data.current_period_start as string) ?? null,
-    current_period_end: (data.current_period_end as string) ?? null,
-    cancel_at_period_end: Boolean(data.cancel_at_period_end),
+    current_period_start: (data.currentPeriodStart as string) ?? null,
+    current_period_end: (data.currentPeriodEnd as string) ?? null,
+    cancel_at_period_end: Boolean(data.cancelAtPeriodEnd),
     custom_data: custom,
   };
 }
