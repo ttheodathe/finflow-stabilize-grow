@@ -39,7 +39,7 @@ import { useDefaultCurrency, useDateFormat, formatDate } from "@/hooks/use-curre
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/expenses")({
-  head: () => ({ meta: [{ title: "Expenses — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "Expenses — Finflow Track" }] }),
   component: ExpensesPage,
 });
 
