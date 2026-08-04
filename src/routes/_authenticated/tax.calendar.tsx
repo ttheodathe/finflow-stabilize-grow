@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import { UpcomingDeadlines } from "@/components/tax/UpcomingDeadlines";
 
 export const Route = createFileRoute("/_authenticated/tax/calendar")({
-  head: () => ({ meta: [{ title: "Tax Calendar — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "Tax Calendar — Finflow Track" }] }),
   component: TaxCalendarPage,
 });
 
