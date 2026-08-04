@@ -22,6 +22,7 @@ export interface PlanLimits {
   companyLimit: number; // Infinity for unlimited
   memberLimit: number;
   inventory: boolean;
+  warehouses: boolean;
   purchaseOrders: boolean;
   bankReconciliation: boolean;
   advancedReports: boolean;
@@ -30,6 +31,7 @@ export interface PlanLimits {
   projects: boolean;
   auditLogs: boolean;
   apiAccess: boolean;
+  aiBookkeeper: boolean;
 }
 
 export interface PlanConfig {
@@ -65,6 +67,7 @@ export const PLANS: Record<PlanKey, PlanConfig> = {
       companyLimit: 1,
       memberLimit: 2,
       inventory: false,
+      warehouses: false,
       purchaseOrders: false,
       bankReconciliation: false,
       advancedReports: false,
@@ -73,6 +76,7 @@ export const PLANS: Record<PlanKey, PlanConfig> = {
       projects: false,
       auditLogs: false,
       apiAccess: false,
+      aiBookkeeper: false,
     },
   },
   pro: {
@@ -86,19 +90,22 @@ export const PLANS: Record<PlanKey, PlanConfig> = {
     yearlyPriceId: "pri_01ky1cy1ehy5dzbnsej8hrya5b",
     features: [
       "Everything in Free",
-      "Up to 3 Companies",
-      "Up to 10 Team Members",
+      "Up to 5 Companies",
+      "Up to 15 Team Members",
       "Inventory Management",
+      "Warehouses",
       "Purchase Orders",
       "Bank Reconciliation",
       "Advanced Reports",
+      "AI Bookkeeper",
       "Role-Based Permissions",
       "Priority Email Support",
     ],
     limits: {
-      companyLimit: 3,
-      memberLimit: 10,
+      companyLimit: 5,
+      memberLimit: 15,
       inventory: true,
+      warehouses: true,
       purchaseOrders: true,
       bankReconciliation: true,
       advancedReports: true,
@@ -107,6 +114,7 @@ export const PLANS: Record<PlanKey, PlanConfig> = {
       projects: false,
       auditLogs: false,
       apiAccess: false,
+      aiBookkeeper: true,
     },
     highlight: true,
   },
@@ -121,7 +129,7 @@ export const PLANS: Record<PlanKey, PlanConfig> = {
     yearlyPriceId: "pri_01ky1d1h4rxe45hbj3zactjxy7",
     features: [
       "Everything in Professional",
-      "Up to 15 Companies",
+      "Up to 25 Companies",
       "Unlimited Team Members",
       "Payroll",
       "CRM",
@@ -132,9 +140,10 @@ export const PLANS: Record<PlanKey, PlanConfig> = {
       "Priority Support",
     ],
     limits: {
-      companyLimit: 15,
+      companyLimit: 25,
       memberLimit: Number.POSITIVE_INFINITY,
       inventory: true,
+      warehouses: true,
       purchaseOrders: true,
       bankReconciliation: true,
       advancedReports: true,
@@ -143,6 +152,7 @@ export const PLANS: Record<PlanKey, PlanConfig> = {
       projects: true,
       auditLogs: true,
       apiAccess: true,
+      aiBookkeeper: true,
     },
   },
   enterprise: {
@@ -173,6 +183,7 @@ export const PLANS: Record<PlanKey, PlanConfig> = {
       companyLimit: Number.POSITIVE_INFINITY,
       memberLimit: Number.POSITIVE_INFINITY,
       inventory: true,
+      warehouses: true,
       purchaseOrders: true,
       bankReconciliation: true,
       advancedReports: true,
@@ -181,6 +192,7 @@ export const PLANS: Record<PlanKey, PlanConfig> = {
       projects: true,
       auditLogs: true,
       apiAccess: true,
+      aiBookkeeper: true,
     },
   },
 };
