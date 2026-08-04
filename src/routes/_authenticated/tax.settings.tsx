@@ -6,7 +6,7 @@ import { TaxRatesEditor } from "@/components/tax/TaxRatesEditor";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/tax/settings")({
-  head: () => ({ meta: [{ title: "Tax Settings — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "Tax Settings — Finflow Track" }] }),
   component: TaxSettingsPage,
 });
 
