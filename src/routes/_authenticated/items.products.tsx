@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ItemsManager } from "@/components/items-manager";
 
 export const Route = createFileRoute("/_authenticated/items/products")({
-  head: () => ({ meta: [{ title: "Products — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "Products — Finflow Track" }] }),
   component: () => (
     <ItemsManager
       type="product"
