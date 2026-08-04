@@ -36,7 +36,7 @@ import { extractDocument } from "@/lib/document-ai.functions";
 import { BillReviewWorkspace } from "@/components/bill-review-workspace";
 
 export const Route = createFileRoute("/_authenticated/purchases/bills")({
-  head: () => ({ meta: [{ title: "Bills — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "Bills — Finflow Track" }] }),
   component: BillsPage,
 });
 
