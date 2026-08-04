@@ -60,6 +60,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useEffect, useMemo, useState } from "react";
 import { CreateCompanyModal } from "@/components/CreateCompanyModal";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { featureForRoute, planHasFeature } from "@/lib/features/catalog";
+import { PLANS } from "@/lib/paddle/config";
+import { Lock } from "lucide-react";
 
 type NavItem = { label: string; to: string };
 type NavGroup = {
@@ -292,6 +296,15 @@ export function AppSidebar() {
 
   const isActive = (to: string) => pathname === to || pathname.startsWith(to + "/");
 
+  // Plan gating: locked modules stay visible in the nav but open the
+  // upgrade modal instead of navigating. Server-side checks still apply.
+  const lockFor = (to: string) => {
+    const feature = featureForRoute(to);
+    if (!feature || planHasFeature(planKey as PlanKey, feature)) return null;
+    const required = PLANS[FEATURE_REQUIRED_PLAN(feature)];
+    return { label: FEATURE_LABEL(feature), requiredPlanName: required.name };
+  };
+
   const currentCompany = companies.find((c) => c.id === currentCompanyId);
 
   const initials = (fullName || email || "U")
@@ -424,6 +437,29 @@ export function AppSidebar() {
             <SidebarMenu>
               {navGroups.map((g) => {
                 if (!g.items) {
+                  const lock = lockFor(g.to!);
+                  if (lock) {
+                    return (
+                      <SidebarMenuItem key={g.label}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <SidebarMenuButton
+                              className="opacity-70"
+                              onClick={() => setUpgradeModalOpen(true)}
+                            >
+                              <g.icon className="h-4 w-4" />
+                              <span>{g.label}</span>
+                              <Lock className="ml-auto h-3.5 w-3.5 text-muted-foreground" />
+                            </SidebarMenuButton>
+                          </TooltipTrigger>
+                          <TooltipContent side="right">
+                            {lock.label} is available on the {lock.requiredPlanName} plan — click to
+                            upgrade.
+                          </TooltipContent>
+                        </Tooltip>
+                      </SidebarMenuItem>
+                    );
+                  }
                   return (
                     <SidebarMenuItem key={g.label}>
                       <SidebarMenuButton asChild isActive={isActive(g.to!)} tooltip={g.label}>
@@ -448,15 +484,39 @@ export function AppSidebar() {
                       </CollapsibleTrigger>
                       <CollapsibleContent>
                         <SidebarMenuSub>
-                          {g.items.map((i) => (
-                            <SidebarMenuSubItem key={i.to}>
-                              <SidebarMenuSubButton asChild isActive={isActive(i.to)}>
-                                <Link to={i.to} onClick={closeOnNav}>
-                                  {i.label}
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                          ))}
+                          {g.items.map((i) => {
+                            const lock = lockFor(i.to);
+                            if (lock) {
+                              return (
+                                <SidebarMenuSubItem key={i.to}>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <SidebarMenuSubButton
+                                        className="opacity-70 cursor-pointer"
+                                        onClick={() => setUpgradeModalOpen(true)}
+                                      >
+                                        <span className="truncate">{i.label}</span>
+                                        <Lock className="ml-auto h-3 w-3 text-muted-foreground" />
+                                      </SidebarMenuSubButton>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="right">
+                                      {lock.label} is available on the {lock.requiredPlanName} plan
+                                      — click to upgrade.
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </SidebarMenuSubItem>
+                              );
+                            }
+                            return (
+                              <SidebarMenuSubItem key={i.to}>
+                                <SidebarMenuSubButton asChild isActive={isActive(i.to)}>
+                                  <Link to={i.to} onClick={closeOnNav}>
+                                    {i.label}
+                                  </Link>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            );
+                          })}
                         </SidebarMenuSub>
                       </CollapsibleContent>
                     </SidebarMenuItem>
