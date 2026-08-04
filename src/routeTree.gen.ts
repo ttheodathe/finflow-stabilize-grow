@@ -28,6 +28,7 @@ import { Route as GuidesRouteImport } from './routes/guides'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as CompletePaymentRouteImport } from './routes/complete-payment'
 import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as CareersRouteImport } from './routes/careers'
 import { Route as BlogRouteImport } from './routes/blog'
@@ -183,6 +184,11 @@ const FeaturesRoute = FeaturesRouteImport.update({
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompletePaymentRoute = CompletePaymentRouteImport.update({
+  id: '/complete-payment',
+  path: '/complete-payment',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChangelogRoute = ChangelogRouteImport.update({
@@ -530,6 +536,7 @@ export interface FileRoutesByFullPath {
   '/blog': typeof BlogRouteWithChildren
   '/careers': typeof CareersRoute
   '/changelog': typeof ChangelogRoute
+  '/complete-payment': typeof CompletePaymentRoute
   '/contact': typeof ContactRoute
   '/features': typeof FeaturesRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -611,6 +618,7 @@ export interface FileRoutesByTo {
   '/blog': typeof BlogRouteWithChildren
   '/careers': typeof CareersRoute
   '/changelog': typeof ChangelogRoute
+  '/complete-payment': typeof CompletePaymentRoute
   '/contact': typeof ContactRoute
   '/features': typeof FeaturesRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -694,6 +702,7 @@ export interface FileRoutesById {
   '/blog': typeof BlogRouteWithChildren
   '/careers': typeof CareersRoute
   '/changelog': typeof ChangelogRoute
+  '/complete-payment': typeof CompletePaymentRoute
   '/contact': typeof ContactRoute
   '/features': typeof FeaturesRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -777,6 +786,7 @@ export interface FileRouteTypes {
     | '/blog'
     | '/careers'
     | '/changelog'
+    | '/complete-payment'
     | '/contact'
     | '/features'
     | '/forgot-password'
@@ -858,6 +868,7 @@ export interface FileRouteTypes {
     | '/blog'
     | '/careers'
     | '/changelog'
+    | '/complete-payment'
     | '/contact'
     | '/features'
     | '/forgot-password'
@@ -940,6 +951,7 @@ export interface FileRouteTypes {
     | '/blog'
     | '/careers'
     | '/changelog'
+    | '/complete-payment'
     | '/contact'
     | '/features'
     | '/forgot-password'
@@ -1023,6 +1035,7 @@ export interface RootRouteChildren {
   BlogRoute: typeof BlogRouteWithChildren
   CareersRoute: typeof CareersRoute
   ChangelogRoute: typeof ChangelogRoute
+  CompletePaymentRoute: typeof CompletePaymentRoute
   ContactRoute: typeof ContactRoute
   FeaturesRoute: typeof FeaturesRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
@@ -1184,6 +1197,13 @@ declare module '@tanstack/react-router' {
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/complete-payment': {
+      id: '/complete-payment'
+      path: '/complete-payment'
+      fullPath: '/complete-payment'
+      preLoaderRoute: typeof CompletePaymentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/changelog': {
@@ -1749,6 +1769,7 @@ const rootRouteChildren: RootRouteChildren = {
   BlogRoute: BlogRouteWithChildren,
   CareersRoute: CareersRoute,
   ChangelogRoute: ChangelogRoute,
+  CompletePaymentRoute: CompletePaymentRoute,
   ContactRoute: ContactRoute,
   FeaturesRoute: FeaturesRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
@@ -1779,3 +1800,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
