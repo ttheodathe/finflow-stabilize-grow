@@ -61,8 +61,7 @@ import { toast } from "sonner";
 import { useEffect, useMemo, useState } from "react";
 import { CreateCompanyModal } from "@/components/CreateCompanyModal";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { featureForRoute, planHasFeature } from "@/lib/features/catalog";
-import { PLANS } from "@/lib/paddle/config";
+import { FEATURES, featureForRoute, planHasFeature, requiredPlanName } from "@/lib/features/catalog";
 import { Lock } from "lucide-react";
 
 type NavItem = { label: string; to: string };
@@ -301,8 +300,7 @@ export function AppSidebar() {
   const lockFor = (to: string) => {
     const feature = featureForRoute(to);
     if (!feature || planHasFeature(planKey as PlanKey, feature)) return null;
-    const required = PLANS[FEATURE_REQUIRED_PLAN(feature)];
-    return { label: FEATURE_LABEL(feature), requiredPlanName: required.name };
+    return { label: FEATURES[feature].label, requiredPlanName: requiredPlanName(feature) };
   };
 
   const currentCompany = companies.find((c) => c.id === currentCompanyId);
