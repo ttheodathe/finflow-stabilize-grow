@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { GatedNavButton } from "@/components/gated-nav-button";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -277,11 +278,15 @@ function Dashboard() {
         </div>
         <div className="flex flex-wrap gap-2">
           {quickActions.map((a) => (
-            <Button key={a.label} asChild variant="outline" size="sm" className="gap-1.5">
-              <Link to={a.to}>
-                <a.icon className="h-4 w-4" /> {a.label}
-              </Link>
-            </Button>
+            <GatedNavButton
+              key={a.label}
+              to={a.to}
+              label={a.label}
+              icon={a.icon}
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+            />
           ))}
         </div>
       </div>
