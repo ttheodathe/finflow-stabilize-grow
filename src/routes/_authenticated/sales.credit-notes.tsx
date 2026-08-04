@@ -33,7 +33,7 @@ import { toast } from "sonner";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/sales/credit-notes")({
-  head: () => ({ meta: [{ title: "Credit notes — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "Credit notes — Finflow Track" }] }),
   component: CreditNotesPage,
 });
 
