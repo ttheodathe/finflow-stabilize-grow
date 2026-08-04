@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SettingsPage } from "@/components/settings-page";
 
 export const Route = createFileRoute("/_authenticated/settings")({
-  head: () => ({ meta: [{ title: "Settings — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "Settings — Finflow Track" }] }),
   loader: async () => {
     const {
       data: { user },
