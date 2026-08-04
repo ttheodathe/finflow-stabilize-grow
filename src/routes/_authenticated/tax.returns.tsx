@@ -28,7 +28,7 @@ import { toast } from "sonner";
 import { generatePeriodsForYear, type GeneratedPeriod } from "@/lib/tax/taxPeriods";
 
 export const Route = createFileRoute("/_authenticated/tax/returns")({
-  head: () => ({ meta: [{ title: "Tax Returns — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "Tax Returns — Finflow Track" }] }),
   component: TaxReturnsPage,
 });
 
