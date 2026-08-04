@@ -114,16 +114,10 @@ async function handleEvent(event: { type: string; data: Record<string, unknown> 
       .upsert(row, { onConflict: "user_id" });
     if (error) throw new Error(`subscriptions upsert: ${error.message}`);
 
-    if (sub.polar_customer_id) {
-      await admin.from("customers").upsert(
-        {
-          polar_customer_id: sub.polar_customer_id,
-          user_id: ownerId,
-          company_id: companyId,
-        },
-        { onConflict: "polar_customer_id" },
-      );
-    }
+    // Note: `customers` is this app's own AR/invoicing table (the tenant's
+    // clients — requires name, company_id), not a Polar-customer mapping
+    // table. Billing only needs subscriptions.polar_customer_id, already
+    // set above; there is nothing else to sync here.
     return;
   }
   // order.paid / other events: no-op for now (still logged in billing_events)
