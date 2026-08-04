@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/calendar")({
-  head: () => ({ meta: [{ title: "Calendar — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "Calendar — Finflow Track" }] }),
   component: CalendarPage,
 });
 
