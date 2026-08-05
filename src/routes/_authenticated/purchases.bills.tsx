@@ -33,6 +33,7 @@ import { toast } from "sonner";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 import { useServerFn } from "@tanstack/react-start";
 import { extractDocument } from "@/lib/document-ai.functions";
+import { GatedActionButton } from "@/components/gated-action-button";
 import { BillReviewWorkspace } from "@/components/bill-review-workspace";
 
 export const Route = createFileRoute("/_authenticated/purchases/bills")({
@@ -372,9 +373,15 @@ function BillsPage() {
         </div>
         <div className="flex items-center gap-2">
           <input ref={fileRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={onScan} />
-          <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} disabled={scanning}>
+          <GatedActionButton
+            feature="documentAi"
+            type="button"
+            variant="outline"
+            onAction={() => fileRef.current?.click()}
+            disabled={scanning}
+          >
             <ScanLine className="h-4 w-4" /> {scanning ? "Uploading…" : "Scan a bill"}
-          </Button>
+          </GatedActionButton>
           <Dialog
           open={open}
           onOpenChange={(o) => {

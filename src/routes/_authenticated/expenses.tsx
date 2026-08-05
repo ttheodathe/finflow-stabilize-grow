@@ -32,6 +32,7 @@ import {
 import { Plus, Pencil, Trash2, Sparkles, Loader2, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { extractDocument } from "@/lib/document-ai.functions";
+import { GatedActionButton } from "@/components/gated-action-button";
 import { DocumentReviewWorkspace } from "@/components/document-review-workspace";
 import { categorizeExpenses } from "@/lib/ai-bookkeeper.functions";
 import { CurrencySelect } from "@/components/currency-select";
@@ -286,9 +287,10 @@ function ExpensesPage() {
         </div>
         <div className="flex gap-2">
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onScan} />
-          <Button
+          <GatedActionButton
+            feature="documentAi"
             variant="outline"
-            onClick={autoCategorize}
+            onAction={autoCategorize}
             disabled={categorizing}
             className="gap-1.5"
           >
@@ -298,10 +300,11 @@ function ExpensesPage() {
               <Wand2 className="h-4 w-4 text-primary" />
             )}
             AI auto-categorize
-          </Button>
-          <Button
+          </GatedActionButton>
+          <GatedActionButton
+            feature="documentAi"
             variant="outline"
-            onClick={() => fileRef.current?.click()}
+            onAction={() => fileRef.current?.click()}
             disabled={scanning}
             className="gap-1.5"
           >
@@ -311,7 +314,7 @@ function ExpensesPage() {
               <Sparkles className="h-4 w-4 text-primary" />
             )}
             Scan receipt with AI
-          </Button>
+          </GatedActionButton>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button onClick={openNew} className="bg-gradient-hero gap-1.5">
