@@ -355,6 +355,10 @@ export const extractDocument = createServerFn({ method: "POST" })
       .single();
     if (docErr || !doc) throw new Error("Document not found or you don't have access to it.");
 
+    // Paid-plan enforcement (Professional and above). Runs before any
+    // status change so a locked plan never leaves the doc in 'processing'.
+    await assertFeature(supabase, { userId: context.userId, companyId: doc.company_id }, "documentAi");
+
     if (!doc.mime_type.startsWith("image/") && doc.mime_type !== "application/pdf") {
       await supabase
         .from("documents")
