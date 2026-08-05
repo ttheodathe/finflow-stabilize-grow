@@ -17,18 +17,23 @@ export const getMySubscription = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     // biome-ignore lint/suspicious/noExplicitAny: dynamic schema
     const sb = context.supabase as any;
-    let query = sb
-      .from("subscriptions")
-      .select("*")
-      .order("updated_at", { ascending: false })
-      .limit(1);
+    const base = () =>
+      sb.from("subscriptions").select("*").order("updated_at", { ascending: false }).limit(1);
+
+    let rows: any[] | null = null;
     if (data.companyId) {
-      query = query.eq("company_id", data.companyId);
-    } else {
-      query = query.eq("owner_id", context.userId);
+      const res = await base().eq("company_id", data.companyId);
+      if (res.error) throw new Error(res.error.message);
+      rows = res.data;
     }
-    const { data: rows, error } = await query;
-    if (error) throw new Error(error.message);
+    if (!rows?.length) {
+      // Fall back to the account-level row (webhooks may not set company_id).
+      const res = await base().or(
+        `owner_id.eq.${context.userId},user_id.eq.${context.userId}`,
+      );
+      if (res.error) throw new Error(res.error.message);
+      rows = res.data;
+    }
     return (rows?.[0] ?? null) as {
       id: string;
       plan: PlanKey;

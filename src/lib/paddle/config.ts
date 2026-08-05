@@ -199,6 +199,33 @@ export const PLANS: Record<PlanKey, PlanConfig> = {
 
 export const PLAN_ORDER: PlanKey[] = ["free", "pro", "business", "enterprise"];
 
+/**
+ * Historical/marketing plan names stored in `subscriptions.plan` that are not
+ * PlanKeys. Without this map an unknown string ranks below "free", which locks
+ * a paying customer out of even the free-tier features.
+ */
+const PLAN_ALIASES: Record<string, PlanKey> = {
+  professional: "pro",
+  pro: "pro",
+  starter: "pro",
+  growth: "business",
+  business: "business",
+  team: "business",
+  enterprise: "enterprise",
+  custom: "enterprise",
+  free: "free",
+  basic: "free",
+  trial: "free",
+};
+
+/** Normalize any stored plan string to a known PlanKey (defaults to "free"). */
+export function normalizePlan(value: string | null | undefined): PlanKey {
+  if (!value) return "free";
+  const key = value.trim().toLowerCase();
+  if ((PLAN_ORDER as string[]).includes(key)) return key as PlanKey;
+  return PLAN_ALIASES[key] ?? "free";
+}
+
 /** Map a Paddle price_id back to (plan, cycle). Used by webhook handlers. */
 export function planFromPriceId(
   priceId: string,
