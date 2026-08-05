@@ -8,7 +8,7 @@
  *
  * Client-side gating is UX only — every mutating server fn must re-check.
  */
-import { PLANS, PLAN_ORDER, type PlanKey } from "@/lib/paddle/config";
+import { PLANS, PLAN_ORDER, normalizePlan, type PlanKey } from "@/lib/paddle/config";
 
 export type FeatureKey =
   | "invoices"
@@ -75,7 +75,10 @@ export const ROUTE_FEATURES: Record<string, FeatureKey> = {
   "/ai-bookkeeper": "aiBookkeeper",
 };
 
-const rank = (plan: PlanKey) => PLAN_ORDER.indexOf(plan);
+const rank = (plan: PlanKey | string | null | undefined) => {
+  const idx = PLAN_ORDER.indexOf(normalizePlan(plan as string));
+  return idx === -1 ? 0 : idx;
+};
 
 export function planHasFeature(plan: PlanKey, key: FeatureKey): boolean {
   return rank(plan) >= rank(FEATURES[key].minPlan);
