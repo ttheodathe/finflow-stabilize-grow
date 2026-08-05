@@ -161,12 +161,27 @@ export function DocumentReviewWorkspace({
   }, [open, documentId]);
 
   // Poll briefly while the document is still being extracted server-side.
+  // Bounded polling while the server extracts. The tick counter guarantees
+  // the effect re-runs even when the status value is unchanged (otherwise
+  // polling stopped after a single retry), fast at first for a snappy
+  // result, and gives up after ~90s instead of spinning forever.
+  const [pollTick, setPollTick] = useState(0);
+  useEffect(() => {
+    if (open) setPollTick(0); /* eslint-disable-next-line */
+  }, [open, documentId]);
   useEffect(() => {
     if (!open || !documentId) return;
     if (status !== "processing" && status !== "uploaded") return;
-    const t = setTimeout(load, 1500); /* eslint-disable-next-line */
+    if (pollTick > 50) {
+      setStatus("failed");
+      return;
+    }
+    const t = setTimeout(() => {
+      load();
+      setPollTick((n) => n + 1);
+    }, pollTick < 6 ? 700 : 2000); /* eslint-disable-next-line */
     return () => clearTimeout(t);
-  }, [open, documentId, status]);
+  }, [open, documentId, status, pollTick]);
 
   const blockingError = validations.find((v) => v.severity === "error");
 
