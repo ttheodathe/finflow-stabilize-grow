@@ -5,7 +5,7 @@
  * Server functions should re-check limits before performing mutations.
  */
 import { useQuery } from "@tanstack/react-query";
-import { PLANS, type PlanKey, type PlanLimits } from "./paddle/config";
+import { PLANS, normalizePlan, type PlanKey, type PlanLimits } from "./paddle/config";
 import { getMySubscription } from "./billing.functions";
 
 export type FeatureKey =
@@ -21,8 +21,8 @@ export type FeatureKey =
   | "apiAccess"
   | "aiBookkeeper";
 
-export function limitsForPlan(plan: PlanKey): PlanLimits {
-  return PLANS[plan]?.limits ?? PLANS.free.limits;
+export function limitsForPlan(plan: PlanKey | string | null | undefined): PlanLimits {
+  return PLANS[normalizePlan(plan as string)]?.limits ?? PLANS.free.limits;
 }
 
 export function hasFeature(plan: PlanKey, feature: FeatureKey): boolean {
@@ -50,8 +50,9 @@ export function useSubscriptionLimits(companyId: string | null) {
     enabled: Boolean(companyId),
     staleTime: 30_000,
   });
-  const isEntitled = query.data?.status === "active" || query.data?.status === "trialing";
-  const plan: PlanKey = isEntitled ? ((query.data?.plan as PlanKey | undefined) ?? "free") : "free";
+  const status = query.data?.status;
+  const isEntitled = status === "active" || status === "trialing" || status === "past_due";
+  const plan: PlanKey = isEntitled ? normalizePlan(query.data?.plan) : "free";
   const limits = limitsForPlan(plan);
   return {
     subscription: query.data,
