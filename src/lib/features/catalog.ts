@@ -26,6 +26,7 @@ export type FeatureKey =
   | "hr"
   | "payroll"
   | "aiBookkeeper"
+  | "documentAi"
   | "apiAccess";
 
 export interface FeatureDef {
@@ -49,6 +50,7 @@ export const FEATURES: Record<FeatureKey, FeatureDef> = {
   accounting: { key: "accounting", label: "Accounting & balance sheet", minPlan: "pro" },
   tax: { key: "tax", label: "Tax management", minPlan: "pro" },
   aiBookkeeper: { key: "aiBookkeeper", label: "AI Bookkeeper & OCR", minPlan: "pro" },
+  documentAi: { key: "documentAi", label: "OCR & AI document scanning", minPlan: "pro" },
   hr: { key: "hr", label: "HR", minPlan: "business" },
   payroll: { key: "payroll", label: "Payroll", minPlan: "business" },
   apiAccess: { key: "apiAccess", label: "API access", minPlan: "business" },

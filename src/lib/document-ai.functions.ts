@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { assertFeature } from "@/lib/features/plan-guard";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
@@ -354,6 +355,10 @@ export const extractDocument = createServerFn({ method: "POST" })
       .eq("id", data.documentId)
       .single();
     if (docErr || !doc) throw new Error("Document not found or you don't have access to it.");
+
+    // Paid-plan enforcement (Professional and above). Runs before any
+    // status change so a locked plan never leaves the doc in 'processing'.
+    await assertFeature(supabase, { userId: context.userId, companyId: doc.company_id }, "documentAi");
 
     if (!doc.mime_type.startsWith("image/") && doc.mime_type !== "application/pdf") {
       await supabase
