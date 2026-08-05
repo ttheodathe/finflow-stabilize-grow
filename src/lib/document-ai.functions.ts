@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { assertFeature } from "@/lib/features/plan-guard";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 

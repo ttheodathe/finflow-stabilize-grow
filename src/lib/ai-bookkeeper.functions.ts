@@ -2,6 +2,7 @@ import { getGeminiApiKey, callGeminiChatCompletion } from "@/lib/ai-key";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { assertFeature } from "@/lib/features/plan-guard";
 
 const CATEGORIES = [
   "Meals",
@@ -70,8 +71,9 @@ export const askBookkeeper = createServerFn({ method: "POST" })
 export const categorizeExpenses = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const key = getGeminiApiKey();
     const { supabase } = context;
+    await assertFeature(supabase, { userId: context.userId }, "documentAi");
+    const key = getGeminiApiKey();
     const { data: rows, error } = await supabase
       .from("expenses")
       .select("id,vendor,description,amount,currency")
