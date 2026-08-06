@@ -35,6 +35,9 @@ import { CurrencySelect } from "@/components/currency-select";
 import { useDefaultCurrency } from "@/hooks/use-currency";
 import { generateInvoicePdf } from "@/lib/invoice-pdf";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
+import { UpgradePlanModal } from "@/components/UpgradePlanModal";
+import { useSubscriptionLimits } from "@/lib/subscription-limits";
+import type { PlanKey } from "@/lib/paddle/config";
 
 type InvoicingSettings = {
   invoicePrefix: string;
@@ -44,7 +47,7 @@ type InvoicingSettings = {
 };
 
 export const Route = createFileRoute("/_authenticated/invoices")({
-  head: () => ({ meta: [{ title: "Invoices — Finflow Track" }] }),
+  head: () => ({ meta: [{ title: "Invoices — Free Accounting" }] }),
   component: InvoicesPage,
 });
 
@@ -109,6 +112,17 @@ function InvoicesPage() {
     notes: "",
   });
   const [lines, setLines] = useState<Line[]>([]);
+  const [weeklyUsage, setWeeklyUsage] = useState<{ used: number; limit: number | null } | null>(
+    null,
+  );
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const { plan } = useSubscriptionLimits(companyId);
+
+  async function loadWeeklyUsage() {
+    if (!companyId) return;
+    const { data } = await supabase.rpc("get_weekly_invoice_usage", { p_company_id: companyId });
+    if (data) setWeeklyUsage(data as { used: number; limit: number | null });
+  }
 
   async function load() {
     if (!companyId) return;
@@ -147,6 +161,7 @@ function InvoicesPage() {
   }
   useEffect(() => {
     load();
+    loadWeeklyUsage();
   }, [companyId]);
 
   const totals = useMemo(() => {
@@ -243,8 +258,10 @@ function InvoicesPage() {
     e.preventDefault();
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
+    if (!companyId) return toast.error("No active company selected");
     const payload = {
       user_id: u.user.id,
+      company_id: companyId,
       invoice_number: form.invoice_number,
       customer_id: form.customer_id || null,
       issue_date: form.issue_date,
@@ -263,8 +280,15 @@ function InvoicesPage() {
       if (error) return toast.error(error.message);
     } else {
       const { data, error } = await supabase.from("invoices").insert(payload).select("id").single();
-      if (error || !data) return toast.error(error?.message ?? "Insert failed");
+      if (error || !data) {
+        if (error?.message?.includes("invoice_weekly_limit_reached")) {
+          setUpgradeOpen(true);
+          return toast.error("Free plan allows up to 20 invoices per 7 days. Upgrade for unlimited.");
+        }
+        return toast.error(error?.message ?? "Insert failed");
+      }
       invoiceId = (data as any).id;
+      loadWeeklyUsage();
 
       // Auto-increment "Next invoice number" in Settings so the next new
       // invoice picks up the following number without manual entry.
@@ -282,6 +306,7 @@ function InvoicesPage() {
         const rows = lines.map((l) => ({
           invoice_id: invoiceId!,
           user_id: u.user!.id,
+          company_id: companyId,
           item_id: l.item_id,
           description: l.description || "Item",
           quantity: Number(l.quantity) || 0,
@@ -371,18 +396,23 @@ function InvoicesPage() {
             Create and track invoices using your real catalog.
           </p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={openNew} className="bg-gradient-hero">
-              <Plus className="h-4 w-4" /> New invoice
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{editing ? "Edit invoice" : "New invoice"}</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={save} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+        {weeklyUsage && weeklyUsage.used >= (weeklyUsage.limit ?? Infinity) ? (
+          <Button onClick={() => setUpgradeOpen(true)} className="bg-gradient-hero">
+            <Plus className="h-4 w-4" /> Upgrade for unlimited invoices
+          </Button>
+        ) : (
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={openNew} className="bg-gradient-hero">
+                <Plus className="h-4 w-4" /> New invoice
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{editing ? "Edit invoice" : "New invoice"}</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={save} className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>Invoice number</Label>
                   <Input
@@ -592,9 +622,25 @@ function InvoicesPage() {
                 Save invoice
               </Button>
             </form>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
+
+      {weeklyUsage && weeklyUsage.limit !== null && (
+        <div className="mb-4 flex items-center justify-between rounded-lg border bg-muted/40 px-4 py-2 text-sm">
+          <span>
+            <span className="font-medium">{weeklyUsage.used}</span> / {weeklyUsage.limit} invoices
+            used this week (free plan)
+          </span>
+          {weeklyUsage.used >= weeklyUsage.limit * 0.75 && (
+            <Button size="sm" variant="outline" onClick={() => setUpgradeOpen(true)}>
+              Upgrade for unlimited
+            </Button>
+          )}
+        </div>
+      )}
+      <UpgradePlanModal open={upgradeOpen} onOpenChange={setUpgradeOpen} currentPlan={plan as PlanKey} />
 
       <div className="bg-card border rounded-xl">
         {items.length === 0 ? (
