@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { scoped } from "@/lib/company-scope";
 import { useEffect, useMemo, useState } from "react";
 import { supabase as _sb } from "@/integrations/supabase/client";
 // Schema drift: generated Database types lag behind applied migrations.
@@ -279,7 +280,7 @@ function InvoicesPage() {
       const { error } = await supabase.from("invoices").update(payload).eq("id", editing.id);
       if (error) return toast.error(error.message);
     } else {
-      const { data, error } = await supabase.from("invoices").insert(payload).select("id").single();
+      const { data, error } = await supabase.from("invoices").insert(scoped(payload)).select("id").single();
       if (error || !data) {
         if (error?.message?.includes("invoice_weekly_limit_reached")) {
           setUpgradeOpen(true);
@@ -314,7 +315,7 @@ function InvoicesPage() {
           tax_rate: Number(l.tax_rate) || 0,
           amount: (Number(l.quantity) || 0) * (Number(l.unit_price) || 0),
         }));
-        const { error } = await supabase.from("invoice_items").insert(rows);
+        const { error } = await supabase.from("invoice_items").insert(scoped(rows));
         if (error) return toast.error(error.message);
       }
     }

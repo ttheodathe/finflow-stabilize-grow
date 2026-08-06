@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { scoped } from "@/lib/company-scope";
 import { useEffect, useState } from "react";
 import { supabase as _sb } from "@/integrations/supabase/client";
 // Schema drift: generated Database types lag behind applied migrations.
@@ -87,7 +88,7 @@ function CustomersPage() {
     const payload = { ...form, user_id: u.user.id };
     const { error } = editing
       ? await supabase.from("customers").update(payload).eq("id", editing.id)
-      : await supabase.from("customers").insert(payload);
+      : await supabase.from("customers").insert(scoped(payload));
     if (error) return toast.error(error.message);
     toast.success(editing ? "Customer updated" : "Customer created");
     setOpen(false);

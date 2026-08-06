@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { scoped } from "@/lib/company-scope";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -113,7 +114,7 @@ function CreditNotesPage() {
     const inv = invoices.find((i) => i.id === form.invoice_id);
     if (!inv) return toast.error("Pick an invoice");
     if (form.amount <= 0) return toast.error("Amount must be positive");
-    const { error } = await (supabase as any).from("credit_notes").insert({
+    const { error } = await (supabase as any).from("credit_notes").insert(scoped({
       user_id: u.user.id,
       credit_note_number: form.credit_note_number,
       invoice_id: inv.id,
@@ -123,7 +124,7 @@ function CreditNotesPage() {
       amount: form.amount,
       currency: inv.currency,
       status: form.status,
-    });
+    }));
     if (error) return toast.error(error.message);
     toast.success("Credit note issued");
     setOpen(false);

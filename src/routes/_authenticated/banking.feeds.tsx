@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { scoped } from "@/lib/company-scope";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -181,7 +182,7 @@ function BankFeedsPage() {
     const chunkSize = 200;
     for (let i = 0; i < payload.length; i += chunkSize) {
       const chunk = payload.slice(i, i + chunkSize);
-      const { error } = await (supabase as any).from("bank_transactions").insert(chunk);
+      const { error } = await (supabase as any).from("bank_transactions").insert(scoped(chunk));
       if (error) {
         setImporting(false);
         return toast.error(error.message);

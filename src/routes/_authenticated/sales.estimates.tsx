@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { scoped } from "@/lib/company-scope";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -296,7 +297,7 @@ function EstimatesPage() {
           tax_rate: Number(l.tax_rate) || 0,
           amount: (Number(l.quantity) || 0) * (Number(l.unit_price) || 0),
         }));
-        const { error } = await (supabase as any).from("estimate_items").insert(rows);
+        const { error } = await (supabase as any).from("estimate_items").insert(scoped(rows));
         if (error) return toast.error(error.message);
       }
     }
@@ -357,7 +358,7 @@ function EstimatesPage() {
         tax_rate: Number(l.tax_rate ?? 0),
         amount: Number(l.amount ?? 0),
       }));
-      await supabase.from("invoice_items").insert(rows);
+      await supabase.from("invoice_items").insert(scoped(rows));
     }
     await (supabase as any)
       .from("estimates")

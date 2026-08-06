@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { scoped } from "@/lib/company-scope";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase as _sb } from "@/integrations/supabase/client";
@@ -202,7 +203,7 @@ function ExpensesPage() {
     };
     const { error } = editing
       ? await supabase.from("expenses").update(payload).eq("id", editing.id)
-      : await supabase.from("expenses").insert(payload);
+      : await supabase.from("expenses").insert(scoped(payload));
     if (error) return toast.error(error.message);
     toast.success(editing ? "Expense updated" : "Expense added");
     setOpen(false);

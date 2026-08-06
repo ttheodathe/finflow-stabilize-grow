@@ -23,3 +23,10 @@ export function withCompany<T extends Record<string, any>>(payload: T): T {
 export function withCompanyAll<T extends Record<string, any>>(rows: T[]): T[] {
   return rows.map((r) => withCompany(r));
 }
+
+/** Wraps either a single insert payload or an array of them. */
+export function scoped<T extends Record<string, any>>(payload: T): T;
+export function scoped<T extends Record<string, any>>(payload: T[]): T[];
+export function scoped(payload: any): any {
+  return Array.isArray(payload) ? withCompanyAll(payload) : withCompany(payload);
+}

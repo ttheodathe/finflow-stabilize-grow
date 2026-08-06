@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { scoped } from "@/lib/company-scope";
 import { useEffect, useState } from "react";
 import { supabase as _sb } from "@/integrations/supabase/client";
 // Schema drift: generated Database types lag behind applied migrations.
@@ -97,14 +98,14 @@ function RecurringPage() {
     if (!u.user) return;
     const inv = invoices.find((i) => i.id === form.template_invoice_id);
     if (!inv) return toast.error("Pick a template invoice");
-    const { error } = await (supabase as any).from("recurring_invoices").insert({
+    const { error } = await (supabase as any).from("recurring_invoices").insert(scoped({
       user_id: u.user.id,
       template_invoice_id: inv.id,
       customer_id: inv.customer_id,
       frequency: form.frequency,
       next_run_date: form.next_run_date,
       is_active: form.is_active,
-    });
+    }));
     if (error) return toast.error(error.message);
     toast.success("Scheduled");
     setOpen(false);
@@ -154,7 +155,7 @@ function RecurringPage() {
     };
     const { data: inv, error } = await supabase
       .from("invoices")
-      .insert(newPayload)
+      .insert(scoped(newPayload))
       .select("id")
       .single();
     if (error || !inv) return toast.error(error?.message ?? "Failed");
@@ -169,7 +170,7 @@ function RecurringPage() {
         tax_rate: Number(l.tax_rate ?? 0),
         amount: Number(l.amount ?? 0),
       }));
-      await supabase.from("invoice_items").insert(rows);
+      await supabase.from("invoice_items").insert(scoped(rows));
     }
     await (supabase as any)
       .from("recurring_invoices")

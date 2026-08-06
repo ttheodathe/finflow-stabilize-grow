@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { scoped } from "@/lib/company-scope";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -306,7 +307,7 @@ function BillsPage() {
       tax_rate: l.tax_rate,
       amount: Number(l.quantity) * Number(l.unit_price),
     }));
-    const { error: ie } = await (supabase as any).from("bill_items").insert(items);
+    const { error: ie } = await (supabase as any).from("bill_items").insert(scoped(items));
     if (ie) return toast.error(ie.message);
     // touch bill to trigger journal posting after lines exist
     await (supabase as any).from("bills").update({ status: "open" }).eq("id", bill.id);
