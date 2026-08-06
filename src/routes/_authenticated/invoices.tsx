@@ -47,7 +47,7 @@ type InvoicingSettings = {
 };
 
 export const Route = createFileRoute("/_authenticated/invoices")({
-  head: () => ({ meta: [{ title: "Invoices — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "Invoices — Finflow Track" }] }),
   component: InvoicesPage,
 });
 
