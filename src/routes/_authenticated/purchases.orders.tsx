@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { scoped } from "@/lib/company-scope";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -147,7 +148,7 @@ function POPage() {
     if (lines.some((l) => !l.description)) return toast.error("Every line needs a description");
     const { data: po, error } = await (supabase as any)
       .from("purchase_orders")
-      .insert({
+      .insert(scoped({
         user_id: u.user.id,
         vendor_id: form.vendor_id,
         po_number: form.po_number,
@@ -159,7 +160,7 @@ function POPage() {
         subtotal: totals.subtotal,
         tax: totals.tax,
         total: totals.total,
-      })
+      }))
       .select()
       .single();
     if (error) return toast.error(error.message);
@@ -173,7 +174,7 @@ function POPage() {
       tax_rate: l.tax_rate,
       amount: Number(l.quantity) * Number(l.unit_price),
     }));
-    const { error: ie } = await (supabase as any).from("purchase_order_items").insert(rows);
+    const { error: ie } = await (supabase as any).from("purchase_order_items").insert(scoped(rows));
     if (ie) return toast.error(ie.message);
     toast.success("Purchase order saved");
     setOpen(false);
@@ -204,7 +205,7 @@ function POPage() {
     const defExp = expenseAccounts[0]?.id;
     const { data: bill, error: e2 } = await (supabase as any)
       .from("bills")
-      .insert({
+      .insert(scoped({
         user_id: u.user.id,
         vendor_id: po.vendor_id,
         bill_number: `BILL-${po.po_number}`,
@@ -216,7 +217,7 @@ function POPage() {
         total: po.total,
         status: "open",
         notes: `Converted from ${po.po_number}`,
-      })
+      }))
       .select()
       .single();
     if (e2) return toast.error(e2.message);
@@ -232,7 +233,7 @@ function POPage() {
       amount: l.amount,
     }));
     if (billItems.length) {
-      const { error: e3 } = await (supabase as any).from("bill_items").insert(billItems);
+      const { error: e3 } = await (supabase as any).from("bill_items").insert(scoped(billItems));
       if (e3) return toast.error(e3.message);
     }
     await (supabase as any).from("bills").update({ status: "open" }).eq("id", bill.id);

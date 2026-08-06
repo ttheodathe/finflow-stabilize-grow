@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { scoped } from "@/lib/company-scope";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -162,7 +163,7 @@ function TransactionsPage() {
       category_account_id: form.category_account_id || null,
       reference: form.reference.trim() || null,
     };
-    const { error } = await (supabase as any).from("bank_transactions").insert(payload);
+    const { error } = await (supabase as any).from("bank_transactions").insert(scoped(payload));
     if (error) return toast.error(error.message);
     toast.success("Transaction added");
     setOpen(false);

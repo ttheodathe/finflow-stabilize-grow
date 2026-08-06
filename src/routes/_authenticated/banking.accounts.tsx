@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { scoped } from "@/lib/company-scope";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -165,7 +166,7 @@ function BankAccountsPage() {
         gl_account_id: form.gl_account_id || null,
         is_active: form.is_active,
       };
-      const { error } = await (supabase as any).from("bank_accounts").insert(payload);
+      const { error } = await (supabase as any).from("bank_accounts").insert(scoped(payload));
       if (error) return toast.error(error.message);
       toast.success("Account created");
     }

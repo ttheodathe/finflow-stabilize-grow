@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { scoped } from "@/lib/company-scope";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -107,7 +108,7 @@ function VendorsPage() {
     };
     const q = editing
       ? (supabase as any).from("vendors").update(payload).eq("id", editing)
-      : (supabase as any).from("vendors").insert({ ...payload, user_id: u.user.id });
+      : (supabase as any).from("vendors").insert(scoped({ ...payload, user_id: u.user.id }));
     const { error } = await q;
     if (error) return toast.error(error.message);
     toast.success(editing ? "Vendor updated" : "Vendor added");

@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { scoped } from "@/lib/company-scope";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -239,7 +240,7 @@ function AccountDialog({ editing, onSaved }: { editing: Account | null; onSaved:
     };
     const { error } = editing
       ? await supabase.from("accounts").update(payload).eq("id", editing.id)
-      : await supabase.from("accounts").insert({ ...payload, user_id: uid } as never);
+      : await supabase.from("accounts").insert(scoped({ ...payload, user_id: uid } as never));
     setSaving(false);
     if (error) toast.error(error.message);
     else {

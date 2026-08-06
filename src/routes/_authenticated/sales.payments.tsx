@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { scoped } from "@/lib/company-scope";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -140,7 +141,7 @@ function PaymentsPage() {
     const inv = invoices.find((i) => i.id === form.invoice_id);
     if (!inv) return toast.error("Pick an invoice");
     if (form.amount <= 0) return toast.error("Amount must be positive");
-    const { error } = await (supabase as any).from("payments").insert({
+    const { error } = await (supabase as any).from("payments").insert(scoped({
       user_id: u.user.id,
       invoice_id: inv.id,
       customer_id: inv.customer_id,
@@ -151,7 +152,7 @@ function PaymentsPage() {
       reference: form.reference || null,
       deposit_account_id: form.deposit_account_id || null,
       notes: form.notes || null,
-    });
+    }));
     if (error) return toast.error(error.message);
     toast.success("Payment recorded — invoice status & general ledger updated");
     setOpen(false);

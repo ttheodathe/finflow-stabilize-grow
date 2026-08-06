@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { scoped } from "@/lib/company-scope";
 import { useEffect, useMemo, useState } from "react";
 import { supabase as _sb } from "@/integrations/supabase/client";
 // Schema drift: generated Database types lag behind applied migrations.
@@ -260,13 +261,13 @@ function NewEntryDialog({
     }
     const { data: entry, error: e1 } = await supabase
       .from("journal_entries" as any)
-      .insert({
+      .insert(scoped({
         user_id: uid,
         entry_date: date,
         reference: reference || null,
         memo: memo || null,
         source_type: "manual",
-      })
+      }))
       .select("id")
       .single();
     if (e1 || !entry) {
@@ -282,7 +283,7 @@ function NewEntryDialog({
       credit: parseFloat(l.credit) || 0,
       description: l.description || null,
     }));
-    const { error: e2 } = await supabase.from("journal_lines").insert(payload);
+    const { error: e2 } = await supabase.from("journal_lines").insert(scoped(payload));
     setSaving(false);
     if (e2) {
       await supabase
