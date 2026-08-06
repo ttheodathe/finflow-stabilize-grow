@@ -1,78 +1,98 @@
-# FinFlow Paddle Sandbox Billing
+# Partner & Referral System — Architecture Review & Phase 1 Plan
 
-Using pre-provisioned Paddle sandbox price IDs and API keys. Only `PADDLE_WEBHOOK_SECRET` will be added after webhook URL is deployed.
+## 1. Architecture review (what exists today)
 
-## 1. Secrets
+- **Framework**: TanStack Start v1 (React 19, Vite 7, Tailwind v4 tokens in `src/styles.css`), deployed on an edge worker.
+- **Routing**: file-based in `src/routes`. Public pages at top level (`pricing.tsx`, `about.tsx`, …) using `SiteHeader`/`SiteFooter`. App pages under `src/routes/_authenticated/` behind an `ssr:false` gate that enforces auth → email verified → company membership → payment.
+- **Auth**: Supabase; `requireSupabaseAuth` middleware for server functions; RLS everywhere.
+- **Data access**: two patterns already in use — browser client + `src/services/<domain>/*.service.ts` + React Query hooks (team, tax, inventory), and `createServerFn` in `src/lib/*.functions.ts` for privileged/server logic (billing, payroll, AI).
+- **Billing**: Paddle (`src/lib/paddle/*`), `subscriptions` / `billing_events` tables, webhook at `src/routes/api/public/paddle/webhook.ts`.
+- **RBAC**: `roles`, `permissions`, `role_permissions`, `company_members`, plus `usePermissions` / `useCurrentRole` hooks. Feature gating via `src/lib/features/catalog.ts` + `useFeatureGate` + `plan-guard.ts`.
+- **Company scoping**: active company in localStorage (`useActiveCompanyId`), inserts wrapped by `scoped()` in `src/lib/company-scope.ts`.
+- **Emails**: Resend via lazy `getResend()`; React Email templates in `src/emails/`.
+- **UI**: shadcn components in `src/components/ui`, semantic tokens only, dark/light supported.
 
-Store the Paddle env vars via `add_secret` (server-only). Also expose `VITE_PADDLE_CLIENT_TOKEN` and `VITE_PADDLE_ENV` for browser Paddle.js. Add placeholder for `PADDLE_WEBHOOK_SECRET` (user pastes after registering webhook in Paddle dashboard).
+## 2. Compatibility report
 
-## 2. Database migration (`supabase/migrations/20260721120000_reconcile_paddle_subscriptions_schema.sql`)
+No existing table, route, component, or API needs to change. The module is fully additive:
+- New public routes `/partners` and `/partners/apply` (no collision with existing files).
+- New authenticated subtree `_authenticated/partner.*` and `_authenticated/admin.partners.*`.
+- New tables prefixed `partner_*` / `referral_*`.
+- One **additive, nullable** column set on attribution: referral link recorded in a new `referral_attributions` table keyed by `user_id` — `profiles`/`subscriptions` are **not** altered.
+- Paddle webhook: append a commission-accrual call inside the existing handler (additive branch, no behaviour change if the customer has no referral).
 
-`supabase/paddle_billing.sql` is superseded — it was never a tracked
-migration and its `create table if not exists` silently no-op'd against
-the `subscriptions` table already created by
-`20260709174725_create_subscriptions_table.sql`. Use the tracked
-migration instead. Add/alter (idempotent):
+**No breaking change detected**, so implementation can proceed incrementally.
 
-- `subscriptions` — id, company_id (FK), owner_id (FK auth.users), paddle_customer_id, paddle_subscription_id (unique), price_id, plan (`free|pro|business|enterprise`), status, billing_cycle (`monthly|yearly|null`), current_period_start, current_period_end, cancel_at_period_end, timestamps.
-- `customers` — id, user_id, company_id, paddle_customer_id (unique), billing_email, created_at.
-- `billing_events` — id, event_type, paddle_event_id (unique for idempotency), payload jsonb, processed bool, error text, created_at.
+## 3. Risk analysis
 
-GRANTs, RLS: owners & company admins read their own; only service_role writes. Add helper `get_active_subscription(company_id)`.
+| Risk | Mitigation |
+| --- | --- |
+| Money correctness | All commission math server-side in SQL functions/server fns; ledger is append-only with reversal rows, never in-place edits. |
+| Self-referral / fraud | Block partner's own user_id, unique constraint on (referred_user_id), IP+UA hash on clicks, rate limits on the public click endpoint. |
+| Attribution loss | First-touch + last-touch stored in a cookie (90d) AND persisted server-side at signup; refresh-safe. |
+| Webhook double-pay | Idempotency on `billing_events.event_id` + unique (subscription_id, period_start) on commission rows. |
+| Bundle size | Partner routes are separate route files → code-split by default; QR generated with a small dep only on the dashboard route. |
+| RLS leakage | Partner sees only own rows; admin access via a `partner_admins`/`has_role` check in security-definer functions. |
 
-## 3. Paddle module (`src/lib/paddle/`)
+## 4. Database changes (Phase 1, new tables only)
 
-- `config.ts` — plan→price_id map (monthly/yearly), plan metadata (limits: companies, seats, feature flags).
-- `client.ts` — browser Paddle.js loader + `openCheckout({ priceId, customerEmail, companyId, userId, plan, cycle })` passing `customData` for webhook mapping.
-- `webhook.server.ts` — signature verification (HMAC over raw body using `Paddle-Signature` header per Paddle spec), typed handlers per event.
+`partners`, `partner_applications`, `referral_links`, `referral_clicks`, `referral_attributions`, `commission_rules`, `commissions`, `partner_payouts`, `partner_audit_logs`.
 
-## 4. Server routes / functions
+Each: PK uuid, FKs to `auth.users`/`companies`, `created_at/updated_at` + trigger, indexes on lookup columns (`code`, `partner_id`, `status`, `created_at`), CHECK constraints on enums, `GRANT`s for `authenticated`/`service_role` (+ `anon` SELECT only on active `referral_links` for click resolution), RLS policies, and a matching `rollback.sql`.
 
-- `src/routes/api/public/paddle/webhook.ts` — POST; verify signature, upsert `billing_events` (idempotent by `paddle_event_id`), handle `subscription.created|updated|canceled|paused|resumed`, `transaction.completed`, `payment.failed|succeeded`; upsert `subscriptions` via `supabaseAdmin`.
-- `src/lib/billing.functions.ts` — `getMySubscription({companyId})` (auth middleware), `cancelSubscription`, `resumeSubscription`, `createFreeSubscription` (used at onboarding).
+Helper SQL: `is_partner_admin()`, `resolve_referral_code(text)`, `record_referral_click(...)`, `attach_referral_on_signup(...)`, `accrue_commission(subscription_id, amount, currency)`.
 
-## 5. Pricing page (`src/routes/pricing.tsx`)
+## 5. Folder / file changes (Phase 1)
 
-Update plans to exact copy from spec. Monthly/yearly toggle. Buttons:
-- Free → signup or "Current"
-- Pro/Business → open Paddle checkout (redirect to `/auth?next=/settings/billing&plan=…` if not logged in)
-- Enterprise → `/contact`
+```text
+supabase/partner_module.sql            (+ partner_module_rollback.sql)
+src/types/partner.types.ts
+src/services/partner/partner.service.ts
+src/services/partner/referral.service.ts
+src/services/partner/commission.service.ts
+src/lib/partner/referral-tracking.ts   cookie/UTM capture, first+last touch
+src/lib/partner.functions.ts           server fns: apply, approve, stats, accrual
+src/hooks/usePartner.ts  usePartnerStats.ts  useReferralLink.ts
+src/components/partner/*               StatsCards, ReferralLinkCard, ReferralsTable,
+                                       CommissionsTable, ApplicationForm, StatusBadge
+src/routes/partners.tsx                public "Become a Partner" landing
+src/routes/partners.apply.tsx          application form
+src/routes/r.$code.tsx                 referral redirect + click tracking
+src/routes/_authenticated/partner.dashboard.tsx
+src/routes/_authenticated/partner.referrals.tsx
+src/routes/_authenticated/partner.commissions.tsx
+src/routes/_authenticated/admin.partners.tsx
+src/emails/PartnerApplicationReceived.tsx / PartnerApproved.tsx
+```
 
-## 6. Billing settings page (`src/routes/_authenticated/settings.billing.tsx`)
+Touched existing files (additive only): `src/components/app-sidebar.tsx` (Partner section), `src/routes/api/public/paddle/webhook.ts` (accrual hook), `src/routes/auth.tsx` (persist referral cookie at signup), `SiteFooter` link.
 
-Show current plan, status, cycle, renewal, IDs, upgrade options (opens checkout), cancel button, invoice history from Paddle (list via API in server fn).
+## 6. API endpoints
 
-Add "Billing" tab entry in existing settings page.
+Server functions (`src/lib/partner.functions.ts`): `submitPartnerApplication`, `getMyPartner`, `getPartnerStats`, `getPartnerReferrals`, `getPartnerCommissions`, `adminListApplications`, `adminDecideApplication`, `adminAdjustCommission`.
+Public route: `GET /r/$code` (redirect + click record), reusing `/api/public/*` conventions for anything external.
 
-## 7. Onboarding
+## 7. UI screens (Phase 1)
 
-After company creation, add "Choose Plan" step. Free → insert `subscriptions` row with plan=free directly; paid → open Paddle Checkout with `customData: { company_id, user_id }`, then redirect to dashboard (webhook activates).
+Become a Partner (public, SEO head), Application form + status page, Partner dashboard (stat cards, referral link + QR + copy, funnel, recent referrals), Referrals table, Commissions table, Admin partners table with approve/reject/need-info. All shadcn + existing tokens, responsive, dark/light.
 
-## 8. Gating helpers (`src/lib/subscription-limits.ts`)
+## 8. Security review
 
-`canCreateCompany`, `canInviteUser`, `canUseInventory`, `canUsePayroll`, `canUseCRM`, `canUseProjects`, `canUseAPI` — read active subscription plan, compare with limits table. Both:
-- Client hook `useSubscriptionLimits(companyId)` for UI.
-- Server enforcement in relevant server fns (add checks to invite/create-company flows).
+RLS on every table; partner rows scoped by `auth.uid()`; admin actions behind security-definer functions checking `is_partner_admin()`; zod validation on every server fn; parameterised queries only (no string SQL); no client-side commission math; audit log on every admin action; rate limit on `/r/$code` and the application form; payout details stored in a restricted table not exposed by the Data API to `anon`.
 
-## 9. Cleanup
+## 9. Performance review
 
-- Remove Razorpay references: search `razorpay`, `RAZORPAY_*`; delete provider toggle in `upgrade-settings-form.tsx`.
-- Consolidate plan config to `src/lib/paddle/config.ts`; deprecate `src/components/Subscription_Plans.ts` re-export.
+Indexed lookups, keyset/offset pagination + server-side filters on all tables, aggregated stats via a SQL function (single round-trip) with React Query `staleTime`, click writes are fire-and-forget inserts, route-level code splitting, QR generated client-side.
 
-## 10. Verification
+## 10. Migration plan
 
-- `bun run build` green.
-- Manual sanity via preview: pricing page renders, checkout opens (client token present).
-- Webhook signature verification unit-tested with sample payload.
+1. Apply `supabase/partner_module.sql` (additive; existing app unaffected).
+2. Ship Phase 1 code behind a sidebar entry visible only to approved partners/admins.
+3. Verify typecheck, lint, build, and existing routes.
+4. Phase 2: marketing center, analytics dashboards, payouts + statements, automated emails.
+5. Phase 3: multi-tier (L1–L3), reseller tools, fraud detection, cross-device attribution, partner API.
+Rollback: run `partner_module_rollback.sql` and remove the additive call sites.
 
-## Technical notes
+## Phase 1 scope to implement on approval
 
-- Paddle Billing webhook uses `Paddle-Signature: ts=…;h1=…`; HMAC-SHA256 of `${ts}:${rawBody}` with `PADDLE_WEBHOOK_SECRET`, timing-safe compare.
-- Webhook route under `/api/public/paddle/webhook` (bypasses auth). Uses `supabaseAdmin` after signature verification.
-- Reads all `process.env.*` inside handlers (Worker runtime).
-- `customData` on checkout carries `company_id`, `user_id`, `plan`, `cycle` so webhook can attribute the subscription without extra lookups.
-- Paddle.js loaded lazily on pricing/billing pages only.
-
-## Out of scope
-
-Not creating Paddle products/prices, not touching auth, dashboard, or unrelated features.
+Referral links + tracking, partner applications, admin approval, partner dashboard, basic recurring commission accrual — plus tests for tracking, commission math, and permissions.
