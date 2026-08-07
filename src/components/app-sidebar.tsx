@@ -25,6 +25,7 @@ import {
   Check,
   Plus,
   Receipt,
+  HandCoins,
 } from "lucide-react";
 import {
   Sidebar,
@@ -61,7 +62,12 @@ import { toast } from "sonner";
 import { useEffect, useMemo, useState } from "react";
 import { CreateCompanyModal } from "@/components/CreateCompanyModal";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { FEATURES, featureForRoute, planHasFeature, requiredPlanName } from "@/lib/features/catalog";
+import {
+  FEATURES,
+  featureForRoute,
+  planHasFeature,
+  requiredPlanName,
+} from "@/lib/features/catalog";
 import { Lock } from "lucide-react";
 
 type NavItem = { label: string; to: string };
@@ -181,6 +187,7 @@ const navGroups: NavGroup[] = [
   // Mapped to the existing External Sync route — rename if you want a dedicated /integrations page.
   { label: "Integrations", icon: Plug, to: "/sync" },
   { label: "Team", icon: Users, to: "/team" },
+  { label: "Partners", icon: HandCoins, to: "/partners" },
   { label: "Settings", icon: SettingsIcon, to: "/settings" },
 ];
 
@@ -210,7 +217,7 @@ export function AppSidebar() {
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
 
   const isEntitled = subscription?.status === "active" || subscription?.status === "trialing";
-  const planKey = isEntitled ? subscription?.plan ?? "free" : "free";
+  const planKey = isEntitled ? (subscription?.plan ?? "free") : "free";
   const planLabel = PLAN_LABELS[planKey] ?? planKey;
   const rawCompanyLimit = limitsForPlan(planKey as PlanKey).companyLimit;
   const companyLimit = Number.isFinite(rawCompanyLimit) ? rawCompanyLimit : null; // null = unlimited
@@ -238,11 +245,7 @@ export function AppSidebar() {
         .eq("user_id", user.id)
         .eq("status", "active")
         .order("created_at", { referencedTable: "companies", ascending: true }),
-      supabase
-        .from("subscriptions")
-        .select("plan, status")
-        .eq("user_id", user.id)
-        .maybeSingle(),
+      supabase.from("subscriptions").select("plan, status").eq("user_id", user.id).maybeSingle(),
     ]);
 
     setFullName(profile?.full_name ?? "");
