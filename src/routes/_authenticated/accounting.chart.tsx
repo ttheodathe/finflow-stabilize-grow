@@ -27,7 +27,7 @@ import { Pencil, Power, Plus } from "lucide-react";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/accounting/chart")({
-  head: () => ({ meta: [{ title: "Chart of accounts — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "Chart of accounts — Finflow Track" }] }),
   component: ChartPage,
 });
 
