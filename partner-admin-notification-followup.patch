@@ -1,0 +1,98 @@
+diff --git a/src/routes/api/public/partners/notify-new-application.ts b/src/routes/api/public/partners/notify-new-application.ts
+new file mode 100644
+index 0000000..6f31ce1
+--- /dev/null
++++ b/src/routes/api/public/partners/notify-new-application.ts
+@@ -0,0 +1,71 @@
++import { createFileRoute } from "@tanstack/react-router";
++
++// Public, but deliberately narrow: takes only an applicationId, re-fetches
++// the application server-side (never trusts client-supplied name/email),
++// and only ever emails addresses belonging to is_staff=true profiles. A
++// malicious caller can at worst trigger a duplicate notification for a
++// real application id — there's no way to make this send arbitrary email
++// or leak data, since nothing from the request body ends up in the email.
++export const Route = createFileRoute("/api/public/partners/notify-new-application")({
++  server: {
++    handlers: {
++      POST: async ({ request }) => {
++        let body: { applicationId?: string };
++        try {
++          body = await request.json();
++        } catch {
++          return new Response("Invalid JSON", { status: 400 });
++        }
++        if (!body.applicationId) return new Response("Missing applicationId", { status: 400 });
++
++        const { supabaseAdmin: _admin } = await import("@/integrations/supabase/client.server");
++        // biome-ignore lint/suspicious/noExplicitAny: service-role client typed loosely, matches pattern used elsewhere
++        const admin = _admin as any;
++
++        const { data: application } = await admin
++          .from("partner_applications")
++          .select("id, business_name, partner_type, contact_email, website, country")
++          .eq("id", body.applicationId)
++          .maybeSingle();
++        if (!application) return new Response(null, { status: 204 }); // nothing to notify about
++
++        const { data: staffProfiles } = await admin
++          .from("profiles")
++          .select("id")
++          .eq("is_staff", true);
++
++        const emails: string[] = [];
++        for (const p of staffProfiles ?? []) {
++          const { data: authUser } = await admin.auth.admin.getUserById(p.id);
++          if (authUser?.user?.email) emails.push(authUser.user.email);
++        }
++        if (emails.length === 0) return new Response(null, { status: 204 });
++
++        const { sendEmail } = await import("@/lib/email");
++        try {
++          await Promise.all(
++            emails.map((to) =>
++              sendEmail({
++                to,
++                subject: `New partner application: ${application.business_name}`,
++                html: `<p>A new partner application just came in.</p>
++<ul>
++<li><strong>Business:</strong> ${application.business_name}</li>
++<li><strong>Type:</strong> ${application.partner_type}</li>
++<li><strong>Email:</strong> ${application.contact_email}</li>
++<li><strong>Country:</strong> ${application.country}</li>
++${application.website ? `<li><strong>Website:</strong> ${application.website}</li>` : ""}
++</ul>
++<p><a href="https://finflowtrack.com/admin/partners">Review it in the admin panel</a></p>`,
++              }),
++            ),
++          );
++        } catch (err) {
++          console.error("[partners] new-application staff notification failed:", err);
++        }
++
++        return new Response(null, { status: 204 });
++      },
++    },
++  },
++});
+diff --git a/src/services/partners/partnerApplications.service.ts b/src/services/partners/partnerApplications.service.ts
+index ee30981..9f3b4c7 100644
+--- a/src/services/partners/partnerApplications.service.ts
++++ b/src/services/partners/partnerApplications.service.ts
+@@ -64,6 +64,16 @@ export async function submitPartnerApplication(
+     .single();
+ 
+   if (error) throw new PartnerServiceError("SUBMIT_APPLICATION_FAILED", error.message);
++
++  // Best-effort — a failed staff-notification email should never fail the
++  // applicant's submission, which already succeeded above.
++  fetch("/api/public/partners/notify-new-application", {
++    method: "POST",
++    headers: { "Content-Type": "application/json" },
++    body: JSON.stringify({ applicationId: data.id }),
++    keepalive: true,
++  }).catch(() => {});
++
+   return data as PartnerApplication;
+ }
+ 
