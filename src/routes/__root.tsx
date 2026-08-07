@@ -15,6 +15,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { captureReferralFromUrl } from "@/lib/referral";
 
 function NotFoundComponent() {
   return (
@@ -175,6 +176,12 @@ function RootComponent() {
     });
     return () => data.subscription.unsubscribe();
   }, [router]);
+
+  // Partner & Referral module: capture ?ref= once per page load, same spot
+  // GA4 is wired up. No-ops if there's no ref param.
+  useEffect(() => {
+    captureReferralFromUrl();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
