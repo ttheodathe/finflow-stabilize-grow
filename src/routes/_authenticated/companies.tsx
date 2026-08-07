@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CurrencySelect } from "@/components/currency-select";
 import { setDefaultCurrency } from "@/hooks/use-currency";
+import { attributePendingReferralToCompany } from "@/services/partners/partnerAttribution.service";
 import { toast } from "sonner";
 import { Upload, Building, Loader2 } from "lucide-react";
 
@@ -67,7 +68,11 @@ function CompanyPage() {
 
     let c: any = null;
     if (activeId) {
-      const { data } = await supabase.from("companies").select("*").eq("id", activeId).maybeSingle();
+      const { data } = await supabase
+        .from("companies")
+        .select("*")
+        .eq("id", activeId)
+        .maybeSingle();
       c = data;
       // Fix: "new row violates row-level security policy for table
       // 'companies'" on Save. Root cause: a stale/orphaned company id was
@@ -184,6 +189,11 @@ function CompanyPage() {
         setCompany((c) => ({ ...c, id: created.id }));
         if (typeof window !== "undefined" && created.id) {
           localStorage.setItem("currentCompanyId", created.id);
+        }
+        if (created.id) {
+          // Fire-and-forget: never let referral attribution block or fail
+          // company creation, the critical path here.
+          void attributePendingReferralToCompany(created.id);
         }
         // create_company() doesn't take a logo, so persist it separately if
         // one was uploaded before the first save.
