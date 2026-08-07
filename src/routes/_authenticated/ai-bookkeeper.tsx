@@ -8,7 +8,7 @@ import { askBookkeeper } from "@/lib/ai-bookkeeper.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/ai-bookkeeper")({
-  head: () => ({ meta: [{ title: "AI Bookkeeper — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "AI Bookkeeper — Finflow Track" }] }),
   component: BookkeeperPage,
 });
 
