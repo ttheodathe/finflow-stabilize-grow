@@ -17,7 +17,9 @@ import {
   UserCircle2,
   Wallet,
 } from "lucide-react";
-import { blogArticles, blogCategories, editorialTeam } from "@/lib/blog-data";
+import { getAllPosts, getFeaturedPosts, getPostsByCategory } from "@/lib/blog/posts";
+import { blogCategories, editorialTeam, formatCategoryName } from "@/lib/blog/categories";
+import type { BlogPost } from "@/lib/blog/types";
 
 export const Route = createFileRoute("/blog")({
   component: BlogPage,
@@ -53,6 +55,12 @@ export const Route = createFileRoute("/blog")({
       {
         rel: "canonical",
         href: "https://www.finflowtrack.com/blog",
+      },
+      {
+        rel: "alternate",
+        type: "application/rss+xml",
+        title: "FinFlowTrack Blog RSS Feed",
+        href: "https://www.finflowtrack.com/blog/rss.xml",
       },
     ],
     scripts: [
@@ -112,24 +120,30 @@ const faqs = [
   },
 ];
 
-function formatCategoryName(slug: string): string {
-  return blogCategories.find((category) => category.slug === slug)?.name ?? slug;
+function formatDate(iso: string): string {
+  return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
 }
 
 function BlogPage() {
   const [query, setQuery] = useState("");
 
-  const featuredArticle = blogArticles[0];
-  const latestArticles = blogArticles.slice(1);
+  const allPosts = useMemo(() => getAllPosts(), []);
+  const featuredArticle = getFeaturedPosts()[0] ?? allPosts[0];
+  const latestArticles = allPosts.filter((post) => post.slug !== featuredArticle?.slug);
 
   const filteredArticles = useMemo(() => {
     const trimmed = query.trim().toLowerCase();
     if (!trimmed) return latestArticles;
     return latestArticles.filter(
-      (article) =>
+      (article: BlogPost) =>
         article.title.toLowerCase().includes(trimmed) ||
         article.excerpt.toLowerCase().includes(trimmed) ||
-        formatCategoryName(article.categorySlug).toLowerCase().includes(trimmed),
+        formatCategoryName(article.category).toLowerCase().includes(trimmed),
     );
   }, [query, latestArticles]);
 
@@ -186,48 +200,52 @@ function BlogPage() {
       </section>
 
       {/* Featured Article */}
-      <section aria-labelledby="featured-heading" className="mx-auto max-w-6xl px-6 py-20">
-        <h2 id="featured-heading" className="sr-only">
-          Featured article
-        </h2>
-        <Link
-          to="/blog/$slug"
-          params={{ slug: featuredArticle.slug }}
-          className="grid grid-cols-1 overflow-hidden rounded-3xl border border-slate-200 shadow-sm transition hover:shadow-md lg:grid-cols-2"
-        >
-          <div className="flex aspect-[16/10] items-center justify-center bg-gradient-to-br from-slate-900 to-slate-700 lg:aspect-auto">
-            <BookOpen className="h-16 w-16 text-white/20" />
-          </div>
-          <div className="flex flex-col justify-center bg-white p-8 sm:p-10">
-            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-              <Sparkles className="h-3.5 w-3.5" />
-              Featured Article
-            </span>
-            <h3 className="mt-4 text-2xl font-bold tracking-tight text-slate-900">
-              {featuredArticle.title}
-            </h3>
-            <p className="mt-3 text-sm leading-relaxed text-slate-600">{featuredArticle.excerpt}</p>
-            <div className="mt-6 flex flex-wrap items-center gap-4 text-xs text-slate-500">
-              <span className="inline-flex items-center gap-1.5">
-                <UserCircle2 className="h-3.5 w-3.5" />
-                {featuredArticle.author}
+      {featuredArticle && (
+        <section aria-labelledby="featured-heading" className="mx-auto max-w-6xl px-6 py-20">
+          <h2 id="featured-heading" className="sr-only">
+            Featured article
+          </h2>
+          <Link
+            to="/blog/$slug"
+            params={{ slug: featuredArticle.slug }}
+            className="grid grid-cols-1 overflow-hidden rounded-3xl border border-slate-200 shadow-sm transition hover:shadow-md lg:grid-cols-2"
+          >
+            <div className="flex aspect-[16/10] items-center justify-center bg-gradient-to-br from-slate-900 to-slate-700 lg:aspect-auto">
+              <BookOpen className="h-16 w-16 text-white/20" />
+            </div>
+            <div className="flex flex-col justify-center bg-white p-8 sm:p-10">
+              <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                <Sparkles className="h-3.5 w-3.5" />
+                Featured Article
               </span>
-              <span className="inline-flex items-center gap-1.5">
-                <Clock className="h-3.5 w-3.5" />
-                {featuredArticle.readTime}
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <CalendarDays className="h-3.5 w-3.5" />
-                {featuredArticle.publishedAt}
+              <h3 className="mt-4 text-2xl font-bold tracking-tight text-slate-900">
+                {featuredArticle.title}
+              </h3>
+              <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                {featuredArticle.excerpt}
+              </p>
+              <div className="mt-6 flex flex-wrap items-center gap-4 text-xs text-slate-500">
+                <span className="inline-flex items-center gap-1.5">
+                  <UserCircle2 className="h-3.5 w-3.5" />
+                  {featuredArticle.author}
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5" />
+                  {featuredArticle.readingTime} min read
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <CalendarDays className="h-3.5 w-3.5" />
+                  {formatDate(featuredArticle.publishedAt)}
+                </span>
+              </div>
+              <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700">
+                Read the guide
+                <ArrowRight className="h-3.5 w-3.5" />
               </span>
             </div>
-            <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700">
-              Read the guide
-              <ArrowRight className="h-3.5 w-3.5" />
-            </span>
-          </div>
-        </Link>
-      </section>
+          </Link>
+        </section>
+      )}
 
       {/* Category System */}
       <section
@@ -247,32 +265,39 @@ function BlogPage() {
             </p>
           </div>
           <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {blogCategories.map((category) => (
-              <article
-                key={category.id}
-                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
-              >
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50">
-                  <category.icon className="h-5 w-5 text-emerald-600" />
-                </div>
-                <h3 className="mt-4 text-base font-semibold text-slate-900">{category.name}</h3>
-                <p className="mt-1.5 text-sm text-slate-600">{category.description}</p>
-                <ul className="mt-4 space-y-2">
-                  {category.previewArticles.map((title) => (
-                    <li key={title}>
-                      <button
-                        type="button"
-                        onClick={() => setQuery(title)}
-                        className="flex items-start gap-2 text-left text-sm text-slate-600 hover:text-emerald-700"
-                      >
-                        <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
-                        {title}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </article>
-            ))}
+            {blogCategories.map((category) => {
+              const categoryArticles = getPostsByCategory(category.slug).slice(0, 5);
+              return (
+                <article
+                  key={category.id}
+                  className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+                >
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50">
+                    <category.icon className="h-5 w-5 text-emerald-600" />
+                  </div>
+                  <h3 className="mt-4 text-base font-semibold text-slate-900">{category.name}</h3>
+                  <p className="mt-1.5 text-sm text-slate-600">{category.description}</p>
+                  <ul className="mt-4 space-y-2">
+                    {categoryArticles.length === 0 ? (
+                      <li className="text-sm text-slate-400">Articles coming soon.</li>
+                    ) : (
+                      categoryArticles.map((article) => (
+                        <li key={article.slug}>
+                          <Link
+                            to="/blog/$slug"
+                            params={{ slug: article.slug }}
+                            className="flex items-start gap-2 text-left text-sm text-slate-600 hover:text-emerald-700"
+                          >
+                            <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
+                            {article.title}
+                          </Link>
+                        </li>
+                      ))
+                    )}
+                  </ul>
+                </article>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -308,7 +333,7 @@ function BlogPage() {
                 </div>
                 <div className="flex flex-1 flex-col p-6">
                   <span className="w-fit rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-                    {formatCategoryName(article.categorySlug)}
+                    {formatCategoryName(article.category)}
                   </span>
                   <h3 className="mt-3 text-base font-semibold text-slate-900">{article.title}</h3>
                   <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-600">
@@ -321,7 +346,7 @@ function BlogPage() {
                     </span>
                     <span className="inline-flex items-center gap-1.5">
                       <Clock className="h-3.5 w-3.5" />
-                      {article.readTime}
+                      {article.readingTime} min read
                     </span>
                   </div>
                 </div>
