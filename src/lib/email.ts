@@ -1,21 +1,15 @@
-import { Resend } from "resend";
+// Lazily construct the Resend client without importing it at module scope.
+// Dynamic import keeps the server-only `resend` package out of client bundles.
 
-/**
- * Lazily construct the Resend client.
- *
- * IMPORTANT: `process.env` is injected per-request in the worker runtime, so
- * reading it at module scope yields `undefined` and `new Resend(undefined)`
- * throws "Missing API key" while the module graph is being loaded — which
- * crashes SSR for every route that transitively imports this file.
- */
-let _resend: Resend | undefined;
+let _resend: any | undefined;
 
-export function getResend(): Resend {
+export async function getResend() {
   if (_resend) return _resend;
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     throw new Error("Missing RESEND_API_KEY environment variable.");
   }
+  const { Resend } = await import("resend");
   _resend = new Resend(apiKey);
   return _resend;
 }
@@ -32,6 +26,8 @@ export interface SendEmailOptions {
   replyTo?: string;
   attachments?: {
     filename: string;
+    // Accept Buffer or string; this is a type-only hint and does not cause the
+    // Resend package to be bundled because we avoid importing it at module scope.
     content: Buffer | string;
   }[];
 }
@@ -44,7 +40,8 @@ export async function sendEmail({
   replyTo,
   attachments,
 }: SendEmailOptions) {
-  const { data, error } = await getResend().emails.send({
+  const resend = await getResend();
+  const { data, error } = await resend.emails.send({
     from: getEmailFrom(),
     to,
     subject,
@@ -52,7 +49,7 @@ export async function sendEmail({
     text,
     replyTo,
     attachments,
-  } as Parameters<Resend["emails"]["send"]>[0]);
+  } as Parameters<any["emails"]["send"]>[0]);
 
   if (error) {
     console.error("Resend Error:", error);
