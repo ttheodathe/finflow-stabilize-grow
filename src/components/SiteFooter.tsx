@@ -34,6 +34,12 @@ const footerLinks = [
       { label: "Refund Policy", to: "/refund" },
     ],
   },
+  {
+    title: "Comparison",
+    links: [
+      {label: "Finflow vs Quick books", to: "/compare/finflow-track-vs-quickbooks"},
+      ],
+  },
 ];
 
 function NewsletterForm() {
