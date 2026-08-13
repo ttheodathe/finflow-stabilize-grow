@@ -13,9 +13,22 @@ export const Route = createFileRoute("/_authenticated")({
   ssr: false,
 
   beforeLoad: async ({ location }) => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    // getUser() can itself throw synchronously (e.g. the Supabase client
+    // failing to construct because VITE_SUPABASE_URL / VITE_SUPABASE_
+    // PUBLISHABLE_KEY weren't baked into this build). Previously that
+    // exception propagated unhandled and looked identical, from the
+    // user's side, to "you're not signed in" — silently bouncing a
+    // logged-in user back to /auth with no explanation. Catch it here and
+    // fail loudly instead so this class of outage is obvious in the UI
+    // and in error reporting rather than masquerading as an auth issue.
+    let user: Awaited<ReturnType<typeof supabase.auth.getUser>>["data"]["user"];
+    try {
+      const result = await supabase.auth.getUser();
+      user = result.data.user;
+    } catch (err) {
+      console.error("[auth] Failed to check session — not treating as signed-out:", err);
+      throw err;
+    }
 
     if (!user) {
       throw redirect({
