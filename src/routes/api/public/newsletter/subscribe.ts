@@ -30,12 +30,19 @@ export const Route = createFileRoute("/api/public/newsletter/subscribe")({
             source: body.source ?? "footer",
             status: "subscribed",
             unsubscribed_at: null,
+            updated_at: new Date().toISOString(),
           },
           { onConflict: "email" },
         );
 
         if (error) {
-          console.error("[newsletter] insert failed", error);
+          // Surface the real cause in logs (missing table, missing grant, RLS, …)
+          console.error("[newsletter] upsert failed", {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+          });
           return Response.json({ error: "Something went wrong. Try again." }, { status: 500 });
         }
 
