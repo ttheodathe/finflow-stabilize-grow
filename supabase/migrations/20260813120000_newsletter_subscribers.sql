@@ -21,3 +21,20 @@ grant all on public.newsletter_subscribers to service_role;
 alter table public.newsletter_subscribers enable row level security;
 
 -- No anon/authenticated policies on purpose: service_role bypasses RLS.
+
+-- Public signup path: allow anonymous/authenticated INSERT + UPDATE of the
+-- upsert row, but never SELECT (email addresses stay unreadable from clients).
+grant insert, update on public.newsletter_subscribers to anon, authenticated;
+
+drop policy if exists "Anyone can subscribe" on public.newsletter_subscribers;
+create policy "Anyone can subscribe"
+  on public.newsletter_subscribers for insert
+  to anon, authenticated
+  with check (status = 'subscribed');
+
+drop policy if exists "Anyone can resubscribe" on public.newsletter_subscribers;
+create policy "Anyone can resubscribe"
+  on public.newsletter_subscribers for update
+  to anon, authenticated
+  using (true)
+  with check (status = 'subscribed');
