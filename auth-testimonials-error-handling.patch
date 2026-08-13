@@ -1,0 +1,78 @@
+diff --git a/src/routes/_authenticated/route.tsx b/src/routes/_authenticated/route.tsx
+index 3c9fc42..197a960 100644
+--- a/src/routes/_authenticated/route.tsx
++++ b/src/routes/_authenticated/route.tsx
+@@ -13,9 +13,22 @@ export const Route = createFileRoute("/_authenticated")({
+   ssr: false,
+ 
+   beforeLoad: async ({ location }) => {
+-    const {
+-      data: { user },
+-    } = await supabase.auth.getUser();
++    // getUser() can itself throw synchronously (e.g. the Supabase client
++    // failing to construct because VITE_SUPABASE_URL / VITE_SUPABASE_
++    // PUBLISHABLE_KEY weren't baked into this build). Previously that
++    // exception propagated unhandled and looked identical, from the
++    // user's side, to "you're not signed in" — silently bouncing a
++    // logged-in user back to /auth with no explanation. Catch it here and
++    // fail loudly instead so this class of outage is obvious in the UI
++    // and in error reporting rather than masquerading as an auth issue.
++    let user: Awaited<ReturnType<typeof supabase.auth.getUser>>["data"]["user"];
++    try {
++      const result = await supabase.auth.getUser();
++      user = result.data.user;
++    } catch (err) {
++      console.error("[auth] Failed to check session — not treating as signed-out:", err);
++      throw err;
++    }
+ 
+     if (!user) {
+       throw redirect({
+diff --git a/src/routes/testimonials.tsx b/src/routes/testimonials.tsx
+index 1235b71..0a6a4f5 100644
+--- a/src/routes/testimonials.tsx
++++ b/src/routes/testimonials.tsx
+@@ -46,21 +46,30 @@ function TestimonialsPage() {
+   useEffect(() => {
+     let active = true;
+     (async () => {
+-      const { data, error } = await supabase
+-        .from("testimonials")
+-        // remove `as any` once types.ts has been regenerated to include
+-        // the new table
+-        .select("id, name, role_company, rating, message, created_at")
+-        .eq("approved", true)
+-        .order("created_at", { ascending: false });
++      try {
++        const { data, error } = await supabase
++          .from("testimonials")
++          // remove `as any` once types.ts has been regenerated to include
++          // the new table
++          .select("id, name, role_company, rating, message, created_at")
++          .eq("approved", true)
++          .order("created_at", { ascending: false });
+ 
+-      if (!active) return;
+-      if (error) {
+-        console.error(error);
+-      } else {
+-        setTestimonials((data as unknown as Testimonial[]) ?? []);
++        if (!active) return;
++        if (error) {
++          console.error(error);
++        } else {
++          setTestimonials((data as unknown as Testimonial[]) ?? []);
++        }
++      } catch (err) {
++        // Client construction itself can throw (e.g. missing Supabase env
++        // vars at build time) — without this catch that rejection was
++        // unhandled and the page spun on "Loading testimonials..." forever.
++        if (!active) return;
++        console.error(err);
++      } finally {
++        if (active) setLoading(false);
+       }
+-      setLoading(false);
+     })();
+     return () => {
+       active = false;
