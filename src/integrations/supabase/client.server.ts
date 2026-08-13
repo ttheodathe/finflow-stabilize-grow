@@ -33,7 +33,10 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 }
 
 function createSupabaseAdminClient() {
-  const SUPABASE_URL = process.env.SUPABASE_URL;
+  // Allow server-side fallbacks to VITE_ env vars when deploy platforms (like Vercel)
+  // only exposed client-prefixed vars. This keeps the service-role client server-only
+  // while allowing the server runtime to find the project URL even if only VITE_* is set.
+  const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
