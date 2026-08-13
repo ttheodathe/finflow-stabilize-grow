@@ -31,19 +31,34 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 
 function createSupabaseClient() {
   // Use import.meta.env for client-side (Vite build-time replacement)
-  // Fall back to process.env for SSR (server-side rendering)
+  // Fall back to process.env for SSR (server-side rendering) ONLY.
+  //
+  // IMPORTANT: this module ships into the BROWSER bundle (it's imported by
+  // route files and components), and browsers have no `process` global.
+  // Referencing `process.env.X` unguarded here throws a raw
+  // "ReferenceError: process is not defined" in the browser the moment
+  // VITE_SUPABASE_URL is missing — which is worse than the "Missing
+  // Supabase environment variable(s)" error below, because it happens
+  // before that error can even run. Guard every access with a
+  // typeof-check so this can never throw anything other than the
+  // intentional, descriptive Error further down.
+  const hasProcessEnv = typeof process !== "undefined" && !!process.env;
+
   const SUPABASE_URL =
-    import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+    import.meta.env.VITE_SUPABASE_URL ||
+    (hasProcessEnv ? process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL : undefined);
 
   // Accept several common env var names used by different deploy platforms or previous setups.
   // The app previously required SUPABASE_PUBLISHABLE_KEY but some deployments expose SUPABASE_ANON_KEY
   // or only VITE-prefixed variants. Try all of them so the client initializes correctly in more cases.
   const SUPABASE_PUBLISHABLE_KEY =
     import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-    process.env.SUPABASE_PUBLISHABLE_KEY ||
-    process.env.SUPABASE_ANON_KEY ||
-    process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-    process.env.VITE_SUPABASE_ANON_KEY;
+    (hasProcessEnv
+      ? process.env.SUPABASE_PUBLISHABLE_KEY ||
+        process.env.SUPABASE_ANON_KEY ||
+        process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+        process.env.VITE_SUPABASE_ANON_KEY
+      : undefined);
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
     const missing = [
