@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { Wallet } from "lucide-react";
+import { CheckCircle2, Loader2, Wallet } from "lucide-react";
+import { useState } from "react";
 
 const footerLinks = [
   {
@@ -35,6 +36,82 @@ const footerLinks = [
   },
 ];
 
+function NewsletterForm() {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (status === "loading") return;
+    setStatus("loading");
+    setErrorMessage("");
+
+    try {
+      const res = await fetch("/api/public/newsletter/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, source: "footer" }),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setStatus("error");
+        setErrorMessage(data.error ?? "Something went wrong. Try again.");
+        return;
+      }
+
+      setStatus("success");
+      setEmail("");
+    } catch {
+      setStatus("error");
+      setErrorMessage("Something went wrong. Try again.");
+    }
+  }
+
+  if (status === "success") {
+    return (
+      <div className="mt-4 flex items-center gap-2 text-sm font-medium text-foreground">
+        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+        You're subscribed — thanks!
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="mt-4 max-w-sm">
+      <label htmlFor="footer-newsletter-email" className="text-sm font-semibold">
+        Get product & finance tips
+      </label>
+      <div className="mt-2 flex gap-2">
+        <input
+          id="footer-newsletter-email"
+          type="email"
+          required
+          autoComplete="email"
+          placeholder="you@company.com"
+          value={email}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            if (status === "error") setStatus("idle");
+          }}
+          className="h-9 w-full min-w-0 rounded-md border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+        />
+        <button
+          type="submit"
+          disabled={status === "loading"}
+          className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-md bg-foreground px-3 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-60"
+        >
+          {status === "loading" && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+          Subscribe
+        </button>
+      </div>
+      {status === "error" && <p className="mt-2 text-xs text-destructive">{errorMessage}</p>}
+      <p className="mt-2 text-xs text-muted-foreground">No spam. Unsubscribe anytime.</p>
+    </form>
+  );
+}
+
 export function SiteFooter() {
   return (
     <footer className="border-t border-border bg-card/30">
@@ -51,6 +128,7 @@ export function SiteFooter() {
               100% free accounting software for small businesses worldwide. Built modern, built for
               you.
             </p>
+            <NewsletterForm />
           </div>
           {footerLinks.map((c) => (
             <div key={c.title}>
