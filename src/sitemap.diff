@@ -1,0 +1,12 @@
+diff --git a/src/routes/sitemap[.]xml.ts b/src/routes/sitemap[.]xml.ts
+index dd95c9f..8f574b2 100644
+--- a/src/routes/sitemap[.]xml.ts
++++ b/src/routes/sitemap[.]xml.ts
+@@ -22,6 +22,7 @@ export const Route = createFileRoute("/sitemap.xml")({
+           "/help",
+           "/docs",
+           "/blog",
++          "/compare/finflow-track-vs-quickbooks",
+           "/careers",
+           "/press",
+           "/integrations",
