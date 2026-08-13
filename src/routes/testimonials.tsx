@@ -46,21 +46,30 @@ function TestimonialsPage() {
   useEffect(() => {
     let active = true;
     (async () => {
-      const { data, error } = await supabase
-        .from("testimonials")
-        // remove `as any` once types.ts has been regenerated to include
-        // the new table
-        .select("id, name, role_company, rating, message, created_at")
-        .eq("approved", true)
-        .order("created_at", { ascending: false });
+      try {
+        const { data, error } = await supabase
+          .from("testimonials")
+          // remove `as any` once types.ts has been regenerated to include
+          // the new table
+          .select("id, name, role_company, rating, message, created_at")
+          .eq("approved", true)
+          .order("created_at", { ascending: false });
 
-      if (!active) return;
-      if (error) {
-        console.error(error);
-      } else {
-        setTestimonials((data as unknown as Testimonial[]) ?? []);
+        if (!active) return;
+        if (error) {
+          console.error(error);
+        } else {
+          setTestimonials((data as unknown as Testimonial[]) ?? []);
+        }
+      } catch (err) {
+        // Client construction itself can throw (e.g. missing Supabase env
+        // vars at build time) — without this catch that rejection was
+        // unhandled and the page spun on "Loading testimonials..." forever.
+        if (!active) return;
+        console.error(err);
+      } finally {
+        if (active) setLoading(false);
       }
-      setLoading(false);
     })();
     return () => {
       active = false;
