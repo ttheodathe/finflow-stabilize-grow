@@ -1,5 +1,4 @@
-import "./buffer-polyfill";
-import matter from "gray-matter";
+import { parseFrontmatter } from "./frontmatter";
 import { marked, Renderer, type Tokens } from "marked";
 import { blogFrontmatterSchema } from "./validation";
 import type { BlogFrontmatter, BlogPost, TocHeading } from "./types";
@@ -67,7 +66,7 @@ function renderMarkdown(markdown: string): { html: string; headings: TocHeading[
 
 function buildPost(filepath: string, raw: string): BlogPost {
   const filenameSlug = filepath.split("/").pop()!.replace(/\.md$/, "");
-  const { data, content } = matter(raw);
+  const { data, content } = parseFrontmatter(raw);
 
   const parsed = blogFrontmatterSchema.safeParse({ slug: filenameSlug, ...data });
   if (!parsed.success) {
