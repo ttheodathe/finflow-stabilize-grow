@@ -43,6 +43,15 @@ index fe9be7d..16628ae 100644
  
    if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
      const missing = [
+diff --git a/src/lib/blog/posts.ts b/src/lib/blog/posts.ts
+index afa38b9..6a78881 100644
+--- a/src/lib/blog/posts.ts
++++ b/src/lib/blog/posts.ts
+@@ -1,3 +1,4 @@
++import "./buffer-polyfill";
+ import matter from "gray-matter";
+ import { marked, Renderer, type Tokens } from "marked";
+ import { blogFrontmatterSchema } from "./validation";
 diff --git a/src/routes/_authenticated/route.tsx b/src/routes/_authenticated/route.tsx
 index 3c9fc42..197a960 100644
 --- a/src/routes/_authenticated/route.tsx
@@ -121,3 +130,40 @@ index 1235b71..0a6a4f5 100644
      })();
      return () => {
        active = false;
+diff --git a/src/lib/blog/buffer-polyfill.ts b/src/lib/blog/buffer-polyfill.ts
+new file mode 100644
+index 0000000..1635b6b
+--- /dev/null
++++ b/src/lib/blog/buffer-polyfill.ts
+@@ -0,0 +1,31 @@
++// gray-matter (a Node-oriented frontmatter parser used by ./posts.ts) calls
++// Buffer.isBuffer() / Buffer.from() internally on every call to matter(),
++// even when it's given a plain string — which is all posts.ts ever passes it
++// (content always comes from import.meta.glob's `?raw` string import, never
++// a real Node Buffer). Node's `Buffer` global doesn't exist in the browser,
++// and because posts.ts is imported into blog.tsx's component (for
++// client-side search/filtering) and every route in routeTree.gen.ts is
++// imported eagerly rather than lazily, this module ships into the single
++// shared client chunk that loads on EVERY page — so the missing global
++// crashed sign-in, sign-up, and testimonials too, not just /blog.
++//
++// This is a deliberately minimal stub, not a full Buffer implementation —
++// it only covers what gray-matter needs for our string-only usage. If any
++// future code needs real Buffer semantics in the browser, use the `buffer`
++// npm polyfill package instead of expanding this.
++//
++// Must be the FIRST import wherever it's used — sibling ES module imports
++// execute in declaration order, so this needs to run before gray-matter's
++// `matter()` is ever called.
++if (typeof globalThis.Buffer === "undefined") {
++  class BufferPolyfill {
++    static isBuffer(_value: unknown): boolean {
++      return false;
++    }
++    static from(value: string) {
++      return { toString: () => value };
++    }
++  }
++  // @ts-expect-error — intentionally minimal browser-only stub, not a real Buffer
++  globalThis.Buffer = BufferPolyfill;
++}
