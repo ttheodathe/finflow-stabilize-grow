@@ -94,7 +94,7 @@ function AuthPage() {
     <div className="min-h-screen bg-gradient-subtle flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <Link to="/" className="block text-center mb-8 text-2xl font-bold gradient-text">
-          Free Accounting
+          FINFLOW TRACK
         </Link>
         <div className="bg-card border rounded-2xl shadow-elevated p-8">
           <h1 className="text-2xl font-bold mb-1">
