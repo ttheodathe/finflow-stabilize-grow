@@ -23,6 +23,7 @@ export const Route = createFileRoute("/sitemap.xml")({
           "/docs",
           "/blog",
           "/compare/finflow-track-vs-quickbooks",
+          "/compare/finflow-track-vs-xero",
           "/careers",
           "/press",
           "/integrations",
