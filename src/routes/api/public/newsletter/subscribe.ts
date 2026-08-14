@@ -10,6 +10,10 @@ function env(name: string): string | undefined {
   return value && value.length > 0 ? value : undefined;
 }
 
+function isNewSupabaseApiKey(value: string): boolean {
+  return value.startsWith("sb_publishable_") || value.startsWith("sb_secret_");
+}
+
 /**
  * Resolve a Supabase client for the newsletter write.
  * Prefers the service-role key; falls back to the publishable/anon key
@@ -37,7 +41,15 @@ function resolveClient() {
     global: {
       fetch: (input, init) => {
         const headers = new Headers(init?.headers);
-        if (headers.get("Authorization") === `Bearer ${key}`) headers.delete("Authorization");
+        // Only the new opaque key format (sb_publishable_/sb_secret_) is
+        // invalid as a Bearer token — legacy JWT keys (anon or service_role)
+        // NEED Authorization: Bearer <jwt> for PostgREST/Kong to resolve the
+        // correct Postgres role. Stripping it unconditionally (the previous
+        // behavior here) made every request 401 whenever a legacy JWT key
+        // was configured, which is what was actually deployed.
+        if (isNewSupabaseApiKey(key) && headers.get("Authorization") === `Bearer ${key}`) {
+          headers.delete("Authorization");
+        }
         headers.set("apikey", key);
         return fetch(input, { ...init, headers });
       },
