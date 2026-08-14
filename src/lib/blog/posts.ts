@@ -1,3 +1,4 @@
+import "./buffer-polyfill";
 import matter from "gray-matter";
 import { marked, Renderer, type Tokens } from "marked";
 import { blogFrontmatterSchema } from "./validation";
