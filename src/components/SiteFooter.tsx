@@ -40,6 +40,7 @@ const footerLinks = [
       {label: "Vs Quickbooks", to: "/compare/finflow-track-vs-quickbooks"},
       {label: "Vs Xero", to: "/compare/finflow-track-vs-xero"},
       {label: "Vs Wave", to: "/compare/finflow-track-vs-wave"},
+      {label: "Vs Zoho Books", to: "/compare/finflow-track-vs-zoho-books"},
       ],
   },
 ];
