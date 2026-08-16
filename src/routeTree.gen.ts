@@ -54,6 +54,10 @@ import { Route as ApiSendInvoiceRouteImport } from './routes/api/send-invoice'
 import { Route as BlogSlugRouteImport } from './routes/blog_.$slug'
 import { Route as BlogRssDotxmlRouteImport } from './routes/blog_.rss[.]xml'
 import { Route as CompareFinflowTrackVsQuickbooksRouteImport } from './routes/compare.finflow-track-vs-quickbooks'
+import { Route as CompareFinflowTrackVsXeroRouteImport } from './routes/compare.finflow-track-vs-xero'
+import { Route as CompareFinflowTrackVsWaveRouteImport } from './routes/compare.finflow-track-vs-wave'
+import { Route as CompareFinflowTrackVsZohoBooksRouteImport } from './routes/compare.finflow-track-vs-zoho-books'
+import { Route as CompareIndexRouteImport } from './routes/compare.index'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as PartnersApplyRouteImport } from './routes/partners.apply'
 import { Route as AuthenticatedAccountingChartRouteImport } from './routes/_authenticated/accounting.chart'
@@ -326,6 +330,29 @@ const CompareFinflowTrackVsQuickbooksRoute =
     path: '/compare/finflow-track-vs-quickbooks',
     getParentRoute: () => rootRouteImport,
   } as any)
+const CompareFinflowTrackVsXeroRoute =
+  CompareFinflowTrackVsXeroRouteImport.update({
+    id: '/compare/finflow-track-vs-xero',
+    path: '/compare/finflow-track-vs-xero',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const CompareFinflowTrackVsWaveRoute =
+  CompareFinflowTrackVsWaveRouteImport.update({
+    id: '/compare/finflow-track-vs-wave',
+    path: '/compare/finflow-track-vs-wave',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const CompareFinflowTrackVsZohoBooksRoute =
+  CompareFinflowTrackVsZohoBooksRouteImport.update({
+    id: '/compare/finflow-track-vs-zoho-books',
+    path: '/compare/finflow-track-vs-zoho-books',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const CompareIndexRoute = CompareIndexRouteImport.update({
+  id: '/compare/',
+  path: '/compare/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InviteTokenRoute = InviteTokenRouteImport.update({
   id: '/invite/$token',
   path: '/invite/$token',
@@ -633,6 +660,10 @@ export interface FileRoutesByFullPath {
   '/blog/$slug': typeof BlogSlugRoute
   '/blog/rss.xml': typeof BlogRssDotxmlRoute
   '/compare/finflow-track-vs-quickbooks': typeof CompareFinflowTrackVsQuickbooksRoute
+  '/compare/finflow-track-vs-xero': typeof CompareFinflowTrackVsXeroRoute
+  '/compare/finflow-track-vs-wave': typeof CompareFinflowTrackVsWaveRoute
+  '/compare/finflow-track-vs-zoho-books': typeof CompareFinflowTrackVsZohoBooksRoute
+  '/compare': typeof CompareIndexRoute
   '/invite/$token': typeof InviteTokenRoute
   '/partners/apply': typeof PartnersApplyRoute
   '/accounting/chart': typeof AuthenticatedAccountingChartRoute
@@ -724,6 +755,10 @@ export interface FileRoutesByTo {
   '/blog/$slug': typeof BlogSlugRoute
   '/blog/rss.xml': typeof BlogRssDotxmlRoute
   '/compare/finflow-track-vs-quickbooks': typeof CompareFinflowTrackVsQuickbooksRoute
+  '/compare/finflow-track-vs-xero': typeof CompareFinflowTrackVsXeroRoute
+  '/compare/finflow-track-vs-wave': typeof CompareFinflowTrackVsWaveRoute
+  '/compare/finflow-track-vs-zoho-books': typeof CompareFinflowTrackVsZohoBooksRoute
+  '/compare': typeof CompareIndexRoute
   '/invite/$token': typeof InviteTokenRoute
   '/partners/apply': typeof PartnersApplyRoute
   '/accounting/chart': typeof AuthenticatedAccountingChartRoute
@@ -817,6 +852,10 @@ export interface FileRoutesById {
   '/blog_/$slug': typeof BlogSlugRoute
   '/blog_/rss.xml': typeof BlogRssDotxmlRoute
   '/compare/finflow-track-vs-quickbooks': typeof CompareFinflowTrackVsQuickbooksRoute
+  '/compare/finflow-track-vs-xero': typeof CompareFinflowTrackVsXeroRoute
+  '/compare/finflow-track-vs-wave': typeof CompareFinflowTrackVsWaveRoute
+  '/compare/finflow-track-vs-zoho-books': typeof CompareFinflowTrackVsZohoBooksRoute
+  '/compare': typeof CompareIndexRoute
   '/invite/$token': typeof InviteTokenRoute
   '/partners/apply': typeof PartnersApplyRoute
   '/_authenticated/accounting/chart': typeof AuthenticatedAccountingChartRoute
@@ -910,6 +949,10 @@ export interface FileRouteTypes {
     | '/blog/$slug'
     | '/blog/rss.xml'
     | '/compare/finflow-track-vs-quickbooks'
+    | '/compare/finflow-track-vs-xero'
+    | '/compare/finflow-track-vs-wave'
+    | '/compare/finflow-track-vs-zoho-books'
+    | '/compare'
     | '/invite/$token'
     | '/partners/apply'
     | '/accounting/chart'
@@ -1001,6 +1044,10 @@ export interface FileRouteTypes {
     | '/blog/$slug'
     | '/blog/rss.xml'
     | '/compare/finflow-track-vs-quickbooks'
+    | '/compare/finflow-track-vs-xero'
+    | '/compare/finflow-track-vs-wave'
+    | '/compare/finflow-track-vs-zoho-books'
+    | '/compare'
     | '/invite/$token'
     | '/partners/apply'
     | '/accounting/chart'
@@ -1093,6 +1140,10 @@ export interface FileRouteTypes {
     | '/blog_/$slug'
     | '/blog_/rss.xml'
     | '/compare/finflow-track-vs-quickbooks'
+    | '/compare/finflow-track-vs-xero'
+    | '/compare/finflow-track-vs-wave'
+    | '/compare/finflow-track-vs-zoho-books'
+    | '/compare'
     | '/invite/$token'
     | '/partners/apply'
     | '/_authenticated/accounting/chart'
@@ -1173,6 +1224,10 @@ export interface RootRouteChildren {
   BlogSlugRoute: typeof BlogSlugRoute
   BlogRssDotxmlRoute: typeof BlogRssDotxmlRoute
   CompareFinflowTrackVsQuickbooksRoute: typeof CompareFinflowTrackVsQuickbooksRoute
+  CompareFinflowTrackVsXeroRoute: typeof CompareFinflowTrackVsXeroRoute
+  CompareFinflowTrackVsWaveRoute: typeof CompareFinflowTrackVsWaveRoute
+  CompareFinflowTrackVsZohoBooksRoute: typeof CompareFinflowTrackVsZohoBooksRoute
+  CompareIndexRoute: typeof CompareIndexRoute
   InviteTokenRoute: typeof InviteTokenRoute
   PartnersApplyRoute: typeof PartnersApplyRoute
   ApiPartnersNotifyApplicationRoute: typeof ApiPartnersNotifyApplicationRoute
@@ -1500,6 +1555,34 @@ declare module '@tanstack/react-router' {
       path: '/compare/finflow-track-vs-quickbooks'
       fullPath: '/compare/finflow-track-vs-quickbooks'
       preLoaderRoute: typeof CompareFinflowTrackVsQuickbooksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compare/finflow-track-vs-xero': {
+      id: '/compare/finflow-track-vs-xero'
+      path: '/compare/finflow-track-vs-xero'
+      fullPath: '/compare/finflow-track-vs-xero'
+      preLoaderRoute: typeof CompareFinflowTrackVsXeroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compare/finflow-track-vs-wave': {
+      id: '/compare/finflow-track-vs-wave'
+      path: '/compare/finflow-track-vs-wave'
+      fullPath: '/compare/finflow-track-vs-wave'
+      preLoaderRoute: typeof CompareFinflowTrackVsWaveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compare/finflow-track-vs-zoho-books': {
+      id: '/compare/finflow-track-vs-zoho-books'
+      path: '/compare/finflow-track-vs-zoho-books'
+      fullPath: '/compare/finflow-track-vs-zoho-books'
+      preLoaderRoute: typeof CompareFinflowTrackVsZohoBooksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compare/': {
+      id: '/compare/'
+      path: '/compare/'
+      fullPath: '/compare'
+      preLoaderRoute: typeof CompareIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/invite/$token': {
@@ -1972,6 +2055,10 @@ const rootRouteChildren: RootRouteChildren = {
   BlogSlugRoute: BlogSlugRoute,
   BlogRssDotxmlRoute: BlogRssDotxmlRoute,
   CompareFinflowTrackVsQuickbooksRoute: CompareFinflowTrackVsQuickbooksRoute,
+  CompareFinflowTrackVsXeroRoute: CompareFinflowTrackVsXeroRoute,
+  CompareFinflowTrackVsWaveRoute: CompareFinflowTrackVsWaveRoute,
+  CompareFinflowTrackVsZohoBooksRoute: CompareFinflowTrackVsZohoBooksRoute,
+  CompareIndexRoute: CompareIndexRoute,
   InviteTokenRoute: InviteTokenRoute,
   PartnersApplyRoute: PartnersApplyRoute,
   ApiPartnersNotifyApplicationRoute: ApiPartnersNotifyApplicationRoute,
