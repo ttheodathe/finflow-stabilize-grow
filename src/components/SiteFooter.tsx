@@ -37,6 +37,7 @@ const footerLinks = [
   {
     title: "Comparison",
     links: [
+      {label: "Compare All", to: "/compare"},
       {label: "Vs Quickbooks", to: "/compare/finflow-track-vs-quickbooks"},
       {label: "Vs Xero", to: "/compare/finflow-track-vs-xero"},
       {label: "Vs Wave", to: "/compare/finflow-track-vs-wave"},
