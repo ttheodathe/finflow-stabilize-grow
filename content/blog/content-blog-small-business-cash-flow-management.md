@@ -7,7 +7,7 @@ publishedAt: "2026-08-19"
 updatedAt: "2026-08-19"
 category: "small-business-finance"
 tags: ["cash flow management", "small business cash flow", "cash flow forecast", "small business finance", "bookkeeping"]
-draft: false
+draft: true
 featured: false
 ---
 
