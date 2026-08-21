@@ -22,6 +22,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
@@ -42,14 +50,39 @@ type Customer = {
   // information for reporting and compliance with the Bureau of Internal
   // Revenue (BIR)"):
   tax_id: string | null;
+  lifecycle_stage: string;
+  tags: string[];
 };
+
+const LIFECYCLE_STAGES = ["lead", "prospect", "customer", "churned"] as const;
+
+function lifecycleBadgeVariant(stage: string): "default" | "secondary" | "outline" | "destructive" {
+  switch (stage) {
+    case "customer":
+      return "default";
+    case "prospect":
+      return "secondary";
+    case "churned":
+      return "destructive";
+    default:
+      return "outline";
+  }
+}
 
 function CustomersPage() {
   const companyId = useActiveCompanyId();
   const [items, setItems] = useState<Customer[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Customer | null>(null);
-  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", tax_id: "" });
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    tax_id: "",
+    lifecycle_stage: "customer",
+    tagsInput: "",
+  });
 
   async function load() {
     if (!companyId) return;
@@ -66,7 +99,15 @@ function CustomersPage() {
 
   function openNew() {
     setEditing(null);
-    setForm({ name: "", email: "", phone: "", address: "", tax_id: "" });
+    setForm({
+      name: "",
+      email: "",
+      phone: "",
+      address: "",
+      tax_id: "",
+      lifecycle_stage: "customer",
+      tagsInput: "",
+    });
     setOpen(true);
   }
   function openEdit(c: Customer) {
@@ -77,6 +118,8 @@ function CustomersPage() {
       phone: c.phone ?? "",
       address: c.address ?? "",
       tax_id: c.tax_id ?? "",
+      lifecycle_stage: c.lifecycle_stage ?? "customer",
+      tagsInput: (c.tags ?? []).join(", "),
     });
     setOpen(true);
   }
@@ -85,7 +128,12 @@ function CustomersPage() {
     e.preventDefault();
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
-    const payload = { ...form, user_id: u.user.id };
+    const { tagsInput, ...rest } = form;
+    const tags = tagsInput
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
+    const payload = { ...rest, tags, user_id: u.user.id };
     const { error } = editing
       ? await supabase.from("customers").update(payload).eq("id", editing.id)
       : await supabase.from("customers").insert(scoped(payload));
@@ -159,6 +207,32 @@ function CustomersPage() {
                   placeholder="e.g. 123-456-789-000"
                 />
               </div>
+              <div>
+                <Label>Lifecycle stage</Label>
+                <Select
+                  value={form.lifecycle_stage}
+                  onValueChange={(v) => setForm({ ...form, lifecycle_stage: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LIFECYCLE_STAGES.map((stage) => (
+                      <SelectItem key={stage} value={stage} className="capitalize">
+                        {stage}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Tags</Label>
+                <Input
+                  value={form.tagsInput}
+                  onChange={(e) => setForm({ ...form, tagsInput: e.target.value })}
+                  placeholder="comma, separated, tags"
+                />
+              </div>
               <Button type="submit" className="w-full bg-gradient-hero">
                 Save
               </Button>
@@ -180,6 +254,7 @@ function CustomersPage() {
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
                 <TableHead>TIN</TableHead>
+                <TableHead>Stage</TableHead>
                 <TableHead className="w-32"></TableHead>
               </TableRow>
             </TableHeader>
@@ -190,6 +265,11 @@ function CustomersPage() {
                   <TableCell>{c.email}</TableCell>
                   <TableCell>{c.phone}</TableCell>
                   <TableCell className="text-muted-foreground">{c.tax_id ?? "—"}</TableCell>
+                  <TableCell>
+                    <Badge variant={lifecycleBadgeVariant(c.lifecycle_stage)} className="capitalize">
+                      {c.lifecycle_stage}
+                    </Badge>
+                  </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon" onClick={() => openEdit(c)}>
                       <Pencil className="h-4 w-4" />
