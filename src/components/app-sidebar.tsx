@@ -26,6 +26,7 @@ import {
   Plus,
   Receipt,
   HandCoins,
+  Target,
 } from "lucide-react";
 import {
   Sidebar,
@@ -106,6 +107,14 @@ const navGroups: NavGroup[] = [
       { label: "Inventory", to: "/items/inventory" },
       { label: "Warehouses", to: "/items/warehouses" },
       { label: "Stock movements", to: "/items/stock-movements" },
+    ],
+  },
+  {
+    label: "CRM",
+    icon: Target,
+    items: [
+      { label: "Contacts", to: "/customers" },
+      { label: "Pipeline", to: "/crm/deals" },
     ],
   },
   {
