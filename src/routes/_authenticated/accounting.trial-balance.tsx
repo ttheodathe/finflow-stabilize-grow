@@ -3,14 +3,43 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
 import { useDefaultCurrency } from "@/hooks/use-currency";
 import { formatCurrency } from "@/lib/currencies";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/accounting/trial-balance")({
-  head: () => ({ meta: [{ title: "Trial balance — FinFlow Track" }] }),
+  head: () => ({ meta: [{ title: "Trial balance — Finflow Track" }] }),
   component: TrialBalancePage,
 });
+
+// Same CSV export pattern used in reports.tsx (exportRowsAsCsv) and
+// items.stock-movements.tsx, kept local to this file to avoid coupling
+// trial-balance.tsx to the reports route module.
+function exportRowsAsCsv(
+  filenamePrefix: string,
+  header: string[],
+  rows: (string | number)[][],
+) {
+  if (rows.length === 0) return false;
+  const escape = (v: string | number) => {
+    const s = String(v);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const lines = [header.map(escape).join(",")];
+  for (const row of rows) lines.push(row.map(escape).join(","));
+  const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${filenamePrefix}-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  return true;
+}
 
 type Row = {
   account_id: string;
@@ -107,15 +136,38 @@ function TrialBalancePage() {
       <p className="text-muted-foreground mb-6">
         Debit/credit totals per account for the selected period.
       </p>
-      <div className="grid grid-cols-4 gap-3 mb-4">
-        <div>
-          <Label>From</Label>
-          <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+      <div className="flex items-end justify-between gap-3 mb-4">
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label>From</Label>
+            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+          </div>
+          <div>
+            <Label>To</Label>
+            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+          </div>
         </div>
-        <div>
-          <Label>To</Label>
-          <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
-        </div>
+        <Button
+          variant="outline"
+          onClick={() => {
+            const rows_: (string | number)[][] = rows.map((r) => [
+              r.code,
+              r.name,
+              r.type,
+              r.debit,
+              r.credit,
+            ]);
+            rows_.push(["", "", "Totals", totals.d, totals.c]);
+            exportRowsAsCsv(
+              "trial-balance",
+              ["Code", "Account", "Type", "Debit", "Credit"],
+              rows_,
+            );
+          }}
+          disabled={loading || rows.length === 0}
+        >
+          <Download className="w-4 h-4 mr-2" /> Export CSV
+        </Button>
       </div>
       <div className="bg-card border rounded-xl overflow-hidden">
         <table className="w-full text-sm">
