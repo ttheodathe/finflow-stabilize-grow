@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -15,7 +15,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CheckCircle2, HandCoins, Loader2, Users2 } from "lucide-react";
+import { CheckCircle2, HandCoins, Loader2, Link2, ShieldCheck, Wallet } from "lucide-react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { submitPartnerApplication } from "@/services/partners/partnerApplications.service";
 import { PARTNER_TYPE_LABELS, type PartnerType } from "@/types/partner.types";
 
@@ -27,7 +33,7 @@ export const Route = createFileRoute("/partners/apply")({
       {
         name: "description",
         content:
-          "Join the FinFlowTrack Partner Program. Earn recurring commissions referring bookkeeping and accounting clients to free, modern accounting software.",
+          "Join the FinFlowTrack Partner Program and earn a 20% recurring commission on every subscription you refer, for as long as it stays active. Open to affiliates, firms, accountants, consultants, educators, and resellers.",
       },
     ],
   }),
@@ -114,14 +120,125 @@ function BecomeAPartnerPage() {
               commissions on every subscription that stays active. Open to affiliates, firms,
               accountants, consultants, educators, and resellers.
             </p>
-            <div className="mt-6 flex items-center justify-center gap-6 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1.5">
-                <Users2 className="h-4 w-4" /> All partner types welcome
-              </span>
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4" /> Recurring commissions
-              </span>
+            <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+              <div className="rounded-lg border bg-card p-4 text-center">
+                <div className="text-2xl font-bold text-primary">20%</div>
+                <div className="mt-1 text-xs text-muted-foreground">Recurring commission</div>
+              </div>
+              <div className="rounded-lg border bg-card p-4 text-center">
+                <div className="text-2xl font-bold text-primary">8</div>
+                <div className="mt-1 text-xs text-muted-foreground">Partner types welcome</div>
+              </div>
+              <div className="rounded-lg border bg-card p-4 text-center">
+                <div className="text-2xl font-bold text-primary">Manual</div>
+                <div className="mt-1 text-xs text-muted-foreground">Fraud-checked commissions</div>
+              </div>
+              <div className="rounded-lg border bg-card p-4 text-center">
+                <div className="text-2xl font-bold text-primary">Kigali</div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  <Link to="/about" className="underline hover:text-foreground">
+                    2005CLG Ltd, Rwanda
+                  </Link>
+                </div>
+              </div>
             </div>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
+          <div className="mb-10 text-center">
+            <h2 className="text-2xl font-bold">How the partner program works</h2>
+            <p className="mt-2 text-muted-foreground">
+              No hidden terms — here's exactly how referrals, commissions, and payouts work.
+            </p>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-3">
+            <div className="rounded-lg border bg-card p-6">
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                <Link2 className="h-5 w-5 text-primary" />
+              </div>
+              <h3 className="font-semibold">1. Share your referral link</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Once approved, you get a unique referral link. We track who clicks it using
+                last-touch attribution — the partner whose link a customer clicked most recently
+                gets credit for that referral.
+              </p>
+            </div>
+            <div className="rounded-lg border bg-card p-6">
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                <ShieldCheck className="h-5 w-5 text-primary" />
+              </div>
+              <h3 className="font-semibold">2. Your referral subscribes</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                When someone you referred makes a paid subscription, a commission is recorded as
+                pending. Every commission is checked for obvious signs of abuse (e.g. an
+                implausibly fast signup-to-payment) before it's approved — this protects genuine
+                partners' payouts.
+              </p>
+            </div>
+            <div className="rounded-lg border bg-card p-6">
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                <Wallet className="h-5 w-5 text-primary" />
+              </div>
+              <h3 className="font-semibold">3. You earn 20%, recurring</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                You earn 20% of what your referral pays FinFlowTrack, for as long as their
+                subscription stays active — not just a one-time bounty. Approved commissions are
+                paid out by our team; you can track pending, approved, and paid amounts in your
+                partner dashboard at any time.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-12">
+            <h3 className="mb-4 text-center text-lg font-semibold">Common questions</h3>
+            <Accordion type="single" collapsible className="mx-auto max-w-2xl">
+              <AccordionItem value="rate">
+                <AccordionTrigger>How much do I actually earn per referral?</AccordionTrigger>
+                <AccordionContent>
+                  20% of the subscription payments your referral makes to FinFlowTrack, for as
+                  long as they remain a paying customer. This is a recurring commission, not a
+                  flat one-time fee.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="tracking">
+                <AccordionTrigger>How is my referral tracked?</AccordionTrigger>
+                <AccordionContent>
+                  Through your unique referral link, using last-touch attribution — whoever's
+                  link a customer clicked most recently before signing up gets credit for that
+                  referral.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="review">
+                <AccordionTrigger>Why are commissions reviewed before approval?</AccordionTrigger>
+                <AccordionContent>
+                  Every new commission is automatically screened for patterns that suggest abuse
+                  — like a signup converting to a paid plan almost instantly, or an unusually high
+                  volume of new referrals from one partner in a short period. Flagged commissions
+                  get a human review rather than automatic rejection, so legitimate partners are
+                  never penalized by the check.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="payout">
+                <AccordionTrigger>When and how do I get paid?</AccordionTrigger>
+                <AccordionContent>
+                  There's no fixed automatic schedule — our team reviews and processes payouts
+                  for your approved commissions, and you can see the status of every commission
+                  (pending, approved, or paid) in your partner dashboard at any time.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="who">
+                <AccordionTrigger>Who is behind FinFlowTrack?</AccordionTrigger>
+                <AccordionContent>
+                  FinFlowTrack is operated by 2005CLG Ltd, registered in Kigali, Rwanda. You can
+                  read more about the company on our{" "}
+                  <Link to="/about" className="underline hover:text-foreground">
+                    About page
+                  </Link>
+                  .
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
         </section>
 
