@@ -4,11 +4,15 @@ import { getRates } from "@/lib/fx";
 export function useFxRates(base = "USD") {
   const [rates, setRates] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
+  const [ts, setTs] = useState<number | null>(null);
   useEffect(() => {
     let alive = true;
     getRates(base)
       .then((c) => {
-        if (alive) setRates(c.rates);
+        if (alive) {
+          setRates(c.rates);
+          setTs(c.ts);
+        }
       })
       .catch(() => {})
       .finally(() => {
@@ -18,5 +22,5 @@ export function useFxRates(base = "USD") {
       alive = false;
     };
   }, [base]);
-  return { rates, loading };
+  return { rates, loading, ts };
 }
