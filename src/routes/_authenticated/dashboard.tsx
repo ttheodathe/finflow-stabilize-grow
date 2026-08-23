@@ -31,13 +31,13 @@ import {
 } from "recharts";
 import { Button } from "@/components/ui/button";
 import { useDefaultCurrency } from "@/hooks/use-currency";
-import { formatCurrency } from "@/lib/currencies";
+import { formatCurrency, getCurrencySymbol } from "@/lib/currencies";
 import { useFxRates } from "@/hooks/use-fx";
 import { convert } from "@/lib/fx";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — FinFlow Track" }] }),
+  head: () => ({ meta: [{ title: "Dashboard — Finflow Track" }] }),
   component: Dashboard,
 });
 
@@ -81,7 +81,8 @@ function monthBuckets(months = 6) {
 
 function Dashboard() {
   const currency = useDefaultCurrency();
-  const { rates, loading: fxLoading } = useFxRates("USD");
+  const currencySymbol = getCurrencySymbol(currency);
+  const { rates, loading: fxLoading, ts: fxTs } = useFxRates("USD");
   const fmt = (n: number) => formatCurrency(n, currency, { maximumFractionDigits: 0 });
   const conv = (amount: number, from: string) => convert(amount, from || currency, currency, rates);
   const companyId = useActiveCompanyId();
@@ -272,7 +273,11 @@ function Dashboard() {
             Here's how your business is performing today.{" "}
             <span className="text-xs">
               All figures shown in <span className="font-medium">{currency}</span> at{" "}
-              {fxLoading ? "loading" : "live"} FX rates.
+              {fxLoading
+                ? "loading FX rates."
+                : fxTs
+                  ? `live FX rates as of ${new Date(fxTs).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.`
+                  : "live FX rates."}
             </span>
           </p>
         </div>
@@ -291,6 +296,36 @@ function Dashboard() {
         </div>
       </div>
 
+      {/* First-run empty state: a brand-new company has nothing to show yet —
+          six flat KPI cards reading "—" looks broken rather than "new".
+          Replace the KPI grid + charts with a clear next-step prompt until
+          there's at least one invoice or expense recorded. */}
+      {!loading && invoices.length === 0 && expenses.length === 0 && bankAccounts.length === 0 ? (
+        <div className="rounded-xl border bg-card p-10 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            <TrendingUp className="h-6 w-6 text-primary" />
+          </div>
+          <h2 className="text-lg font-semibold">Let's get your books started</h2>
+          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+            Your dashboard will fill in with revenue, expenses, and cash flow as soon as you
+            record your first invoice or expense.
+          </p>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+            {quickActions.map((a) => (
+              <GatedNavButton
+                key={a.label}
+                to={a.to}
+                label={a.label}
+                icon={a.icon}
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+              />
+            ))}
+          </div>
+        </div>
+      ) : (
+        <>
       {/* KPI grid */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {kpis.map((k) => (
@@ -333,6 +368,9 @@ function Dashboard() {
             </div>
           </div>
           <div className="h-72">
+            {loading ? (
+              <div className="h-full w-full animate-pulse rounded-lg bg-muted/50" />
+            ) : (
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={trend}>
                 <defs>
@@ -350,7 +388,7 @@ function Dashboard() {
                 <YAxis
                   stroke="hsl(var(--muted-foreground))"
                   fontSize={12}
-                  tickFormatter={(v) => `$${v}`}
+                  tickFormatter={(v) => `${currencySymbol}${v}`}
                 />
                 <Tooltip
                   contentStyle={{
@@ -376,6 +414,7 @@ function Dashboard() {
                 />
               </AreaChart>
             </ResponsiveContainer>
+            )}
           </div>
         </div>
 
@@ -383,6 +422,9 @@ function Dashboard() {
           <h2 className="font-semibold mb-1">Cash flow</h2>
           <p className="text-xs text-muted-foreground mb-4">Net by month</p>
           <div className="h-72">
+            {loading ? (
+              <div className="h-full w-full animate-pulse rounded-lg bg-muted/50" />
+            ) : (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={trend}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -390,7 +432,7 @@ function Dashboard() {
                 <YAxis
                   stroke="hsl(var(--muted-foreground))"
                   fontSize={12}
-                  tickFormatter={(v) => `$${v}`}
+                  tickFormatter={(v) => `${currencySymbol}${v}`}
                 />
                 <Tooltip
                   contentStyle={{
@@ -402,6 +444,7 @@ function Dashboard() {
                 <Bar dataKey="cashflow" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
+            )}
           </div>
         </div>
       </div>
@@ -476,6 +519,8 @@ function Dashboard() {
           </div>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }
