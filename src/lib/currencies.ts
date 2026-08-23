@@ -68,3 +68,13 @@ export function formatCurrency(
     return `${currency} ${(amount || 0).toFixed(2)}`;
   }
 }
+
+/**
+ * Symbol for a currency code (e.g. "€" for EUR, "FRw" for RWF), for compact
+ * display like chart axis ticks where the full Intl.NumberFormat currency
+ * string would be too wide. Falls back to the currency code itself for any
+ * code not in CURRENCIES.
+ */
+export function getCurrencySymbol(currency = "USD"): string {
+  return CURRENCIES.find((c) => c.code === currency)?.symbol ?? currency;
+}
