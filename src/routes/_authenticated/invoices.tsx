@@ -36,6 +36,7 @@ import { CurrencySelect } from "@/components/currency-select";
 import { useDefaultCurrency } from "@/hooks/use-currency";
 import { generateInvoicePdf } from "@/lib/invoice-pdf";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
+import { lockExchangeRate } from "@/lib/fx-lock";
 import { UpgradePlanModal } from "@/components/UpgradePlanModal";
 import { useSubscriptionLimits } from "@/lib/subscription-limits";
 import type { PlanKey } from "@/lib/paddle/config";
@@ -260,6 +261,7 @@ function InvoicesPage() {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
     if (!companyId) return toast.error("No active company selected");
+    const { rate, companyCurrency } = await lockExchangeRate(companyId, form.currency);
     const payload = {
       user_id: u.user.id,
       company_id: companyId,
@@ -273,6 +275,8 @@ function InvoicesPage() {
       tax: totals.tax,
       total: totals.total,
       notes: form.notes,
+      exchange_rate: rate,
+      base_currency_amount: form.currency === companyCurrency ? totals.total : totals.total * rate,
     };
 
     let invoiceId = editing?.id;
