@@ -163,13 +163,13 @@ function ProfitAndLoss() {
       const [inv, exp] = await Promise.all([
         supabase
           .from("invoices")
-          .select("total,status,issue_date,invoice_number,customers(name)")
+          .select("total,status,issue_date,invoice_number,customers(name),base_currency_amount,currency" as any)
           .eq("company_id", companyId)
           .gte("issue_date", from)
           .lte("issue_date", to),
         supabase
           .from("expenses")
-          .select("amount,category,vendor,expense_date")
+          .select("amount,category,vendor,expense_date,base_currency_amount,currency" as any)
           .eq("company_id", companyId)
           .gte("expense_date", from)
           .lte("expense_date", to),
@@ -180,33 +180,48 @@ function ProfitAndLoss() {
         issue_date: string;
         invoice_number: string | null;
         customers: { name: string } | null;
+        base_currency_amount: number | null;
+        currency: string | null;
       }[];
       const expenses = (exp.data ?? []) as {
         amount: number;
         category: string | null;
         vendor: string | null;
+        base_currency_amount: number | null;
+        currency: string | null;
       }[];
+
+      // Use the rate that was locked in at transaction time
+      // (base_currency_amount) so multi-currency rows are actually
+      // converted to the company's reporting currency before summing,
+      // instead of adding raw numbers across different currencies.
+      // Falls back to the raw total/amount for rows saved before this
+      // column existed (base_currency_amount is null there).
+      const inCompanyCurrency = (total: number, baseAmount: number | null) =>
+        baseAmount ?? total;
 
       const revByGroup = new Map<string, number>();
       let out = 0;
       for (const i of invoices) {
+        const amount = inCompanyCurrency(Number(i.total), i.base_currency_amount);
         if (i.status === "paid") {
           const key =
             groupRevenueBy === "invoice"
               ? `${i.invoice_number ?? "—"} · ${i.customers?.name ?? "Unassigned"} (${i.issue_date})`
               : (i.customers?.name ?? "Unassigned");
-          revByGroup.set(key, (revByGroup.get(key) ?? 0) + Number(i.total));
+          revByGroup.set(key, (revByGroup.get(key) ?? 0) + amount);
         } else if (i.status !== "draft") {
-          out += Number(i.total);
+          out += amount;
         }
       }
       const expByGroup = new Map<string, number>();
       for (const e of expenses) {
+        const amount = inCompanyCurrency(Number(e.amount), e.base_currency_amount);
         const key =
           groupExpensesBy === "vendor"
             ? e.vendor || "Unknown vendor"
             : e.category || "Uncategorized";
-        expByGroup.set(key, (expByGroup.get(key) ?? 0) + Number(e.amount));
+        expByGroup.set(key, (expByGroup.get(key) ?? 0) + amount);
       }
 
       setRevenueRows(
@@ -1140,7 +1155,7 @@ function ReceivablesAging() {
       setLoading(true);
       const { data, error } = await supabase
         .from("invoices")
-        .select("total,status,due_date,customers(name)")
+        .select("total,status,due_date,customers(name),base_currency_amount" as any)
         .eq("company_id", companyId)
         .not("status", "in", "(draft,paid)");
       if (error) {
@@ -1153,11 +1168,12 @@ function ReceivablesAging() {
         total: number;
         due_date: string | null;
         customers: { name: string } | null;
+        base_currency_amount: number | null;
       }[]) {
         if (!inv.due_date) continue;
         const name = inv.customers?.name ?? "Unassigned";
         const row = byCustomer.get(name) ?? newAgingRow(name, bucketCount);
-        bucketByDaysPastDue(inv.due_date, Number(inv.total), row, cutoffs);
+        bucketByDaysPastDue(inv.due_date, inv.base_currency_amount ?? Number(inv.total), row, cutoffs);
         byCustomer.set(name, row);
       }
       setRows([...byCustomer.values()].sort((a, b) => b.total - a.total));
@@ -1217,7 +1233,7 @@ function PayablesAging() {
       setLoading(true);
       const { data, error } = await supabase
         .from("bills")
-        .select("total,status,due_date,vendors(name)")
+        .select("total,status,due_date,vendors(name),base_currency_amount" as any)
         .eq("company_id", companyId)
         .neq("status", "paid");
       if (error) {
@@ -1230,11 +1246,12 @@ function PayablesAging() {
         total: number;
         due_date: string | null;
         vendors: { name: string } | null;
+        base_currency_amount: number | null;
       }[]) {
         if (!bill.due_date) continue;
         const name = bill.vendors?.name ?? "Unassigned";
         const row = byVendor.get(name) ?? newAgingRow(name, bucketCount);
-        bucketByDaysPastDue(bill.due_date, Number(bill.total), row, cutoffs);
+        bucketByDaysPastDue(bill.due_date, bill.base_currency_amount ?? Number(bill.total), row, cutoffs);
         byVendor.set(name, row);
       }
       setRows([...byVendor.values()].sort((a, b) => b.total - a.total));
