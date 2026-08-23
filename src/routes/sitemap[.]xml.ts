@@ -30,6 +30,7 @@ export const Route = createFileRoute("/sitemap.xml")({
           "/careers",
           "/press",
           "/integrations",
+          "/partners/apply",
         ];
 
         const today = new Date().toISOString();
