@@ -39,6 +39,7 @@ import { categorizeExpenses } from "@/lib/ai-bookkeeper.functions";
 import { CurrencySelect } from "@/components/currency-select";
 import { useDefaultCurrency, useDateFormat, formatDate } from "@/hooks/use-currency";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
+import { lockExchangeRate } from "@/lib/fx-lock";
 
 export const Route = createFileRoute("/_authenticated/expenses")({
   head: () => ({ meta: [{ title: "Expenses — Finflow Track" }] }),
@@ -189,17 +190,21 @@ function ExpensesPage() {
     if (!form.account_id) return toast.error("Select an account/category");
     const vendor = vendors.find((v) => v.id === form.vendor_id);
     const account = accounts.find((a) => a.id === form.account_id);
+    const { rate, companyCurrency } = await lockExchangeRate(companyId, form.currency);
+    const amountNum = Number(form.amount) || 0;
     const payload = {
       vendor_id: form.vendor_id,
       vendor: vendor?.name ?? null, // keep legacy text column in sync
       account_id: form.account_id,
       category: account?.name ?? null, // keep legacy text column in sync
       description: form.description,
-      amount: Number(form.amount) || 0,
+      amount: amountNum,
       expense_date: form.expense_date,
       currency: form.currency,
       supplier_invoice_number: form.supplier_invoice_number || null,
       user_id: u.user.id,
+      exchange_rate: rate,
+      base_currency_amount: form.currency === companyCurrency ? amountNum : amountNum * rate,
     };
     const { error } = editing
       ? await supabase.from("expenses").update(payload).eq("id", editing.id)
