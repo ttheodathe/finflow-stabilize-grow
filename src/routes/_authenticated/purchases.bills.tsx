@@ -32,6 +32,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, DollarSign, ScanLine } from "lucide-react";
 import { toast } from "sonner";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
+import { lockExchangeRate } from "@/lib/fx-lock";
 import { useServerFn } from "@tanstack/react-start";
 import { extractDocument } from "@/lib/document-ai.functions";
 import { GatedActionButton } from "@/components/gated-action-button";
@@ -276,6 +277,9 @@ function BillsPage() {
     if (!form.vendor_id) return toast.error("Pick a vendor");
     if (lines.some((l) => !l.description || !l.account_id))
       return toast.error("Every line needs a description & expense account");
+    const { rate, companyCurrency } = await lockExchangeRate(companyId, form.currency);
+    const baseCurrencyAmount =
+      form.currency === companyCurrency ? totals.total : totals.total * rate;
     const { data: bill, error } = await (supabase as any)
       .from("bills")
       .insert({
@@ -292,6 +296,8 @@ function BillsPage() {
         tax: totals.tax,
         total: totals.total,
         status: "open",
+        exchange_rate: rate,
+        base_currency_amount: baseCurrencyAmount,
       })
       .select()
       .single();
