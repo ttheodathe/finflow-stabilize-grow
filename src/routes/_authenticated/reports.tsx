@@ -4,10 +4,26 @@ import { supabase } from "@/integrations/supabase/client";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Download } from "lucide-react";
 import { useDefaultCurrency } from "@/hooks/use-currency";
 import { formatCurrency } from "@/lib/currencies";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
+import { ReportPresetBar } from "@/components/reports/ReportPresetBar";
+import {
+  RangePreset,
+  AsOfPreset,
+  RANGE_PRESET_OPTIONS,
+  AS_OF_PRESET_OPTIONS,
+  resolveRangePreset,
+  resolveAsOfPreset,
+} from "@/lib/report-date-presets";
 
 // ---------------------------------------------------------------------------
 // Shared CSV export helper — same pattern as items.stock-movements.tsx
@@ -97,20 +113,48 @@ function ReportsPage() {
 // with a subtotal, instead of a single flat total per side.
 // ---------------------------------------------------------------------------
 
+type PnlGroupRevenueBy = "customer" | "invoice";
+type PnlGroupExpensesBy = "category" | "vendor";
+
+type PnlConfig = {
+  from: string;
+  to: string;
+  preset: RangePreset;
+  groupRevenueBy: PnlGroupRevenueBy;
+  groupExpensesBy: PnlGroupExpensesBy;
+};
+
+const PNL_DEFAULT_CONFIG: PnlConfig = {
+  from: (() => {
+    const d = new Date();
+    d.setMonth(0, 1);
+    return d.toISOString().slice(0, 10);
+  })(),
+  to: new Date().toISOString().slice(0, 10),
+  preset: "this-year",
+  groupRevenueBy: "customer",
+  groupExpensesBy: "category",
+};
+
 function ProfitAndLoss() {
   const currency = useDefaultCurrency();
   const fmt = (n: number) => formatCurrency(n, currency);
   const companyId = useActiveCompanyId();
-  const [from, setFrom] = useState(() => {
-    const d = new Date();
-    d.setMonth(0, 1);
-    return d.toISOString().slice(0, 10);
-  });
-  const [to, setTo] = useState(() => new Date().toISOString().slice(0, 10));
+  const [config, setConfig] = useState<PnlConfig>(PNL_DEFAULT_CONFIG);
+  const { from, to, preset, groupRevenueBy, groupExpensesBy } = config;
   const [revenueRows, setRevenueRows] = useState<{ label: string; amount: number }[]>([]);
   const [expenseRows, setExpenseRows] = useState<{ label: string; amount: number }[]>([]);
   const [outstanding, setOutstanding] = useState(0);
   const [loading, setLoading] = useState(false);
+
+  function patchConfig(patch: Partial<PnlConfig>) {
+    setConfig((c) => ({ ...c, ...patch }));
+  }
+
+  function handlePresetChange(value: RangePreset) {
+    const resolved = value === "custom" ? null : resolveRangePreset(value);
+    patchConfig(resolved ? { preset: value, ...resolved } : { preset: value });
+  }
 
   useEffect(() => {
     if (!companyId) return;
@@ -119,52 +163,66 @@ function ProfitAndLoss() {
       const [inv, exp] = await Promise.all([
         supabase
           .from("invoices")
-          .select("total,status,issue_date,customers(name)").eq("company_id", companyId)
+          .select("total,status,issue_date,invoice_number,customers(name)")
+          .eq("company_id", companyId)
           .gte("issue_date", from)
           .lte("issue_date", to),
         supabase
           .from("expenses")
-          .select("amount,category,vendor,expense_date").eq("company_id", companyId)
+          .select("amount,category,vendor,expense_date")
+          .eq("company_id", companyId)
           .gte("expense_date", from)
           .lte("expense_date", to),
       ]);
       const invoices = (inv.data ?? []) as {
         total: number;
         status: string;
+        issue_date: string;
+        invoice_number: string | null;
         customers: { name: string } | null;
       }[];
-      const expenses = (exp.data ?? []) as { amount: number; category: string | null }[];
+      const expenses = (exp.data ?? []) as {
+        amount: number;
+        category: string | null;
+        vendor: string | null;
+      }[];
 
-      const revByCustomer = new Map<string, number>();
+      const revByGroup = new Map<string, number>();
       let out = 0;
       for (const i of invoices) {
         if (i.status === "paid") {
-          const key = i.customers?.name ?? "Unassigned";
-          revByCustomer.set(key, (revByCustomer.get(key) ?? 0) + Number(i.total));
+          const key =
+            groupRevenueBy === "invoice"
+              ? `${i.invoice_number ?? "—"} · ${i.customers?.name ?? "Unassigned"} (${i.issue_date})`
+              : (i.customers?.name ?? "Unassigned");
+          revByGroup.set(key, (revByGroup.get(key) ?? 0) + Number(i.total));
         } else if (i.status !== "draft") {
           out += Number(i.total);
         }
       }
-      const expByCategory = new Map<string, number>();
+      const expByGroup = new Map<string, number>();
       for (const e of expenses) {
-        const key = e.category || "Uncategorized";
-        expByCategory.set(key, (expByCategory.get(key) ?? 0) + Number(e.amount));
+        const key =
+          groupExpensesBy === "vendor"
+            ? e.vendor || "Unknown vendor"
+            : e.category || "Uncategorized";
+        expByGroup.set(key, (expByGroup.get(key) ?? 0) + Number(e.amount));
       }
 
       setRevenueRows(
-        [...revByCustomer.entries()]
+        [...revByGroup.entries()]
           .map(([label, amount]) => ({ label, amount }))
           .sort((a, b) => b.amount - a.amount),
       );
       setExpenseRows(
-        [...expByCategory.entries()]
+        [...expByGroup.entries()]
           .map(([label, amount]) => ({ label, amount }))
           .sort((a, b) => b.amount - a.amount),
       );
       setOutstanding(out);
       setLoading(false);
     })();
-  }, [from, to, companyId]);
+  }, [from, to, groupRevenueBy, groupExpensesBy, companyId]);
 
   const totalRevenue = revenueRows.reduce((s, r) => s + r.amount, 0);
   const totalExpenses = expenseRows.reduce((s, r) => s + r.amount, 0);
@@ -172,15 +230,68 @@ function ProfitAndLoss() {
 
   return (
     <div>
-      <div className="flex items-end justify-between gap-3 mb-4">
-        <div className="grid grid-cols-2 gap-3">
+      <div className="flex flex-wrap items-end justify-between gap-3 mb-3">
+        <div className="flex flex-wrap items-end gap-3">
+          <div>
+            <Label>Date range</Label>
+            <Select value={preset} onValueChange={(v) => handlePresetChange(v as RangePreset)}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {RANGE_PRESET_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div>
             <Label>From</Label>
-            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+            <Input
+              type="date"
+              value={from}
+              onChange={(e) => patchConfig({ from: e.target.value, preset: "custom" })}
+            />
           </div>
           <div>
             <Label>To</Label>
-            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+            <Input
+              type="date"
+              value={to}
+              onChange={(e) => patchConfig({ to: e.target.value, preset: "custom" })}
+            />
+          </div>
+          <div>
+            <Label>Group revenue by</Label>
+            <Select
+              value={groupRevenueBy}
+              onValueChange={(v) => patchConfig({ groupRevenueBy: v as PnlGroupRevenueBy })}
+            >
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="customer">Customer</SelectItem>
+                <SelectItem value="invoice">Invoice</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Group expenses by</Label>
+            <Select
+              value={groupExpensesBy}
+              onValueChange={(v) => patchConfig({ groupExpensesBy: v as PnlGroupExpensesBy })}
+            >
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="category">Category</SelectItem>
+                <SelectItem value="vendor">Vendor</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
         <Button
@@ -203,6 +314,14 @@ function ProfitAndLoss() {
         >
           <Download className="w-4 h-4 mr-2" /> Export CSV
         </Button>
+      </div>
+
+      <div className="mb-4">
+        <ReportPresetBar<PnlConfig>
+          reportKey="pnl"
+          currentConfig={config}
+          onApply={(c) => setConfig(c)}
+        />
       </div>
 
       <div className="bg-card border rounded-xl overflow-hidden">
@@ -293,11 +412,18 @@ function BalanceSheet() {
   const fmt = (n: number) => formatCurrency(n, currency);
   const companyId = useActiveCompanyId();
   const [asOf, setAsOf] = useState(() => new Date().toISOString().slice(0, 10));
+  const [asOfPreset, setAsOfPreset] = useState<AsOfPreset>("today");
   const [assets, setAssets] = useState<LedgerRow[]>([]);
   const [liabilities, setLiabilities] = useState<LedgerRow[]>([]);
   const [equity, setEquity] = useState<LedgerRow[]>([]);
   const [netIncome, setNetIncome] = useState(0);
   const [loading, setLoading] = useState(false);
+
+  function handleAsOfPresetChange(value: AsOfPreset) {
+    setAsOfPreset(value);
+    const resolved = value === "custom" ? null : resolveAsOfPreset(value);
+    if (resolved) setAsOf(resolved);
+  }
 
   useEffect(() => {
     if (!companyId) return;
@@ -401,10 +527,34 @@ function BalanceSheet() {
 
   return (
     <div>
-      <div className="flex items-end justify-between gap-3 mb-4">
-        <div>
-          <Label>As of</Label>
-          <Input type="date" value={asOf} onChange={(e) => setAsOf(e.target.value)} />
+      <div className="flex flex-wrap items-end justify-between gap-3 mb-3">
+        <div className="flex flex-wrap items-end gap-3">
+          <div>
+            <Label>As of</Label>
+            <Select value={asOfPreset} onValueChange={(v) => handleAsOfPresetChange(v as AsOfPreset)}>
+              <SelectTrigger className="w-44">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {AS_OF_PRESET_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Date</Label>
+            <Input
+              type="date"
+              value={asOf}
+              onChange={(e) => {
+                setAsOf(e.target.value);
+                setAsOfPreset("custom");
+              }}
+            />
+          </div>
         </div>
         <Button
           variant="outline"
@@ -427,6 +577,17 @@ function BalanceSheet() {
         >
           <Download className="w-4 h-4 mr-2" /> Export CSV
         </Button>
+      </div>
+
+      <div className="mb-4">
+        <ReportPresetBar<{ asOf: string; asOfPreset: AsOfPreset }>
+          reportKey="balance-sheet"
+          currentConfig={{ asOf, asOfPreset }}
+          onApply={(c) => {
+            setAsOf(c.asOf);
+            setAsOfPreset(c.asOfPreset);
+          }}
+        />
       </div>
 
       {loading ? (
@@ -531,11 +692,21 @@ function CashFlow() {
     return d.toISOString().slice(0, 10);
   });
   const [to, setTo] = useState(() => new Date().toISOString().slice(0, 10));
+  const [rangePreset, setRangePreset] = useState<RangePreset>("this-year");
   const [loading, setLoading] = useState(false);
   const [netIncome, setNetIncome] = useState(0);
   const [workingCapitalRows, setWorkingCapitalRows] = useState<LedgerRow[]>([]);
   const [beginningCash, setBeginningCash] = useState(0);
   const [endingCash, setEndingCash] = useState(0);
+
+  function handleRangePresetChange(value: RangePreset) {
+    setRangePreset(value);
+    const resolved = value === "custom" ? null : resolveRangePreset(value);
+    if (resolved) {
+      setFrom(resolved.from);
+      setTo(resolved.to);
+    }
+  }
 
   useEffect(() => {
     if (!companyId) return;
@@ -647,15 +818,44 @@ function CashFlow() {
 
   return (
     <div>
-      <div className="flex items-end justify-between gap-3 mb-4">
-        <div className="grid grid-cols-2 gap-3">
+      <div className="flex flex-wrap items-end justify-between gap-3 mb-3">
+        <div className="flex flex-wrap items-end gap-3">
+          <div>
+            <Label>Date range</Label>
+            <Select value={rangePreset} onValueChange={(v) => handleRangePresetChange(v as RangePreset)}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {RANGE_PRESET_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div>
             <Label>From</Label>
-            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+            <Input
+              type="date"
+              value={from}
+              onChange={(e) => {
+                setFrom(e.target.value);
+                setRangePreset("custom");
+              }}
+            />
           </div>
           <div>
             <Label>To</Label>
-            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+            <Input
+              type="date"
+              value={to}
+              onChange={(e) => {
+                setTo(e.target.value);
+                setRangePreset("custom");
+              }}
+            />
           </div>
         </div>
         <Button
@@ -676,6 +876,18 @@ function CashFlow() {
         >
           <Download className="w-4 h-4 mr-2" /> Export CSV
         </Button>
+      </div>
+
+      <div className="mb-4">
+        <ReportPresetBar<{ from: string; to: string; rangePreset: RangePreset }>
+          reportKey="cash-flow"
+          currentConfig={{ from, to, rangePreset }}
+          onApply={(c) => {
+            setFrom(c.from);
+            setTo(c.to);
+            setRangePreset(c.rangePreset);
+          }}
+        />
       </div>
 
       {loading ? (
@@ -761,44 +973,103 @@ function CashFlow() {
 // by days past due as of today.
 // ---------------------------------------------------------------------------
 
-type AgingRow = { name: string; current: number; d1_30: number; d31_60: number; d61_90: number; d90_plus: number; total: number };
+// AgingRow now holds a dynamic bucket array instead of fixed d1_30/d31_60/…
+// fields, so the number of days per bucket can be configured per-user
+// (default cutoffs: 30/60/90) rather than hardcoded.
+type AgingRow = { name: string; buckets: number[]; total: number };
 
-function bucketByDaysPastDue(dueDate: string, amount: number, row: AgingRow) {
+type AgingBucketConfig = { cutoffs: number[] };
+
+const DEFAULT_AGING_CUTOFFS = [30, 60, 90];
+
+function bucketLabels(cutoffs: number[]): string[] {
+  const labels = ["Current"];
+  let prev = 1;
+  for (const cutoff of cutoffs) {
+    labels.push(`${prev}–${cutoff}`);
+    prev = cutoff + 1;
+  }
+  labels.push(`${prev}+`);
+  return labels;
+}
+
+function newAgingRow(name: string, bucketCount: number): AgingRow {
+  return { name, buckets: new Array(bucketCount).fill(0), total: 0 };
+}
+
+function bucketByDaysPastDue(dueDate: string, amount: number, row: AgingRow, cutoffs: number[]) {
   const due = new Date(dueDate);
   const today = new Date();
   const days = Math.floor((today.getTime() - due.getTime()) / (1000 * 60 * 60 * 24));
-  if (days <= 0) row.current += amount;
-  else if (days <= 30) row.d1_30 += amount;
-  else if (days <= 60) row.d31_60 += amount;
-  else if (days <= 90) row.d61_90 += amount;
-  else row.d90_plus += amount;
+  let idx = cutoffs.length; // default: last bucket ("90+" style)
+  if (days <= 0) {
+    idx = 0;
+  } else {
+    for (let i = 0; i < cutoffs.length; i++) {
+      if (days <= cutoffs[i]) {
+        idx = i + 1;
+        break;
+      }
+    }
+  }
+  row.buckets[idx] += amount;
   row.total += amount;
+}
+
+function AgingBucketConfigInputs({
+  cutoffs,
+  onChange,
+}: {
+  cutoffs: number[];
+  onChange: (cutoffs: number[]) => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-end gap-3">
+      {cutoffs.map((cutoff, idx) => (
+        <div key={idx}>
+          <Label>Bucket {idx + 1} cutoff (days)</Label>
+          <Input
+            type="number"
+            min={1}
+            className="w-28"
+            value={cutoff}
+            onChange={(e) => {
+              const next = [...cutoffs];
+              next[idx] = Math.max(1, Number(e.target.value) || 1);
+              onChange(next);
+            }}
+          />
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function AgingTable({
   rows,
+  cutoffs,
   loading,
   emptyLabel,
   nameLabel,
 }: {
   rows: AgingRow[];
+  cutoffs: number[];
   loading: boolean;
   emptyLabel: string;
   nameLabel: string;
 }) {
   const currency = useDefaultCurrency();
   const fmt = (n: number) => formatCurrency(n, currency);
+  const labels = bucketLabels(cutoffs);
+  const bucketCount = labels.length;
   const totals = rows.reduce(
-    (acc, r) => ({
-      current: acc.current + r.current,
-      d1_30: acc.d1_30 + r.d1_30,
-      d31_60: acc.d31_60 + r.d31_60,
-      d61_90: acc.d61_90 + r.d61_90,
-      d90_plus: acc.d90_plus + r.d90_plus,
-      total: acc.total + r.total,
-    }),
-    { current: 0, d1_30: 0, d31_60: 0, d61_90: 0, d90_plus: 0, total: 0 },
+    (acc, r) => {
+      r.buckets.forEach((v, i) => (acc[i] += v));
+      return acc;
+    },
+    new Array(bucketCount).fill(0),
   );
+  const grandTotal = rows.reduce((s, r) => s + r.total, 0);
 
   return (
     <div className="bg-card border rounded-xl overflow-hidden overflow-x-auto">
@@ -806,25 +1077,25 @@ function AgingTable({
         <thead>
           <tr className="bg-muted/40 border-b">
             <th className="px-6 py-2 text-left font-semibold">{nameLabel}</th>
-            <th className="px-4 py-2 text-right font-semibold">Current</th>
-            <th className="px-4 py-2 text-right font-semibold">1–30</th>
-            <th className="px-4 py-2 text-right font-semibold">31–60</th>
-            <th className="px-4 py-2 text-right font-semibold">61–90</th>
-            <th className="px-4 py-2 text-right font-semibold">90+</th>
+            {labels.map((label) => (
+              <th key={label} className="px-4 py-2 text-right font-semibold">
+                {label}
+              </th>
+            ))}
             <th className="px-6 py-2 text-right font-semibold">Total</th>
           </tr>
         </thead>
         <tbody>
           {loading && (
             <tr>
-              <td colSpan={7} className="px-6 py-4 text-center text-muted-foreground">
+              <td colSpan={bucketCount + 2} className="px-6 py-4 text-center text-muted-foreground">
                 Loading…
               </td>
             </tr>
           )}
           {!loading && rows.length === 0 && (
             <tr>
-              <td colSpan={7} className="px-6 py-4 text-muted-foreground">
+              <td colSpan={bucketCount + 2} className="px-6 py-4 text-muted-foreground">
                 {emptyLabel}
               </td>
             </tr>
@@ -832,23 +1103,23 @@ function AgingTable({
           {rows.map((r) => (
             <tr key={r.name} className="border-b last:border-0">
               <td className="px-6 py-2">{r.name}</td>
-              <td className="px-4 py-2 text-right">{fmt(r.current)}</td>
-              <td className="px-4 py-2 text-right">{fmt(r.d1_30)}</td>
-              <td className="px-4 py-2 text-right">{fmt(r.d31_60)}</td>
-              <td className="px-4 py-2 text-right">{fmt(r.d61_90)}</td>
-              <td className="px-4 py-2 text-right">{fmt(r.d90_plus)}</td>
+              {r.buckets.map((v, i) => (
+                <td key={i} className="px-4 py-2 text-right">
+                  {fmt(v)}
+                </td>
+              ))}
               <td className="px-6 py-2 text-right font-medium">{fmt(r.total)}</td>
             </tr>
           ))}
           {rows.length > 0 && (
             <tr className="font-semibold border-t">
               <td className="px-6 py-2">Total</td>
-              <td className="px-4 py-2 text-right">{fmt(totals.current)}</td>
-              <td className="px-4 py-2 text-right">{fmt(totals.d1_30)}</td>
-              <td className="px-4 py-2 text-right">{fmt(totals.d31_60)}</td>
-              <td className="px-4 py-2 text-right">{fmt(totals.d61_90)}</td>
-              <td className="px-4 py-2 text-right">{fmt(totals.d90_plus)}</td>
-              <td className="px-6 py-2 text-right">{fmt(totals.total)}</td>
+              {totals.map((v, i) => (
+                <td key={i} className="px-4 py-2 text-right">
+                  {fmt(v)}
+                </td>
+              ))}
+              <td className="px-6 py-2 text-right">{fmt(grandTotal)}</td>
             </tr>
           )}
         </tbody>
@@ -861,6 +1132,7 @@ function ReceivablesAging() {
   const companyId = useActiveCompanyId();
   const [rows, setRows] = useState<AgingRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [cutoffs, setCutoffs] = useState<number[]>(DEFAULT_AGING_CUTOFFS);
 
   useEffect(() => {
     if (!companyId) return;
@@ -875,6 +1147,7 @@ function ReceivablesAging() {
         setLoading(false);
         return;
       }
+      const bucketCount = cutoffs.length + 1;
       const byCustomer = new Map<string, AgingRow>();
       for (const inv of (data ?? []) as {
         total: number;
@@ -883,24 +1156,47 @@ function ReceivablesAging() {
       }[]) {
         if (!inv.due_date) continue;
         const name = inv.customers?.name ?? "Unassigned";
-        const row =
-          byCustomer.get(name) ??
-          ({ name, current: 0, d1_30: 0, d31_60: 0, d61_90: 0, d90_plus: 0, total: 0 } as AgingRow);
-        bucketByDaysPastDue(inv.due_date, Number(inv.total), row);
+        const row = byCustomer.get(name) ?? newAgingRow(name, bucketCount);
+        bucketByDaysPastDue(inv.due_date, Number(inv.total), row, cutoffs);
         byCustomer.set(name, row);
       }
       setRows([...byCustomer.values()].sort((a, b) => b.total - a.total));
       setLoading(false);
     })();
-  }, [companyId]);
+  }, [companyId, cutoffs]);
 
   return (
     <div>
-      <p className="text-muted-foreground mb-4">
-        Unpaid invoices as of today, grouped by customer and days past due.
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+        <p className="text-muted-foreground">
+          Unpaid invoices as of today, grouped by customer and days past due.
+        </p>
+        <Button
+          variant="outline"
+          onClick={() => {
+            const labels = bucketLabels(cutoffs);
+            const header = ["Customer", ...labels, "Total"];
+            const csvRows = rows.map((r) => [r.name, ...r.buckets, r.total]);
+            exportRowsAsCsv("ar-aging", header, csvRows);
+          }}
+          disabled={loading || rows.length === 0}
+        >
+          <Download className="w-4 h-4 mr-2" /> Export CSV
+        </Button>
+      </div>
+      <div className="mb-3">
+        <AgingBucketConfigInputs cutoffs={cutoffs} onChange={setCutoffs} />
+      </div>
+      <div className="mb-4">
+        <ReportPresetBar<AgingBucketConfig>
+          reportKey="ar-aging"
+          currentConfig={{ cutoffs }}
+          onApply={(c) => setCutoffs(c.cutoffs)}
+        />
+      </div>
       <AgingTable
         rows={rows}
+        cutoffs={cutoffs}
         loading={loading}
         emptyLabel="No outstanding invoices."
         nameLabel="Customer"
@@ -913,6 +1209,7 @@ function PayablesAging() {
   const companyId = useActiveCompanyId();
   const [rows, setRows] = useState<AgingRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [cutoffs, setCutoffs] = useState<number[]>(DEFAULT_AGING_CUTOFFS);
 
   useEffect(() => {
     if (!companyId) return;
@@ -927,6 +1224,7 @@ function PayablesAging() {
         setLoading(false);
         return;
       }
+      const bucketCount = cutoffs.length + 1;
       const byVendor = new Map<string, AgingRow>();
       for (const bill of (data ?? []) as {
         total: number;
@@ -935,24 +1233,47 @@ function PayablesAging() {
       }[]) {
         if (!bill.due_date) continue;
         const name = bill.vendors?.name ?? "Unassigned";
-        const row =
-          byVendor.get(name) ??
-          ({ name, current: 0, d1_30: 0, d31_60: 0, d61_90: 0, d90_plus: 0, total: 0 } as AgingRow);
-        bucketByDaysPastDue(bill.due_date, Number(bill.total), row);
+        const row = byVendor.get(name) ?? newAgingRow(name, bucketCount);
+        bucketByDaysPastDue(bill.due_date, Number(bill.total), row, cutoffs);
         byVendor.set(name, row);
       }
       setRows([...byVendor.values()].sort((a, b) => b.total - a.total));
       setLoading(false);
     })();
-  }, [companyId]);
+  }, [companyId, cutoffs]);
 
   return (
     <div>
-      <p className="text-muted-foreground mb-4">
-        Unpaid bills as of today, grouped by vendor and days past due.
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+        <p className="text-muted-foreground">
+          Unpaid bills as of today, grouped by vendor and days past due.
+        </p>
+        <Button
+          variant="outline"
+          onClick={() => {
+            const labels = bucketLabels(cutoffs);
+            const header = ["Vendor", ...labels, "Total"];
+            const csvRows = rows.map((r) => [r.name, ...r.buckets, r.total]);
+            exportRowsAsCsv("ap-aging", header, csvRows);
+          }}
+          disabled={loading || rows.length === 0}
+        >
+          <Download className="w-4 h-4 mr-2" /> Export CSV
+        </Button>
+      </div>
+      <div className="mb-3">
+        <AgingBucketConfigInputs cutoffs={cutoffs} onChange={setCutoffs} />
+      </div>
+      <div className="mb-4">
+        <ReportPresetBar<AgingBucketConfig>
+          reportKey="ap-aging"
+          currentConfig={{ cutoffs }}
+          onApply={(c) => setCutoffs(c.cutoffs)}
+        />
+      </div>
       <AgingTable
         rows={rows}
+        cutoffs={cutoffs}
         loading={loading}
         emptyLabel="No outstanding bills."
         nameLabel="Vendor"
