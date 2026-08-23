@@ -19,6 +19,7 @@ const footerLinks = [
       { label: "About", to: "/about" },
       { label: "Blog", to: "/blog" },
       { label: "Careers", to: "/careers" },
+      { label: "Partners", to: "/partners/apply" },
       { label: "Press", to: "/press" },
       { label: "Testimonials", to: "/testimonials" },
     ],
