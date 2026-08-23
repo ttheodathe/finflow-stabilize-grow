@@ -15,7 +15,7 @@ import { formatCurrency } from "@/lib/currencies";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/accounting/ledger")({
-  head: () => ({ meta: [{ title: "General ledger — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "General ledger — Finflow Track" }] }),
   component: LedgerPage,
 });
 
