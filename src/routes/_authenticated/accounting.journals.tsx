@@ -24,13 +24,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, RotateCcw, Ban } from "lucide-react";
 import { useDefaultCurrency, useDateFormat, formatDate } from "@/hooks/use-currency";
 import { formatCurrency } from "@/lib/currencies";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
 export const Route = createFileRoute("/_authenticated/accounting/journals")({
-  head: () => ({ meta: [{ title: "Journal entries — Free Accounting" }] }),
+  head: () => ({ meta: [{ title: "Journal entries — Finflow Track" }] }),
   component: JournalsPage,
 });
 
@@ -41,6 +41,9 @@ type Entry = {
   reference: string | null;
   memo: string | null;
   source_type: string | null;
+  voided_at: string | null;
+  reverses_entry_id: string | null;
+  reversed_by_entry_id: string | null;
   journal_lines: {
     id: string;
     account_id: string;
@@ -82,7 +85,7 @@ function JournalsPage() {
       supabase
         .from("journal_entries" as any)
         .select(
-          "id,entry_date,reference,memo,source_type,journal_lines(id,account_id,debit,credit,description,accounts(code,name))",
+          "id,entry_date,reference,memo,source_type,voided_at,reverses_entry_id,reversed_by_entry_id,journal_lines(id,account_id,debit,credit,description,accounts(code,name))",
         )
         .order("entry_date", { ascending: false })
         .limit(200),
@@ -101,14 +104,66 @@ function JournalsPage() {
     load();
   }, [companyId]);
 
-  async function del(id: string) {
-    if (!confirm("Delete this journal entry?")) return;
-    const { error } = await supabase.from("journal_entries").delete().eq("id", id);
-    if (error) toast.error(error.message);
-    else {
-      toast.success("Deleted");
-      load();
+  // Fix (E-E-A-T audit): posted journal entries were previously hard-deleted,
+  // which breaks the audit trail expected of real double-entry bookkeeping
+  // software. Voiding now posts a reversing entry (debits/credits swapped)
+  // and marks the original as voided — the original stays visible with
+  // full history instead of silently disappearing.
+  async function voidEntry(entry: Entry) {
+    if (entry.voided_at) return;
+    if (
+      !confirm(
+        "Void this entry? This posts a reversing entry and keeps this one visible for audit history — it will not be deleted.",
+      )
+    )
+      return;
+    const { data: userRes } = await supabase.auth.getUser();
+    const uid = userRes.user?.id;
+    if (!uid) return;
+
+    const { data: reversal, error: e1 } = await supabase
+      .from("journal_entries" as any)
+      .insert(
+        scoped({
+          user_id: uid,
+          entry_date: new Date().toISOString().slice(0, 10),
+          reference: entry.reference ? `${entry.reference}-VOID` : null,
+          memo: `Reversal of ${entry.reference || entry.id}${entry.memo ? `: ${entry.memo}` : ""}`,
+          source_type: "reversal",
+          reverses_entry_id: entry.id,
+        }),
+      )
+      .select("id")
+      .single();
+    if (e1 || !reversal) {
+      toast.error(e1?.message ?? "Failed to create reversing entry");
+      return;
     }
+    const reversalId = (reversal as any).id;
+    const reversedLines = entry.journal_lines.map((l) => ({
+      user_id: uid,
+      entry_id: reversalId,
+      account_id: l.account_id,
+      debit: Number(l.credit),
+      credit: Number(l.debit),
+      description: l.description ? `Reversal: ${l.description}` : "Reversal",
+    }));
+    const { error: e2 } = await supabase.from("journal_lines").insert(scoped(reversedLines));
+    if (e2) {
+      await supabase.from("journal_entries").delete().eq("id", reversalId);
+      toast.error(e2.message);
+      return;
+    }
+    const { error: e3 } = await supabase
+      .from("journal_entries")
+      .update({ voided_at: new Date().toISOString(), voided_by: uid, reversed_by_entry_id: reversalId })
+      .eq("id", entry.id);
+    if (e3) {
+      toast.error(e3.message);
+      return;
+    }
+    toast.success("Entry voided — reversing entry posted");
+    load();
   }
 
   return (
@@ -117,7 +172,8 @@ function JournalsPage() {
         <div>
           <h1 className="text-3xl font-bold mb-1">Journal entries</h1>
           <p className="text-muted-foreground">
-            Post manual journal entries. Debits must equal credits.
+            Post manual journal entries. Debits must equal credits. Posted entries are voided,
+            not deleted, so your books keep a full audit trail.
           </p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
@@ -148,7 +204,7 @@ function JournalsPage() {
           {entries.map((e) => {
             const total = e.journal_lines.reduce((s, l) => s + Number(l.debit), 0);
             return (
-              <div key={e.id} className="bg-card border rounded-xl overflow-hidden">
+              <div key={e.id} className={"bg-card border rounded-xl overflow-hidden" + (e.voided_at ? " opacity-60" : "")}>
                 <div className="flex items-center justify-between px-4 py-3 border-b">
                   <div className="flex items-baseline gap-3">
                     <span className="font-semibold">{formatDate(e.entry_date, dateFormat)}</span>
@@ -158,12 +214,32 @@ function JournalsPage() {
                     {e.source_type && (
                       <span className="text-xs px-2 py-0.5 rounded bg-muted">{e.source_type}</span>
                     )}
+                    {e.voided_at && (
+                      <span className="text-xs px-2 py-0.5 rounded bg-destructive/10 text-destructive font-medium">
+                        Voided
+                      </span>
+                    )}
+                    {e.reverses_entry_id && (
+                      <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">
+                        Reversal entry
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-sm text-muted-foreground">{fmt(total)}</span>
-                    <Button size="icon" variant="ghost" onClick={() => del(e.id)}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    {!e.voided_at && !e.reverses_entry_id && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => voidEntry(e)}
+                        title="Void entry (posts a reversing entry, keeps history)"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {e.voided_at && (
+                      <Ban className="w-4 h-4 text-muted-foreground" />
+                    )}
                   </div>
                 </div>
                 {e.memo && (
