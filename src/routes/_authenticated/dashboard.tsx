@@ -91,12 +91,22 @@ function Dashboard() {
   const [customers, setCustomers] = useState<{ id: string; name: string }[]>([]);
   const [bankAccounts, setBankAccounts] = useState<BankAcct[]>([]);
   const [loading, setLoading] = useState(true);
+  // Fix (E-E-A-T audit): previously a failed fetch (network error, RLS
+  // hiccup, transient outage) silently fell back to `data ?? []`, which
+  // is indistinguishable from a genuinely empty company — a real customer
+  // could see the "let's get your books started" empty state and think
+  // their financial data had disappeared. loadError/reloadKey let us tell
+  // "failed" apart from "actually empty" and offer a retry instead.
+  const [loadError, setLoadError] = useState(false);
+  const [loadedAt, setLoadedAt] = useState<number | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     // Wait until we know which company is active, and reset stale
     // data from the previous company the moment the switch happens.
     if (!companyId) return;
     setLoading(true);
+    setLoadError(false);
     setInvoices([]);
     setExpenses([]);
     setCustomers([]);
@@ -123,17 +133,24 @@ function Dashboard() {
           .eq("is_active", true),
       ]);
       if (cancelled) return;
+      const anyFailed = Boolean(i.error || e.error || c.error || b.error);
+      if (anyFailed) {
+        setLoadError(true);
+        setLoading(false);
+        return;
+      }
       setInvoices((i.data ?? []) as Inv[]);
       setExpenses((e.data ?? []) as Exp[]);
       setCustomers((c.data ?? []) as { id: string; name: string }[]);
       setBankAccounts((b.data ?? []) as BankAcct[]);
+      setLoadedAt(Date.now());
       setLoading(false);
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [companyId]);
+  }, [companyId, reloadKey]);
 
   const stats = useMemo(() => {
     const revenue = invoices
@@ -278,6 +295,13 @@ function Dashboard() {
                 : fxTs
                   ? `live FX rates as of ${new Date(fxTs).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.`
                   : "live FX rates."}
+              {loadedAt && !loadError && (
+                <>
+                  {" "}
+                  Data as of{" "}
+                  {new Date(loadedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.
+                </>
+              )}
             </span>
           </p>
         </div>
@@ -296,11 +320,34 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* First-run empty state: a brand-new company has nothing to show yet —
-          six flat KPI cards reading "—" looks broken rather than "new".
-          Replace the KPI grid + charts with a clear next-step prompt until
-          there's at least one invoice or expense recorded. */}
-      {!loading && invoices.length === 0 && expenses.length === 0 && bankAccounts.length === 0 ? (
+      {/* Error state: a failed fetch must never be mistaken for "no data" —
+          that's the difference between "temporary problem, try again" and
+          incorrectly telling a real customer their financial records are
+          gone. Checked before the empty-state branch below. */}
+      {!loading && loadError ? (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-10 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+            <AlertTriangle className="h-6 w-6 text-destructive" />
+          </div>
+          <h2 className="text-lg font-semibold">Couldn't load your dashboard</h2>
+          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+            This is likely a temporary connection issue — your data is safe. Try again in a
+            moment.
+          </p>
+          <div className="mt-6">
+            <Button variant="outline" size="sm" onClick={() => setReloadKey((k) => k + 1)}>
+              Retry
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
+      {/* First-run empty state vs. real dashboard — both gated behind
+          !loadError. On a failed fetch we render only the error banner
+          above and stop here, instead of also rendering a KPI grid full
+          of zeros underneath it. */}
+      {!loading && !loadError ? (
+      invoices.length === 0 && expenses.length === 0 && bankAccounts.length === 0 ? (
         <div className="rounded-xl border bg-card p-10 text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
             <TrendingUp className="h-6 w-6 text-primary" />
@@ -520,7 +567,8 @@ function Dashboard() {
         </div>
       </div>
         </>
-      )}
+      )
+      ) : null}
     </div>
   );
 }
