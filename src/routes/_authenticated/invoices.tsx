@@ -30,7 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, X, Download } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Download, Mail, MailCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { CurrencySelect } from "@/components/currency-select";
 import { useDefaultCurrency } from "@/hooks/use-currency";
@@ -65,7 +65,9 @@ type Invoice = {
   tax: number;
   total: number;
   currency: string;
-  customers?: { name: string } | null;
+  customers?: { name: string; email: string | null } | null;
+  share_token: string;
+  sent_at: string | null;
 };
 type Customer = { id: string; name: string };
 type CatalogItem = {
@@ -120,6 +122,8 @@ function InvoicesPage() {
   );
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const { plan } = useSubscriptionLimits(companyId);
+  const [companyName, setCompanyName] = useState("Finflow Track");
+  const [sendingId, setSendingId] = useState<string | null>(null);
 
   async function loadWeeklyUsage() {
     if (!companyId) return;
@@ -130,10 +134,10 @@ function InvoicesPage() {
   async function load() {
     if (!companyId) return;
     const { data: u } = await supabase.auth.getUser();
-    const [inv, cust, cat, ws] = await Promise.all([
+    const [inv, cust, cat, ws, comp] = await Promise.all([
       supabase
         .from("invoices")
-        .select("*, customers(name)").eq("company_id", companyId)
+        .select("*, customers(name,email)").eq("company_id", companyId)
         .order("issue_date", { ascending: false }),
       supabase.from("customers").select("id,name").eq("company_id", companyId).order("name"),
       supabase
@@ -148,6 +152,7 @@ function InvoicesPage() {
             .eq("user_id", u.user.id)
             .maybeSingle()
         : Promise.resolve({ data: null }),
+      supabase.from("companies").select("name").eq("id", companyId).maybeSingle(),
     ]);
     if (inv.error) toast.error(inv.error.message);
     else setItems(inv.data as unknown as Invoice[]);
@@ -160,6 +165,49 @@ function InvoicesPage() {
         defaultPaymentTermsDays: ws.data.default_payment_terms_days ?? 30,
         defaultInvoiceNotes: ws.data.default_invoice_notes ?? null,
       });
+    }
+    if (comp.data?.name) setCompanyName(comp.data.name);
+  }
+
+  async function sendInvoiceEmail(inv: Invoice) {
+    const email = inv.customers?.email;
+    if (!email) {
+      toast.error("This customer has no email address on file.");
+      return;
+    }
+    setSendingId(inv.id);
+    try {
+      const invoiceUrl = `${window.location.origin}/invoice/${inv.share_token}`;
+      const res = await fetch("/api/send-invoice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerEmail: email,
+          customerName: inv.customers?.name,
+          invoiceNumber: inv.invoice_number,
+          amount: Number(inv.total).toFixed(2),
+          currency: inv.currency,
+          dueDate: inv.due_date,
+          invoiceUrl,
+          companyName,
+        }),
+      });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok || result.error) {
+        toast.error(result.error ?? "Failed to send invoice");
+        return;
+      }
+      const { error } = await supabase
+        .from("invoices")
+        .update({ sent_at: new Date().toISOString() } as any)
+        .eq("id", inv.id);
+      if (error) toast.error(error.message);
+      toast.success(`Invoice sent to ${email}`);
+      load();
+    } catch {
+      toast.error("Failed to send invoice — check your connection and try again.");
+    } finally {
+      setSendingId(null);
     }
   }
   useEffect(() => {
@@ -692,6 +740,25 @@ function InvoicesPage() {
                   </TableCell>
                   <TableCell className="text-right">{fmt(Number(i.total), i.currency)}</TableCell>
                   <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => sendInvoiceEmail(i)}
+                      disabled={sendingId === i.id}
+                      title={
+                        i.sent_at
+                          ? `Sent ${new Date(i.sent_at).toLocaleDateString()} — resend`
+                          : "Send invoice by email"
+                      }
+                    >
+                      {sendingId === i.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : i.sent_at ? (
+                        <MailCheck className="h-4 w-4 text-emerald-600" />
+                      ) : (
+                        <Mail className="h-4 w-4" />
+                      )}
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
