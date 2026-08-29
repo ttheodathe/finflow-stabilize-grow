@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { MobileHeader } from "@/components/mobile-header";
+import { NotificationBell } from "@/components/NotificationBell";
 import { hasCompletedOnboarding, getPendingPlan } from "@/lib/auth-flow";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -84,6 +85,7 @@ function AppShell() {
         <header className="sticky top-0 z-30 hidden h-12 items-center gap-2 border-b bg-card px-3 lg:flex">
           <SidebarTrigger />
           <div className="flex-1" />
+          <NotificationBell />
         </header>
 
         {/* Main Content */}
