@@ -1,8 +1,8 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Bell, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { NotificationBell } from "@/components/NotificationBell";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -74,17 +74,11 @@ export function MobileHeader() {
         </div>
 
         <span className="truncate font-bold text-sm gradient-text">
-          FinFlow Track
+          Finflow Track
         </span>
       </Link>
 
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-9 w-9 shrink-0"
-      >
-        <Bell className="h-5 w-5" />
-      </Button>
+      <NotificationBell />
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
