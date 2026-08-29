@@ -192,8 +192,14 @@ function Dashboard() {
     const thisMonth = trend[n - 1];
     const lastMonth = trend[n - 2];
     if (!thisMonth || !lastMonth) return { revenue: null, expenses: null, profit: null };
+    // Fix (screenshot-confirmed bug): guarding only prev === 0 let a
+    // near-zero prior month (a few cents of rounding, a stray test
+    // transaction) through, producing mathematically "correct" but
+    // meaningless deltas like +21,890% — which reads as broken, not
+    // impressive. Treat any baseline under 1 currency unit as "no
+    // meaningful comparison" the same way an exact zero already was.
     const pct = (cur: number, prev: number) =>
-      prev === 0 ? null : ((cur - prev) / Math.abs(prev)) * 100;
+      Math.abs(prev) < 1 ? null : ((cur - prev) / Math.abs(prev)) * 100;
     const thisProfit = thisMonth.revenue - thisMonth.expenses;
     const lastProfit = lastMonth.revenue - lastMonth.expenses;
     return {
@@ -378,8 +384,9 @@ function Dashboard() {
         {kpis.map((k) => (
           <div
             key={k.label}
-            className="rounded-xl border bg-card p-4 hover:shadow-md transition-shadow"
+            className="group relative overflow-hidden rounded-xl border bg-card p-4 transition-all hover:-translate-y-0.5 hover:shadow-lg"
           >
+            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-hero opacity-70 transition-opacity group-hover:opacity-100" />
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 {k.label}
@@ -422,25 +429,25 @@ function Dashboard() {
               <AreaChart data={trend}>
                 <defs>
                   <linearGradient id="rev" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="exp" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--destructive))" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="hsl(var(--destructive))" stopOpacity={0} />
+                    <stop offset="5%" stopColor="var(--destructive)" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="var(--destructive)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <XAxis dataKey="label" stroke="var(--muted-foreground)" fontSize={12} />
                 <YAxis
-                  stroke="hsl(var(--muted-foreground))"
+                  stroke="var(--muted-foreground)"
                   fontSize={12}
                   tickFormatter={(v) => `${currencySymbol}${v}`}
                 />
                 <Tooltip
                   contentStyle={{
-                    background: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
+                    background: "var(--card)",
+                    border: "1px solid var(--border)",
                     borderRadius: 8,
                   }}
                 />
@@ -448,14 +455,14 @@ function Dashboard() {
                 <Area
                   type="monotone"
                   dataKey="revenue"
-                  stroke="hsl(var(--primary))"
+                  stroke="var(--primary)"
                   fill="url(#rev)"
                   strokeWidth={2}
                 />
                 <Area
                   type="monotone"
                   dataKey="expenses"
-                  stroke="hsl(var(--destructive))"
+                  stroke="var(--destructive)"
                   fill="url(#exp)"
                   strokeWidth={2}
                 />
@@ -474,21 +481,21 @@ function Dashboard() {
             ) : (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={trend}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <XAxis dataKey="label" stroke="var(--muted-foreground)" fontSize={12} />
                 <YAxis
-                  stroke="hsl(var(--muted-foreground))"
+                  stroke="var(--muted-foreground)"
                   fontSize={12}
                   tickFormatter={(v) => `${currencySymbol}${v}`}
                 />
                 <Tooltip
                   contentStyle={{
-                    background: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
+                    background: "var(--card)",
+                    border: "1px solid var(--border)",
                     borderRadius: 8,
                   }}
                 />
-                <Bar dataKey="cashflow" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="cashflow" fill="var(--primary)" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
             )}
