@@ -37,6 +37,7 @@ import { useDefaultCurrency } from "@/hooks/use-currency";
 import { generateInvoicePdf } from "@/lib/invoice-pdf";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 import { lockExchangeRate } from "@/lib/fx-lock";
+import { notifyCompanyMembers } from "@/lib/notify";
 import { UpgradePlanModal } from "@/components/UpgradePlanModal";
 import { useSubscriptionLimits } from "@/lib/subscription-limits";
 import type { PlanKey } from "@/lib/paddle/config";
@@ -280,6 +281,7 @@ function InvoicesPage() {
     };
 
     let invoiceId = editing?.id;
+    const becamePaid = editing?.status !== "paid" && form.status === "paid";
     if (editing) {
       const { error } = await supabase.from("invoices").update(payload).eq("id", editing.id);
       if (error) return toast.error(error.message);
@@ -325,6 +327,21 @@ function InvoicesPage() {
     }
 
     toast.success(editing ? "Invoice updated" : "Invoice created");
+    if (becamePaid && companyId) {
+      const customerName = customers.find((c) => c.id === form.customer_id)?.name;
+      notifyCompanyMembers(
+        companyId,
+        {
+          type: "invoice_paid",
+          title: `Invoice ${form.invoice_number} paid`,
+          body: customerName
+            ? `${fmt(totals.total, form.currency)} received from ${customerName}`
+            : `${fmt(totals.total, form.currency)} received`,
+          link: "/invoices",
+        },
+        { excludeUserId: u.user.id },
+      );
+    }
     setOpen(false);
     load();
   }
