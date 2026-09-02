@@ -29,9 +29,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
+import { lockExchangeRate } from "@/lib/fx-lock";
 
 export const Route = createFileRoute("/_authenticated/sales/payments")({
   head: () => ({ meta: [{ title: "Payments received — Finflow Track" }] }),
@@ -44,6 +45,8 @@ type Payment = {
   payment_date: string;
   amount: number;
   currency: string;
+  exchange_rate: number;
+  base_currency_amount: number | null;
   method: string;
   reference: string | null;
   deposit_account_id: string | null;
@@ -72,6 +75,7 @@ function PaymentsPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [open, setOpen] = useState(false);
+  const [revaluingId, setRevaluingId] = useState<string | null>(null);
   const [form, setForm] = useState({
     invoice_id: "",
     payment_date: new Date().toISOString().slice(0, 10),
@@ -82,6 +86,7 @@ function PaymentsPage() {
     notes: "",
   });
   const [paidMap, setPaidMap] = useState<Record<string, number>>({});
+  const [saving, setSaving] = useState(false);
 
   async function load() {
     if (!companyId) return;
@@ -136,27 +141,43 @@ function PaymentsPage() {
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    if (!companyId) return toast.error("Select a company first");
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
     const inv = invoices.find((i) => i.id === form.invoice_id);
     if (!inv) return toast.error("Pick an invoice");
     if (form.amount <= 0) return toast.error("Amount must be positive");
-    const { error } = await (supabase as any).from("payments").insert(scoped({
-      user_id: u.user.id,
-      invoice_id: inv.id,
-      customer_id: inv.customer_id,
-      payment_date: form.payment_date,
-      amount: form.amount,
-      currency: inv.currency,
-      method: form.method,
-      reference: form.reference || null,
-      deposit_account_id: form.deposit_account_id || null,
-      notes: form.notes || null,
-    }));
-    if (error) return toast.error(error.message);
-    toast.success("Payment recorded — invoice status & general ledger updated");
-    setOpen(false);
-    load();
+
+    setSaving(true);
+    try {
+      // Live rate at the moment of settlement — this can (and usually
+      // will) differ from the rate the invoice originally locked, which
+      // is exactly what lets us book an FX gain/loss on payment.
+      const { rate, companyCurrency } = await lockExchangeRate(companyId, inv.currency);
+      const baseCurrencyAmount =
+        inv.currency === companyCurrency ? form.amount : form.amount * rate;
+
+      const { error } = await (supabase as any).from("payments").insert(scoped({
+        user_id: u.user.id,
+        invoice_id: inv.id,
+        customer_id: inv.customer_id,
+        payment_date: form.payment_date,
+        amount: form.amount,
+        currency: inv.currency,
+        exchange_rate: rate,
+        base_currency_amount: baseCurrencyAmount,
+        method: form.method,
+        reference: form.reference || null,
+        deposit_account_id: form.deposit_account_id || null,
+        notes: form.notes || null,
+      }));
+      if (error) return toast.error(error.message);
+      toast.success("Payment recorded — invoice status & general ledger updated");
+      setOpen(false);
+      load();
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function remove(id: string) {
@@ -165,6 +186,37 @@ function PaymentsPage() {
     await (supabase as any).from("payments").delete().eq("id", id);
     toast.success("Deleted");
     load();
+  }
+
+  // Explicit revaluation of an OPEN (not fully paid) invoice at today's
+  // live rate. This never changes the invoice's foreign-currency total —
+  // only its base-currency reporting value — and posts an auditable FX
+  // adjustment entry. Never runs automatically; the user has to ask for it.
+  async function revalue(inv: Invoice) {
+    if (!companyId) return;
+    if (inv.status === "paid") return toast.error("Invoice is already fully paid");
+    if (!confirm(
+      `Revalue ${inv.invoice_number} at today's live rate? This updates its reporting ` +
+      `value only — the ${inv.currency} amount owed by the customer does not change.`,
+    )) return;
+    setRevaluingId(inv.id);
+    try {
+      const { rate, companyCurrency } = await lockExchangeRate(companyId, inv.currency);
+      if (inv.currency === companyCurrency) {
+        toast.info("Invoice is already in the company's base currency — nothing to revalue");
+        return;
+      }
+      const { error } = await supabase.rpc("revalue_open_transaction" as any, {
+        _type: "invoice",
+        _id: inv.id,
+        _new_rate: rate,
+      });
+      if (error) return toast.error(error.message);
+      toast.success("Invoice revalued at today's rate — FX adjustment posted to the ledger");
+      load();
+    } finally {
+      setRevaluingId(null);
+    }
   }
 
   return (
@@ -285,12 +337,68 @@ function PaymentsPage() {
                   onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 />
               </div>
-              <Button type="submit" className="w-full bg-gradient-hero">
-                Record payment
+              <Button type="submit" className="w-full bg-gradient-hero" disabled={saving}>
+                {saving ? "Fetching live rate…" : "Record payment"}
               </Button>
             </form>
           </DialogContent>
         </Dialog>
+      </div>
+
+      <div className="bg-card border rounded-xl mb-6">
+        <div className="p-4 border-b">
+          <h2 className="font-semibold">Open invoices</h2>
+          <p className="text-sm text-muted-foreground">
+            Revalue an open foreign-currency invoice at today's live rate. This only updates its
+            reporting value in your books — the amount the customer owes stays exactly as billed.
+          </p>
+        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Invoice</TableHead>
+              <TableHead>Currency</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Outstanding</TableHead>
+              <TableHead className="w-40"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {invoices
+              .filter((i) => i.status !== "paid")
+              .map((i) => {
+                const outstanding = Number(i.total) - (paidMap[i.id] ?? 0);
+                return (
+                  <TableRow key={i.id}>
+                    <TableCell className="font-medium">{i.invoice_number}</TableCell>
+                    <TableCell>{i.currency}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{i.status}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right">{fmt(outstanding, i.currency)}</TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={revaluingId === i.id}
+                        onClick={() => revalue(i)}
+                      >
+                        <RefreshCw className="h-3 w-3" />
+                        {revaluingId === i.id ? "Revaluing…" : "Revalue at today's rate"}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            {invoices.filter((i) => i.status !== "paid").length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                  No open invoices.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
 
       <div className="bg-card border rounded-xl">
