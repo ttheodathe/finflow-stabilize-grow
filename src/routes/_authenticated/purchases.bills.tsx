@@ -29,7 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, DollarSign, ScanLine } from "lucide-react";
+import { Plus, Trash2, DollarSign, ScanLine, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 import { lockExchangeRate } from "@/lib/fx-lock";
@@ -124,6 +124,8 @@ function BillsPage() {
   const [paidMap, setPaidMap] = useState<Record<string, number>>({});
   const [open, setOpen] = useState(false);
   const [payOpen, setPayOpen] = useState<Bill | null>(null);
+  const [payingLive, setPayingLive] = useState(false);
+  const [revaluingId, setRevaluingId] = useState<string | null>(null);
   const [form, setForm] = useState({
     vendor_id: "",
     bill_number: "",
@@ -350,23 +352,69 @@ function BillsPage() {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
     if (pay.amount <= 0) return toast.error("Amount must be positive");
-    const { error } = await (supabase as any).from("bill_payments").insert({
-      company_id: companyId,
-      user_id: u.user.id,
-      bill_id: payOpen.id,
-      vendor_id: payOpen.vendor_id,
-      payment_date: pay.payment_date,
-      amount: pay.amount,
-      currency: payOpen.currency,
-      method: pay.method,
-      reference: pay.reference || null,
-      source_account_id: pay.source_account_id || null,
-      notes: pay.notes || null,
-    });
-    if (error) return toast.error(error.message);
-    toast.success("Payment recorded — banking & ledger updated");
-    setPayOpen(null);
-    load();
+
+    setPayingLive(true);
+    try {
+      // Live rate at the moment of settlement — this can differ from the
+      // rate the bill originally locked, which is exactly what lets us
+      // book an FX gain/loss on payment rather than losing it silently.
+      const { rate, companyCurrency } = await lockExchangeRate(companyId, payOpen.currency);
+      const baseCurrencyAmount =
+        payOpen.currency === companyCurrency ? pay.amount : pay.amount * rate;
+
+      const { error } = await (supabase as any).from("bill_payments").insert({
+        company_id: companyId,
+        user_id: u.user.id,
+        bill_id: payOpen.id,
+        vendor_id: payOpen.vendor_id,
+        payment_date: pay.payment_date,
+        amount: pay.amount,
+        currency: payOpen.currency,
+        exchange_rate: rate,
+        base_currency_amount: baseCurrencyAmount,
+        method: pay.method,
+        reference: pay.reference || null,
+        source_account_id: pay.source_account_id || null,
+        notes: pay.notes || null,
+      });
+      if (error) return toast.error(error.message);
+      toast.success("Payment recorded — banking & ledger updated");
+      setPayOpen(null);
+      load();
+    } finally {
+      setPayingLive(false);
+    }
+  }
+
+  // Explicit revaluation of an OPEN (not fully paid) bill at today's live
+  // rate. Never changes the bill's foreign-currency total — only its
+  // base-currency reporting value — and posts an auditable FX adjustment
+  // entry. Never runs automatically; the user has to ask for it.
+  async function revalue(b: Bill) {
+    if (!companyId) return;
+    if (b.status === "paid") return toast.error("Bill is already fully paid");
+    if (!confirm(
+      `Revalue ${b.bill_number} at today's live rate? This updates its reporting value ` +
+      `only — the ${b.currency} amount owed to the vendor does not change.`,
+    )) return;
+    setRevaluingId(b.id);
+    try {
+      const { rate, companyCurrency } = await lockExchangeRate(companyId, b.currency);
+      if (b.currency === companyCurrency) {
+        toast.info("Bill is already in the company's base currency — nothing to revalue");
+        return;
+      }
+      const { error } = await supabase.rpc("revalue_open_transaction" as any, {
+        _type: "bill",
+        _id: b.id,
+        _new_rate: rate,
+      });
+      if (error) return toast.error(error.message);
+      toast.success("Bill revalued at today's rate — FX adjustment posted to the ledger");
+      load();
+    } finally {
+      setRevaluingId(null);
+    }
   }
 
   return (
@@ -622,6 +670,62 @@ function BillsPage() {
         </div>
       </div>
 
+      <div className="bg-card border rounded-xl mb-6">
+        <div className="p-4 border-b">
+          <h2 className="font-semibold">Open bills</h2>
+          <p className="text-sm text-muted-foreground">
+            Revalue an open foreign-currency bill at today's live rate. This only updates its
+            reporting value in your books — the amount owed to the vendor stays exactly as billed.
+          </p>
+        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Bill #</TableHead>
+              <TableHead>Currency</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Outstanding</TableHead>
+              <TableHead className="w-48"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {bills
+              .filter((b) => b.status !== "paid")
+              .map((b) => {
+                const outstanding = Number(b.total) - (paidMap[b.id] ?? 0);
+                return (
+                  <TableRow key={b.id}>
+                    <TableCell className="font-medium">{b.bill_number}</TableCell>
+                    <TableCell>{b.currency}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{b.status}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right">{fmt(outstanding, b.currency)}</TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={revaluingId === b.id}
+                        onClick={() => revalue(b)}
+                      >
+                        <RefreshCw className="h-3 w-3" />
+                        {revaluingId === b.id ? "Revaluing…" : "Revalue at today's rate"}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            {bills.filter((b) => b.status !== "paid").length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                  No open bills.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
       <div className="bg-card border rounded-xl">
         {bills.length === 0 ? (
           <div className="p-12 text-center text-muted-foreground">No bills yet.</div>
@@ -759,8 +863,8 @@ function BillsPage() {
                 onChange={(e) => setPay({ ...pay, notes: e.target.value })}
               />
             </div>
-            <Button type="submit" className="w-full bg-gradient-hero">
-              Record payment
+            <Button type="submit" className="w-full bg-gradient-hero" disabled={payingLive}>
+              {payingLive ? "Fetching live rate…" : "Record payment"}
             </Button>
           </form>
         </DialogContent>
