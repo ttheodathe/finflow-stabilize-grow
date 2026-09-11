@@ -372,6 +372,11 @@ function InvoicesPage() {
         const { error } = await supabase.from("invoice_items").insert(scoped(rows));
         if (error) return toast.error(error.message);
       }
+      // Ledger posting is deferred on INSERT (line items don't exist yet
+      // at that point) — this touch-update fires the UPDATE trigger path
+      // so the invoice actually posts to the general ledger now that its
+      // items are saved. Same pattern bills already use.
+      await supabase.from("invoices").update({ status: payload.status }).eq("id", invoiceId);
     }
 
     toast.success(editing ? "Invoice updated" : "Invoice created");
