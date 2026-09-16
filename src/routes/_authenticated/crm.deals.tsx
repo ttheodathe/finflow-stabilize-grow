@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { scoped } from "@/lib/company-scope";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase as _sb } from "@/integrations/supabase/client";
 // Schema drift: generated Database types lag behind applied migrations.
 const supabase = _sb as any; // untyped-db
@@ -23,9 +23,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
-import { Plus, Trash2, ArrowRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Trash2, ArrowRight, ReceiptText, CircleAlert } from "lucide-react";
 import { toast } from "sonner";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
+import { lockExchangeRate } from "@/lib/fx-lock";
 
 export const Route = createFileRoute("/_authenticated/crm/deals")({
   head: () => ({ meta: [{ title: "Pipeline — Finflow Track" }] }),
@@ -41,9 +43,18 @@ type Deal = {
   customer_id: string | null;
   expected_close_date: string | null;
   notes: string | null;
+  invoice_id: string | null;
 };
 
 type Customer = { id: string; name: string };
+type InvoiceRow = {
+  id: string;
+  invoice_number: string;
+  customer_id: string | null;
+  status: string;
+  total: number;
+  base_currency_amount: number | null;
+};
 
 const STAGES: { key: string; label: string }[] = [
   { key: "new", label: "New" },
@@ -72,7 +83,12 @@ function DealsPage() {
   const companyId = useActiveCompanyId();
   const [deals, setDeals] = useState<Deal[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
+  const [paidMap, setPaidMap] = useState<Record<string, number>>({});
+  const [companyCurrency, setCompanyCurrency] = useState("USD");
+  const [invNumbering, setInvNumbering] = useState({ prefix: "INV-", next: 1 });
   const [open, setOpen] = useState(false);
+  const [convertingId, setConvertingId] = useState<string | null>(null);
   const [form, setForm] = useState({
     title: "",
     value: "",
@@ -84,33 +100,81 @@ function DealsPage() {
 
   async function load() {
     if (!companyId) return;
-    const [dealsRes, customersRes] = await Promise.all([
+    const { data: u } = await supabase.auth.getUser();
+    const [dealsRes, customersRes, invRes, paymentsRes, compRes, wsRes] = await Promise.all([
+      supabase.from("deals").select("*").eq("company_id", companyId).order("created_at", { ascending: false }),
+      supabase.from("customers").select("id, name").eq("company_id", companyId).order("name"),
       supabase
-        .from("deals")
-        .select("*")
-        .eq("company_id", companyId)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("customers")
-        .select("id, name")
-        .eq("company_id", companyId)
-        .order("name"),
+        .from("invoices")
+        .select("id,invoice_number,customer_id,status,total,base_currency_amount")
+        .eq("company_id", companyId),
+      supabase.from("payments").select("invoice_id, amount").eq("company_id", companyId),
+      supabase.from("companies").select("currency").eq("id", companyId).maybeSingle(),
+      u.user
+        ? supabase
+            .from("workspace_settings")
+            .select("invoice_prefix,invoice_next_number")
+            .eq("user_id", u.user.id)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
     ]);
     if (dealsRes.error) return toast.error(dealsRes.error.message);
     if (customersRes.error) return toast.error(customersRes.error.message);
     setDeals(dealsRes.data as Deal[]);
     setCustomers(customersRes.data as Customer[]);
-  }
+    if (invRes.data) setInvoices(invRes.data as InvoiceRow[]);
+    if (compRes.data?.currency) setCompanyCurrency(compRes.data.currency);
+    if (wsRes.data) {
+      setInvNumbering({
+        prefix: wsRes.data.invoice_prefix ?? "INV-",
+        next: wsRes.data.invoice_next_number ?? 1,
+      });
+    }
 
+    // Outstanding balance per invoice, in company base currency — this
+    // is the "sales sees financial reality instantly" gap most CRM+
+    // accounting combos never close, because there's no second system
+    // and no sync delay: it's the same query hitting the same ledger.
+    const paidByInvoice: Record<string, number> = {};
+    (paymentsRes.data ?? []).forEach((p: any) => {
+      paidByInvoice[p.invoice_id] = (paidByInvoice[p.invoice_id] ?? 0) + Number(p.amount);
+    });
+    setPaidMap(paidByInvoice);
+  }
   useEffect(() => {
     load();
   }, [companyId]);
+
+  // customer_id -> outstanding balance owed, in company base currency
+  const customerBalances = useMemo(() => {
+    const paidTotalsByInvoice: Record<string, number> = paidMap;
+    const map: Record<string, number> = {};
+    for (const inv of invoices) {
+      if (!inv.customer_id || inv.status === "draft") continue;
+      const invTotalBase = Number(inv.base_currency_amount ?? inv.total);
+      // approximate paid-in-base by the same proportion of total paid in
+      // invoice currency — matches how the ledger books the settlement
+      const paidForeign = paidTotalsByInvoice[inv.id] ?? 0;
+      const paidBase = inv.total ? (paidForeign / Number(inv.total)) * invTotalBase : 0;
+      const outstanding = invTotalBase - paidBase;
+      if (outstanding > 0.01) {
+        map[inv.customer_id] = (map[inv.customer_id] ?? 0) + outstanding;
+      }
+    }
+    return map;
+  }, [invoices, paidMap]);
+
+  const invoiceById = useMemo(() => {
+    const map: Record<string, InvoiceRow> = {};
+    for (const inv of invoices) map[inv.id] = inv;
+    return map;
+  }, [invoices]);
 
   function openNew() {
     setForm({
       title: "",
       value: "",
-      currency: "USD",
+      currency: companyCurrency,
       customer_id: "",
       expected_close_date: "",
       notes: "",
@@ -150,6 +214,88 @@ function DealsPage() {
     if (error) return toast.error(error.message);
     toast.success("Deleted");
     load();
+  }
+
+  // Quote-to-cash in one step: a won deal becomes an invoice by
+  // creating it directly in the SAME accounting tables the rest of the
+  // app uses — not a "synced" copy in a separate CRM invoice module the
+  // way Zoho CRM's own Quotes/Invoices sit apart from Zoho Books. One
+  // record, one source of truth, posts to the ledger immediately.
+  async function convertToInvoice(deal: Deal) {
+    if (!companyId) return;
+    if (!deal.customer_id) return toast.error("Link a customer to this deal before converting");
+    if (deal.value <= 0) return toast.error("Deal value must be positive");
+    if (!confirm(`Create an invoice for ${formatCurrency(deal.value, deal.currency)} from "${deal.title}"?`))
+      return;
+
+    setConvertingId(deal.id);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return;
+      const { rate, companyCurrency: cc } = await lockExchangeRate(companyId, deal.currency);
+      const baseAmt = deal.currency === cc ? deal.value : deal.value * rate;
+      const invoiceNumber = `${invNumbering.prefix}${invNumbering.next}`;
+
+      const { data: inv, error: invErr } = await supabase
+        .from("invoices")
+        .insert(
+          scoped({
+            user_id: u.user.id,
+            invoice_number: invoiceNumber,
+            customer_id: deal.customer_id,
+            issue_date: new Date().toISOString().slice(0, 10),
+            status: "sent",
+            currency: deal.currency,
+            subtotal: deal.value,
+            tax: 0,
+            total: deal.value,
+            notes: `Converted from deal: ${deal.title}`,
+            exchange_rate: rate,
+            base_currency_amount: baseAmt,
+          }),
+        )
+        .select("id")
+        .single();
+      if (invErr || !inv) {
+        if (invErr?.message?.includes("invoice_weekly_limit_reached")) {
+          return toast.error("Free plan allows up to 20 invoices per 7 days. Upgrade for unlimited.");
+        }
+        return toast.error(invErr?.message ?? "Could not create invoice");
+      }
+
+      const { error: itemErr } = await supabase.from("invoice_items").insert(
+        scoped({
+          invoice_id: inv.id,
+          user_id: u.user.id,
+          description: deal.title,
+          quantity: 1,
+          unit_price: deal.value,
+          tax_rate: 0,
+          amount: deal.value,
+        }),
+      );
+      if (itemErr) return toast.error(itemErr.message);
+
+      // Fires the ledger-posting trigger now that the line item exists —
+      // same deferred-then-repost pattern the Invoices page uses.
+      await supabase.from("invoices").update({ status: "sent" }).eq("id", inv.id);
+
+      await supabase
+        .from("workspace_settings")
+        .update({ invoice_next_number: invNumbering.next + 1 })
+        .eq("user_id", u.user.id);
+
+      const { error: dealErr } = await supabase
+        .from("deals")
+        .update({ invoice_id: inv.id, converted_at: new Date().toISOString() })
+        .eq("id", deal.id);
+      if (dealErr) return toast.error(dealErr.message);
+
+      toast.success(`Invoice ${invoiceNumber} created and posted to the ledger`);
+      load();
+    } finally {
+      setConvertingId(null);
+    }
   }
 
   const totalOpenValue = deals
@@ -218,10 +364,17 @@ function DealsPage() {
                     {customers.map((c) => (
                       <SelectItem key={c.id} value={c.id}>
                         {c.name}
+                        {customerBalances[c.id] > 0
+                          ? ` — owes ${formatCurrency(customerBalances[c.id], companyCurrency)}`
+                          : ""}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Linking a customer shows their live account balance right on the deal card —
+                  no separate CRM sync required.
+                </p>
               </div>
               <div>
                 <Label>Expected close date</Label>
@@ -265,6 +418,8 @@ function DealsPage() {
               <div className="space-y-2">
                 {stageDeals.map((deal) => {
                   const customer = customers.find((c) => c.id === deal.customer_id);
+                  const balance = deal.customer_id ? customerBalances[deal.customer_id] : undefined;
+                  const linkedInvoice = deal.invoice_id ? invoiceById[deal.invoice_id] : undefined;
                   const next = nextStage(deal.stage);
                   return (
                     <Card key={deal.id} className="p-3">
@@ -273,6 +428,25 @@ function DealsPage() {
                         <p className="text-xs text-muted-foreground">{customer.name}</p>
                       )}
                       <p className="text-sm mt-1">{formatCurrency(deal.value, deal.currency)}</p>
+
+                      {/* Live account balance — pulled from the same
+                          invoices/payments tables the rest of the app
+                          uses, so it's never stale the way a "syncs
+                          every 2 hours" CRM+accounting integration is. */}
+                      {balance !== undefined && balance > 0.01 && (
+                        <Badge variant="destructive" className="mt-1.5 gap-1 font-normal text-[10px]">
+                          <CircleAlert className="h-2.5 w-2.5" />
+                          Owes {formatCurrency(balance, companyCurrency)}
+                        </Badge>
+                      )}
+
+                      {linkedInvoice && (
+                        <Badge variant="secondary" className="mt-1.5 gap-1 font-normal text-[10px]">
+                          <ReceiptText className="h-2.5 w-2.5" />
+                          {linkedInvoice.invoice_number} · {linkedInvoice.status}
+                        </Badge>
+                      )}
+
                       <div className="flex items-center justify-between mt-2">
                         {deal.stage !== "won" && deal.stage !== "lost" ? (
                           <div className="flex gap-1">
@@ -296,6 +470,20 @@ function DealsPage() {
                               Mark lost
                             </Button>
                           </div>
+                        ) : deal.stage === "won" && !deal.invoice_id ? (
+                          <Button
+                            size="sm"
+                            className="h-7 px-2 text-xs bg-gradient-hero"
+                            disabled={convertingId === deal.id}
+                            onClick={() => convertToInvoice(deal)}
+                          >
+                            <ReceiptText className="h-3 w-3 mr-1" />
+                            {convertingId === deal.id ? "Creating…" : "Convert to invoice"}
+                          </Button>
+                        ) : linkedInvoice ? (
+                          <Link to="/invoices" className="text-xs text-primary hover:underline">
+                            View invoice →
+                          </Link>
                         ) : (
                           <span className="text-xs text-muted-foreground capitalize">
                             {deal.stage}
