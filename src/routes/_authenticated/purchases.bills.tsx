@@ -144,6 +144,7 @@ function BillsPage() {
     source_account_id: "",
     notes: "",
   });
+  const [forwardingEmail, setForwardingEmail] = useState<string | null>(null);
 
   const fileRef = useRef<HTMLInputElement>(null);
   const runScan = useServerFn(extractDocument);
@@ -211,7 +212,7 @@ function BillsPage() {
 
   async function load() {
     if (!companyId) return;
-    const [b, v, a, sums] = await Promise.all([
+    const [b, v, a, sums, comp] = await Promise.all([
       (supabase as any)
         .from("bills")
         .select("*, vendors(name)").eq("company_id", companyId)
@@ -223,10 +224,17 @@ function BillsPage() {
         .eq("is_active", true)
         .order("code"),
       (supabase as any).from("bill_payments").select("bill_id,amount").eq("company_id", companyId),
+      (supabase as any).from("companies").select("inbound_email_token").eq("id", companyId).maybeSingle(),
     ]);
     if (b.data) setBills(b.data as Bill[]);
     if (v.data) setVendors(v.data as Vendor[]);
     if (a.data) setAccounts(a.data as Account[]);
+    if (comp.data?.inbound_email_token) {
+      // Domain must match whatever inbound domain is verified in Resend
+      // (see src/routes/api/public/resend/inbound-webhook.ts) — this is
+      // the placeholder documented there until that's confirmed live.
+      setForwardingEmail(`bills+${comp.data.inbound_email_token}@inbound.finflowtrack.com`);
+    }
     const map: Record<string, number> = {};
     (sums.data ?? []).forEach((r: any) => {
       map[r.bill_id] = (map[r.bill_id] ?? 0) + Number(r.amount);
@@ -427,6 +435,22 @@ function BillsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {forwardingEmail && (
+            <button
+              type="button"
+              className="hidden sm:flex flex-col items-start text-left px-3 py-1.5 rounded-lg border bg-muted/40 hover:bg-muted transition-colors"
+              title="Click to copy"
+              onClick={() => {
+                navigator.clipboard.writeText(forwardingEmail);
+                toast.success("Copied — forward any bill email here");
+              }}
+            >
+              <span className="text-[10px] text-muted-foreground leading-none">
+                Or forward bills to
+              </span>
+              <span className="text-xs font-medium leading-tight">{forwardingEmail}</span>
+            </button>
+          )}
           <input ref={fileRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={onScan} />
           <GatedActionButton
             feature="documentAi"
