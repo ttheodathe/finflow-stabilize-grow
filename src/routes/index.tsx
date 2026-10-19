@@ -16,149 +16,128 @@ import {
   Building2,
   Menu,
   X,
-  Zap,
-  PieChart,
-  CreditCard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import heroImage from "@/assets/hero-dashboard.jpg";
+import { PLANS, type PlanKey } from "@/lib/paddle/config";
+
+const SITE_URL = "https://www.finflowtrack.com/";
+const PAGE_TITLE = "FinFlow Track — Accounting & Cash Flow Software for Small Businesses";
+const PAGE_DESC =
+  "Know your numbers, control your cash flow and grow your business. Invoicing, expenses, multi-currency bookkeeping and financial reports for freelancers, SMEs and NGOs. Start on the Free plan.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "FinFlow Track — 100% Free Accounting Software for Small Businesses" },
+      { title: PAGE_TITLE },
+      { name: "description", content: PAGE_DESC },
+      { property: "og:title", content: PAGE_TITLE },
+      { property: "og:description", content: PAGE_DESC },
+      { property: "og:url", content: SITE_URL },
+      { name: "twitter:title", content: PAGE_TITLE },
+      { name: "twitter:description", content: PAGE_DESC },
+    ],
+    links: [{ rel: "canonical", href: SITE_URL }],
+    scripts: [
       {
-        name: "description",
-        content:
-          "Modern, free accounting software for freelancers, small businesses, startups, NGOs, and African SMEs. Invoicing, expenses, multi-currency, AI bookkeeping. Free forever.",
-      },
-      {
-        property: "og:title",
-        content: "FinFlow Track — 100% Free Accounting Software for Small Businesses",
-      },
-      {
-        property: "og:description",
-        content:
-          "Modern, free accounting software for freelancers, small businesses, startups, NGOs, and African SMEs. Invoicing, expenses, multi-currency, AI bookkeeping. Free forever.",
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          name: "FinFlow Track",
+          url: SITE_URL,
+          applicationCategory: "FinanceApplication",
+          operatingSystem: "Web",
+          description: PAGE_DESC,
+          offers: {
+            "@type": "Offer",
+            price: "0",
+            priceCurrency: "USD",
+            description: "Free plan available; paid plans from $19/month",
+          },
+        }),
       },
     ],
   }),
   component: LandingPage,
 });
 
+/* ---------- Content (all claims verified against the codebase) ---------- */
+
 const features = [
   {
     icon: FileText,
-    title: "Smart Invoicing",
-    desc: "Create, send, and track beautiful invoices in seconds. PDF export, recurring billing, and online payments built in.",
+    title: "Invoicing",
+    desc: "Create invoices, export them as PDF, email them to customers and share a secure online invoice link. Recurring invoices on paid plans.",
   },
   {
     icon: Receipt,
-    title: "Expense Tracking",
-    desc: "Snap a receipt, our AI extracts the vendor, date, and amount automatically. Categorize and reconcile effortlessly.",
-  },
-  {
-    icon: Building2,
-    title: "Multi-Company",
-    desc: "Run unlimited companies from one account. Perfect for agencies, accountants, and entrepreneurs juggling brands.",
-  },
-  {
-    icon: Globe2,
-    title: "Multi-Currency",
-    desc: "Trade globally with live exchange rates. Native support for USD, EUR, GBP, RWF, KES, UGX, NGN and more.",
+    title: "Expenses & bills",
+    desc: "Track expenses and supplier bills by vendor and category, and reconcile against bank statement imports.",
   },
   {
     icon: BarChart3,
-    title: "Real-Time Reports",
-    desc: "P&L, balance sheet, cash flow, tax reports — generated instantly. Export to PDF, Excel, or CSV.",
+    title: "Financial reports",
+    desc: "Profit & loss, balance sheet, cash flow, and receivables/payables aging, with CSV export and saved report filters.",
   },
   {
-    icon: Sparkles,
-    title: "AI Bookkeeper",
-    desc: "Ask: \u201cHow much profit did I make?\u201d or \u201cForecast next month.\u201d Get instant answers from your data.",
+    icon: Globe2,
+    title: "Multi-currency",
+    desc: "Invoice in the currency your customer uses. Exchange rates are locked when a transaction is recorded.",
+  },
+  {
+    icon: Building2,
+    title: "Multiple companies",
+    desc: "Switch between companies from one login, each with its own separate books. Company limits depend on your plan.",
+  },
+  {
+    icon: Users,
+    title: "Teams & roles",
+    desc: "Invite your accountant or staff and control what each person can see and do.",
   },
 ];
 
-const audience = [
-  "Freelancers",
-  "Small Businesses",
-  "Startups",
-  "NGOs",
-  "Agencies",
-  "Consultants",
-  "Online Sellers",
-  "African SMEs",
-];
-
-const pricing = [
+const steps = [
   {
-    name: "Free",
-    price: "$0",
-    period: "forever",
-    tagline: "Everything you need to run your business",
-    features: [
-      "Unlimited invoices & customers",
-      "Expense tracking",
-      "Multi-currency",
-      "1 company",
-      "Basic reports",
-      "Ad-supported",
-    ],
-    cta: "Start Free",
-    highlighted: false,
+    title: "Create your account",
+    desc: "Sign up with your email. No credit card is needed for the Free plan.",
   },
   {
-    name: "Business",
-    price: "$19",
-    period: "per month",
-    tagline: "For growing teams that need more power",
-    features: [
-      "Everything in Free",
-      "Unlimited companies",
-      "AI Bookkeeper & Receipt scanner",
-      "Advanced reports & forecasting",
-      "Up to 5 team members",
-      "No ads, priority support",
-    ],
-    cta: "Start 14-Day Trial",
-    highlighted: true,
+    title: "Set up your company",
+    desc: "Add your business name and choose your base currency during onboarding.",
   },
   {
-    name: "Enterprise",
-    price: "$49",
-    period: "per month",
-    tagline: "For agencies and larger organizations",
-    features: [
-      "Everything in Business",
-      "Unlimited team members",
-      "API access & integrations",
-      "Custom roles & audit logs",
-      "Dedicated account manager",
-      "SLA & onboarding",
-    ],
-    cta: "Contact Sales",
-    highlighted: false,
+    title: "Record and review",
+    desc: "Create invoices, log expenses, and open reports to see where you stand.",
   },
 ];
 
-const stats = [
-  { value: "100K+", label: "Businesses served" },
-  { value: "190+", label: "Countries" },
-  { value: "30+", label: "Currencies" },
-  { value: "4.9/5", label: "Average rating" },
-];
+const pricingOrder: PlanKey[] = ["free", "pro", "business", "enterprise"];
+
+function planPrice(key: PlanKey) {
+  const p = PLANS[key];
+  if (p.priceMonthly === null) return "Custom";
+  return `$${p.priceMonthly}`;
+}
+
+/* ---------- Page ---------- */
 
 function LandingPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:bg-card focus:px-4 focus:py-2 focus:shadow-elevated"
+      >
+        Skip to content
+      </a>
       <Header />
-      <main>
+      <main id="main">
         <Hero />
-        <LogoCloud />
+        <HowItWorks />
         <Features />
         <AiSection />
-        <Audience />
+        <Trust />
         <Pricing />
         <CTA />
       </main>
@@ -177,6 +156,10 @@ function Header() {
     );
     return () => sub.subscription.unsubscribe();
   }, []);
+
+  const navLink =
+    "text-sm font-medium text-muted-foreground transition-colors hover:text-foreground";
+
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
@@ -186,30 +169,18 @@ function Header() {
           </div>
           <span className="text-lg font-bold tracking-tight">FinFlow Track</span>
         </Link>
-        <nav className="hidden items-center gap-8 md:flex">
-          <a
-            href="features"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
+        <nav aria-label="Main" className="hidden items-center gap-8 md:flex">
+          <Link to="/features" className={navLink}>
             Features
-          </a>
-          <a
-            href="#ai"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
+          </Link>
+          <a href="#ai" className={navLink}>
             AI
           </a>
-          <a
-            href="pricing"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
+          <Link to="/pricing" className={navLink}>
             Pricing
-          </a>
-          <a
-            href="#audience"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Who it's for
+          </Link>
+          <a href="#how-it-works" className={navLink}>
+            How it works
           </a>
         </nav>
         <div className="hidden items-center gap-3 md:flex">
@@ -232,24 +203,30 @@ function Header() {
             </>
           )}
         </div>
-        <button className="md:hidden" onClick={() => setOpen(!open)} aria-label="Toggle menu">
+        <button
+          className="md:hidden"
+          onClick={() => setOpen(!open)}
+          aria-label="Toggle menu"
+          aria-expanded={open}
+          aria-controls="mobile-nav"
+        >
           {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
       </div>
       {open && (
-        <div className="border-t border-border bg-background px-6 py-4 md:hidden">
-          <nav className="flex flex-col gap-3">
-            <a href="#features" onClick={() => setOpen(false)} className="text-sm font-medium">
+        <div id="mobile-nav" className="border-t border-border bg-background px-6 py-4 md:hidden">
+          <nav aria-label="Mobile" className="flex flex-col gap-3">
+            <Link to="/features" onClick={() => setOpen(false)} className="text-sm font-medium">
               Features
-            </a>
+            </Link>
             <a href="#ai" onClick={() => setOpen(false)} className="text-sm font-medium">
               AI
             </a>
-            <a href="#pricing" onClick={() => setOpen(false)} className="text-sm font-medium">
+            <Link to="/pricing" onClick={() => setOpen(false)} className="text-sm font-medium">
               Pricing
-            </a>
-            <a href="#audience" onClick={() => setOpen(false)} className="text-sm font-medium">
-              Who it's for
+            </Link>
+            <a href="#how-it-works" onClick={() => setOpen(false)} className="text-sm font-medium">
+              How it works
             </a>
             <div className="mt-2 flex flex-col gap-2">
               {signedIn ? (
@@ -281,98 +258,121 @@ function Header() {
 function Hero() {
   return (
     <section className="relative overflow-hidden bg-gradient-subtle">
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute -top-40 left-1/2 h-[600px] w-[1100px] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute bottom-0 right-0 h-[400px] w-[600px] rounded-full bg-secondary/10 blur-3xl" />
-      </div>
-      <div className="mx-auto max-w-7xl px-6 pb-20 pt-16 md:pb-28 md:pt-24">
+      <div className="mx-auto max-w-7xl px-6 pb-16 pt-16 md:pb-24 md:pt-24">
         <div className="mx-auto max-w-3xl text-center">
           <Badge
             variant="secondary"
-            className="mb-6 gap-1.5 border-border/60 bg-card/80 px-3 py-1.5 text-xs font-medium backdrop-blur"
+            className="mb-6 gap-1.5 border-border/60 bg-card/80 px-3 py-1.5 text-xs font-medium"
           >
             <Sparkles className="h-3.5 w-3.5 text-accent" />
-            AI-powered bookkeeping is here
+            Accounting for freelancers, SMEs and NGOs
           </Badge>
-          <h1 className="text-4xl font-bold leading-[1.05] tracking-tight md:text-6xl lg:text-7xl">
-            100% free accounting <br className="hidden md:inline" />
-            for <span className="gradient-text">small businesses</span>
+          <h1 className="text-4xl font-bold leading-[1.1] tracking-tight md:text-6xl">
+            Know your numbers. <span className="gradient-text">Control your cash flow.</span> Grow
+            your business.
           </h1>
           <p className="mt-6 text-lg leading-relaxed text-muted-foreground md:text-xl">
-            Invoicing, expenses, multi-currency, and AI bookkeeping — built for freelancers,
-            startups, NGOs, and SMEs worldwide. No credit card, no limits, free forever.
+            Invoicing, expenses and financial reports in one place, so you always know who owes you,
+            what you owe and where your business stands.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button asChild size="lg" className="bg-gradient-hero shadow-glow hover:opacity-95">
               <Link to="/auth" search={{ mode: "signup" }}>
-                Start free — no card required <ArrowRight className="ml-1 h-4 w-4" />
+                Start free <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <Link to="/auth" search={{ mode: "login" }}>
-                Sign in
-              </Link>
+              <a href="#how-it-works">See how it works</a>
             </Button>
           </div>
           <p className="mt-4 text-xs text-muted-foreground">
-            Join 100,000+ businesses · Ease of Use · Bank-grade security
+            Free plan available · No credit card needed to sign up ·{" "}
+            <Link to="/auth" search={{ mode: "login" }} className="underline underline-offset-2">
+              Already have an account? Sign in
+            </Link>
           </p>
         </div>
 
-        <div className="relative mx-auto mt-16 max-w-6xl">
-          <div className="absolute -inset-4 rounded-3xl bg-gradient-hero opacity-20 blur-2xl" />
-          <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card shadow-elevated">
-            <img
-              src={heroImage}
-              alt="FINFLOW TRACK dashboard showing revenue charts, expenses, and KPIs"
-              width={1536}
-              height={1024}
-              className="w-full"
-            />
-          </div>
-          <div className="absolute -left-4 top-1/3 hidden rounded-xl border border-border/60 bg-card/90 p-4 shadow-elevated backdrop-blur-xl md:block">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary/15">
-                <Zap className="h-5 w-5 text-secondary" />
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground">This month</div>
-                <div className="text-base font-bold">+ $24,580</div>
-              </div>
-            </div>
-          </div>
-          <div className="absolute -right-4 bottom-12 hidden rounded-xl border border-border/60 bg-card/90 p-4 shadow-elevated backdrop-blur-xl md:block">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/15">
-                <PieChart className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground">Cash flow</div>
-                <div className="text-base font-bold">Healthy</div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ReportsPreview />
       </div>
     </section>
   );
 }
 
-function LogoCloud() {
+/**
+ * Illustrative preview built from real report names in the app.
+ * Figures are labelled as sample data. Replace with a real screenshot
+ * (e.g. /public/screenshots/reports.webp) when one is available.
+ */
+function ReportsPreview() {
+  const rows = [
+    { label: "Current", w: "w-4/5" },
+    { label: "1–30 days overdue", w: "w-2/5" },
+    { label: "31–60 days overdue", w: "w-1/4" },
+    { label: "60+ days overdue", w: "w-[12%]" },
+  ];
   return (
-    <section className="border-y border-border bg-card/30 py-10">
-      <div className="mx-auto max-w-7xl px-6">
-        <p className="text-center text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-          Trusted by businesses in 190+ countries
-        </p>
-        <div className="mt-6 grid grid-cols-2 gap-8 md:grid-cols-4">
-          {stats.map((s) => (
-            <div key={s.label} className="text-center">
-              <div className="text-2xl font-bold tracking-tight md:text-3xl">{s.value}</div>
-              <div className="mt-1 text-xs text-muted-foreground md:text-sm">{s.label}</div>
-            </div>
+    <figure className="mx-auto mt-14 max-w-3xl">
+      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-elevated">
+        <div
+          className="flex flex-wrap gap-1 border-b border-border bg-muted/40 p-2 text-xs font-medium"
+          aria-hidden="true"
+        >
+          {["Profit & Loss", "Balance Sheet", "Cash Flow", "AR Aging", "AP Aging"].map((t) => (
+            <span
+              key={t}
+              className={`rounded-md px-3 py-1.5 ${
+                t === "AR Aging" ? "bg-card shadow-soft" : "text-muted-foreground"
+              }`}
+            >
+              {t}
+            </span>
           ))}
         </div>
+        <div className="p-6">
+          <div className="text-sm font-semibold">Receivables aging</div>
+          <div className="mt-4 space-y-3">
+            {rows.map((r) => (
+              <div key={r.label} className="flex items-center gap-3 text-xs">
+                <span className="w-36 flex-none text-muted-foreground">{r.label}</span>
+                <div className="h-3 flex-1 rounded-full bg-muted">
+                  <div className={`h-3 rounded-full bg-gradient-hero ${r.w}`} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <figcaption className="mt-3 text-center text-xs text-muted-foreground">
+        Illustration of the AR Aging report using sample data, not real customer figures.
+      </figcaption>
+    </figure>
+  );
+}
+
+function HowItWorks() {
+  return (
+    <section id="how-it-works" className="scroll-mt-20 py-20">
+      <div className="mx-auto max-w-5xl px-6">
+        <div className="text-center">
+          <Badge variant="secondary" className="mb-4">
+            Getting started
+          </Badge>
+          <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
+            Up and running in three steps
+          </h2>
+        </div>
+        <ol className="mt-12 grid gap-6 md:grid-cols-3">
+          {steps.map((s, i) => (
+            <li key={s.title} className="rounded-2xl border border-border bg-card p-7">
+              <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-full bg-gradient-hero text-sm font-bold text-primary-foreground">
+                {i + 1}
+              </div>
+              <h3 className="font-semibold">{s.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.desc}</p>
+            </li>
+          ))}
+        </ol>
       </div>
     </section>
   );
@@ -380,25 +380,27 @@ function LogoCloud() {
 
 function Features() {
   return (
-    <section id="features" className="py-24">
+    <section id="features" className="scroll-mt-20 bg-gradient-subtle py-20">
       <div className="mx-auto max-w-7xl px-6">
         <div className="mx-auto max-w-2xl text-center">
           <Badge variant="secondary" className="mb-4">
             Features
           </Badge>
-          <h2 className="text-3xl font-bold tracking-tight md:text-5xl">
+          <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
             Everything you need to run the books
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            One platform for invoicing, expenses, banking, and reporting. Built modern, built fast.
+            One platform for invoicing, expenses, banking imports and reporting.{" "}
+            <Link to="/features" className="font-medium text-primary underline underline-offset-2">
+              See all features
+            </Link>
           </p>
         </div>
-
-        <div className="mt-16 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {features.map((f) => (
             <div
               key={f.title}
-              className="group relative rounded-2xl border border-border bg-card p-7 transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-elevated"
+              className="rounded-2xl border border-border bg-card p-7 transition-colors hover:border-primary/40"
             >
               <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-hero shadow-glow">
                 <f.icon className="h-6 w-6 text-primary-foreground" strokeWidth={2.2} />
@@ -415,39 +417,34 @@ function Features() {
 
 function AiSection() {
   return (
-    <section id="ai" className="relative overflow-hidden bg-gradient-subtle py-24">
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute left-1/4 top-1/2 h-[400px] w-[600px] -translate-y-1/2 rounded-full bg-accent/10 blur-3xl" />
-      </div>
+    <section id="ai" className="scroll-mt-20 py-20">
       <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 md:grid-cols-2">
         <div>
           <Badge variant="secondary" className="mb-4 gap-1.5">
             <Sparkles className="h-3.5 w-3.5 text-accent" /> AI Bookkeeper
           </Badge>
-          <h2 className="text-3xl font-bold tracking-tight md:text-5xl">
-            Ask your books anything. <br />
-            Get answers in seconds.
+          <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
+            Ask questions about your books in plain language
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Skip the spreadsheet detective work. Our AI understands your financial data and answers
-            in plain language — so you can make decisions, not reports.
+            The AI Bookkeeper answers questions using your own invoices and expenses. It is
+            available on the {PLANS.pro.name} and {PLANS.business.name} plans. Always check
+            important figures against your reports.
           </p>
           <ul className="mt-6 space-y-3">
             {[
-              "How much profit did I make this quarter?",
-              "Which customers are overdue?",
-              "Forecast next month's revenue",
-              "Auto-categorize my last 200 transactions",
+              "How much did I spend on software this quarter?",
+              "Which customers have overdue invoices?",
+              "What were my biggest expenses last month?",
             ].map((q) => (
               <li key={q} className="flex items-start gap-3 text-sm">
-                <Check className="mt-0.5 h-4 w-4 flex-none text-secondary" />
+                <Check className="mt-0.5 h-4 w-4 flex-none text-secondary" aria-hidden="true" />
                 <span className="text-foreground/90">{q}</span>
               </li>
             ))}
           </ul>
         </div>
-
-        <div className="relative">
+        <figure>
           <div className="rounded-2xl border border-border bg-card p-6 shadow-elevated">
             <div className="flex items-center gap-2 border-b border-border pb-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-hero">
@@ -457,73 +454,65 @@ function AiSection() {
             </div>
             <div className="space-y-4 pt-5">
               <div className="ml-auto max-w-xs rounded-2xl rounded-tr-sm bg-primary px-4 py-2.5 text-sm text-primary-foreground">
-                What was my profit last month?
+                Which customers have overdue invoices?
               </div>
               <div className="max-w-sm rounded-2xl rounded-tl-sm bg-muted px-4 py-3 text-sm">
-                You made <span className="font-semibold text-secondary">$12,480 profit</span> in
-                October — up 18% from September. Revenue: $34,200. Expenses: $21,720.
-              </div>
-              <div className="ml-auto max-w-xs rounded-2xl rounded-tr-sm bg-primary px-4 py-2.5 text-sm text-primary-foreground">
-                Show overdue invoices
-              </div>
-              <div className="max-w-sm rounded-2xl rounded-tl-sm bg-muted px-4 py-3 text-sm">
-                3 overdue invoices totaling <span className="font-semibold">$4,820</span>. Want me
-                to send reminders?
+                The assistant lists your overdue invoices by customer, based on the records in your
+                account.
               </div>
             </div>
           </div>
-        </div>
+          <figcaption className="mt-3 text-center text-xs text-muted-foreground">
+            Example interaction. Real answers depend on your own data.
+          </figcaption>
+        </figure>
       </div>
     </section>
   );
 }
 
-function Audience() {
+function Trust() {
+  const items = [
+    {
+      icon: ShieldCheck,
+      title: "Separate books per company",
+      desc: "Each company's records are kept separate, and access is controlled by membership and role.",
+    },
+    {
+      icon: Users,
+      title: "Role-based permissions",
+      desc: "Decide who on your team can view or change financial records.",
+    },
+    {
+      icon: FileText,
+      title: "Your data, your records",
+      desc: "Export reports to CSV and invoices to PDF whenever you need them.",
+    },
+  ];
   return (
-    <section id="audience" className="py-24">
-      <div className="mx-auto max-w-7xl px-6 text-center">
-        <Badge variant="secondary" className="mb-4">
-          Built for everyone
-        </Badge>
-        <h2 className="text-3xl font-bold tracking-tight md:text-5xl">
-          From solo freelancer to growing NGO
-        </h2>
-        <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
-          FinFlow Track scales with you — whether you're invoicing your first client or running a
-          multi-country operation.
-        </p>
-        <div className="mt-10 flex flex-wrap justify-center gap-3">
-          {audience.map((a) => (
-            <div
-              key={a}
-              className="rounded-full border border-border bg-card px-5 py-2.5 text-sm font-medium shadow-soft transition-all hover:border-primary/40 hover:shadow-elevated"
-            >
-              {a}
-            </div>
-          ))}
+    <section className="bg-gradient-subtle py-20">
+      <div className="mx-auto max-w-7xl px-6">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
+            Built to protect your financial data
+          </h2>
+          <p className="mt-4 text-muted-foreground">
+            Read how we handle security on our{" "}
+            <Link to="/security" className="font-medium text-primary underline underline-offset-2">
+              Security
+            </Link>{" "}
+            and{" "}
+            <Link to="/privacy" className="font-medium text-primary underline underline-offset-2">
+              Privacy
+            </Link>{" "}
+            pages.
+          </p>
         </div>
-
-        <div className="mt-16 grid gap-6 md:grid-cols-3">
-          {[
-            {
-              icon: ShieldCheck,
-              title: "Bank-grade security",
-              desc: "Encrypted at rest and in transit. GDPR-ready, with SOC 2 on the roadmap.",
-            },
-            {
-              icon: Users,
-              title: "Built for teams",
-              desc: "Invite your accountant, partner, or staff. Roles and permissions included.",
-            },
-            {
-              icon: CreditCard,
-              title: "Get paid faster",
-              desc: "Online payments via card and mobile money. Average customer pays 8 days sooner.",
-            },
-          ].map((b) => (
-            <div key={b.title} className="rounded-2xl border border-border bg-card p-7 text-left">
+        <div className="mt-12 grid gap-6 md:grid-cols-3">
+          {items.map((b) => (
+            <div key={b.title} className="rounded-2xl border border-border bg-card p-7">
               <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-secondary/15">
-                <b.icon className="h-5 w-5 text-secondary" />
+                <b.icon className="h-5 w-5 text-secondary" aria-hidden="true" />
               </div>
               <h3 className="font-semibold">{b.title}</h3>
               <p className="mt-2 text-sm text-muted-foreground">{b.desc}</p>
@@ -537,58 +526,78 @@ function Audience() {
 
 function Pricing() {
   return (
-    <section id="pricing" className="bg-gradient-subtle py-24">
+    <section id="pricing" className="scroll-mt-20 py-20">
       <div className="mx-auto max-w-7xl px-6">
         <div className="mx-auto max-w-2xl text-center">
           <Badge variant="secondary" className="mb-4">
             Pricing
           </Badge>
-          <h2 className="text-3xl font-bold tracking-tight md:text-5xl">Simple, honest pricing</h2>
+          <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
+            Start free. Upgrade when you need more.
+          </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Start free. Upgrade when you need more. Cancel anytime.
+            Compare every plan in detail on the{" "}
+            <Link to="/pricing" className="font-medium text-primary underline underline-offset-2">
+              pricing page
+            </Link>
+            .
           </p>
         </div>
 
-        <div className="mx-auto mt-14 grid max-w-6xl gap-6 md:grid-cols-3">
-          {pricing.map((p) => (
-            <div
-              key={p.name}
-              className={`relative rounded-2xl border p-8 ${
-                p.highlighted ? "border-primary bg-card shadow-elevated" : "border-border bg-card"
-              }`}
-            >
-              {p.highlighted && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-hero px-3 py-1 text-xs font-semibold text-primary-foreground shadow-glow">
-                  Most popular
-                </div>
-              )}
-              <div className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                {p.name}
-              </div>
-              <div className="mt-3 flex items-baseline gap-1.5">
-                <span className="text-5xl font-bold tracking-tight">{p.price}</span>
-                <span className="text-sm text-muted-foreground">/ {p.period}</span>
-              </div>
-              <p className="mt-2 text-sm text-muted-foreground">{p.tagline}</p>
-              <Button
-                asChild
-                className={`mt-6 w-full ${p.highlighted ? "bg-gradient-hero shadow-glow hover:opacity-95" : ""}`}
-                variant={p.highlighted ? "default" : "outline"}
+        <div className="mx-auto mt-12 grid max-w-6xl gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {pricingOrder.map((key) => {
+            const p = PLANS[key];
+            const highlighted = key === "pro";
+            return (
+              <div
+                key={key}
+                className={`relative flex flex-col rounded-2xl border p-7 ${
+                  highlighted ? "border-primary bg-card shadow-elevated" : "border-border bg-card"
+                }`}
               >
-                <Link to="/auth" search={{ mode: "signup" }}>
-                  {p.cta}
-                </Link>
-              </Button>
-              <ul className="mt-7 space-y-3">
-                {p.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2.5 text-sm">
-                    <Check className="mt-0.5 h-4 w-4 flex-none text-secondary" />
-                    <span>{f}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+                {highlighted && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-hero px-3 py-1 text-xs font-semibold text-primary-foreground">
+                    Most popular
+                  </div>
+                )}
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                  {p.name}
+                </h3>
+                <div className="mt-3 flex items-baseline gap-1.5">
+                  <span className="text-4xl font-bold tracking-tight">{planPrice(key)}</span>
+                  {p.priceMonthly !== null && (
+                    <span className="text-sm text-muted-foreground">/ month</span>
+                  )}
+                </div>
+                <ul className="mt-6 flex-1 space-y-2.5">
+                  {p.features.slice(0, 5).map((f) => (
+                    <li key={f} className="flex items-start gap-2.5 text-sm">
+                      <Check
+                        className="mt-0.5 h-4 w-4 flex-none text-secondary"
+                        aria-hidden="true"
+                      />
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Button
+                  asChild
+                  className={`mt-7 w-full ${highlighted ? "bg-gradient-hero hover:opacity-95" : ""}`}
+                  variant={highlighted ? "default" : "outline"}
+                >
+                  {key === "free" ? (
+                    <Link to="/auth" search={{ mode: "signup", plan: "free" }}>
+                      Start free
+                    </Link>
+                  ) : key === "enterprise" ? (
+                    <Link to="/contact">Contact us</Link>
+                  ) : (
+                    <Link to="/pricing">View {p.name} plan</Link>
+                  )}
+                </Button>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -597,41 +606,35 @@ function Pricing() {
 
 function CTA() {
   return (
-    <section className="px-6 py-24">
-      <div className="relative mx-auto max-w-5xl overflow-hidden rounded-3xl bg-gradient-hero p-12 text-center shadow-glow md:p-20">
-        <div className="absolute inset-0 opacity-30">
-          <div className="absolute -left-20 -top-20 h-80 w-80 rounded-full bg-white/20 blur-3xl" />
-          <div className="absolute -bottom-20 -right-20 h-80 w-80 rounded-full bg-secondary/30 blur-3xl" />
-        </div>
-        <div className="relative">
-          <h2 className="text-3xl font-bold tracking-tight text-primary-foreground md:text-5xl">
-            Run your books in minutes, not hours
-          </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-lg text-primary-foreground/90">
-            Join 100,000+ businesses using FinFlow Track. No credit card, no limits, free forever.
-          </p>
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Button
-              asChild
-              size="lg"
-              variant="secondary"
-              className="bg-card text-foreground hover:bg-card/90"
-            >
-              <Link to="/auth" search={{ mode: "signup" }}>
-                Get started free <ArrowRight className="ml-1 h-4 w-4" />
-              </Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="border-white/30 bg-white/10 text-primary-foreground hover:bg-white/20"
-            >
-              <Link to="/auth" search={{ mode: "login" }}>
-                Sign in
-              </Link>
-            </Button>
-          </div>
+    <section className="px-6 pb-24">
+      <div className="relative mx-auto max-w-5xl overflow-hidden rounded-3xl bg-gradient-hero p-12 text-center shadow-glow md:p-16">
+        <h2 className="text-3xl font-bold tracking-tight text-primary-foreground md:text-4xl">
+          See where your business stands today
+        </h2>
+        <p className="mx-auto mt-4 max-w-2xl text-lg text-primary-foreground/90">
+          Create a free account, add your company and send your first invoice.
+        </p>
+        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Button
+            asChild
+            size="lg"
+            variant="secondary"
+            className="bg-card text-foreground hover:bg-card/90"
+          >
+            <Link to="/auth" search={{ mode: "signup" }}>
+              Get started free <ArrowRight className="ml-1 h-4 w-4" />
+            </Link>
+          </Button>
+          <Button
+            asChild
+            size="lg"
+            variant="outline"
+            className="border-white/30 bg-white/10 text-primary-foreground hover:bg-white/20"
+          >
+            <Link to="/auth" search={{ mode: "login" }}>
+              Sign in
+            </Link>
+          </Button>
         </div>
       </div>
     </section>
