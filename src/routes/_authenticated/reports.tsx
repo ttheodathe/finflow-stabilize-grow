@@ -16,6 +16,7 @@ import { useDefaultCurrency } from "@/hooks/use-currency";
 import { formatCurrency } from "@/lib/currencies";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 import { ReportPresetBar } from "@/components/reports/ReportPresetBar";
+import { InvoiceIntelligence } from "@/components/reports/InvoiceIntelligence";
 import {
   RangePreset,
   AsOfPreset,
@@ -30,11 +31,7 @@ import {
 // exportCsv(), reused here so every report tab gets export without each
 // component re-implementing Blob/anchor-download plumbing.
 // ---------------------------------------------------------------------------
-function exportRowsAsCsv(
-  filenamePrefix: string,
-  header: string[],
-  rows: (string | number)[][],
-) {
+function exportRowsAsCsv(filenamePrefix: string, header: string[], rows: (string | number)[][]) {
   if (rows.length === 0) {
     return false;
   }
@@ -63,7 +60,7 @@ export const Route = createFileRoute("/_authenticated/reports")({
   component: ReportsPage,
 });
 
-type Tab = "pnl" | "balance-sheet" | "cash-flow" | "ar-aging" | "ap-aging";
+type Tab = "pnl" | "balance-sheet" | "cash-flow" | "ar-aging" | "ap-aging" | "invoice-summary";
 
 function ReportsPage() {
   const [tab, setTab] = useState<Tab>("pnl");
@@ -82,6 +79,7 @@ function ReportsPage() {
             ["cash-flow", "Cash Flow"],
             ["ar-aging", "AR Aging"],
             ["ap-aging", "AP Aging"],
+            ["invoice-summary", "Invoice Summary"],
           ] as [Tab, string][]
         ).map(([id, label]) => (
           <button
@@ -102,6 +100,7 @@ function ReportsPage() {
       {tab === "cash-flow" && <CashFlow />}
       {tab === "ar-aging" && <ReceivablesAging />}
       {tab === "ap-aging" && <PayablesAging />}
+      {tab === "invoice-summary" && <InvoiceIntelligence />}
     </div>
   );
 }
@@ -163,7 +162,9 @@ function ProfitAndLoss() {
       const [inv, exp] = await Promise.all([
         supabase
           .from("invoices")
-          .select("total,status,issue_date,invoice_number,customers(name),base_currency_amount,currency" as any)
+          .select(
+            "total,status,issue_date,invoice_number,customers(name),base_currency_amount,currency" as any,
+          )
           .eq("company_id", companyId)
           .gte("issue_date", from)
           .lte("issue_date", to),
@@ -197,8 +198,7 @@ function ProfitAndLoss() {
       // instead of adding raw numbers across different currencies.
       // Falls back to the raw total/amount for rows saved before this
       // column existed (base_currency_amount is null there).
-      const inCompanyCurrency = (total: number, baseAmount: number | null) =>
-        baseAmount ?? total;
+      const inCompanyCurrency = (total: number, baseAmount: number | null) => baseAmount ?? total;
 
       const revByGroup = new Map<string, number>();
       let out = 0;
@@ -445,10 +445,15 @@ function BalanceSheet() {
     (async () => {
       setLoading(true);
       const [accRes, lineRes] = await Promise.all([
-        supabase.from("accounts").select("id,code,name,type").eq("company_id", companyId).order("code"),
+        supabase
+          .from("accounts")
+          .select("id,code,name,type")
+          .eq("company_id", companyId)
+          .order("code"),
         supabase
           .from("journal_lines")
-          .select("account_id,debit,credit,journal_entries!inner(entry_date)").eq("company_id", companyId)
+          .select("account_id,debit,credit,journal_entries!inner(entry_date)")
+          .eq("company_id", companyId)
           .lte("journal_entries.entry_date", asOf),
       ]);
       const accounts = (accRes.data ?? []) as {
@@ -505,8 +510,7 @@ function BalanceSheet() {
   const totalLiabilities = liabilities.reduce((s, r) => s + r.amount, 0);
   const totalEquity = equity.reduce((s, r) => s + r.amount, 0) + netIncome;
   const totalLiabilitiesAndEquity = totalLiabilities + totalEquity;
-  const inBalance =
-    Math.round(totalAssets * 100) === Math.round(totalLiabilitiesAndEquity * 100);
+  const inBalance = Math.round(totalAssets * 100) === Math.round(totalLiabilitiesAndEquity * 100);
 
   function Section({ title, rows, total }: { title: string; rows: LedgerRow[]; total: number }) {
     return (
@@ -546,7 +550,10 @@ function BalanceSheet() {
         <div className="flex flex-wrap items-end gap-3">
           <div>
             <Label>As of</Label>
-            <Select value={asOfPreset} onValueChange={(v) => handleAsOfPresetChange(v as AsOfPreset)}>
+            <Select
+              value={asOfPreset}
+              onValueChange={(v) => handleAsOfPresetChange(v as AsOfPreset)}
+            >
               <SelectTrigger className="w-44">
                 <SelectValue />
               </SelectTrigger>
@@ -837,7 +844,10 @@ function CashFlow() {
         <div className="flex flex-wrap items-end gap-3">
           <div>
             <Label>Date range</Label>
-            <Select value={rangePreset} onValueChange={(v) => handleRangePresetChange(v as RangePreset)}>
+            <Select
+              value={rangePreset}
+              onValueChange={(v) => handleRangePresetChange(v as RangePreset)}
+            >
               <SelectTrigger className="w-40">
                 <SelectValue />
               </SelectTrigger>
@@ -954,15 +964,11 @@ function CashFlow() {
 
               <tr className="border-b">
                 <td className="px-6 py-3 text-base font-bold">Net change in cash</td>
-                <td className="px-6 py-3 text-right text-base font-bold">
-                  {fmt(netChangeInCash)}
-                </td>
+                <td className="px-6 py-3 text-right text-base font-bold">{fmt(netChangeInCash)}</td>
               </tr>
               <tr className="border-b">
                 <td className="px-6 py-2 text-muted-foreground">Beginning cash</td>
-                <td className="px-6 py-2 text-right text-muted-foreground">
-                  {fmt(beginningCash)}
-                </td>
+                <td className="px-6 py-2 text-right text-muted-foreground">{fmt(beginningCash)}</td>
               </tr>
               <tr>
                 <td className="px-6 py-2 font-semibold">Ending cash</td>
@@ -976,8 +982,8 @@ function CashFlow() {
         Built using the indirect method from ledger-posted transactions (the same source as the
         Balance Sheet), so ending cash reconciles with cash & bank accounts as of the same date.
         "Other financing & investing activity" captures cash movements this method doesn't yet
-        categorize into operating activities (e.g. loan draws or asset purchases posted directly
-        to a cash account).
+        categorize into operating activities (e.g. loan draws or asset purchases posted directly to
+        a cash account).
       </p>
     </div>
   );
@@ -1077,13 +1083,10 @@ function AgingTable({
   const fmt = (n: number) => formatCurrency(n, currency);
   const labels = bucketLabels(cutoffs);
   const bucketCount = labels.length;
-  const totals = rows.reduce(
-    (acc, r) => {
-      r.buckets.forEach((v, i) => (acc[i] += v));
-      return acc;
-    },
-    new Array(bucketCount).fill(0),
-  );
+  const totals = rows.reduce((acc, r) => {
+    r.buckets.forEach((v, i) => (acc[i] += v));
+    return acc;
+  }, new Array(bucketCount).fill(0));
   const grandTotal = rows.reduce((s, r) => s + r.total, 0);
 
   return (
@@ -1173,7 +1176,12 @@ function ReceivablesAging() {
         if (!inv.due_date) continue;
         const name = inv.customers?.name ?? "Unassigned";
         const row = byCustomer.get(name) ?? newAgingRow(name, bucketCount);
-        bucketByDaysPastDue(inv.due_date, inv.base_currency_amount ?? Number(inv.total), row, cutoffs);
+        bucketByDaysPastDue(
+          inv.due_date,
+          inv.base_currency_amount ?? Number(inv.total),
+          row,
+          cutoffs,
+        );
         byCustomer.set(name, row);
       }
       setRows([...byCustomer.values()].sort((a, b) => b.total - a.total));
@@ -1251,7 +1259,12 @@ function PayablesAging() {
         if (!bill.due_date) continue;
         const name = bill.vendors?.name ?? "Unassigned";
         const row = byVendor.get(name) ?? newAgingRow(name, bucketCount);
-        bucketByDaysPastDue(bill.due_date, bill.base_currency_amount ?? Number(bill.total), row, cutoffs);
+        bucketByDaysPastDue(
+          bill.due_date,
+          bill.base_currency_amount ?? Number(bill.total),
+          row,
+          cutoffs,
+        );
         byVendor.set(name, row);
       }
       setRows([...byVendor.values()].sort((a, b) => b.total - a.total));
