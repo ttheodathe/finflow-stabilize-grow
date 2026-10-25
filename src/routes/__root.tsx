@@ -7,15 +7,22 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
-import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/react";
+import { Suspense, lazy, useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
+import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { captureReferralFromUrl } from "@/lib/referral";
+
+// Not needed for first paint: loaded after the page is interactive so they stay
+// out of the initial JavaScript that every visitor downloads.
+const Analytics = lazy(() =>
+  import("@vercel/analytics/react").then((m) => ({ default: m.Analytics })),
+);
+const SpeedInsights = lazy(() =>
+  import("@vercel/speed-insights/react").then((m) => ({ default: m.SpeedInsights })),
+);
 
 function NotFoundComponent() {
   return (
@@ -137,8 +144,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         children: `(function(){var l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=optional';document.head.appendChild(l);})();`,
       },
       {
-        src: "https://www.googletagmanager.com/gtag/js?id=G-XKQYZKSJ08",
-        async: true,
+        // Google Analytics loads after the page's load event + browser idle time,
+        // so it does not compete with first paint. Early gtag() calls are queued in
+        // dataLayer and sent when the script arrives.
+        children: `window.addEventListener('load',function(){var g=function(){var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-XKQYZKSJ08';document.head.appendChild(s)};if('requestIdleCallback' in window){requestIdleCallback(g,{timeout:2000})}else{setTimeout(g,1000)}});`,
       },
       {
         children: `
@@ -174,6 +183,21 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
 
+  const [deferredReady, setDeferredReady] = useState(false);
+  useEffect(() => {
+    const w = window as Window & {
+      requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+    const go = () => setDeferredReady(true);
+    if (w.requestIdleCallback) {
+      const id = w.requestIdleCallback(go, { timeout: 2000 });
+      return () => w.cancelIdleCallback?.(id);
+    }
+    const t = window.setTimeout(go, 1500);
+    return () => window.clearTimeout(t);
+  }, []);
+
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
@@ -193,9 +217,14 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      {/* Toaster stays eager so a toast fired right after load is never dropped. */}
       <Toaster />
-      <Analytics />
-      <SpeedInsights />
+      {deferredReady && (
+        <Suspense fallback={null}>
+          <Analytics />
+          <SpeedInsights />
+        </Suspense>
+      )}
     </QueryClientProvider>
   );
 }
