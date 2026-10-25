@@ -43,6 +43,18 @@ export const Route = createFileRoute("/")({
         type: "application/ld+json",
         children: JSON.stringify({
           "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqs.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
           "@type": "SoftwareApplication",
           name: "FinFlow Track",
           url: SITE_URL,
@@ -63,6 +75,33 @@ export const Route = createFileRoute("/")({
 });
 
 /* ---------- Content (all claims verified against the codebase) ---------- */
+
+const faqs = [
+  {
+    q: "Is there a free plan?",
+    a: "Yes. You can sign up and start on the Free plan without a credit card. Paid plans add more companies, team members and features. See the pricing page for the current limits.",
+  },
+  {
+    q: "Can I invoice in different currencies?",
+    a: "Yes. You can invoice in the currency your customer uses, and exchange rates are locked when a transaction is recorded.",
+  },
+  {
+    q: "Can I manage more than one business?",
+    a: "Yes, on plans that include multiple companies. Each company has its own separate books, and you switch between them from one login.",
+  },
+  {
+    q: "How is my financial data protected?",
+    a: "Each company's records are kept separate and access is controlled by membership and role. Details are on our Security and Privacy pages.",
+  },
+  {
+    q: "Does the AI Bookkeeper replace my accountant?",
+    a: "No. It answers questions using the invoices and expenses in your account, and you should check important figures against your reports. It is available on the Professional and Business plans.",
+  },
+  {
+    q: "Can I export my data?",
+    a: "Yes. Reports can be exported to CSV and invoices to PDF.",
+  },
+];
 
 const features = [
   {
@@ -132,15 +171,17 @@ function LandingPage() {
         Skip to content
       </a>
       <Header />
-      <main id="main">
+      <main id="main" className="pb-20 md:pb-0">
         <Hero />
         <HowItWorks />
         <Features />
         <AiSection />
         <Trust />
         <Pricing />
+        <Faq />
         <CTA />
       </main>
+      <MobileStickyCta />
       <SiteFooter />
     </div>
   );
@@ -161,7 +202,7 @@ function Header() {
     "text-sm font-medium text-muted-foreground transition-colors hover:text-foreground";
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-border/60 bg-background">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         <Link to="/" className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-hero shadow-glow">
@@ -601,6 +642,52 @@ function Pricing() {
         </div>
       </div>
     </section>
+  );
+}
+
+function Faq() {
+  return (
+    <section id="faq" className="scroll-mt-20 bg-gradient-subtle py-20">
+      <div className="mx-auto max-w-3xl px-6">
+        <h2 className="text-center text-3xl font-bold tracking-tight md:text-4xl">
+          Frequently asked questions
+        </h2>
+        <div className="mt-10 space-y-3">
+          {faqs.map((f) => (
+            <details
+              key={f.q}
+              className="group rounded-xl border border-border bg-card px-5 py-4 open:shadow-soft"
+            >
+              <summary className="cursor-pointer list-none font-medium marker:hidden">
+                <span className="flex items-center justify-between gap-4">
+                  {f.q}
+                  <span
+                    aria-hidden="true"
+                    className="text-muted-foreground transition-transform group-open:rotate-45"
+                  >
+                    +
+                  </span>
+                </span>
+              </summary>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/** Always-visible signup button on phones. Pure CSS, no JavaScript. */
+function MobileStickyCta() {
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 md:hidden">
+      <Button asChild size="lg" className="w-full bg-gradient-hero shadow-glow">
+        <Link to="/auth" search={{ mode: "signup" }}>
+          Start free <ArrowRight className="ml-1 h-4 w-4" />
+        </Link>
+      </Button>
+    </div>
   );
 }
 
