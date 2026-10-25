@@ -11,13 +11,19 @@ import {
   RefreshCw,
   UserCircle2,
 } from "lucide-react";
-import { getPostBySlug, getRelatedPosts, SITE_URL } from "@/lib/blog/posts";
+import { getRelatedPosts } from "@/lib/blog/posts";
 import { blogCategories, editorialTeam, getCategoryBySlug } from "@/lib/blog/categories";
 import { TableOfContents } from "@/components/blog/TableOfContents";
 
+// Kept local (same value as in "@/lib/blog/posts") so this route's head/loader do not
+// statically import the blog content bundle. A static import here pulled every
+// article (~466 KB) into the main entry chunk loaded on EVERY page, including the homepage.
+const SITE_URL = "https://www.finflowtrack.com";
+
 export const Route = createFileRoute("/blog_/$slug")({
   component: BlogArticlePage,
-  loader: ({ params }) => {
+  loader: async ({ params }) => {
+    const { getPostBySlug } = await import("@/lib/blog/posts");
     const article = getPostBySlug(params.slug);
     if (!article) {
       throw notFound();
