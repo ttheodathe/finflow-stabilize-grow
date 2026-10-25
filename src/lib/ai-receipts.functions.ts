@@ -16,7 +16,7 @@ export type ParsedReceipt = {
 };
 
 export const parseReceipt = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => Input.parse(data))
+  .validator((data: unknown) => Input.parse(data))
   .handler(async ({ data }): Promise<ParsedReceipt> => {
     const key = getGeminiApiKey();
 
