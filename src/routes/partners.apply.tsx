@@ -33,7 +33,7 @@ export const Route = createFileRoute("/partners/apply")({
       {
         name: "description",
         content:
-          "Join the FinFlowTrack Partner Program and earn a 20% recurring commission on every subscription you refer, for as long as it stays active. Open to affiliates, firms, accountants, consultants, educators, and resellers.",
+          "Join the FinFlowTrack Partner Program and earn tiered commissions of 20%, 35% or 50% on qualified referrals, with eligible commissions continuing for up to 15 months. Open to affiliates, firms, accountants, consultants, educators, and resellers.",
       },
     ],
   }),
@@ -116,14 +116,14 @@ function BecomeAPartnerPage() {
               Become a FinFlowTrack Partner
             </h1>
             <p className="mt-4 text-muted-foreground">
-              Refer bookkeeping and accounting clients to FinFlowTrack and earn recurring
-              commissions on every subscription that stays active. Open to affiliates, firms,
-              accountants, consultants, educators, and resellers.
+              Refer bookkeeping and accounting clients to FinFlowTrack and earn tiered commissions
+              on qualified referrals. Open to affiliates, firms, accountants, consultants,
+              educators, and resellers.
             </p>
             <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
               <div className="rounded-lg border bg-card p-4 text-center">
-                <div className="text-2xl font-bold text-primary">20%</div>
-                <div className="mt-1 text-xs text-muted-foreground">Recurring commission</div>
+                <div className="text-2xl font-bold text-primary">20–50%</div>
+                <div className="mt-1 text-xs text-muted-foreground">Tiered commission</div>
               </div>
               <div className="rounded-lg border bg-card p-4 text-center">
                 <div className="text-2xl font-bold text-primary">8</div>
@@ -171,21 +171,21 @@ function BecomeAPartnerPage() {
               <h3 className="font-semibold">2. Your referral subscribes</h3>
               <p className="mt-2 text-sm text-muted-foreground">
                 When someone you referred makes a paid subscription, a commission is recorded as
-                pending. Every commission is checked for obvious signs of abuse (e.g. an
-                implausibly fast signup-to-payment) before it's approved — this protects genuine
-                partners' payouts.
+                pending. Every commission is checked for obvious signs of abuse (e.g. an implausibly
+                fast signup-to-payment) before it's approved — this protects genuine partners'
+                payouts.
               </p>
             </div>
             <div className="rounded-lg border bg-card p-6">
               <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                 <Wallet className="h-5 w-5 text-primary" />
               </div>
-              <h3 className="font-semibold">3. You earn 20%, recurring</h3>
+              <h3 className="font-semibold">3. You earn 20–50%, tiered</h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                You earn 20% of what your referral pays FinFlowTrack, for as long as their
-                subscription stays active — not just a one-time bounty. Approved commissions are
-                paid out by our team; you can track pending, approved, and paid amounts in your
-                partner dashboard at any time.
+                Your commission rate depends on your volume of qualified referrals: 20% for 1–10,
+                35% for 11–49, and 50% for 50 or more. Eligible commissions can continue for up to
+                15 months. Approved commissions are paid out by our team; you can track pending,
+                approved, and paid amounts in your partner dashboard at any time.
               </p>
             </div>
           </div>
@@ -196,24 +196,24 @@ function BecomeAPartnerPage() {
               <AccordionItem value="rate">
                 <AccordionTrigger>How much do I actually earn per referral?</AccordionTrigger>
                 <AccordionContent>
-                  20% of the subscription payments your referral makes to FinFlowTrack, for as
-                  long as they remain a paying customer. This is a recurring commission, not a
-                  flat one-time fee.
+                  It depends on your tier: 20% for 1–10 qualified referrals, 35% for 11–49, and 50%
+                  for 50 or more. Eligible commissions can continue for up to 15 months. This is a
+                  commission-based independent opportunity with no fixed salary, and earnings depend
+                  on eligible customer acquisition and the applicable commission terms.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="tracking">
                 <AccordionTrigger>How is my referral tracked?</AccordionTrigger>
                 <AccordionContent>
-                  Through your unique referral link, using last-touch attribution — whoever's
-                  link a customer clicked most recently before signing up gets credit for that
-                  referral.
+                  Through your unique referral link, using last-touch attribution — whoever's link a
+                  customer clicked most recently before signing up gets credit for that referral.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="review">
                 <AccordionTrigger>Why are commissions reviewed before approval?</AccordionTrigger>
                 <AccordionContent>
-                  Every new commission is automatically screened for patterns that suggest abuse
-                  — like a signup converting to a paid plan almost instantly, or an unusually high
+                  Every new commission is automatically screened for patterns that suggest abuse —
+                  like a signup converting to a paid plan almost instantly, or an unusually high
                   volume of new referrals from one partner in a short period. Flagged commissions
                   get a human review rather than automatic rejection, so legitimate partners are
                   never penalized by the check.
@@ -222,8 +222,8 @@ function BecomeAPartnerPage() {
               <AccordionItem value="payout">
                 <AccordionTrigger>When and how do I get paid?</AccordionTrigger>
                 <AccordionContent>
-                  There's no fixed automatic schedule — our team reviews and processes payouts
-                  for your approved commissions, and you can see the status of every commission
+                  There's no fixed automatic schedule — our team reviews and processes payouts for
+                  your approved commissions, and you can see the status of every commission
                   (pending, approved, or paid) in your partner dashboard at any time.
                 </AccordionContent>
               </AccordionItem>
