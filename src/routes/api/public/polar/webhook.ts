@@ -1,3 +1,4 @@
+import { isWithinCommissionWindow, resolveTier1Rate } from "@/lib/partner-commission-tiers";
 import { createFileRoute } from "@tanstack/react-router";
 import { verifyPolarSignature, normalizePolarSubscription } from "@/lib/polar/webhook.server";
 
@@ -171,6 +172,19 @@ async function createPartnerCommissionForOrder(data: Record<string, unknown>, ad
     .eq("id", true)
     .maybeSingle();
 
+  // Commission window: eligible commissions continue for up to 15 months from the
+  // referred customer's first commission. After that, no tier is paid for them.
+  const { data: firstCommission } = await admin
+    .from("partner_commissions")
+    .select("created_at")
+    .eq("company_id", companyId)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (!isWithinCommissionWindow((firstCommission?.created_at as string | undefined) ?? null)) {
+    return;
+  }
+
   const billedAmount = totalAmountCents / 100;
 
   // Walk the tier-1 partner, then (if multi-tier is on) its upline, up to
@@ -207,7 +221,24 @@ async function createPartnerCommissionForOrder(data: Record<string, unknown>, ad
 
     if (!partner || partner.status !== "active") break;
 
-    const rate = tier === 1 ? Number(partner.commission_rate) : (tierRates[tier] ?? 0);
+    let tier1Rate = Number(partner.commission_rate);
+    if (tier === 1) {
+      // Volume tiers (20% / 35% / 50%). If the count cannot be read (for example the
+      // database function is not installed yet) fall back to the partner's own rate
+      // rather than failing the webhook or guessing a higher rate.
+      try {
+        // biome-ignore lint/suspicious/noExplicitAny: admin client is loosely typed in this file
+        const { data: qualified, error: countError } = await (admin as any).rpc(
+          "partner_qualified_referral_count",
+          { _partner_id: currentPartnerId, _company_id: companyId },
+        );
+        if (countError) throw countError;
+        tier1Rate = resolveTier1Rate(Number(partner.commission_rate), Number(qualified ?? 1));
+      } catch (err) {
+        console.warn("[polar-webhook] qualified referral count unavailable, using base rate:", err);
+      }
+    }
+    const rate = tier === 1 ? tier1Rate : (tierRates[tier] ?? 0);
     if (rate > 0) {
       const commissionAmount = Math.round(billedAmount * (rate / 100) * 100) / 100;
       const flag = await detectSuspiciousReferral(admin, companyId, currentPartnerId);
