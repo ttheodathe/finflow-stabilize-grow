@@ -124,12 +124,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap",
-      },
     ],
     scripts: [
+      {
+        // Load the Inter web font WITHOUT blocking first paint. A static
+        // <link rel="stylesheet"> to Google Fonts is render-blocking (two
+        // cross-origin round trips), which delays FCP/LCP on slow mobile
+        // connections. A dynamically inserted stylesheet is not
+        // render-blocking. display=optional avoids a late font swap that
+        // re-renders the headline (the system font is used on a cold first
+        // visit; Inter is used once cached).
+        children: `(function(){var l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=optional';document.head.appendChild(l);})();`,
+      },
       {
         src: "https://www.googletagmanager.com/gtag/js?id=G-XKQYZKSJ08",
         async: true,
