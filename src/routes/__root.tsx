@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -182,6 +183,11 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
+  // Route pattern (for example "/blog_/$slug") so Vercel Speed Insights can group real-user
+  // scores per page instead of showing every visit as "Unknown".
+  const speedRoute = useRouterState({
+    select: (s) => s.matches[s.matches.length - 1]?.routeId,
+  });
 
   const [deferredReady, setDeferredReady] = useState(false);
   useEffect(() => {
@@ -222,7 +228,7 @@ function RootComponent() {
       {deferredReady && (
         <Suspense fallback={null}>
           <Analytics />
-          <SpeedInsights />
+          <SpeedInsights route={speedRoute} />
         </Suspense>
       )}
     </QueryClientProvider>
