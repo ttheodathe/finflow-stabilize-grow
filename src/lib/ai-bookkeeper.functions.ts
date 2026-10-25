@@ -1,104 +1,244 @@
-import { getGeminiApiKey, callGeminiChatCompletion } from "@/lib/ai-key";
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
-import { assertFeature } from "@/lib/features/plan-guard";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { PlanKey } from "./paddle/config";
 
-const CATEGORIES = [
-  "Meals",
-  "Travel",
-  "Software",
-  "Office",
-  "Utilities",
-  "Marketing",
-  "Equipment",
-  "Payroll",
-  "Rent",
-  "Professional Services",
-  "Other",
-];
-
-async function callGemini(messages: any[], key: string, jsonMode = false) {
-  return callGeminiChatCompletion(
-    {
-      model: "gemini-3.6-flash",
-      ...(jsonMode ? { response_format: { type: "json_object" } } : {}),
-      messages,
-    },
-    key,
-  );
-}
-
-const ChatInput = z.object({
-  messages: z.array(z.object({ role: z.enum(["user", "assistant"]), content: z.string() })).min(1),
-});
-
-export const askBookkeeper = createServerFn({ method: "POST" })
+/**
+ * Return the caller's most-recent subscription for a company (or user).
+ * Uses RLS so users only see their own rows. Includes both Paddle and
+ * Polar identifier columns — a row will have one set populated depending
+ * on which provider processed the payment.
+ */
+export const getMySubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => ChatInput.parse(d))
+  .validator((input: { companyId?: string | null }) =>
+    z.object({ companyId: z.string().uuid().nullable().optional() }).parse(input),
+  )
   .handler(async ({ data, context }) => {
-    const key = getGeminiApiKey();
-    const { supabase } = context;
+    // biome-ignore lint/suspicious/noExplicitAny: dynamic schema
+    const sb = context.supabase as any;
+    const base = () =>
+      sb.from("subscriptions").select("*").order("updated_at", { ascending: false }).limit(1);
 
-    const [inv, exp, cust, items] = await Promise.all([
-      supabase
-        .from("invoices")
-        .select("invoice_number,status,total,currency,issue_date,due_date,customer_id")
-        .order("issue_date", { ascending: false })
-        .limit(200),
-      supabase
-        .from("expenses")
-        .select("vendor,category,amount,currency,expense_date")
-        .order("expense_date", { ascending: false })
-        .limit(200),
-      supabase.from("customers").select("id,name,email").limit(200),
-      supabase.from("items").select("name,type,price,stock_quantity,track_inventory").limit(200),
-    ]);
-
-    const summary = {
-      invoices: inv.data ?? [],
-      expenses: exp.data ?? [],
-      customers: cust.data ?? [],
-      items: items.data ?? [],
-    };
-
-    const system = `You are an AI bookkeeper for a small business. Use the JSON dataset below to answer questions concisely with concrete numbers. Compute revenue, profit, top customers, category spend, cash trends, overdue invoices, or inventory as needed. Format money with the invoice/expense currency. Be brief and useful. If data is missing, say so.\n\nDATA:\n${JSON.stringify(summary).slice(0, 60000)}`;
-
-    const text = await callGemini([{ role: "system", content: system }, ...data.messages], key);
-    return { reply: text };
+    let rows: any[] | null = null;
+    if (data.companyId) {
+      const res = await base().eq("company_id", data.companyId);
+      if (res.error) throw new Error(res.error.message);
+      rows = res.data;
+    }
+    if (!rows?.length) {
+      // Fall back to the account-level row (webhooks may not set company_id).
+      const res = await base().or(
+        `owner_id.eq.${context.userId},user_id.eq.${context.userId}`,
+      );
+      if (res.error) throw new Error(res.error.message);
+      rows = res.data;
+    }
+    return (rows?.[0] ?? null) as {
+      id: string;
+      plan: PlanKey;
+      status: string;
+      billing_cycle: "monthly" | "yearly" | null;
+      current_period_end: string | null;
+      cancel_at_period_end: boolean;
+      paddle_subscription_id: string | null;
+      paddle_customer_id: string | null;
+      polar_subscription_id: string | null;
+      polar_customer_id: string | null;
+    } | null;
   });
 
-export const categorizeExpenses = createServerFn({ method: "POST" })
+/**
+ * subscriptions has UNIQUE(user_id) — every account has exactly one row.
+ * Always upsert on user_id rather than select-then-insert, so re-running
+ * this (e.g. switching plan choice, or retrying onboarding) never collides
+ * with an existing row for the same user.
+ */
+export const createFreeSubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { supabase } = context;
-    await assertFeature(supabase, { userId: context.userId }, "documentAi");
-    const key = getGeminiApiKey();
-    const { data: rows, error } = await supabase
-      .from("expenses")
-      .select("id,vendor,description,amount,currency")
-      .or("category.is.null,category.eq.")
-      .limit(50);
+  .validator((input: { companyId: string }) =>
+    z.object({ companyId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    // biome-ignore lint/suspicious/noExplicitAny: dynamic schema
+    const sb = context.supabase as any;
+    const { data: row, error } = await sb
+      .from("subscriptions")
+      .upsert(
+        {
+          user_id: context.userId,
+          owner_id: context.userId,
+          company_id: data.companyId,
+          plan: "free",
+          status: "active",
+          billing_cycle: null,
+          polar_subscription_id: null,
+        },
+        { onConflict: "user_id" },
+      )
+      .select("id")
+      .single();
     if (error) throw new Error(error.message);
-    if (!rows || rows.length === 0) return { updated: 0 };
+    return { id: row.id as string, plan: "free" as const };
+  });
 
-    const prompt = `Classify each expense into ONE category from this list: ${CATEGORIES.join(", ")}. Reply with ONLY a JSON object shaped like {"results": [{"id": string, "category": string}]}. No prose.\n\nEXPENSES:\n${JSON.stringify(rows)}`;
-    const text = await callGemini([{ role: "user", content: prompt }], key, true);
-    const cleaned = text.replace(/```json\s*|```/g, "").trim();
-    let parsed: { id: string; category: string }[] = [];
-    try {
-      const obj = JSON.parse(cleaned);
-      parsed = Array.isArray(obj) ? obj : (obj?.results ?? []);
-    } catch {
-      const m = cleaned.match(/\[[\s\S]*\]/);
-      if (m) parsed = JSON.parse(m[0]);
+/**
+ * Called when the user picks a paid plan but hasn't finished checkout yet.
+ * Records the *intended* plan with status "pending" (never "active"/"free")
+ * so nothing downstream — dashboard access, feature gating — treats this
+ * account as paid or as free until the Polar webhook confirms payment and
+ * flips status to "active".
+ */
+export const createPendingSubscription = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((input: { companyId: string; plan: "pro" | "business"; cycle: "monthly" | "yearly" }) =>
+    z
+      .object({
+        companyId: z.string().uuid(),
+        plan: z.enum(["pro", "business"]),
+        cycle: z.enum(["monthly", "yearly"]),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    // biome-ignore lint/suspicious/noExplicitAny: dynamic schema
+    const sb = context.supabase as any;
+    const { data: row, error } = await sb
+      .from("subscriptions")
+      .upsert(
+        {
+          user_id: context.userId,
+          owner_id: context.userId,
+          company_id: data.companyId,
+          plan: data.plan,
+          status: "pending",
+          billing_cycle: data.cycle,
+          polar_subscription_id: null,
+        },
+        { onConflict: "user_id" },
+      )
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    return { id: row.id as string, plan: data.plan, status: "pending" as const };
+  });
+
+/**
+ * Cancel the active subscription. Detects Paddle vs Polar automatically
+ * by checking which ID column the given subscriptionId matches, then
+ * calls that provider's cancel API.
+ */
+export const cancelSubscription = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((input: { subscriptionId: string; atPeriodEnd?: boolean }) =>
+    z
+      .object({
+        subscriptionId: z.string().min(1),
+        atPeriodEnd: z.boolean().optional().default(true),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    // biome-ignore lint/suspicious/noExplicitAny: dynamic schema
+    const sb = context.supabase as any;
+    const { data: sub } = await sb
+      .from("subscriptions")
+      .select("paddle_subscription_id, polar_subscription_id, owner_id")
+      .or(
+        `paddle_subscription_id.eq.${data.subscriptionId},polar_subscription_id.eq.${data.subscriptionId}`,
+      )
+      .maybeSingle();
+    if (!sub) throw new Error("Subscription not found");
+
+    const isPolar = sub.polar_subscription_id === data.subscriptionId;
+
+    if (isPolar) {
+      const { polar } = await import("@/lib/polar/server");
+      if (data.atPeriodEnd) {
+        await polar.subscriptions.update({
+          id: data.subscriptionId,
+          subscriptionUpdate: { cancelAtPeriodEnd: true },
+        });
+      } else {
+        await polar.subscriptions.revoke({ id: data.subscriptionId });
+      }
+      return { ok: true as const };
     }
-    let updated = 0;
-    for (const p of parsed) {
-      if (!p?.id || !p?.category) continue;
-      const cat = CATEGORIES.includes(p.category) ? p.category : "Other";
-      const { error: e } = await supabase.from("expenses").update({ category: cat }).eq("id", p.id);
-      if (!e) updated++;
+
+    // Paddle path (unchanged)
+    const apiKey = process.env.PADDLE_API_KEY;
+    const env = process.env.PADDLE_ENV ?? "sandbox";
+    if (!apiKey) throw new Error("PADDLE_API_KEY not configured");
+
+    const base =
+      env === "sandbox" ? "https://sandbox-api.paddle.com" : "https://api.paddle.com";
+
+    const resp = await fetch(`${base}/subscriptions/${data.subscriptionId}/cancel`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        effective_from: data.atPeriodEnd ? "next_billing_period" : "immediately",
+      }),
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(`Paddle cancel failed: ${resp.status} ${text}`);
     }
-    return { updated };
+    return { ok: true as const };
+  });
+
+/**
+ * List invoices/orders for the caller's company. Checks for a Polar
+ * customer first (new subscriptions), falls back to Paddle transactions
+ * (existing subscriptions from before the Polar migration).
+ */
+export const listInvoices = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((input: { companyId: string }) =>
+    z.object({ companyId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    // biome-ignore lint/suspicious/noExplicitAny: dynamic schema
+    const sb = context.supabase as any;
+    const { data: sub } = await sb
+      .from("subscriptions")
+      .select("paddle_customer_id, polar_customer_id")
+      .eq("company_id", data.companyId)
+      .or("paddle_customer_id.not.is.null,polar_customer_id.not.is.null")
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (sub?.polar_customer_id) {
+      const env = process.env.POLAR_SERVER ?? "sandbox";
+      const base =
+        env === "sandbox" ? "https://sandbox-api.polar.sh" : "https://api.polar.sh";
+      const resp = await fetch(
+        `${base}/v1/orders?customer_id=${encodeURIComponent(sub.polar_customer_id)}&limit=25`,
+        { headers: { Authorization: `Bearer ${process.env.POLAR_ACCESS_TOKEN}` } },
+      );
+      if (!resp.ok) return { transactionsJson: "[]" };
+      const json = (await resp.json()) as { items?: unknown[] };
+      return { transactionsJson: JSON.stringify(json.items ?? []) };
+    }
+
+    const customerId = sub?.paddle_customer_id as string | undefined;
+    if (!customerId) return { transactionsJson: "[]" };
+
+    const apiKey = process.env.PADDLE_API_KEY;
+    const env = process.env.PADDLE_ENV ?? "sandbox";
+    if (!apiKey) return { transactionsJson: "[]" };
+    const base =
+      env === "sandbox" ? "https://sandbox-api.paddle.com" : "https://api.paddle.com";
+
+    const resp = await fetch(
+      `${base}/transactions?customer_id=${encodeURIComponent(customerId)}&per_page=25`,
+      { headers: { Authorization: `Bearer ${apiKey}` } },
+    );
+    if (!resp.ok) return { transactionsJson: "[]" };
+    const json = (await resp.json()) as { data?: unknown[] };
+    return { transactionsJson: JSON.stringify(json.data ?? []) };
   });
