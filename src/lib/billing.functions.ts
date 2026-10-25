@@ -11,7 +11,7 @@ import type { PlanKey } from "./paddle/config";
  */
 export const getMySubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { companyId?: string | null }) =>
+  .validator((input: { companyId?: string | null }) =>
     z.object({ companyId: z.string().uuid().nullable().optional() }).parse(input),
   )
   .handler(async ({ data, context }) => {
@@ -56,7 +56,7 @@ export const getMySubscription = createServerFn({ method: "POST" })
  */
 export const createFreeSubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { companyId: string }) =>
+  .validator((input: { companyId: string }) =>
     z.object({ companyId: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }) => {
@@ -91,7 +91,7 @@ export const createFreeSubscription = createServerFn({ method: "POST" })
  */
 export const createPendingSubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { companyId: string; plan: "pro" | "business"; cycle: "monthly" | "yearly" }) =>
+  .validator((input: { companyId: string; plan: "pro" | "business"; cycle: "monthly" | "yearly" }) =>
     z
       .object({
         companyId: z.string().uuid(),
@@ -130,7 +130,7 @@ export const createPendingSubscription = createServerFn({ method: "POST" })
  */
 export const cancelSubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { subscriptionId: string; atPeriodEnd?: boolean }) =>
+  .validator((input: { subscriptionId: string; atPeriodEnd?: boolean }) =>
     z
       .object({
         subscriptionId: z.string().min(1),
@@ -197,7 +197,7 @@ export const cancelSubscription = createServerFn({ method: "POST" })
  */
 export const listInvoices = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { companyId: string }) =>
+  .validator((input: { companyId: string }) =>
     z.object({ companyId: z.string().uuid() }).parse(input),
   )
   .handler(async ({ data, context }) => {
