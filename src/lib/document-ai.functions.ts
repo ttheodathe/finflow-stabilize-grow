@@ -344,7 +344,7 @@ const ExtractInput = z.object({ documentId: z.string().uuid() });
 
 export const extractDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => ExtractInput.parse(d))
+  .validator((d: unknown) => ExtractInput.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
 
@@ -527,7 +527,7 @@ const ApproveInput = z.object({
 // rather than building a parallel history mechanism.
 export const approveDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => ApproveInput.parse(d))
+  .validator((d: unknown) => ApproveInput.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: auth } = await supabase.auth.getUser();
@@ -614,7 +614,7 @@ const ApproveBillInput = z.object({
 // but reuses the exact same document status/link/audit-log mechanics.
 export const approveBillDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => ApproveBillInput.parse(d))
+  .validator((d: unknown) => ApproveBillInput.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: auth } = await supabase.auth.getUser();
@@ -720,7 +720,7 @@ const ApproveItemsInput = z.object({
 // item count and ids go in the audit log instead.
 export const approveItemsDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => ApproveItemsInput.parse(d))
+  .validator((d: unknown) => ApproveItemsInput.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: auth } = await supabase.auth.getUser();
@@ -801,7 +801,7 @@ const ApproveEstimateInput = z.object({
 // because their PO was scanned.
 export const approveEstimateDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => ApproveEstimateInput.parse(d))
+  .validator((d: unknown) => ApproveEstimateInput.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: auth } = await supabase.auth.getUser();
@@ -877,7 +877,7 @@ export const approveEstimateDocument = createServerFn({ method: "POST" })
 
 export const rejectDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => RejectInput.parse(d))
+  .validator((d: unknown) => RejectInput.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: auth } = await supabase.auth.getUser();
