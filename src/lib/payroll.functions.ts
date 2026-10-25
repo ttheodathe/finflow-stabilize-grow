@@ -32,7 +32,7 @@ const GenerateInput = z.object({
 
 export const generatePayRun = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => GenerateInput.parse(d))
+  .validator((d: unknown) => GenerateInput.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: auth } = await supabase.auth.getUser();
@@ -180,7 +180,7 @@ const ApproveInput = z.object({ payRunId: z.string().uuid() });
 
 export const approvePayRun = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => ApproveInput.parse(d))
+  .validator((d: unknown) => ApproveInput.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: auth } = await supabase.auth.getUser();
@@ -222,7 +222,7 @@ const PostInput = z.object({
 //   since net_pay = gross - paye - employee_contrib.
 export const postPayRunToLedger = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => PostInput.parse(d))
+  .validator((d: unknown) => PostInput.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: auth } = await supabase.auth.getUser();
@@ -294,7 +294,7 @@ const CancelInput = z.object({ payRunId: z.string().uuid() });
 
 export const cancelPayRun = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => CancelInput.parse(d))
+  .validator((d: unknown) => CancelInput.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: run, error } = await supabase
