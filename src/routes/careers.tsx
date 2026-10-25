@@ -12,11 +12,93 @@ export const Route = createFileRoute("/careers")({
       {
         name: "description",
         content:
-          "Explore careers at FinFlowTrack. Join a mission-driven team building modern accounting and business management software for growing businesses worldwide.",
+          "Explore careers at FinFlowTrack. Now hiring Growth & Marketing Partners worldwide (commission-based, applications reviewed on a rolling basis).",
       },
     ],
   }),
 });
+
+const APPLY_MAILTO =
+  "mailto:ceo@finflowtrack.com?subject=" +
+  encodeURIComponent("Application — Growth & Marketing Partner");
+
+const backgrounds = [
+  "Bookkeeping",
+  "Accounting",
+  "Finance",
+  "Small-business advisory",
+  "Business development",
+  "SaaS",
+  "Digital marketing",
+];
+
+const responsibilities = [
+  "Identify and connect with potential customers",
+  "Explain the value of FinFlow Track",
+  "Build relationships through channels you already use",
+];
+
+const channels = [
+  "Professional networks",
+  "Business communities",
+  "Content",
+  "Partnerships",
+  "Email outreach",
+  "Your existing network",
+  "Social media",
+];
+
+const goodFit = [
+  "Explain software clearly",
+  "Identify genuine customer needs",
+  "Reach the right audience",
+  "Build professional relationships",
+  "Work independently",
+  "Communicate consistently",
+  "Focus on qualified customers, not spam",
+];
+
+const commissionTiers = [
+  { rate: "20%", range: "1–10 qualified referrals" },
+  { rate: "35%", range: "11–49 qualified referrals" },
+  { rate: "50%", range: "50+ qualified referrals" },
+];
+
+const applicationIncludes = [
+  "Your name",
+  "Your country",
+  "Relevant experience",
+  "The channels you would use",
+  "A short note on how you’d approach customer acquisition",
+];
+
+/** Professional "HIRING" status pill. Static, no animation. */
+function HiringBadge({ className = "" }: { className?: string }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-2 rounded-full border border-emerald-600/30 bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 ${className}`}
+    >
+      <span aria-hidden="true" className="h-2 w-2 rounded-full bg-emerald-500" />
+      Hiring
+    </span>
+  );
+}
+
+function BulletList({ items }: { items: string[] }) {
+  return (
+    <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+      {items.map((item) => (
+        <li key={item} className="flex items-start gap-2">
+          <span
+            aria-hidden="true"
+            className="mt-1.5 h-1.5 w-1.5 flex-none rounded-full bg-primary"
+          />
+          <span>{item}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 function CareersPage() {
   return (
@@ -25,7 +107,10 @@ function CareersPage() {
       {/* Hero */}
       <section className="py-20 text-center">
         <div className="mx-auto max-w-4xl px-6">
-          <p className="text-sm font-semibold text-primary">Careers</p>
+          <div className="flex items-center justify-center gap-3">
+            <p className="text-sm font-semibold text-primary">Careers</p>
+            <HiringBadge />
+          </div>
 
           <h1 className="mt-4 text-4xl font-bold md:text-6xl">
             Build the Future of Business Finance With FinFlowTrack
@@ -34,6 +119,11 @@ function CareersPage() {
           <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
             Join a team building accessible accounting and business management technology that helps
             businesses understand their finances and grow with confidence.
+          </p>
+
+          <p className="mx-auto mt-6 max-w-xl rounded-lg border border-emerald-600/30 bg-emerald-50/60 px-4 py-3 text-sm text-foreground dark:bg-emerald-950/20">
+            <strong>Now hiring:</strong> Growth &amp; Marketing Partners worldwide. Applications are
+            reviewed on a rolling basis.
           </p>
 
           <div className="mt-8 flex justify-center gap-4">
@@ -150,17 +240,128 @@ function CareersPage() {
       {/* Open Positions */}
       <section id="open-positions" className="border-t py-16">
         <div className="mx-auto max-w-5xl px-6">
-          <h2 className="text-3xl font-bold">Open Positions</h2>
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 className="text-3xl font-bold">Open Positions</h2>
+            <HiringBadge />
+          </div>
 
-          <div className="mt-8 rounded-xl border p-8">
-            <h3 className="text-xl font-semibold">We are growing our team</h3>
+          <article className="mt-8 rounded-xl border p-8 shadow-sm">
+            <div className="flex flex-wrap items-center gap-3">
+              <HiringBadge />
+              <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium">Worldwide</span>
+              <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium">
+                Commission-based
+              </span>
+              <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium">
+                Independent partner
+              </span>
+            </div>
 
-            <p className="mt-4 text-muted-foreground">
-              Current openings will be listed here as new opportunities become available.
+            <h3 className="mt-5 text-2xl font-bold">Growth &amp; Marketing Partners</h3>
+            <p className="mt-3 max-w-3xl text-muted-foreground">
+              Turn your financial knowledge into a real income opportunity by helping businesses
+              find better financial tools. Help us reach businesses that genuinely need better
+              financial-management tools.
             </p>
 
+            <div className="mt-8 grid gap-8 md:grid-cols-2">
+              <div>
+                <h4 className="font-semibold">Who we’re looking for</h4>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  We’re especially interested in people already working in or around:
+                </p>
+                <BulletList items={backgrounds} />
+              </div>
+
+              <div>
+                <h4 className="font-semibold">What you’ll do</h4>
+                <BulletList items={responsibilities} />
+                <p className="mt-4 text-sm font-medium">This could mean:</p>
+                <BulletList items={channels} />
+              </div>
+            </div>
+
+            <div className="mt-8 grid gap-8 md:grid-cols-2">
+              <div>
+                <h4 className="font-semibold">Why bookkeepers &amp; accounting professionals?</h4>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Because you already understand the problems: you see the spreadsheets, the unpaid
+                  invoices and the expense records, and you understand what businesses struggle
+                  with. That knowledge is valuable.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold">Are you a good fit?</h4>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  You may be a strong fit if you can:
+                </p>
+                <BulletList items={goodFit} />
+                <p className="mt-3 text-sm font-medium">
+                  You don’t need a formal marketing degree.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-8">
+              <h4 className="font-semibold">Commission tiers</h4>
+              <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                {commissionTiers.map((t) => (
+                  <div key={t.rate} className="rounded-lg border bg-muted/30 p-4">
+                    <div className="text-2xl font-bold text-primary">{t.rate}</div>
+                    <div className="mt-1 text-sm text-muted-foreground">{t.range}</div>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-sm text-muted-foreground">
+                Eligible commissions can continue for up to 15 months.
+              </p>
+              <p className="mt-3 rounded-lg border bg-muted/30 p-4 text-sm text-muted-foreground">
+                <strong className="text-foreground">
+                  This is a commission-based independent opportunity, not a salaried position.
+                </strong>{" "}
+                There is no fixed salary. Earnings depend on eligible customer acquisition and
+                applicable commission terms.
+              </p>
+            </div>
+
+            <div className="mt-8 rounded-lg border-2 border-primary/30 p-6">
+              <h4 className="text-lg font-semibold">How to apply</h4>
+              <p className="mt-2 text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                Applications are reviewed on a rolling basis.
+              </p>
+              <p className="mt-3 text-sm text-muted-foreground">
+                Email{" "}
+                <a href={APPLY_MAILTO} className="font-semibold text-primary underline">
+                  ceo@finflowtrack.com
+                </a>{" "}
+                with the subject “Application — Growth &amp; Marketing Partner” and include:
+              </p>
+              <BulletList items={applicationIncludes} />
+
+              <div className="mt-5 flex flex-wrap items-center gap-4">
+                <a
+                  href={APPLY_MAILTO}
+                  className="inline-block rounded-lg bg-primary px-6 py-3 font-medium text-white"
+                >
+                  Apply now
+                </a>
+                <p className="text-sm text-muted-foreground">
+                  Questions about the role or commission details? Email{" "}
+                  <a href="mailto:support@finflowtrack.com" className="font-semibold text-primary">
+                    support@finflowtrack.com
+                  </a>
+                </p>
+              </div>
+            </div>
+          </article>
+
+          <div className="mt-8 rounded-xl border p-8">
+            <h3 className="text-xl font-semibold">Other roles</h3>
+
             <p className="mt-4 text-muted-foreground">
-              Interested in joining FinFlowTrack? Send your profile and experience to:
+              Interested in joining FinFlowTrack in another capacity? Send your profile and
+              experience to:
             </p>
 
             <a
