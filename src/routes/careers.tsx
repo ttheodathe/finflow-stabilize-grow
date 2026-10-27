@@ -79,7 +79,7 @@ function HiringBadge({ className = "" }: { className?: string }) {
       className={`inline-flex items-center gap-2 rounded-full border border-emerald-600/30 bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 ${className}`}
     >
       <span aria-hidden="true" className="h-2 w-2 rounded-full bg-emerald-500" />
-      Hiring
+      We&rsquo;re hiring
     </span>
   );
 }
