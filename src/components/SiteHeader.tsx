@@ -3,12 +3,14 @@ import { useEffect, useState } from "react";
 import { Menu, Wallet, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { HiringPill } from "@/components/HiringPill";
 
 const navLinks = [
   { label: "Features", to: "/features" as const },
   { label: "Pricing", to: "/pricing" as const },
   { label: "AI", to: "/" as const, hash: "ai" },
   { label: "Reviews", to: "/testimonials" as const },
+  { label: "Careers", to: "/careers" as const },
 ];
 
 /**
@@ -47,6 +49,7 @@ export function SiteHeader() {
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               {link.label}
+              {link.to === "/careers" && <HiringPill label="Hiring" />}
             </Link>
           ))}
         </nav>
@@ -89,6 +92,7 @@ export function SiteHeader() {
                 className="text-sm font-medium"
               >
                 {link.label}
+                {link.to === "/careers" && <HiringPill />}
               </Link>
             ))}
             <div className="mt-2 flex flex-col gap-2">
