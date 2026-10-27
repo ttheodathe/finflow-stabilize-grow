@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { CheckCircle2, Loader2, Wallet } from "lucide-react";
 import { useState } from "react";
+import { HiringPill } from "@/components/HiringPill";
 
 const footerLinks = [
   {
@@ -38,12 +39,12 @@ const footerLinks = [
   {
     title: "Comparison",
     links: [
-      {label: "Compare All", to: "/compare"},
-      {label: "Vs Quickbooks", to: "/compare/finflow-track-vs-quickbooks"},
-      {label: "Vs Xero", to: "/compare/finflow-track-vs-xero"},
-      {label: "Vs Wave", to: "/compare/finflow-track-vs-wave"},
-      {label: "Vs Zoho Books", to: "/compare/finflow-track-vs-zoho-books"},
-      ],
+      { label: "Compare All", to: "/compare" },
+      { label: "Vs Quickbooks", to: "/compare/finflow-track-vs-quickbooks" },
+      { label: "Vs Xero", to: "/compare/finflow-track-vs-xero" },
+      { label: "Vs Wave", to: "/compare/finflow-track-vs-wave" },
+      { label: "Vs Zoho Books", to: "/compare/finflow-track-vs-zoho-books" },
+    ],
   },
 ];
 
@@ -152,6 +153,7 @@ export function SiteFooter() {
                       className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                     >
                       {l.label}
+                      {l.to === "/careers" && <HiringPill />}
                     </Link>
                   </li>
                 ))}
