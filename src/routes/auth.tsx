@@ -16,7 +16,18 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
-  head: () => ({ meta: [{ title: "Sign in — Finflow Track" }] }),
+  head: ({ match }) => ({
+    meta: [
+      {
+        title:
+          match.search?.mode === "signup"
+            ? "Create your account | FinFlowTrack"
+            : "Sign in | FinFlowTrack",
+      },
+      // Account pages have no value in search results.
+      { name: "robots", content: "noindex, follow" },
+    ],
+  }),
   component: AuthPage,
 });
 
@@ -102,8 +113,8 @@ function AuthPage() {
           </h1>
           <p className="text-sm text-muted-foreground mb-6">
             {mode === "login"
-              ? "Sign in to your free account."
-              : "Free forever. No credit card required."}
+              ? "Sign in to your account."
+              : "Free plan available. No credit card needed to sign up."}
           </p>
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === "signup" && (
@@ -122,6 +133,7 @@ function AuthPage() {
               <Input
                 id="email"
                 type="email"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -132,6 +144,7 @@ function AuthPage() {
               <Input
                 id="password"
                 type="password"
+                autoComplete={mode === "login" ? "current-password" : "new-password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -145,6 +158,19 @@ function AuthPage() {
             >
               {loading ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}
             </Button>
+            {mode === "signup" && (
+              <p className="text-center text-xs text-muted-foreground">
+                By creating an account you agree to our{" "}
+                <Link to="/terms" className="underline underline-offset-2 hover:text-foreground">
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link to="/privacy" className="underline underline-offset-2 hover:text-foreground">
+                  Privacy Policy
+                </Link>
+                .
+              </p>
+            )}
           </form>
           <div className="mt-4 flex justify-between text-sm">
             <button
@@ -161,6 +187,28 @@ function AuthPage() {
             )}
           </div>
         </div>
+        <p className="mt-6 text-center text-xs leading-relaxed text-muted-foreground">
+          FinFlowTrack is operated by 2005CLG Ltd, a company registered in Rwanda.{" "}
+          <Link to="/about" className="underline underline-offset-2 hover:text-foreground">
+            About us
+          </Link>
+          {" · "}
+          <Link to="/security" className="underline underline-offset-2 hover:text-foreground">
+            Security
+          </Link>
+          {" · "}
+          <Link to="/contact" className="underline underline-offset-2 hover:text-foreground">
+            Contact
+          </Link>
+          <br />
+          Need help?{" "}
+          <a
+            href="mailto:support@finflowtrack.com"
+            className="underline underline-offset-2 hover:text-foreground"
+          >
+            support@finflowtrack.com
+          </a>
+        </p>
       </div>
     </div>
   );
