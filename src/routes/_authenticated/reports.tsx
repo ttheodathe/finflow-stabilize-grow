@@ -175,7 +175,7 @@ function ProfitAndLoss() {
           .gte("expense_date", from)
           .lte("expense_date", to),
       ]);
-      const invoices = (inv.data ?? []) as {
+      const invoices = (inv.data ?? []) as unknown as {
         total: number;
         status: string;
         issue_date: string;
@@ -184,7 +184,7 @@ function ProfitAndLoss() {
         base_currency_amount: number | null;
         currency: string | null;
       }[];
-      const expenses = (exp.data ?? []) as {
+      const expenses = (exp.data ?? []) as unknown as {
         amount: number;
         category: string | null;
         vendor: string | null;
@@ -1167,7 +1167,7 @@ function ReceivablesAging() {
       }
       const bucketCount = cutoffs.length + 1;
       const byCustomer = new Map<string, AgingRow>();
-      for (const inv of (data ?? []) as {
+      for (const inv of (data ?? []) as unknown as {
         total: number;
         due_date: string | null;
         customers: { name: string } | null;
@@ -1250,7 +1250,7 @@ function PayablesAging() {
       }
       const bucketCount = cutoffs.length + 1;
       const byVendor = new Map<string, AgingRow>();
-      for (const bill of (data ?? []) as {
+      for (const bill of (data ?? []) as unknown as {
         total: number;
         due_date: string | null;
         vendors: { name: string } | null;
