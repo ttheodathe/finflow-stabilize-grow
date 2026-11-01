@@ -41,8 +41,24 @@ const DOC_TYPES = [
 const LINE_ITEM_FIELDS = ["product", "quantity", "unit_price", "tax", "total"] as const;
 
 const FIELD_GROUPS: Record<string, string[]> = {
-  general: ["document_type", "language", "currency", "company", "supplier", "customer", "date", "due_date"],
-  invoice: ["invoice_number", "reference_number", "purchase_order", "payment_terms", "tax_number", "vat_number"],
+  general: [
+    "document_type",
+    "language",
+    "currency",
+    "company",
+    "supplier",
+    "customer",
+    "date",
+    "due_date",
+  ],
+  invoice: [
+    "invoice_number",
+    "reference_number",
+    "purchase_order",
+    "payment_terms",
+    "tax_number",
+    "vat_number",
+  ],
   financial: ["subtotal", "discount", "vat", "tax", "shipping", "grand_total"],
   payment: ["payment_method", "bank_details", "mobile_money", "reference_number"],
 };
@@ -69,9 +85,12 @@ function resolveAiProvider(): AiProvider {
 }
 
 function handleProviderError(res: Response, body: string, providerName: string): never {
-  if (res.status === 429) throw new Error(`${providerName} rate limit reached. Please retry in a moment.`);
+  if (res.status === 429)
+    throw new Error(`${providerName} rate limit reached. Please retry in a moment.`);
   if (res.status === 402)
-    throw new Error(`${providerName} credits exhausted. Upgrade your plan to continue processing documents.`);
+    throw new Error(
+      `${providerName} credits exhausted. Upgrade your plan to continue processing documents.`,
+    );
   throw new Error(`${providerName} error (${res.status}): ${body.slice(0, 200)}`);
 }
 
@@ -342,171 +361,189 @@ function fieldValue(rows: { field_name: string; field_value: string | null }[], 
 
 const ExtractInput = z.object({ documentId: z.string().uuid() });
 
+/**
+ * Runs AI extraction for one document. Shared by the signed-in server function below and by
+ * the inbound-email webhook (which passes the admin client and the company owner's user id).
+ */
+// biome-ignore lint/suspicious/noExplicitAny: callers pass either a user-scoped or admin client
+export async function runDocumentExtraction(supabase: any, documentId: string, userId: string) {
+  // RLS (is_company_member) scopes this to documents the caller can see.
+  const { data: doc, error: docErr } = await supabase
+    .from("documents")
+    .select("id, company_id, file_path, mime_type, doc_type")
+    .eq("id", documentId)
+    .single();
+  if (docErr || !doc) throw new Error("Document not found or you don't have access to it.");
+
+  // Paid-plan enforcement (Professional and above). Runs before any
+  // status change so a locked plan never leaves the doc in 'processing'.
+  await assertFeature(supabase, { userId: userId, companyId: doc.company_id }, "documentAi");
+
+  if (!doc.mime_type.startsWith("image/") && doc.mime_type !== "application/pdf") {
+    await supabase
+      .from("documents")
+      .update({
+        status: "failed",
+        error_message: "Unsupported file type. Upload a JPG, PNG, HEIC, or PDF.",
+      })
+      .eq("id", doc.id);
+    throw new Error("Unsupported file type. Upload a JPG, PNG, HEIC, or PDF.");
+  }
+
+  await supabase.from("documents").update({ status: "processing" }).eq("id", doc.id);
+
+  try {
+    // Resolved INSIDE the try block deliberately: if no AI provider is
+    // configured, this must still land in the catch below and mark the
+    // document 'failed'. When this lived above the try (an earlier bug),
+    // a missing key made this throw before the document ever left
+    // 'uploaded' — the review workspace would then poll forever waiting
+    // for a status change that could never come, showing an endless
+    // "AI is reading the document…" spinner with no error surfaced.
+    const provider = resolveAiProvider();
+    const { data: file, error: dlErr } = await supabase.storage
+      .from("documents")
+      .download(doc.file_path);
+    if (dlErr || !file) throw new Error(dlErr?.message ?? "Could not read the uploaded file.");
+
+    const buf = Buffer.from(await file.arrayBuffer());
+
+    let raw: string;
+    if (doc.mime_type === "application/pdf") {
+      const text = await extractPdfText(buf);
+      if (text.replace(/\s/g, "").length < 20) {
+        throw new Error(
+          "This PDF doesn't contain a readable text layer (it looks like a scanned image saved as PDF). " +
+            "Please upload it as a JPG or PNG instead so it can go through image extraction.",
+        );
+      }
+      raw = await callGeminiText(text, EXTRACTION_PROMPT, provider);
+    } else {
+      const imageDataUrl = `data:${doc.mime_type};base64,${buf.toString("base64")}`;
+      raw = await callGeminiVision([imageDataUrl], EXTRACTION_PROMPT, provider);
+    }
+
+    const parsed = extractJson(raw);
+    const rows = flattenExtraction(parsed);
+
+    const confidences = rows.filter((r) => r.field_value !== null).map((r) => r.confidence);
+    const overallConfidence =
+      confidences.length > 0
+        ? Math.round((confidences.reduce((s, c) => s + c, 0) / confidences.length) * 1000) / 1000
+        : 0;
+
+    await supabase.from("document_extractions").delete().eq("document_id", doc.id);
+    if (rows.length > 0) {
+      const { error: insErr } = await supabase
+        .from("document_extractions")
+        .insert(rows.map((r) => ({ document_id: doc.id, ...r })));
+      if (insErr) throw new Error(insErr.message);
+    }
+
+    // --- Phase 7: deterministic validation, not AI guesswork ---
+    const validations: {
+      check_name: string;
+      severity: "info" | "warning" | "error";
+      message: string;
+    }[] = [];
+
+    const subtotal = Number(fieldValue(rows, "subtotal"));
+    const tax = Number(fieldValue(rows, "vat")) || Number(fieldValue(rows, "tax")) || 0;
+    const shipping = Number(fieldValue(rows, "shipping")) || 0;
+    const discount = Number(fieldValue(rows, "discount")) || 0;
+    const grandTotal = Number(fieldValue(rows, "grand_total"));
+    if (Number.isFinite(subtotal) && Number.isFinite(grandTotal)) {
+      const expected = subtotal + tax + shipping - discount;
+      if (Math.abs(expected - grandTotal) > 0.02) {
+        validations.push({
+          check_name: "math_mismatch",
+          severity: "warning",
+          message: `Subtotal + tax + shipping − discount (${expected.toFixed(2)}) doesn't match the grand total (${grandTotal.toFixed(2)}).`,
+        });
+      }
+    }
+
+    if (!fieldValue(rows, "supplier") && !fieldValue(rows, "company")) {
+      validations.push({
+        check_name: "missing_supplier",
+        severity: "warning",
+        message: "No supplier/company name was detected on this document.",
+      });
+    }
+
+    const invoiceNumber = fieldValue(rows, "invoice_number");
+    if (invoiceNumber) {
+      const { data: dupes } = await supabase
+        .from("document_extractions")
+        .select("document_id, documents!inner(company_id, id)")
+        .eq("field_name", "invoice_number")
+        .eq("field_value", invoiceNumber)
+        .neq("document_id", doc.id);
+      const sameCompanyDupe = (dupes ?? []).some(
+        (d: any) => d.documents?.company_id === doc.company_id,
+      );
+      if (sameCompanyDupe) {
+        validations.push({
+          check_name: "duplicate_invoice",
+          severity: "error",
+          message: `Invoice number "${invoiceNumber}" was already extracted from another document for this company.`,
+        });
+      }
+    }
+
+    const lowConfidenceCount = rows.filter(
+      (r) => r.field_value !== null && r.confidence < 0.6,
+    ).length;
+    if (lowConfidenceCount > 0) {
+      validations.push({
+        check_name: "low_confidence",
+        severity: "info",
+        message: `${lowConfidenceCount} field${lowConfidenceCount > 1 ? "s" : ""} were extracted with low confidence — please double-check before approving.`,
+      });
+    }
+
+    await supabase.from("document_validations").delete().eq("document_id", doc.id);
+    if (validations.length > 0) {
+      await supabase
+        .from("document_validations")
+        .insert(validations.map((v) => ({ document_id: doc.id, ...v })));
+    }
+
+    await supabase
+      .from("documents")
+      .update({
+        status: "needs_review",
+        ai_model: "google/gemini-3-flash-preview",
+        overall_confidence: overallConfidence,
+        extracted_at: new Date().toISOString(),
+        error_message: null,
+      })
+      .eq("id", doc.id);
+
+    return {
+      ok: true as const,
+      overallConfidence,
+      fieldCount: rows.length,
+      validationCount: validations.length,
+    };
+  } catch (err) {
+    await supabase
+      .from("documents")
+      .update({
+        status: "failed",
+        error_message: err instanceof Error ? err.message : "Extraction failed",
+      })
+      .eq("id", doc.id);
+    throw err;
+  }
+}
+
 export const extractDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => ExtractInput.parse(d))
-  .handler(async ({ data, context }) => {
-    const { supabase } = context;
-
-    // RLS (is_company_member) scopes this to documents the caller can see.
-    const { data: doc, error: docErr } = await supabase
-      .from("documents")
-      .select("id, company_id, file_path, mime_type, doc_type")
-      .eq("id", data.documentId)
-      .single();
-    if (docErr || !doc) throw new Error("Document not found or you don't have access to it.");
-
-    // Paid-plan enforcement (Professional and above). Runs before any
-    // status change so a locked plan never leaves the doc in 'processing'.
-    await assertFeature(supabase, { userId: context.userId, companyId: doc.company_id }, "documentAi");
-
-    if (!doc.mime_type.startsWith("image/") && doc.mime_type !== "application/pdf") {
-      await supabase
-        .from("documents")
-        .update({
-          status: "failed",
-          error_message: "Unsupported file type. Upload a JPG, PNG, HEIC, or PDF.",
-        })
-        .eq("id", doc.id);
-      throw new Error("Unsupported file type. Upload a JPG, PNG, HEIC, or PDF.");
-    }
-
-    await supabase.from("documents").update({ status: "processing" }).eq("id", doc.id);
-
-    try {
-      // Resolved INSIDE the try block deliberately: if no AI provider is
-      // configured, this must still land in the catch below and mark the
-      // document 'failed'. When this lived above the try (an earlier bug),
-      // a missing key made this throw before the document ever left
-      // 'uploaded' — the review workspace would then poll forever waiting
-      // for a status change that could never come, showing an endless
-      // "AI is reading the document…" spinner with no error surfaced.
-      const provider = resolveAiProvider();
-      const { data: file, error: dlErr } = await supabase.storage
-        .from("documents")
-        .download(doc.file_path);
-      if (dlErr || !file) throw new Error(dlErr?.message ?? "Could not read the uploaded file.");
-
-      const buf = Buffer.from(await file.arrayBuffer());
-
-      let raw: string;
-      if (doc.mime_type === "application/pdf") {
-        const text = await extractPdfText(buf);
-        if (text.replace(/\s/g, "").length < 20) {
-          throw new Error(
-            "This PDF doesn't contain a readable text layer (it looks like a scanned image saved as PDF). " +
-              "Please upload it as a JPG or PNG instead so it can go through image extraction.",
-          );
-        }
-        raw = await callGeminiText(text, EXTRACTION_PROMPT, provider);
-      } else {
-        const imageDataUrl = `data:${doc.mime_type};base64,${buf.toString("base64")}`;
-        raw = await callGeminiVision([imageDataUrl], EXTRACTION_PROMPT, provider);
-      }
-
-      const parsed = extractJson(raw);
-      const rows = flattenExtraction(parsed);
-
-      const confidences = rows.filter((r) => r.field_value !== null).map((r) => r.confidence);
-      const overallConfidence =
-        confidences.length > 0
-          ? Math.round((confidences.reduce((s, c) => s + c, 0) / confidences.length) * 1000) / 1000
-          : 0;
-
-      await supabase.from("document_extractions").delete().eq("document_id", doc.id);
-      if (rows.length > 0) {
-        const { error: insErr } = await supabase
-          .from("document_extractions")
-          .insert(rows.map((r) => ({ document_id: doc.id, ...r })));
-        if (insErr) throw new Error(insErr.message);
-      }
-
-      // --- Phase 7: deterministic validation, not AI guesswork ---
-      const validations: { check_name: string; severity: "info" | "warning" | "error"; message: string }[] = [];
-
-      const subtotal = Number(fieldValue(rows, "subtotal"));
-      const tax = Number(fieldValue(rows, "vat")) || Number(fieldValue(rows, "tax")) || 0;
-      const shipping = Number(fieldValue(rows, "shipping")) || 0;
-      const discount = Number(fieldValue(rows, "discount")) || 0;
-      const grandTotal = Number(fieldValue(rows, "grand_total"));
-      if (Number.isFinite(subtotal) && Number.isFinite(grandTotal)) {
-        const expected = subtotal + tax + shipping - discount;
-        if (Math.abs(expected - grandTotal) > 0.02) {
-          validations.push({
-            check_name: "math_mismatch",
-            severity: "warning",
-            message: `Subtotal + tax + shipping − discount (${expected.toFixed(2)}) doesn't match the grand total (${grandTotal.toFixed(2)}).`,
-          });
-        }
-      }
-
-      if (!fieldValue(rows, "supplier") && !fieldValue(rows, "company")) {
-        validations.push({
-          check_name: "missing_supplier",
-          severity: "warning",
-          message: "No supplier/company name was detected on this document.",
-        });
-      }
-
-      const invoiceNumber = fieldValue(rows, "invoice_number");
-      if (invoiceNumber) {
-        const { data: dupes } = await supabase
-          .from("document_extractions")
-          .select("document_id, documents!inner(company_id, id)")
-          .eq("field_name", "invoice_number")
-          .eq("field_value", invoiceNumber)
-          .neq("document_id", doc.id);
-        const sameCompanyDupe = (dupes ?? []).some(
-          (d: any) => d.documents?.company_id === doc.company_id,
-        );
-        if (sameCompanyDupe) {
-          validations.push({
-            check_name: "duplicate_invoice",
-            severity: "error",
-            message: `Invoice number "${invoiceNumber}" was already extracted from another document for this company.`,
-          });
-        }
-      }
-
-      const lowConfidenceCount = rows.filter((r) => r.field_value !== null && r.confidence < 0.6).length;
-      if (lowConfidenceCount > 0) {
-        validations.push({
-          check_name: "low_confidence",
-          severity: "info",
-          message: `${lowConfidenceCount} field${lowConfidenceCount > 1 ? "s" : ""} were extracted with low confidence — please double-check before approving.`,
-        });
-      }
-
-      await supabase.from("document_validations").delete().eq("document_id", doc.id);
-      if (validations.length > 0) {
-        await supabase
-          .from("document_validations")
-          .insert(validations.map((v) => ({ document_id: doc.id, ...v })));
-      }
-
-      await supabase
-        .from("documents")
-        .update({
-          status: "needs_review",
-          ai_model: "google/gemini-3-flash-preview",
-          overall_confidence: overallConfidence,
-          extracted_at: new Date().toISOString(),
-          error_message: null,
-        })
-        .eq("id", doc.id);
-
-      return { ok: true as const, overallConfidence, fieldCount: rows.length, validationCount: validations.length };
-    } catch (err) {
-      await supabase
-        .from("documents")
-        .update({
-          status: "failed",
-          error_message: err instanceof Error ? err.message : "Extraction failed",
-        })
-        .eq("id", doc.id);
-      throw err;
-    }
-  });
+  .handler(async ({ data, context }) =>
+    runDocumentExtraction(context.supabase, data.documentId, context.userId),
+  );
 
 const ApproveInput = z.object({
   documentId: z.string().uuid(),
@@ -541,8 +578,16 @@ export const approveDocument = createServerFn({ method: "POST" })
     if (docErr || !doc) throw new Error("Document not found or you don't have access to it.");
     if (doc.status === "approved") throw new Error("This document was already approved.");
 
-    const vendor = await supabase.from("vendors").select("name").eq("id", data.expense.vendor_id).single();
-    const account = await supabase.from("accounts").select("name").eq("id", data.expense.account_id).single();
+    const vendor = await supabase
+      .from("vendors")
+      .select("name")
+      .eq("id", data.expense.vendor_id)
+      .single();
+    const account = await supabase
+      .from("accounts")
+      .select("name")
+      .eq("id", data.expense.account_id)
+      .single();
 
     const { data: expense, error: expErr } = await supabase
       .from("expenses")
@@ -629,7 +674,10 @@ export const approveBillDocument = createServerFn({ method: "POST" })
     if (doc.status === "approved") throw new Error("This document was already approved.");
 
     const subtotal = data.bill.lines.reduce((s, l) => s + l.quantity * l.unit_price, 0);
-    const tax = data.bill.lines.reduce((s, l) => s + l.quantity * l.unit_price * (l.tax_rate / 100), 0);
+    const tax = data.bill.lines.reduce(
+      (s, l) => s + l.quantity * l.unit_price * (l.tax_rate / 100),
+      0,
+    );
 
     const { data: bill, error: billErr } = await supabase
       .from("bills")
@@ -668,7 +716,10 @@ export const approveBillDocument = createServerFn({ method: "POST" })
 
     // Touch the bill so the same status-change trigger that posts the
     // journal entry for the manual "New bill" flow fires here too.
-    await supabase.from("bills").update({ status: "open" }).eq("id", (bill as { id: string }).id);
+    await supabase
+      .from("bills")
+      .update({ status: "open" })
+      .eq("id", (bill as { id: string }).id);
 
     await supabase
       .from("documents")
@@ -768,7 +819,11 @@ export const approveItemsDocument = createServerFn({ method: "POST" })
       action: "document_approved",
       entity_type: "documents",
       entity_id: doc.id,
-      metadata: { linked_table: "items", item_ids: (created ?? []).map((r: any) => r.id), count: rows.length },
+      metadata: {
+        linked_table: "items",
+        item_ids: (created ?? []).map((r: any) => r.id),
+        count: rows.length,
+      },
     });
 
     return { ok: true as const, count: rows.length };
@@ -816,7 +871,10 @@ export const approveEstimateDocument = createServerFn({ method: "POST" })
     if (doc.status === "approved") throw new Error("This document was already approved.");
 
     const subtotal = data.estimate.lines.reduce((s, l) => s + l.quantity * l.unit_price, 0);
-    const tax = data.estimate.lines.reduce((s, l) => s + l.quantity * l.unit_price * (l.tax_rate / 100), 0);
+    const tax = data.estimate.lines.reduce(
+      (s, l) => s + l.quantity * l.unit_price * (l.tax_rate / 100),
+      0,
+    );
 
     const { data: estimate, error: estErr } = await supabase
       .from("estimates")
@@ -892,7 +950,11 @@ export const rejectDocument = createServerFn({ method: "POST" })
 
     await supabase
       .from("documents")
-      .update({ status: "rejected", reviewed_at: new Date().toISOString(), reviewed_by: auth.user.id })
+      .update({
+        status: "rejected",
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: auth.user.id,
+      })
       .eq("id", data.documentId);
 
     await supabase.from("audit_logs").insert({
