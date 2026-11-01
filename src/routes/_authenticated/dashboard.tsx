@@ -35,6 +35,7 @@ import { formatCurrency, getCurrencySymbol } from "@/lib/currencies";
 import { useFxRates } from "@/hooks/use-fx";
 import { convert } from "@/lib/fx";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
+import { GettingStartedChecklist } from "@/components/dashboard/GettingStartedChecklist";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — Finflow Track" }] }),
@@ -325,6 +326,8 @@ function Dashboard() {
           ))}
         </div>
       </div>
+
+      <GettingStartedChecklist />
 
       {/* Error state: a failed fetch must never be mistaken for "no data" —
           that's the difference between "temporary problem, try again" and
