@@ -177,20 +177,21 @@ function InvoicesPage() {
     }
     setSendingId(inv.id);
     try {
-      const invoiceUrl = `${window.location.origin}/invoice/${inv.share_token}`;
+      // The server loads the recipient, amounts and link from the invoice record and checks
+      // that this user belongs to the invoice's company. Only the id is sent.
+      const { data: sessionRes } = await supabase.auth.getSession();
+      const accessToken = sessionRes?.session?.access_token;
+      if (!accessToken) {
+        toast.error("Your session has expired. Please sign in again.");
+        return;
+      }
       const res = await fetch("/api/send-invoice", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customerEmail: email,
-          customerName: inv.customers?.name,
-          invoiceNumber: inv.invoice_number,
-          amount: Number(inv.total).toFixed(2),
-          currency: inv.currency,
-          dueDate: inv.due_date,
-          invoiceUrl,
-          companyName,
-        }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ invoiceId: inv.id }),
       });
       const result = await res.json().catch(() => ({}));
       if (!res.ok || result.error) {
