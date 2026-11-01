@@ -61,35 +61,23 @@ export async function createInvitation(input: CreateInvitationInput): Promise<Te
  */
 async function sendInvitationEmail(invitation: TeamInvitation): Promise<boolean> {
   try {
-    const [{ data: company, error: companyError }, { data: userRes }] = await Promise.all([
-      supabase.from("companies").select("name").eq("id", invitation.company_id).single(),
-      supabase.auth.getUser(),
-    ]);
-    if (companyError) throw companyError;
-
-    const inviterName =
-      (userRes?.user?.user_metadata?.full_name as string | undefined) ??
-      userRes?.user?.email ??
-      undefined;
-
-    const inviteUrl = `${window.location.origin}/invite/${invitation.token}`;
-
+    // The server looks up the recipient, company, inviter and link itself from the
+    // invitation record and checks that this user may send it. Only the id is sent.
+    const { data: sessionRes } = await supabase.auth.getSession();
+    const accessToken = sessionRes?.session?.access_token;
+    if (!accessToken) throw new Error("Not signed in");
     const response = await fetch("/api/send-invitation", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: invitation.email,
-        inviterName,
-        companyName: company?.name,
-        inviteUrl,
-      }),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ invitationId: invitation.id }),
     });
-
     if (!response.ok) {
       const body = await response.json().catch(() => ({}));
       throw new Error(body?.error ?? `Send failed with status ${response.status}`);
     }
-
     return true;
   } catch (emailError) {
     console.error("Invitation created but email failed to send", emailError);
