@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Download, Printer, Mail, Copy } from "lucide-react";
+import { Download, Printer, Mail, Copy, Send, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/currencies";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
@@ -31,6 +31,11 @@ export function InvoiceIntelligence() {
   const [currency, setCurrency] = useState<string | null>(null);
   const [reminderFor, setReminderFor] = useState<string | null>(null);
   const [reminderText, setReminderText] = useState("");
+  const [reminderInvoiceIds, setReminderInvoiceIds] = useState<string[]>([]);
+  const [sending, setSending] = useState(false);
+  const [sentTo, setSentTo] = useState<string | null>(null);
+  // undefined = still loading, null = the customer has no email on file
+  const [recipientEmail, setRecipientEmail] = useState<string | null | undefined>(undefined);
   const asOf = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
   useEffect(() => {
@@ -70,6 +75,58 @@ export function InvoiceIntelligence() {
     }
     setReminderFor(customer);
     setReminderText(text);
+    setSentTo(null);
+    setRecipientEmail(undefined);
+    // Show the address from the Customers record before anything is sent.
+    const customerId = rows.find(
+      (r) => (r.customer_name?.trim() || "Unassigned") === customer && r.customer_id,
+    )?.customer_id;
+    if (customerId) {
+      supabase
+        .from("customers")
+        .select("email")
+        .eq("id", customerId)
+        .maybeSingle()
+        .then(({ data }) => setRecipientEmail(data?.email?.trim() || null));
+    } else {
+      setRecipientEmail(null);
+    }
+    // Only this customer's overdue invoices in the selected currency, same as the draft text.
+    setReminderInvoiceIds(
+      rows
+        .filter(
+          (r) =>
+            (r.customer_name?.trim() || "Unassigned") === customer &&
+            r.currency === active.currency &&
+            r.days_overdue > 0,
+        )
+        .map((r) => r.invoice_id),
+    );
+  }
+
+  async function sendReminder() {
+    if (!reminderFor || sending) return;
+    if (!recipientEmail) return;
+    if (!window.confirm(`Send this reminder to ${reminderFor} <${recipientEmail}>?`)) return;
+    setSending(true);
+    try {
+      const { data: sessionRes } = await supabase.auth.getSession();
+      const accessToken = sessionRes?.session?.access_token;
+      if (!accessToken) throw new Error("Your session has expired. Please sign in again.");
+      const res = await fetch("/api/send-reminder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+        body: JSON.stringify({ invoiceIds: reminderInvoiceIds, message: reminderText }),
+      });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(result?.error ?? "Failed to send the reminder");
+      setSentTo(result.sentTo ?? "the customer");
+      toast.success(`Reminder sent to ${result.sentTo ?? "the customer"}`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to send the reminder");
+    } finally {
+      setSending(false);
+    }
   }
 
   function exportCsv() {
@@ -254,18 +311,56 @@ export function InvoiceIntelligence() {
         <section className="rounded-lg border p-4 print:hidden">
           <h3 className="mb-1 font-semibold">Reminder draft for {reminderFor}</h3>
           <p className="mb-2 text-xs text-muted-foreground">
-            This is a draft only. Review and edit it, then copy it into your own email. Nothing is
-            sent automatically.
+            Review and edit the message. It is only emailed when you press Send, to the
+            customer&rsquo;s email address on file, and replies come to your own email. You can also
+            copy it into your own email instead.
           </p>
+          {reminderFor !== "Unassigned" && (
+            <p className="mb-2 text-sm" aria-live="polite">
+              <span className="text-muted-foreground">To: </span>
+              {recipientEmail === undefined ? (
+                <span className="text-muted-foreground">loading…</span>
+              ) : recipientEmail ? (
+                <span className="font-medium">{recipientEmail}</span>
+              ) : (
+                <span className="text-destructive">
+                  No email address on file for this customer. Add one in Customers to enable Send.
+                </span>
+              )}
+            </p>
+          )}
           <textarea
             className="min-h-48 w-full rounded-md border bg-background p-3 text-sm"
             value={reminderText}
-            onChange={(e) => setReminderText(e.target.value)}
+            onChange={(e) => {
+              setReminderText(e.target.value);
+              setSentTo(null);
+            }}
             aria-label={`Payment reminder draft for ${reminderFor}`}
           />
-          <div className="mt-2 flex gap-2">
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            {reminderFor !== "Unassigned" && (
+              <Button
+                size="sm"
+                onClick={sendReminder}
+                disabled={
+                  sending ||
+                  !recipientEmail ||
+                  !reminderText.trim() ||
+                  reminderInvoiceIds.length === 0
+                }
+              >
+                {sending ? (
+                  <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Send className="mr-1 h-3.5 w-3.5" />
+                )}
+                {sentTo ? "Send again" : "Send"}
+              </Button>
+            )}
             <Button
               size="sm"
+              variant="outline"
               onClick={async () => {
                 await navigator.clipboard.writeText(reminderText);
                 toast.success("Copied to clipboard");
@@ -276,6 +371,11 @@ export function InvoiceIntelligence() {
             <Button size="sm" variant="ghost" onClick={() => setReminderFor(null)}>
               Close
             </Button>
+            {sentTo && (
+              <span className="text-sm text-green-700" role="status">
+                Sent to {sentTo}
+              </span>
+            )}
           </div>
         </section>
       )}
