@@ -51,7 +51,7 @@ export function useSubscriptionLimits(companyId: string | null) {
     staleTime: 30_000,
   });
   const status = query.data?.status;
-  const isEntitled = status === "active" || status === "trialing" || status === "past_due";
+  const isEntitled = status === "active" || status === "trialing";
   const plan: PlanKey = isEntitled ? normalizePlan(query.data?.plan) : "free";
   const limits = limitsForPlan(plan);
   return {
