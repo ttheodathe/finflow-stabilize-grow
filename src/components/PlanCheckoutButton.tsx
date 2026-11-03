@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { PLANS, type PlanKey, type BillingCycle } from "@/lib/paddle/config";
 import { getPolarProductId } from "@/lib/polar/config";
+import { startPolarCheckout } from "@/lib/polar/checkout-client";
 import { toast } from "sonner";
 
 interface Props {
@@ -74,12 +75,7 @@ export function PlanCheckoutButton({
         return;
       }
 
-      const params = new URLSearchParams({
-        productId,
-        companyId,
-        userId: user.id,
-      });
-      window.location.href = `/api/public/polar/checkout?${params.toString()}`;
+      await startPolarCheckout({ productId, companyId });
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       toast.error(`Checkout failed: ${msg}`);
