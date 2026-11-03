@@ -1,3 +1,4 @@
+import { startPolarCheckout } from "@/lib/polar/checkout-client";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase as _sb } from "@/integrations/supabase/client";
@@ -206,14 +207,14 @@ function OnboardingPage() {
         { onConflict: "user_id" },
       );
       if (typeof window !== "undefined") localStorage.removeItem("pendingPlan");
-      const params = new URLSearchParams({
-        productId,
-        companyId,
-        userId: user.id,
-      });
-      // Full navigation (not the router) — this leaves the SPA for the
-      // Polar-hosted checkout page and returns to /settings?tab=billing.
-      window.location.href = `/api/public/polar/checkout?${params.toString()}`;
+      // Leaves the SPA for the Polar-hosted checkout page and returns to
+      // /settings?tab=billing. The server takes the payer from the session.
+      try {
+        await startPolarCheckout({ productId, companyId });
+      } catch (e) {
+        setSaving(false);
+        toast.error(e instanceof Error ? e.message : "Checkout could not be started");
+      }
       return;
     } else if (plan === "free" && companyId) {
       try {
