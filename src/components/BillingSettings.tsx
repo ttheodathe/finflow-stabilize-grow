@@ -112,7 +112,11 @@ export function BillingSettings() {
           {sub?.current_period_end && (
             <div>
               <dt className="text-gray-500">
-                {sub.cancel_at_period_end ? "Ends on" : "Renews on"}
+                {sub.cancel_at_period_end
+                  ? "Ends on"
+                  : sub.status === "trialing"
+                    ? "Trial ends on"
+                    : "Renews on"}
               </dt>
               <dd className="mt-0.5 font-medium text-gray-900">
                 {new Date(sub.current_period_end).toLocaleDateString()}
@@ -136,6 +140,13 @@ export function BillingSettings() {
             </div>
           )}
         </dl>
+        {sub?.status === "past_due" && (
+          <p className="mt-4 rounded-md bg-yellow-50 p-3 text-xs text-yellow-800" role="alert">
+            Your last payment did not go through, so your account is on the Free plan for now.
+            Update your payment method using the link in the email from our payment provider, and
+            your plan will be restored as soon as the payment succeeds.
+          </p>
+        )}
         {subscriptionId && !sub?.cancel_at_period_end && (
           <button
             type="button"
