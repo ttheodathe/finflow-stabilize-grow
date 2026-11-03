@@ -1,3 +1,4 @@
+import { startPolarCheckout } from "@/lib/polar/checkout-client";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase as _sb } from "@/integrations/supabase/client";
@@ -37,7 +38,7 @@ function CompletePaymentPage() {
   const cfg = PLANS[plan] ?? PLANS.pro;
   const cycle = (pending.billingCycle as "monthly" | "yearly") ?? "monthly";
 
-  function payNow() {
+  async function payNow() {
     if (!pending.companyId) {
       toast.error("Missing company for this subscription — contact support.");
       return;
@@ -48,12 +49,12 @@ function CompletePaymentPage() {
       return;
     }
     setLoading("pay");
-    const params = new URLSearchParams({
-      productId,
-      companyId: pending.companyId,
-      userId: user.id,
-    });
-    window.location.href = `/api/public/polar/checkout?${params.toString()}`;
+    try {
+      await startPolarCheckout({ productId, companyId: pending.companyId });
+    } catch (e) {
+      setLoading(null);
+      toast.error(e instanceof Error ? e.message : "Checkout could not be started");
+    }
   }
 
   async function switchToFree() {
