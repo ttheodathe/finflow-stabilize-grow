@@ -7,7 +7,10 @@
 import { normalizePlan, type PlanKey } from "@/lib/paddle/config";
 import { planHasFeature, requiredPlanName, type FeatureKey } from "./catalog";
 
-const ENTITLED = new Set(["active", "trialing", "past_due"]);
+// "past_due" (a payment failed, for example the first charge after a trial) is deliberately NOT
+// entitled: the account is on the Free plan until the payment succeeds, then Polar's webhook
+// flips the status back to "active" and the paid plan returns automatically.
+const ENTITLED = new Set(["active", "trialing"]);
 
 export async function resolvePlan(
   // biome-ignore lint/suspicious/noExplicitAny: dynamic schema
