@@ -72,6 +72,10 @@ async function handleEvent(event: { type: string; data: Record<string, unknown> 
     t === "subscription.created" ||
     t === "subscription.updated" ||
     t === "subscription.active" ||
+    t === "subscription.uncanceled" ||
+    t === "subscription.past_due" ||
+    t === "subscription.paused" ||
+    t === "subscription.resumed" ||
     t === "subscription.canceled" ||
     t === "subscription.revoked"
   ) {
@@ -80,8 +84,13 @@ async function handleEvent(event: { type: string; data: Record<string, unknown> 
     const companyId = (custom.company_id as string | undefined) ?? null;
     const ownerId = (custom.user_id as string | undefined) ?? null;
 
+    // Polar sends "subscription.canceled" the moment a cancellation is SCHEDULED for the end of
+    // the billing period; the subscription is still active (cancel_at_period_end = true) and the
+    // customer has paid for that time. Access really ends with "subscription.revoked", which
+    // also fires when a trial or renewal payment fails for good. So only "revoked" forces the
+    // status to "canceled"; every other event keeps the status Polar reports in the payload.
     let status = sub.status;
-    if (t === "subscription.canceled" || t === "subscription.revoked") status = "canceled";
+    if (t === "subscription.revoked") status = "canceled";
 
     if (!ownerId) {
       // No user_id in checkout metadata — can't attribute this event to an
@@ -147,6 +156,9 @@ async function createPartnerCommissionForOrder(data: Record<string, unknown>, ad
     );
     return;
   }
+  // A zero-value order (free trial, fully discounted) pays nothing, so it must not create a
+  // commission, count as a qualified referral, or start the 15-month commission window.
+  if (totalAmountCents <= 0) return;
 
   const { data: subRow } = await admin
     .from("subscriptions")
