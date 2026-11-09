@@ -67,12 +67,12 @@ function AuthPage() {
         const target = await resolveNextRoute(data.user);
         if (cancelled) return;
         if (target.to !== "/dashboard" && target.to !== "/onboarding") {
-          navigate(target as any, { replace: true });
+          navigate({ ...(target as any), replace: true });
           return;
         }
 
         const safeNext = getSafeNextPath(next);
-        navigate((safeNext ? { to: safeNext } : target) as any, { replace: true });
+        navigate({ ...(safeNext ? { to: safeNext } : (target as any)), replace: true } as any);
       } catch (error) {
         console.error("[auth] Could not resolve signed-in destination:", error);
         toast.error("We couldn't load your account. Please refresh and try again.");
