@@ -112,10 +112,10 @@ function AuthPage() {
         toast.success("Welcome back!");
         const target = await resolveNextRoute(data.user);
         if (target.to !== "/dashboard" && target.to !== "/onboarding") {
-          navigate(target as any, { replace: true });
+          navigate({ ...(target as any), replace: true });
         } else {
           const safeNext = getSafeNextPath(next);
-          navigate((safeNext ? { to: safeNext } : target) as any, { replace: true });
+          navigate({ ...(safeNext ? { to: safeNext } : (target as any)), replace: true } as any);
         }
       }
     } catch (err) {
