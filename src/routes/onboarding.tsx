@@ -170,6 +170,15 @@ function OnboardingPage() {
   }
 
   async function savePlan() {
+    if (plan === "enterprise") {
+      // Enterprise is a sales-assisted plan, not a self-serve subscription.
+      // Never mark it as a completed paid plan or silently fall through as Free.
+      if (typeof window !== "undefined") localStorage.removeItem("pendingPlan");
+      toast.info("Enterprise plans are arranged with our team. Continue to request a demo.");
+      navigate({ to: "/contact" });
+      return;
+    }
+
     setSaving(true);
     const companyId =
       typeof window !== "undefined" ? localStorage.getItem("currentCompanyId") : null;
