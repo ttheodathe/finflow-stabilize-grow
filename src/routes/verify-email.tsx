@@ -19,6 +19,7 @@ function VerifyEmailPage() {
   const { email } = Route.useSearch();
   const navigate = useNavigate();
   const [resending, setResending] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   // Poll for verification and route forward once confirmed.
   useEffect(() => {
@@ -31,9 +32,9 @@ function VerifyEmailPage() {
       }
     }
     check();
-    const interval = setInterval(check, 4000);
+    const interval = setInterval(check, 6000);
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_IN" || event === "USER_UPDATED") check();
+      if (event === "SIGNED_IN" || event === "USER_UPDATED") void check();
     });
     return () => {
       cancelled = true;
@@ -42,21 +43,30 @@ function VerifyEmailPage() {
     };
   }, [navigate]);
 
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setTimeout(() => setResendCooldown((seconds) => seconds - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
+
   async function resend() {
-    if (!email) {
-      toast.error("No email on file to resend to.");
-      return;
-    }
+    if (!email || resending || resendCooldown > 0) return;
     setResending(true);
-    const { error } = await supabase.auth.resend({ type: "signup", email });
-    setResending(false);
-    if (error) toast.error(error.message);
-    else toast.success("Verification email sent.");
+    try {
+      const { error } = await supabase.auth.resend({ type: "signup", email });
+      if (error) throw error;
+      setResendCooldown(60);
+      toast.success("Verification email sent. You can request another in 60 seconds.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Couldn't resend the verification email.");
+    } finally {
+      setResending(false);
+    }
   }
 
   return (
     <div className="min-h-screen bg-gradient-subtle flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md text-center bg-card border rounded-2xl shadow-elevated p-10">
+      <div className="w-full max-w-md text-center bg-card border rounded-2xl shadow-elevated p-5 sm:p-8">
         <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
           <MailCheck className="h-7 w-7 text-primary" />
         </div>
@@ -71,8 +81,8 @@ function VerifyEmailPage() {
           <Loader2 className="h-3 w-3 animate-spin" /> Waiting for verification…
         </div>
         <div className="flex flex-col gap-2">
-          <Button onClick={resend} disabled={resending} variant="outline">
-            {resending ? "Sending…" : "Resend verification email"}
+          <Button onClick={resend} disabled={resending || resendCooldown > 0 || !email} variant="outline">
+            {resending ? "Sending…" : resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend verification email"}
           </Button>
           <Link
             to="/auth"

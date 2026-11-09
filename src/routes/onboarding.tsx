@@ -170,6 +170,15 @@ function OnboardingPage() {
   }
 
   async function savePlan() {
+    if (plan === "enterprise") {
+      // Enterprise is a sales-assisted plan, not a self-serve subscription.
+      // Never mark it as a completed paid plan or silently fall through as Free.
+      if (typeof window !== "undefined") localStorage.removeItem("pendingPlan");
+      toast.info("Enterprise plans are arranged with our team. Continue to request a demo.");
+      navigate({ to: "/contact" });
+      return;
+    }
+
     setSaving(true);
     const companyId =
       typeof window !== "undefined" ? localStorage.getItem("currentCompanyId") : null;
@@ -259,7 +268,7 @@ function OnboardingPage() {
     .split(" ")[0];
 
   return (
-    <div className="min-h-screen bg-gradient-subtle px-4 py-10">
+    <div className="min-h-screen bg-gradient-subtle px-4 py-6 sm:py-10">
       <div className="mx-auto max-w-2xl">
         {resuming ? (
           <div className="flex items-center justify-center py-24 text-muted-foreground">
@@ -302,7 +311,7 @@ function OnboardingPage() {
               })}
             </div>
 
-            <div className="rounded-2xl border bg-card p-8 shadow-elevated">
+            <div className="rounded-2xl border bg-card p-5 shadow-elevated sm:p-8">
               {step === "profile" && (
                 <div className="space-y-4">
                   <h2 className="text-xl font-semibold">Set up your workspace</h2>
@@ -408,7 +417,7 @@ function OnboardingPage() {
                       autoFocus
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                       <Label>Currency</Label>
                       <CurrencySelect value={companyCurrency} onValueChange={setCompanyCurrency} />

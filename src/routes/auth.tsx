@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { resolveNextRoute } from "@/lib/auth-flow";
+
+function getSafeNextPath(value?: string): string | null {
+  if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("\\")) {
+    return null;
+  }
+  // Never allow a return path to bypass account setup or create an auth loop.
+  if (value === "/auth" || value.startsWith("/auth?") || value === "/onboarding" || value.startsWith("/onboarding?")) {
+    return null;
+  }
+  return value;
+}
 
 const searchSchema = z.object({
   mode: z.enum(["login", "signup"]).optional().default("login"),
@@ -39,27 +51,38 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => setMode(initialMode), [initialMode]);
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) return;
-      if (next) {
-        navigate({ to: next as any });
-        return;
-      }
-      const target = await resolveNextRoute(data.user);
-      navigate(target as any);
-    });
-  }, [navigate, next]);
+    let cancelled = false;
+    async function redirectSignedInUser() {
+      try {
+        const { data, error } = await supabase.auth.getUser();
+        if (error) throw error;
+        if (!data.user || cancelled) return;
 
-  // Persist plan chosen on Pricing across signup so onboarding picks it up.
-  useEffect(() => {
-    if (plan && typeof window !== "undefined") {
-      localStorage.setItem("pendingPlan", plan);
+        // Always enforce verification/onboarding before honoring a return path.
+        const target = await resolveNextRoute(data.user);
+        if (cancelled) return;
+        if (target.to !== "/dashboard" && target.to !== "/onboarding") {
+          navigate({ ...(target as any), replace: true });
+          return;
+        }
+
+        const safeNext = getSafeNextPath(next);
+        navigate({ ...(safeNext ? { to: safeNext } : (target as any)), replace: true } as any);
+      } catch (error) {
+        console.error("[auth] Could not resolve signed-in destination:", error);
+        toast.error("We couldn't load your account. Please refresh and try again.");
+      }
     }
-  }, [plan]);
+    void redirectSignedInUser();
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate, next]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -87,11 +110,12 @@ function AuthPage() {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Welcome back!");
-        if (next) {
-          navigate({ to: next as any });
+        const target = await resolveNextRoute(data.user);
+        if (target.to !== "/dashboard" && target.to !== "/onboarding") {
+          navigate({ ...(target as any), replace: true });
         } else {
-          const target = await resolveNextRoute(data.user);
-          navigate(target as any);
+          const safeNext = getSafeNextPath(next);
+          navigate({ ...(safeNext ? { to: safeNext } : (target as any)), replace: true } as any);
         }
       }
     } catch (err) {
@@ -102,12 +126,12 @@ function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-subtle flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-gradient-subtle flex items-center justify-center px-4 py-8 sm:py-12">
       <div className="w-full max-w-md">
         <Link to="/" className="block text-center mb-8 text-2xl font-bold gradient-text">
           FINFLOW TRACK
         </Link>
-        <div className="bg-card border rounded-2xl shadow-elevated p-8">
+        <div className="bg-card border rounded-2xl shadow-elevated p-5 sm:p-8">
           <h1 className="text-2xl font-bold mb-1">
             {mode === "login" ? "Welcome back" : "Create your account"}
           </h1>
@@ -122,9 +146,12 @@ function AuthPage() {
                 <Label htmlFor="name">Full name</Label>
                 <Input
                   id="name"
+                  autoComplete="name"
+                  autoCapitalize="words"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required
+                  className="h-11"
                 />
               </div>
             )}
@@ -137,19 +164,32 @@ function AuthPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="h-11"
               />
             </div>
             <div>
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                autoComplete={mode === "login" ? "current-password" : "new-password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete={mode === "login" ? "current-password" : "new-password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="h-11 pr-12"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((visible) => !visible)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-pressed={showPassword}
+                  className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-md text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             <Button
               type="submit"
@@ -172,10 +212,22 @@ function AuthPage() {
               </p>
             )}
           </form>
-          <div className="mt-4 flex justify-between text-sm">
+          <div className="mt-4 flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
             <button
               type="button"
-              onClick={() => setMode(mode === "login" ? "signup" : "login")}
+              onClick={() => {
+                const nextMode = mode === "login" ? "signup" : "login";
+                setMode(nextMode);
+                navigate({
+                  to: "/auth",
+                  search: {
+                    mode: nextMode,
+                    ...(plan ? { plan } : {}),
+                    ...(next ? { next } : {}),
+                  },
+                  replace: true,
+                });
+              }}
               className="text-primary hover:underline"
             >
               {mode === "login" ? "Need an account? Sign up" : "Have an account? Sign in"}
