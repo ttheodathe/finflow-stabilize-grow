@@ -9,6 +9,17 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { resolveNextRoute } from "@/lib/auth-flow";
 
+function getSafeNextPath(value?: string): string | null {
+  if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("\\")) {
+    return null;
+  }
+  // Never allow a return path to bypass account setup or create an auth loop.
+  if (value === "/auth" || value.startsWith("/auth?") || value === "/onboarding" || value.startsWith("/onboarding?")) {
+    return null;
+  }
+  return value;
+}
+
 const searchSchema = z.object({
   mode: z.enum(["login", "signup"]).optional().default("login"),
   plan: z.enum(["free", "starter", "pro", "business", "enterprise"]).optional(),
@@ -45,15 +56,32 @@ function AuthPage() {
   useEffect(() => setMode(initialMode), [initialMode]);
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) return;
-      if (next) {
-        navigate({ to: next as any });
-        return;
+    let cancelled = false;
+    async function redirectSignedInUser() {
+      try {
+        const { data, error } = await supabase.auth.getUser();
+        if (error) throw error;
+        if (!data.user || cancelled) return;
+
+        // Always enforce verification/onboarding before honoring a return path.
+        const target = await resolveNextRoute(data.user);
+        if (cancelled) return;
+        if (target.to !== "/dashboard" && target.to !== "/onboarding") {
+          navigate(target as any, { replace: true });
+          return;
+        }
+
+        const safeNext = getSafeNextPath(next);
+        navigate((safeNext ? { to: safeNext } : target) as any, { replace: true });
+      } catch (error) {
+        console.error("[auth] Could not resolve signed-in destination:", error);
+        toast.error("We couldn't load your account. Please refresh and try again.");
       }
-      const target = await resolveNextRoute(data.user);
-      navigate(target as any);
-    });
+    }
+    void redirectSignedInUser();
+    return () => {
+      cancelled = true;
+    };
   }, [navigate, next]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -82,11 +110,12 @@ function AuthPage() {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Welcome back!");
-        if (next) {
-          navigate({ to: next as any });
+        const target = await resolveNextRoute(data.user);
+        if (target.to !== "/dashboard" && target.to !== "/onboarding") {
+          navigate(target as any, { replace: true });
         } else {
-          const target = await resolveNextRoute(data.user);
-          navigate(target as any);
+          const safeNext = getSafeNextPath(next);
+          navigate((safeNext ? { to: safeNext } : target) as any, { replace: true });
         }
       }
     } catch (err) {
