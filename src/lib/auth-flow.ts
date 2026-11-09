@@ -21,12 +21,20 @@ export type NextRoute =
  * is false, we upsert it to true so future checks are fast and consistent.
  */
 export async function hasCompletedOnboarding(userId: string): Promise<boolean> {
-  const { data: member } = await supabase
+  const { data: member, error } = await supabase
     .from("company_members")
     .select("company_id")
     .eq("user_id", userId)
     .limit(1)
     .maybeSingle();
+
+  // A failed membership lookup is not proof that onboarding is incomplete.
+  // Throw so callers can show/retry a technical error instead of looping users
+  // back through setup or creating duplicate workspaces.
+  if (error) {
+    console.error("[auth] Could not verify company membership:", error);
+    throw new Error("We couldn't verify your workspace. Please try again.");
+  }
 
   if (!member) return false;
 
@@ -69,11 +77,15 @@ export async function hasCompletedOnboarding(userId: string): Promise<boolean> {
 export async function getPendingPlan(
   userId: string,
 ): Promise<{ plan: string; billingCycle: string | null; companyId: string | null } | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("subscriptions")
     .select("plan, billing_cycle, company_id, status")
     .eq("user_id", userId)
     .maybeSingle();
+  if (error) {
+    console.error("[auth] Could not verify subscription status:", error);
+    throw new Error("We couldn't verify your subscription. Please refresh and try again.");
+  }
   if (!data || data.status !== "pending") return null;
   return { plan: data.plan, billingCycle: data.billing_cycle, companyId: data.company_id };
 }
