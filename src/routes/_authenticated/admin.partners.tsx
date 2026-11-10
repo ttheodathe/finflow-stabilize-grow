@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -16,7 +17,12 @@ import {
   rejectPartnerApplication,
 } from "@/services/partners/partnerApplications.service";
 import { setPartnerStatus } from "@/services/partners/partners.service";
-import { createPartnerPayout } from "@/services/partners/partnerPayouts.service";
+import {
+  createPartnerPayout,
+  listPendingPartnerPayouts,
+  markPayoutFailed,
+  markPayoutPaid,
+} from "@/services/partners/partnerPayouts.service";
 import {
   reviewCommission,
   updateProgramSettings,
@@ -62,6 +68,10 @@ function AdminPartnersPage() {
   const { partners, isLoading: partnersLoading } = useAllPartners();
   const { analytics, isLoading: analyticsLoading } = usePartnerAdminAnalytics();
   const { grouped: payoutQueue, isLoading: payoutQueueLoading } = useApprovedCommissionsByPartner();
+  const { data: pendingPayouts = [], isLoading: pendingPayoutsLoading } = useQuery({
+    queryKey: ["partner-pending-payouts"],
+    queryFn: listPendingPartnerPayouts,
+  });
   const { commissions: reviewQueue, isLoading: reviewQueueLoading } = useCommissionReviewQueue();
   const { settings, isLoading: settingsLoading } = useProgramSettings();
   const [settingsDraft, setSettingsDraft] = useState<PartnerProgramSettings | null>(null);
@@ -133,10 +143,33 @@ function AdminPartnersPage() {
   async function handleCreatePayout(partnerId: string, commissionIds: string[]) {
     try {
       await createPartnerPayout(partnerId, commissionIds);
-      toast.success("Payout created — commissions marked as paid");
+      toast.success("Payout created. Commissions remain approved until the transfer is confirmed.");
       queryClient.invalidateQueries({ queryKey: ["approved-commissions-by-partner"] });
+      queryClient.invalidateQueries({ queryKey: ["partner-pending-payouts"] });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to create payout");
+    }
+  }
+
+  async function handleMarkPayoutPaid(payoutId: string) {
+    try {
+      await markPayoutPaid(payoutId);
+      toast.success("Payout marked paid and linked commissions settled");
+      queryClient.invalidateQueries({ queryKey: ["partner-pending-payouts"] });
+      queryClient.invalidateQueries({ queryKey: ["approved-commissions-by-partner"] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to confirm payout");
+    }
+  }
+
+  async function handleMarkPayoutFailed(payoutId: string) {
+    try {
+      await markPayoutFailed(payoutId, "Transfer failed; commissions released for retry.");
+      toast.success("Payout marked failed; commissions returned to the payout queue");
+      queryClient.invalidateQueries({ queryKey: ["partner-pending-payouts"] });
+      queryClient.invalidateQueries({ queryKey: ["approved-commissions-by-partner"] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to mark payout failed");
     }
   }
 
@@ -263,11 +296,11 @@ function AdminPartnersPage() {
             </p>
           ) : (
             <div className="divide-y">
-              {Object.values(payoutQueue).map((group) => {
+              {Object.entries(payoutQueue).map(([groupKey, group]) => {
                 const total = group.commissions.reduce((acc, c) => acc + c.commission_amount, 0);
                 return (
                   <div
-                    key={group.partnerId}
+                    key={groupKey}
                     className="flex items-center justify-between py-3 text-sm"
                   >
                     <div>
@@ -293,6 +326,45 @@ function AdminPartnersPage() {
               })}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Pending transfers</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {pendingPayoutsLoading ? (
+            <Skeleton className="h-16 w-full" />
+          ) : pendingPayouts.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No transfers awaiting confirmation.</p>
+          ) : (
+            <div className="divide-y">
+              {pendingPayouts.map((payout) => (
+                <div key={payout.id} className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm">
+                  <div>
+                    <p className="font-medium">
+                      {formatMoney(Number(payout.total_amount), payout.currency)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Created {new Date(payout.created_at).toLocaleString()} · {payout.method ?? "Method not recorded"}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" variant="outline" onClick={() => handleMarkPayoutFailed(payout.id)}>
+                      Mark failed
+                    </Button>
+                    <Button size="sm" onClick={() => handleMarkPayoutPaid(payout.id)}>
+                      Confirm transfer paid
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <p className="mt-3 text-xs text-muted-foreground">
+            Confirm payment only after the transfer has actually cleared. Marking a transfer failed releases its commissions for a later retry.
+          </p>
         </CardContent>
       </Card>
 
