@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { trackEvent } from "@/lib/analytics";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Label } from "@/components/ui/label";
@@ -63,7 +64,17 @@ export const Route = createFileRoute("/_authenticated/reports")({
 type Tab = "pnl" | "balance-sheet" | "cash-flow" | "ar-aging" | "ap-aging" | "invoice-summary";
 
 function ReportsPage() {
+  const companyId = useActiveCompanyId();
   const [tab, setTab] = useState<Tab>("pnl");
+
+  useEffect(() => {
+    if (!companyId || typeof window === "undefined") return;
+    const key = "onboardingReportsViewed:" + companyId;
+    if (localStorage.getItem(key) !== "1") {
+      localStorage.setItem(key, "1");
+      trackEvent("onboarding_step_completed", { step: "reports" });
+    }
+  }, [companyId]);
 
   return (
     <div>
