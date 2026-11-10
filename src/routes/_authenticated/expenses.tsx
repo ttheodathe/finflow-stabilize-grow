@@ -40,6 +40,7 @@ import { CurrencySelect } from "@/components/currency-select";
 import { useDefaultCurrency, useDateFormat, formatDate } from "@/hooks/use-currency";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 import { lockExchangeRate } from "@/lib/fx-lock";
+import { trackAccountingAction } from "@/lib/analytics";
 
 export const Route = createFileRoute("/_authenticated/expenses")({
   head: () => ({ meta: [{ title: "Expenses — Finflow Track" }] }),
@@ -211,6 +212,7 @@ function ExpensesPage() {
       : await supabase.from("expenses").insert(scoped(payload));
     if (error) return toast.error(error.message);
     toast.success(editing ? "Expense updated" : "Expense added");
+    if (!editing && companyId) void trackAccountingAction(companyId, "expense");
     setOpen(false);
     load();
   }
