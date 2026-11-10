@@ -14,6 +14,17 @@ export interface PartnerPayout {
   created_at: string;
 }
 
+export async function listPendingPartnerPayouts(): Promise<PartnerPayout[]> {
+  const { data, error } = await supabase
+    .from("partner_payouts")
+    .select("*")
+    .eq("status", "pending")
+    .order("created_at", { ascending: true });
+
+  if (error) throw new PartnerServiceError("FETCH_PENDING_PAYOUTS_FAILED", error.message);
+  return (data ?? []) as PartnerPayout[];
+}
+
 export async function listPartnerPayouts(partnerId: string): Promise<PartnerPayout[]> {
   const { data, error } = await supabase
     .from("partner_payouts")
@@ -41,14 +52,24 @@ export async function createPartnerPayout(
   return data as PartnerPayout;
 }
 
+/** Call only after the transfer has actually been completed and verified. */
 export async function markPayoutPaid(payoutId: string): Promise<PartnerPayout> {
   const { data, error } = await supabase.rpc("mark_partner_payout_paid", { p_payout_id: payoutId });
   if (error) throw new PartnerServiceError("MARK_PAYOUT_PAID_FAILED", error.message);
   return data as PartnerPayout;
 }
 
-// Staff-only: every approved (unpaid) commission across all partners,
-// grouped by partner — this is the admin's payout queue.
+/** Releases reserved commissions after a transfer fails, while preserving payout history. */
+export async function markPayoutFailed(payoutId: string, notes?: string): Promise<PartnerPayout> {
+  const { data, error } = await supabase.rpc("mark_partner_payout_failed", {
+    p_payout_id: payoutId,
+    p_notes: notes,
+  });
+  if (error) throw new PartnerServiceError("MARK_PAYOUT_FAILED", error.message);
+  return data as PartnerPayout;
+}
+
+// Staff-only: group by BOTH partner and currency. Different currencies must never be summed.
 export async function listApprovedCommissionsByPartner(): Promise<
   Record<
     string,
@@ -69,17 +90,13 @@ export async function listApprovedCommissionsByPartner(): Promise<
   ]);
 
   if (commissionsRes.error)
-    throw new PartnerServiceError(
-      "FETCH_APPROVED_COMMISSIONS_FAILED",
-      commissionsRes.error.message,
-    );
+    throw new PartnerServiceError("FETCH_APPROVED_COMMISSIONS_FAILED", commissionsRes.error.message);
   if (partnersRes.error)
     throw new PartnerServiceError("FETCH_APPROVED_COMMISSIONS_FAILED", partnersRes.error.message);
 
   const businessNameById = new Map(
     (partnersRes.data ?? []).map((p) => [p.id, p.business_name] as const),
   );
-
   const grouped: Record<
     string,
     {
@@ -91,12 +108,17 @@ export async function listApprovedCommissionsByPartner(): Promise<
   > = {};
 
   for (const row of commissionsRes.data ?? []) {
-    const partnerId = row.partner_id;
-    const businessName = businessNameById.get(partnerId) ?? "Unknown partner";
-    if (!grouped[partnerId]) {
-      grouped[partnerId] = { partnerId, businessName, currency: row.currency, commissions: [] };
+    const currency = row.currency.toUpperCase();
+    const key = `${row.partner_id}:${currency}`;
+    if (!grouped[key]) {
+      grouped[key] = {
+        partnerId: row.partner_id,
+        businessName: businessNameById.get(row.partner_id) ?? "Unknown partner",
+        currency,
+        commissions: [],
+      };
     }
-    grouped[partnerId].commissions.push({
+    grouped[key].commissions.push({
       id: row.id,
       commission_amount: Number(row.commission_amount),
     });

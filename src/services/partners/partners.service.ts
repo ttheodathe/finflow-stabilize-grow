@@ -46,21 +46,24 @@ export async function getPartnerDashboardStats(partnerId: string): Promise<Partn
     PartnerCommission,
     "status" | "commission_amount" | "currency"
   >[];
-
+  const currencies = new Set(commissions.map((commission) => commission.currency.toUpperCase()));
   const sum = (statuses: PartnerCommission["status"][]) =>
     commissions
       .filter((c) => statuses.includes(c.status))
       .reduce((acc, c) => acc + Number(c.commission_amount), 0);
 
+  // The legacy dashboard model exposes one currency. Avoid presenting a misleading
+  // cross-currency total; show zero totals until a multi-currency dashboard is introduced.
+  const singleCurrency = currencies.size <= 1;
   return {
     totalClicks: clicks.length,
     uniqueVisitors,
     totalSignups: attributionsRes.data?.length ?? 0,
-    pendingCommissions: sum(["pending"]),
-    approvedCommissions: sum(["approved"]),
-    paidCommissions: sum(["paid"]),
-    lifetimeEarnings: sum(["approved", "paid"]),
-    currency: commissions[0]?.currency ?? "USD",
+    pendingCommissions: singleCurrency ? sum(["pending"]) : 0,
+    approvedCommissions: singleCurrency ? sum(["approved"]) : 0,
+    paidCommissions: singleCurrency ? sum(["paid"]) : 0,
+    lifetimeEarnings: singleCurrency ? sum(["approved", "paid"]) : 0,
+    currency: currencies.size === 1 ? [...currencies][0] : "USD",
   };
 }
 
@@ -90,12 +93,10 @@ export async function setPartnerStatus(
   partnerId: string,
   status: Partner["status"],
 ): Promise<Partner> {
-  const { data, error } = await supabase
-    .from("partners")
-    .update({ status })
-    .eq("id", partnerId)
-    .select("*")
-    .single();
+  const { data, error } = await supabase.rpc("set_partner_status", {
+    p_partner_id: partnerId,
+    p_status: status,
+  });
 
   if (error) throw new PartnerServiceError("UPDATE_PARTNER_STATUS_FAILED", error.message);
   return data as Partner;
