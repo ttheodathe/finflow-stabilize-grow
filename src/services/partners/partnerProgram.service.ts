@@ -26,12 +26,14 @@ export async function getProgramSettings(): Promise<PartnerProgramSettings> {
 export async function updateProgramSettings(
   patch: Partial<PartnerProgramSettings>,
 ): Promise<PartnerProgramSettings> {
-  const { data, error } = await supabase
-    .from("partner_program_settings")
-    .update(patch)
-    .eq("id", true)
-    .select("multi_tier_enabled, max_tiers, tier2_rate, tier3_rate")
-    .single();
+  const current = await getProgramSettings();
+  const next = { ...current, ...patch };
+  const { data, error } = await supabase.rpc("update_partner_program_settings", {
+    p_multi_tier_enabled: next.multi_tier_enabled,
+    p_max_tiers: next.max_tiers,
+    p_tier2_rate: next.tier2_rate,
+    p_tier3_rate: next.tier3_rate,
+  });
 
   if (error) throw new PartnerServiceError("UPDATE_SETTINGS_FAILED", error.message);
   return data as PartnerProgramSettings;
