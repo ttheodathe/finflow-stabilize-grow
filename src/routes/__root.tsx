@@ -15,6 +15,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { captureReferralFromUrl } from "@/lib/referral";
+import { trackEvent } from "@/lib/analytics";
 
 // Not needed for first paint: loaded after the page is interactive so they stay
 // out of the initial JavaScript that every visitor downloads.
@@ -205,7 +206,14 @@ function RootComponent() {
   }, []);
 
   useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange((event) => {
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && window.location.pathname === "/auth") {
+        const provider = session?.user?.app_metadata?.provider;
+        if (typeof provider === "string" && provider !== "email") {
+          const mode = new URLSearchParams(window.location.search).get("mode") === "signup" ? "signup" : "login";
+          trackEvent("auth_completed", { method: provider, mode });
+        }
+      }
       if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
         router.invalidate();
       }
