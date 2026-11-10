@@ -14,7 +14,18 @@ export interface PartnerPayout {
   created_at: string;
 }
 
-export async function listPendingPartnerPayouts(): Promise<PartnerPayout[]> {\n  const { data, error } = await supabase\n    .from("partner_payouts")\n    .select("*")\n    .eq("status", "pending")\n    .order("created_at", { ascending: true });\n\n  if (error) throw new PartnerServiceError("FETCH_PENDING_PAYOUTS_FAILED", error.message);\n  return (data ?? []) as PartnerPayout[];\n}\n\nexport async function listPartnerPayouts(partnerId: string): Promise<PartnerPayout[]> {
+export async function listPendingPartnerPayouts(): Promise<PartnerPayout[]> {
+  const { data, error } = await supabase
+    .from("partner_payouts")
+    .select("*")
+    .eq("status", "pending")
+    .order("created_at", { ascending: true });
+
+  if (error) throw new PartnerServiceError("FETCH_PENDING_PAYOUTS_FAILED", error.message);
+  return (data ?? []) as PartnerPayout[];
+}
+
+export async function listPartnerPayouts(partnerId: string): Promise<PartnerPayout[]> {
   const { data, error } = await supabase
     .from("partner_payouts")
     .select("*")
