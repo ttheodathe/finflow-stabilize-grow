@@ -13,7 +13,7 @@ type Step = {
   done: boolean;
   to: string | null;
   action: string;
-  image: string;
+  imagePosition: number;
   imageAlt: string;
 };
 
@@ -75,7 +75,7 @@ export function GettingStartedChecklist() {
       done: Boolean(companyId),
       to: null,
       action: "Workspace ready",
-      image: "/onboarding/dashboard.jpg",
+      imagePosition: 0,
       imageAlt: "FinFlow Track dashboard with its getting-started progress card",
     },
     {
@@ -85,7 +85,7 @@ export function GettingStartedChecklist() {
       done: (counts?.customers ?? 0) > 0,
       to: "/customers",
       action: "Add a customer",
-      image: "/onboarding/customers.jpg",
+      imagePosition: 1,
       imageAlt: "FinFlow Track customer management screen",
     },
     {
@@ -95,7 +95,7 @@ export function GettingStartedChecklist() {
       done: (counts?.invoices ?? 0) > 0,
       to: "/invoices",
       action: "Create an invoice",
-      image: "/onboarding/invoices.jpg",
+      imagePosition: 2,
       imageAlt: "FinFlow Track invoices screen",
     },
     {
@@ -105,7 +105,7 @@ export function GettingStartedChecklist() {
       done: (counts?.expenses ?? 0) > 0,
       to: "/expenses",
       action: "Record an expense",
-      image: "/onboarding/expenses.jpg",
+      imagePosition: 3,
       imageAlt: "FinFlow Track expenses screen",
     },
     {
@@ -115,7 +115,7 @@ export function GettingStartedChecklist() {
       done: reportsViewed,
       to: "/reports",
       action: "Explore reports",
-      image: "/onboarding/reports.jpg",
+      imagePosition: 4,
       imageAlt: "FinFlow Track financial reports screen",
     },
   ], [companyId, counts, reportsViewed]);
@@ -176,11 +176,15 @@ export function GettingStartedChecklist() {
               )}
             </div>
             <div className="overflow-hidden rounded-xl border bg-muted/30">
-              <img
-                src={activeStep.image}
-                alt={activeStep.imageAlt}
-                loading="lazy"
-                className="block aspect-[16/9] w-full object-cover object-top"
+              <div
+                role="img"
+                aria-label={activeStep.imageAlt}
+                className="aspect-[16/9] w-full bg-no-repeat"
+                style={{
+                  backgroundImage: "url('/onboarding/screenshots.webp')",
+                  backgroundSize: "100% 500%",
+                  backgroundPosition: "center " + (activeStep.imagePosition * 25) + "%",
+                }}
               />
               <p className="border-t px-3 py-2 text-xs text-muted-foreground">
                 A real view of this area in FinFlow Track
