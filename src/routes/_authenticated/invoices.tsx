@@ -41,6 +41,7 @@ import { notifyCompanyMembers } from "@/lib/notify";
 import { UpgradePlanModal } from "@/components/UpgradePlanModal";
 import { useSubscriptionLimits } from "@/lib/subscription-limits";
 import type { PlanKey } from "@/lib/paddle/config";
+import { trackAccountingAction } from "@/lib/analytics";
 
 type InvoicingSettings = {
   invoicePrefix: string;
@@ -381,6 +382,7 @@ function InvoicesPage() {
     }
 
     toast.success(editing ? "Invoice updated" : "Invoice created");
+    if (!editing && companyId) void trackAccountingAction(companyId, "invoice");
     if (becamePaid && companyId) {
       const customerName = customers.find((c) => c.id === form.customer_id)?.name;
       notifyCompanyMembers(
