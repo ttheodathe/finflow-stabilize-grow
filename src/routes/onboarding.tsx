@@ -497,11 +497,15 @@ function OnboardingPage() {
                     After setup, you can add customers, create invoices, record expenses and explore reports.
                   </p>
                 </div>
-                <img
-                  src="/onboarding/dashboard.jpg"
-                  alt="FinFlow Track dashboard showing the getting-started area"
-                  loading="lazy"
-                  className="block w-full border-t object-cover object-top"
+                <div
+                  role="img"
+                  aria-label="FinFlow Track dashboard showing the getting-started area"
+                  className="aspect-[16/9] w-full border-t bg-no-repeat"
+                  style={{
+                    backgroundImage: "url('/onboarding/screenshots.webp')",
+                    backgroundSize: "100% 500%",
+                    backgroundPosition: "center 0%",
+                  }}
                 />
               </div>
             )}
