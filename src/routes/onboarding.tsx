@@ -489,6 +489,22 @@ function OnboardingPage() {
                 </div>
               )}
             </div>
+            {step === "profile" && (
+              <div className="mt-5 overflow-hidden rounded-2xl border bg-card">
+                <div className="p-4 sm:p-5">
+                  <p className="text-sm font-semibold">A look at your workspace</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    After setup, you can add customers, create invoices, record expenses and explore reports.
+                  </p>
+                </div>
+                <img
+                  src="/onboarding/dashboard.jpg"
+                  alt="FinFlow Track dashboard showing the getting-started area"
+                  loading="lazy"
+                  className="block w-full border-t object-cover object-top"
+                />
+              </div>
+            )}
           </>
         )}
       </div>
