@@ -54,9 +54,9 @@ begin
 
   select
     coalesce(sum(commission_amount), 0),
-    min(currency),
+    min(upper(currency)),
     count(*),
-    count(distinct currency)
+    count(distinct upper(currency))
   into v_total, v_currency, v_count, v_distinct_count
   from public.partner_commissions
   where id = any(p_commission_ids)
