@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { resolveNextRoute } from "@/lib/auth-flow";
+import { trackEvent } from "@/lib/analytics";
 
 function getSafeNextPath(value?: string): string | null {
   if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("\\")) {
@@ -86,6 +87,7 @@ function AuthPage() {
   }, [navigate, next]);
 
   async function handleGoogleSignIn() {
+    trackEvent("auth_started", { method: "google", mode });
     setGoogleLoading(true);
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -107,6 +109,7 @@ function AuthPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    trackEvent("auth_started", { method: "email", mode });
     setLoading(true);
     try {
       if (mode === "signup") {
@@ -119,6 +122,7 @@ function AuthPage() {
           },
         });
         if (error) throw error;
+        if (data.user) trackEvent("auth_completed", { method: "email", mode: "signup" });
         // If Supabase requires email confirmation there is no session yet.
         if (!data.session) {
           toast.success("Account created — check your email to verify.");
@@ -130,6 +134,7 @@ function AuthPage() {
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        trackEvent("auth_completed", { method: "email", mode: "login" });
         toast.success("Welcome back!");
         const target = await resolveNextRoute(data.user);
         if (target.to !== "/dashboard" && target.to !== "/onboarding") {

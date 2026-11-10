@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { Loader2, Check, ArrowRight, Building2, CreditCard } from "lucide-react";
 import { hasCompletedOnboarding } from "@/lib/auth-flow";
 import { createFreeSubscription, createPendingSubscription } from "@/lib/billing.functions";
+import { trackEvent } from "@/lib/analytics";
 
 export const Route = createFileRoute("/onboarding")({
   ssr: false,
@@ -234,7 +235,7 @@ function OnboardingPage() {
         return;
       }
     }
-    await supabase.from("onboarding_progress").upsert(
+    const { error: onboardingError } = await supabase.from("onboarding_progress").upsert(
       {
         user_id: user.id,
         financial_completed: true,
@@ -245,6 +246,9 @@ function OnboardingPage() {
       },
       { onConflict: "user_id" },
     );
+    if (!onboardingError) {
+      trackEvent("onboarding_completed", { plan, first_goal: goal });
+    }
     if (typeof window !== "undefined") localStorage.removeItem("pendingPlan");
     setSaving(false);
     toast.success("Workspace ready");
