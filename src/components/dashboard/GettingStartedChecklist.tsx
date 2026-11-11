@@ -1,155 +1,238 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Check, Circle, X } from "lucide-react";
+import { ArrowRight, Check, Circle, Sparkles, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 
-type Counts = { invoices: number; expenses: number; teammates: number };
+type Counts = { customers: number; invoices: number; expenses: number };
+
+type Step = {
+  id: "workspace" | "customer" | "invoice" | "expense" | "reports";
+  label: string;
+  description: string;
+  done: boolean;
+  to: string | null;
+  action: string;
+  imagePosition: number;
+  imageAlt: string;
+};
 
 const GOAL_KEY = "onboardingGoal";
 
 /**
- * Small "get started" checklist for new companies. Progress is computed from real records
- * (invoices, expenses, team), never stored, and the card hides itself once everything is done
- * or when dismissed. If any count cannot be read it renders nothing rather than guess.
+ * A visual first-value journey. Database records complete the customer,
+ * invoice and expense steps; opening Reports is recorded locally per workspace.
+ * No step is completed merely because a user clicks its CTA.
  */
 export function GettingStartedChecklist() {
   const companyId = useActiveCompanyId();
   const [counts, setCounts] = useState<Counts | null>(null);
+  const [reportsViewed, setReportsViewed] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const [goal, setGoal] = useState<string | null>(null);
 
   useEffect(() => {
     if (!companyId) return;
-    setDismissed(localStorage.getItem(`gettingStartedDismissed:${companyId}`) === "1");
+    setDismissed(localStorage.getItem("gettingStartedDismissed:" + companyId) === "1");
+    setReportsViewed(localStorage.getItem("onboardingReportsViewed:" + companyId) === "1");
+    setGoal(localStorage.getItem(GOAL_KEY));
+
     let cancelled = false;
     (async () => {
-      // biome-ignore lint/suspicious/noExplicitAny: some tables are not in the generated types
       const db = supabase as any;
-      const count = async (table: string, extra?: (q: any) => any) => {
-        let q = db
+      const count = async (table: string) => {
+        const { count: total, error } = await db
           .from(table)
           .select("id", { count: "exact", head: true })
           .eq("company_id", companyId);
-        if (extra) q = extra(q);
-        const { count: n, error } = await q;
         if (error) throw error;
-        return n ?? 0;
+        return total ?? 0;
       };
+
       try {
-        const [invoices, expenses, members, invites] = await Promise.all([
+        const [customers, invoices, expenses] = await Promise.all([
+          count("customers"),
           count("invoices"),
           count("expenses"),
-          count("company_members", (q) => q.eq("status", "active")),
-          count("team_invitations"),
         ]);
-        if (!cancelled)
-          setCounts({ invoices, expenses, teammates: members > 1 ? members : invites });
-      } catch {
+        if (!cancelled) setCounts({ customers, invoices, expenses });
+      } catch (error) {
+        console.error("[onboarding] Could not load getting-started progress:", error);
         if (!cancelled) setCounts(null);
       }
     })();
+
     return () => {
       cancelled = true;
     };
   }, [companyId]);
 
-  if (!companyId || !counts || dismissed) return null;
-
-  const goal = typeof window !== "undefined" ? localStorage.getItem(GOAL_KEY) : null;
-  const items = [
-    { id: "company", label: "Create your company", done: true, to: null, goal: "" },
+  const steps = useMemo<Step[]>(() => [
+    {
+      id: "workspace",
+      label: "Create your workspace",
+      description: "Your company workspace is ready. Next, add someone you do business with.",
+      done: Boolean(companyId),
+      to: null,
+      action: "Workspace ready",
+      imagePosition: 0,
+      imageAlt: "FinFlow Track dashboard with its getting-started progress card",
+    },
+    {
+      id: "customer",
+      label: "Add your first customer",
+      description: "Save a customer once, then select them when you prepare an invoice.",
+      done: (counts?.customers ?? 0) > 0,
+      to: "/customers",
+      action: "Add a customer",
+      imagePosition: 1,
+      imageAlt: "FinFlow Track customer management screen",
+    },
     {
       id: "invoice",
       label: "Create your first invoice",
-      done: counts.invoices > 0,
-      to: "/invoices" as const,
-      goal: "invoice",
+      description: "Turn the customer details into an invoice you can export or share.",
+      done: (counts?.invoices ?? 0) > 0,
+      to: "/invoices",
+      action: "Create an invoice",
+      imagePosition: 2,
+      imageAlt: "FinFlow Track invoices screen",
     },
     {
       id: "expense",
       label: "Record your first expense",
-      done: counts.expenses > 0,
-      to: "/expenses" as const,
-      goal: "expense",
+      description: "Capture a business cost so it can appear in your financial records.",
+      done: (counts?.expenses ?? 0) > 0,
+      to: "/expenses",
+      action: "Record an expense",
+      imagePosition: 3,
+      imageAlt: "FinFlow Track expenses screen",
     },
     {
-      id: "team",
-      label: "Invite your accountant or a teammate",
-      done: counts.teammates > 0,
-      to: "/team" as const,
-      goal: "",
+      id: "reports",
+      label: "Explore your reports",
+      description: "See how invoices and expenses come together in your financial reports.",
+      done: reportsViewed,
+      to: "/reports",
+      action: "Explore reports",
+      imagePosition: 4,
+      imageAlt: "FinFlow Track financial reports screen",
     },
-  ];
-  const doneCount = items.filter((i) => i.done).length;
-  if (doneCount === items.length) return null;
+  ], [companyId, counts, reportsViewed]);
+
+  if (!companyId || !counts || dismissed) return null;
+
+  const doneCount = steps.filter((step) => step.done).length;
+  const activeIndex = steps.findIndex((step) => !step.done);
+  const activeStep = activeIndex >= 0 ? steps[activeIndex] : null;
+  const preferredStep = goal === "invoice" ? "invoice" : goal === "expense" ? "expense" : goal === "reports" ? "reports" : null;
 
   return (
-    <section aria-label="Getting started" className="rounded-xl border bg-card p-5 shadow-soft">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h2 className="font-semibold">Get started</h2>
-          <p className="text-sm text-muted-foreground">
-            {doneCount} of {items.length} done
-          </p>
+    <section aria-label="Your FinFlow Track getting-started journey" className="overflow-hidden rounded-2xl border bg-card shadow-soft">
+      <div className="p-5 sm:p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
+              <h2 className="font-semibold">Your first steps with FinFlow Track</h2>
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {doneCount} of {steps.length} steps complete
+            </p>
+          </div>
+          <button
+            type="button"
+            aria-label="Dismiss getting-started guide"
+            className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+            onClick={() => {
+              localStorage.setItem("gettingStartedDismissed:" + companyId, "1");
+              setDismissed(true);
+            }}
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
-        <button
-          type="button"
-          aria-label="Hide the getting started checklist"
-          className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-          onClick={() => {
-            localStorage.setItem(`gettingStartedDismissed:${companyId}`, "1");
-            setDismissed(true);
-          }}
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
 
-      <div
-        className="mt-3 h-2 overflow-hidden rounded-full bg-muted"
-        role="progressbar"
-        aria-valuemin={0}
-        aria-valuemax={items.length}
-        aria-valuenow={doneCount}
-      >
-        <div
-          className="h-full rounded-full bg-primary transition-all"
-          style={{ width: `${(doneCount / items.length) * 100}%` }}
-        />
-      </div>
+        <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted" role="progressbar" aria-label="Onboarding progress" aria-valuemin={0} aria-valuemax={steps.length} aria-valuenow={doneCount}>
+          <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: (doneCount / steps.length) * 100 + "%" }} />
+        </div>
 
-      <ul className="mt-4 grid gap-2 sm:grid-cols-2">
-        {items.map((i) => {
-          const row = (
-            <span className="flex items-center gap-3">
-              {i.done ? (
-                <Check className="h-5 w-5 flex-none text-green-600" aria-hidden="true" />
-              ) : (
-                <Circle className="h-5 w-5 flex-none text-muted-foreground" aria-hidden="true" />
-              )}
-              <span className={i.done ? "text-muted-foreground line-through" : "font-medium"}>
-                {i.label}
-              </span>
-              {!i.done && i.goal && goal === i.goal && (
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                  Your pick
-                </span>
-              )}
-            </span>
-          );
-          return (
-            <li key={i.id}>
-              {i.to && !i.done ? (
-                <Link to={i.to} className="block rounded-lg border p-3 hover:border-primary/50">
-                  {row}
+        {activeStep ? (
+          <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:items-center">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                Step {activeIndex + 1} of {steps.length}
+              </p>
+              <h3 className="mt-2 text-xl font-semibold">{activeStep.label}</h3>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">{activeStep.description}</p>
+              {activeStep.to && (
+                <Link
+                  to={activeStep.to as any}
+                  className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  {activeStep.action}
+                  <ArrowRight className="h-4 w-4" />
                 </Link>
-              ) : (
-                <div className="rounded-lg border border-transparent p-3">{row}</div>
               )}
-            </li>
-          );
-        })}
-      </ul>
+            </div>
+            <div className="overflow-hidden rounded-xl border bg-muted/30">
+              <div
+                role="img"
+                aria-label={activeStep.imageAlt}
+                className="aspect-[16/9] w-full bg-no-repeat"
+                style={{
+                  backgroundImage: "url('/onboarding/screenshots.webp')",
+                  backgroundSize: "100% 500%",
+                  backgroundPosition: "center " + (activeStep.imagePosition * 25) + "%",
+                }}
+              />
+              <p className="border-t px-3 py-2 text-xs text-muted-foreground">
+                A real view of this area in FinFlow Track
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-5 rounded-xl bg-primary/5 p-5">
+            <p className="font-semibold">You’re ready to put FinFlow Track to work.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              You’ve explored the essential workflow: customers, invoices, expenses and reports.
+            </p>
+            <Link to="/dashboard" className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-primary">
+              Go to your dashboard <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        )}
+
+        <ol className="mt-5 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+          {steps.map((step, index) => {
+            const isPreferred = preferredStep === step.id && !step.done;
+            const content = (
+              <span className="flex min-h-[58px] items-center gap-2.5">
+                {step.done ? (
+                  <Check className="h-4 w-4 flex-none text-green-600" aria-hidden="true" />
+                ) : (
+                  <Circle className="h-4 w-4 flex-none text-muted-foreground" aria-hidden="true" />
+                )}
+                <span className="min-w-0">
+                  <span className={"block text-xs font-medium " + (step.done ? "text-muted-foreground line-through" : "")}>
+                    {index + 1}. {step.label}
+                  </span>
+                  {isPreferred && <span className="mt-0.5 block text-[10px] font-semibold text-primary">Your selected goal</span>}
+                </span>
+              </span>
+            );
+            return (
+              <li key={step.id} className={"rounded-lg border px-3 py-2 " + (step.id === activeStep?.id ? "border-primary/50 bg-primary/5" : "border-border/70")}>
+                {step.to && !step.done ? (
+                  <Link to={step.to as any} className="block rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    {content}
+                  </Link>
+                ) : content}
+              </li>
+            );
+          })}
+        </ol>
+      </div>
     </section>
   );
 }
