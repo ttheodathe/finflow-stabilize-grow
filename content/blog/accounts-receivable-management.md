@@ -790,7 +790,7 @@ A disciplined receivables process gives business owners better visibility into l
 ## Related Reading
 
 - [Small Business Cash Flow Management](/blog/small-business-cash-flow-management)
-- [How to Track Business Expenses](/blog/how-to-track-business-expenses)
+- [How to Track Business Expenses](/blog/how-to-keep-track-of-business-expenses)
 - [How to Do Bookkeeping for a Small Business](/blog/how-to-do-bookkeeping-for-a-small-business)
 - [Small Business Bookkeeping Checklist](/blog/small-business-bookkeeping-checklist)
 - [Bookkeeping vs Accounting: What's the Difference?](/blog/bookkeeping-vs-accounting)
