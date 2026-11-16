@@ -610,8 +610,7 @@ function ComparePage() {
                 <Link to="/pricing" className="underline hover:text-foreground">
                   the pricing page
                 </Link>{" "}
-                for current details. Four plans total, with a flat feature set per tier and no
-                separate add-on marketplace today.
+                for current plan names, limits, included features, and any custom arrangements.
               </p>
             </div>
 
@@ -1013,11 +1012,11 @@ function ComparePage() {
               <h2 className="text-2xl font-bold">FinFlow Track Limitations</h2>
               <ul className="mt-6 space-y-3 text-sm text-muted-foreground">
                 {[
-                  "Full accounting reports, bank reconciliation, and inventory are not available on Free",
-                  "No live bank feed connections yet — bank data comes in via CSV import",
-                  "No cash-flow forecasting, project time tracking, or custom user roles yet",
+                  "Advanced reports, bank reconciliation, and inventory are listed on Professional rather than Free",
+                  "The public pricing page does not specify whether bank reconciliation uses live feeds or CSV imports",
+                  "Cash-flow forecasting and project time-billing are not specified in the current published plan details",
                   "Third-party integration marketplace is still in development",
-                  "Inventory is less mature than Zoho Books' higher tiers (no serial/batch tracking or marketplace integrations)",
+                  "FinFlow Track's public pricing page does not itemize inventory depth at the same level as Zoho's plan comparison",
                   "No direct, one-click Zoho Books data import at this time",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2">
@@ -1082,9 +1081,9 @@ function ComparePage() {
               </li>
               <li>
                 <strong className="text-foreground">
-                  Businesses with straightforward inventory needs
+                  Businesses that need inventory management at a $19/month entry paid tier
                 </strong>{" "}
-                that want it available at a lower price point than Zoho Books' Professional plan.
+                while checking feature depth against their requirements.
               </li>
             </ul>
           </div>
