@@ -1,0 +1,20 @@
+Forecast line,Week 1 start date,Week 2 start date,Week 3 start date,Week 4 start date,Week 5 start date,Week 6 start date,Week 7 start date,Week 8 start date,Week 9 start date,Week 10 start date,Week 11 start date,Week 12 start date,Week 13 start date,13-week total / ending
+Opening cash (enter actual usable balance in Week 1),,=B17,=C17,=D17,=E17,=F17,=G17,=H17,=I17,=J17,=K17,=L17,=M17,
+Customer collections on existing invoices,,,,,,,,,,,,,,=SUM(B3:N3)
+Customer receipts from new work (risk-adjusted),,,,,,,,,,,,,,=SUM(B4:N4)
+Other confirmed receipts,,,,,,,,,,,,,,=SUM(B5:N5)
+Confirmed financing received,,,,,,,,,,,,,,=SUM(B6:N6)
+TOTAL RECEIPTS,=SUM(B3:B6),=SUM(C3:C6),=SUM(D3:D6),=SUM(E3:E6),=SUM(F3:F6),=SUM(G3:G6),=SUM(H3:H6),=SUM(I3:I6),=SUM(J3:J6),=SUM(K3:K6),=SUM(L3:L6),=SUM(M3:M6),=SUM(N3:N6),=SUM(B7:N7)
+Supplier and inventory payments,,,,,,,,,,,,,,=SUM(B8:N8)
+Payroll and related payments,,,,,,,,,,,,,,=SUM(B9:N9)
+"Rent, utilities, and subscriptions",,,,,,,,,,,,,,=SUM(B10:N10)
+Taxes and statutory payments,,,,,,,,,,,,,,=SUM(B11:N11)
+Debt service,,,,,,,,,,,,,,=SUM(B12:N12)
+Capital purchases,,,,,,,,,,,,,,=SUM(B13:N13)
+Other payments,,,,,,,,,,,,,,=SUM(B14:N14)
+TOTAL PAYMENTS,=SUM(B8:B14),=SUM(C8:C14),=SUM(D8:D14),=SUM(E8:E14),=SUM(F8:F14),=SUM(G8:G14),=SUM(H8:H14),=SUM(I8:I14),=SUM(J8:J14),=SUM(K8:K14),=SUM(L8:L14),=SUM(M8:M14),=SUM(N8:N14),=SUM(B15:N15)
+NET CASH FLOW,=B7-B15,=C7-C15,=D7-D15,=E7-E15,=F7-F15,=G7-G15,=H7-H15,=I7-I15,=J7-J15,=K7-K15,=L7-L15,=M7-M15,=N7-N15,=SUM(B16:N16)
+CLOSING CASH,=B2+B16,=C2+C16,=D2+D16,=E2+E16,=F2+F16,=G2+G16,=H2+H16,=I2+I16,=J2+J16,=K2+K16,=L2+L16,=M2+M16,=N2+N16,=N17
+Minimum cash buffer (enter your own floor),,,,,,,,,,,,,,
+Headroom above / (below) minimum buffer,=B17-B18,=C17-C18,=D17-D18,=E17-E18,=F17-F18,=G17-G18,=H17-H18,=I17-I18,=J17-J18,=K17-K18,=L17-L18,=M17-M18,=N17-N18,=MIN(B19:N19)
+Forecast vs actual notes,,,,,,,,,,,,,,
