@@ -256,7 +256,7 @@ const freePlanRows: {
   {
     feature: "Expense tracking",
     finflow: { status: "yes" },
-    wave: { status: "yes", label: "Manual entry / CSV import" },
+    wave: { status: "yes", label: "Manual transaction entry" },
   },
   {
     feature: "Financial reports",
@@ -303,7 +303,7 @@ const freePlanRows: {
 const faqs: { q: string; a: string }[] = [
   {
     q: "Is FinFlow Track better than Wave?",
-    a: "Neither is universally better — they serve different needs. FinFlow Track offers a free starting plan for basic accounting, invoice creation, expense tracking, customer management, and basic reports, with multi-currency support. Its AI Bookkeeper and recurring invoices are paid-plan features. Wave offers a free Starter plan with invoicing and bookkeeping records, while Pro adds bank transaction imports, automatic categorization, and unlimited receipt scanning. Wave is available to businesses in the US and Canada; its business currency is selected during setup and cannot be changed later.",
+    a: "Neither is universally better — they serve different needs. FinFlow Track offers a Free plan for basic accounting, invoice creation, expense tracking, customer management, and basic reports. It also supports multi-currency workflows, with exchange rates locked when transactions are recorded; AI Bookkeeper and recurring invoices are paid-plan features. Wave offers a free Starter plan with invoicing and bookkeeping records, while Pro adds bank transaction imports, automatic categorization, and unlimited receipt scanning. Wave is available to businesses in the US and Canada; its business currency is selected during setup and cannot be changed later.",
   },
   {
     q: "Is FinFlow Track cheaper than Wave?",
@@ -1112,7 +1112,7 @@ function ComparePage() {
                   <strong className="text-foreground">
                     Businesses that need multi-currency workflows
                   </strong>{" "}
-                  and want stock tracking included rather than a separate tool.
+                  and want exchange rates locked when transactions are recorded.
                 </li>
               </ul>
             </div>
@@ -1232,7 +1232,7 @@ function ComparePage() {
               <h3 className="font-semibold">Choose Wave if:</h3>
               <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
                 <li>· You're a US or Canadian business</li>
-                <li>· You want customers to pay invoices online directly through the platform</li>
+                <li>· You want optional online invoice payments and meet Wave's eligibility requirements</li>
                 <li>· You're comfortable with USD or CAD as your only base currency</li>
                 <li>
                   · You want automated bank feeds and receipt scanning and are willing to pay for
