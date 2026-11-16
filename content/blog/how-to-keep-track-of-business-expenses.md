@@ -4,7 +4,7 @@ description: "Learn how to keep track of business expenses with a practical syst
 slug: "how-to-keep-track-of-business-expenses"
 author: "FinFlowTrack Editorial Team"
 publishedAt: "2026-08-23"
-updatedAt: "2026-08-23"
+updatedAt: "2026-11-16"
 category: "small-business-finance"
 tags:
   - business expense tracking
@@ -24,6 +24,8 @@ Keeping track of business expenses becomes difficult when purchases are spread a
 The answer is not simply to save receipts. A useful expense-tracking system should tell you **what you spent, when you spent it, why you spent it, how you paid, where the supporting document is, and how the cost affects your business**.
 
 This guide explains a practical system for keeping track of business expenses, organizing receipts, choosing categories, reconciling accounts, reviewing recurring costs, using spreadsheets or software, and turning expense records into better financial decisions.
+
+If you are a freelancer looking for a shorter, repeatable process, see our [weekly expense-tracking routine for freelancers](/blog/weekly-expense-tracking-for-freelancers). This guide covers the broader small-business system; the freelancer guide focuses on the weekly habit.
 
 # Why Keep Track of Business Expenses?
 
@@ -628,6 +630,8 @@ Records are most valuable when they support decisions.
 Bookkeeping classification and tax deductibility are not the same thing.
 
 # A Simple Weekly Routine
+
+For a freelancer-focused walkthrough with a sample weekly expense log and reusable checklist, follow the [20-minute weekly expense-tracking routine](/blog/weekly-expense-tracking-for-freelancers). The steps below provide a general starting point for small businesses with different transaction volumes and operating structures.
 
 A small business can use a short recurring routine:
 
