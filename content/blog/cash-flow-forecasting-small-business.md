@@ -1162,14 +1162,14 @@ Investigate the cause first, then consider actions such as accelerating legitima
 
 Yes. A multi-currency forecast should track original currency amounts and apply clearly defined exchange-rate assumptions to produce consolidated amounts in the business's base currency.
 
-### Further Reading
+## Further Reading
 
 - [Business Development Bank of Canada: Cash flow management](https://publications.gc.ca/collections/collection_2017/bdc/CC143-17-2014-eng.pdf) — discusses cash-flow projections and comparing forecasts with actual results.
 - [Small Business Cash Flow Management](/blog/small-business-cash-flow-management) — practical routines for collections, payment timing, and cash buffers.
 - [Accounts Receivable Management](/blog/accounts-receivable-management) — managing customer balances and expected collections.
 - [Accounts Payable Management](/blog/accounts-payable-management) — organizing supplier bills and payment dates.
 
-# Final Takeaway
+## Final Takeaway
 
 Cash flow forecasting is not about predicting the future perfectly.
 
