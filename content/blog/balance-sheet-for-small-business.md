@@ -1,10 +1,10 @@
 ---
 title: "Balance Sheet for Small Business: How to Read Assets, Liabilities and Equity"
-description: "Learn how to read a balance sheet for a small business, understand assets, liabilities and owner's equity, and use financial position to make better decisions."
+description: "See a worked small-business balance sheet example, understand assets, liabilities and owner’s equity, and calculate working capital and liquidity ratios."
 slug: "balance-sheet-for-small-business"
 author: "FinFlowTrack Editorial Team"
 publishedAt: "2026-08-20"
-updatedAt: "2026-08-20"
+updatedAt: "2026-11-16"
 category: "small-business-finance"
 tags:
   - balance sheet
@@ -242,50 +242,72 @@ The exact presentation depends on the business structure and accounting framewor
 
 # A Simple Balance Sheet Example
 
-Consider a fictional small consulting company.
+The following fictional consulting business example shows how a small business can organize assets, liabilities, and equity into current and non-current categories.
+
+**Illustrative balance sheet — as of August 31, 2026**
 
 ### Assets
 
-| Asset | Amount |
+| Assets | Amount |
 | --- | ---: |
+| **Current assets** | |
 | Cash | $35,000 |
 | Accounts receivable | $20,000 |
-| Equipment | $25,000 |
 | Prepaid expenses | $5,000 |
+| **Total current assets** | **$60,000** |
+| **Non-current assets** | |
+| Equipment, net of accumulated depreciation | $25,000 |
+| **Total non-current assets** | **$25,000** |
 | **Total assets** | **$85,000** |
 
-### Liabilities
+### Liabilities and owner's equity
 
-| Liability | Amount |
+| Liabilities and equity | Amount |
 | --- | ---: |
+| **Current liabilities** | |
 | Accounts payable | $10,000 |
-| Business loan | $20,000 |
 | Accrued expenses | $5,000 |
+| Current portion of business loan | $5,000 |
+| **Total current liabilities** | **$20,000** |
+| **Non-current liabilities** | |
+| Remaining long-term business loan | $15,000 |
+| **Total non-current liabilities** | **$15,000** |
 | **Total liabilities** | **$35,000** |
+| Owner's equity | $50,000 |
+| **Total liabilities and equity** | **$85,000** |
 
-### Equity
+The loan is split between a $5,000 portion assumed due within the next 12 months and a $15,000 portion assumed due later. The classification of real loan balances depends on the contractual repayment schedule and applicable accounting framework.
 
-```text
-Equity = Assets − Liabilities
+### Check that the balance sheet balances
 
-$85,000 − $35,000 = $50,000
-```
-
-Therefore:
+The accounting equation is:
 
 ```text
-Assets:          $85,000
-Liabilities:     $35,000
-Equity:          $50,000
-```
-
-And:
-
-```text
+Assets = Liabilities + Equity
 $85,000 = $35,000 + $50,000
 ```
 
-The balance sheet balances.
+The two sides agree.
+
+### Calculate working capital and the current ratio
+
+The example also supports two basic liquidity calculations:
+
+```text
+Working capital = Current assets − Current liabilities
+                 = $60,000 − $20,000
+                 = $40,000
+```
+
+```text
+Current ratio = Current assets ÷ Current liabilities
+              = $60,000 ÷ $20,000
+              = 3.0
+```
+
+A current ratio of 3.0 means the example business reports $3 of current assets for each $1 of current liabilities. It does **not** prove that the business is financially healthy: the usefulness of the ratio depends on when liabilities fall due and how quickly receivables and other current assets can be converted into cash.
+
+This example is simplified for learning. Actual balance sheets may include additional accounts, contra-assets, tax balances, lease liabilities, inventory, provisions, and other items. Account names, classifications, and measurement depend on the business and the accounting framework it follows.
 
 # How to Read a Balance Sheet
 
@@ -932,6 +954,15 @@ Yes. A spreadsheet can work for a simple business, but maintaining accurate clas
 ## Does FinFlowTrack replace an accountant?
 
 Financial software can help organize financial workflows and reporting, but it does not automatically replace professional accounting, tax, legal, or financial advice.
+
+# Further Reading and Accounting References
+
+For additional explanations of balance-sheet structure and liquidity measures, consult these educational sources:
+
+- [U.S. Securities and Exchange Commission: What Is a Balance Sheet?](https://www.sec.gov/files/balancesheet-building-blocks.pdf) — explains the balance sheet as a point-in-time statement and outlines assets, liabilities, and equity.
+- [OpenStax: Prepare an Income Statement, Statement of Owner’s Equity, and Balance Sheet](https://openstax.org/books/principles-financial-accounting/pages/2-3-prepare-an-income-statement-statement-of-owners-equity-and-balance-sheet) — explains working capital and the current ratio, including why comparisons need context.
+
+These sources provide general accounting education. They do not replace the accounting standards, reporting rules, or professional advice applicable to a particular business or jurisdiction.
 
 # Final Takeaway
 
