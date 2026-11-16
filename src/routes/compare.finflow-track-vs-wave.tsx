@@ -29,6 +29,7 @@ import {
 
 const SITE_URL = "https://www.finflowtrack.com";
 const PAGE_URL = `${SITE_URL}/compare/finflow-track-vs-wave`;
+const PUBLISHED_DATE = "2026-08-14";
 const REVIEWED_DATE = "2026-11-16";
 const REVIEWED_DATE_LABEL = "November 16, 2026";
 
@@ -84,7 +85,7 @@ export const Route = createFileRoute("/compare/finflow-track-vs-wave")({
             name: title,
             description,
             url: PAGE_URL,
-            datePublished: REVIEWED_DATE,
+            datePublished: PUBLISHED_DATE,
             dateModified: REVIEWED_DATE,
             isPartOf: { "@type": "WebSite", name: "FinFlow Track", url: SITE_URL },
             publisher: { "@type": "Organization", name: "FinFlow Track", url: SITE_URL },
@@ -614,12 +615,7 @@ function ComparePage() {
                 </li>
               </ul>
               <p className="mt-4 text-sm text-muted-foreground leading-7">
-                Wave's own subscription pricing is inexpensive, but online payment processing carries
-                per-transaction fees on both plans (around 2.9% + $0.60 per card transaction on
-                Starter; Pro waives the fixed $0.60 fee for the first 10 transactions each month,
-                then reverts to the same rate). Wave also sells receipt scanning, payroll, and
-                bookkeeper add-ons separately from the core subscription. Wave periodically runs
-                promotional discounts on the first few months of Pro for new subscribers.
+                Wave's Pro subscription is $19 USD/month or $190 USD/year, and $25 CAD/month or $250 CAD/year. Online payments are optional and carry transaction fees when enabled. Receipt scanning is included with Pro or available as a paid Starter add-on; payroll and Wave Advisors are separate paid services. Check the live pricing page for current rates, add-ons, and eligibility.
               </p>
               <a
                 href="https://www.waveapps.com/pricing"
@@ -748,13 +744,7 @@ function ComparePage() {
               <strong>FinFlow Track</strong> supports multi-currency transactions. The exchange rate is locked when a transaction is recorded; this comparison does not claim a specific currency count or that every currency feature is available on every plan.
             </p>
             <p>
-              <strong>Wave</strong> takes a different approach: your business's base/reporting
-              currency is fixed to either USD or CAD when you first create your Wave account and
-              cannot be changed afterward, because Wave's signups are restricted to US and Canadian
-              businesses. Within that constraint, Wave does let you create invoices and bills in a
-              foreign currency, automatically tracking the estimated conversion (recorded as an
-              unrealized gain or loss) back to your USD/CAD base currency — a real feature, but a
-              narrower one than a fully currency-agnostic base currency.
+              <strong>Wave</strong> allows foreign-currency invoicing, but the business's base currency is selected during setup and cannot be changed later. Wave currently offers USD and CAD as business-currency options. Check Wave's official documentation for the latest details on foreign-currency transactions and conversion treatment.
             </p>
           </FeatureBlock>
 
@@ -788,11 +778,7 @@ function ComparePage() {
               <strong>FinFlow Track</strong> supports multiple companies and team members, with limits that vary by plan. Check the current pricing page for the applicable company and user limits.
             </p>
             <p>
-              <strong>Wave</strong> lets one login manage multiple separate business profiles, but
-              each business is billed independently — if you run three businesses on Wave Pro, you
-              pay the Pro subscription three times, once per business. On the free tier, you can add
-              collaborators only in specific free roles (payroll manager, tax pro); broader roles
-              (admin, editor, viewer) require Pro.
+              <strong>Wave</strong> lets one login manage multiple separate business profiles, but each business is billed independently. Its free tier provides limited collaborator roles; broader team permissions are available on Pro. Check Wave's current plan comparison for exact role availability.
             </p>
           </FeatureBlock>
 
@@ -808,11 +794,7 @@ function ComparePage() {
               as future connections rather than currently available ones. Do not assume integrations or API access are included.
             </p>
             <p>
-              <strong>Wave</strong> offers a small number of natively built integrations — including
-              PayPal, Etsy, and Shoeboxed — plus broader automation through Zapier and Make, letting
-              Wave connect indirectly to a large number of other apps. Wave's pricing page notes that
-              setting up third-party integrations is a Pro-plan feature, though existing Zapier
-              connections can be kept without a Pro subscription.
+              <strong>Wave</strong> lists third-party integrations as a Pro-plan feature. Because supported connections can change, consult Wave's current integration directory before relying on a specific app or automation workflow.
             </p>
           </FeatureBlock>
 
@@ -825,9 +807,7 @@ function ComparePage() {
               use.
             </p>
             <p>
-              <strong>Wave</strong> offers optional online payments for eligible US and Canadian businesses. Customers can pay an invoice through supported payment methods after the business applies and receives approval. Processing fees apply, and the fee structure differs between Starter and Pro. This is a genuine,
-              structural difference — Wave functions as an accounting tool with an integrated payment
-              gateway, while FinFlow Track is currently accounting/invoicing software without one.
+              <strong>Wave</strong> offers optional online payments for eligible US and Canadian businesses. Customers can pay an invoice through supported payment methods after the business applies and receives approval. Processing fees apply, and the fee structure differs between Starter and Pro. This is a meaningful difference: Wave offers optional online payments, while FinFlow Track currently provides invoicing without an integrated payment gateway.
             </p>
           </FeatureBlock>
         </div>
@@ -1018,7 +998,7 @@ function ComparePage() {
                   "Free Starter plan with unlimited invoices, estimates, bills, and bookkeeping records",
                   "Optional online invoice payments, subject to approval and transaction fees",
                   "Expanded financial reporting on the Pro plan",
-                  "Long track record, widely reviewed and well known to US/Canada accountants",
+                  "Established accounting product with a longer operating history",
                   "Pro-plan access to third-party integrations; check Wave's current app directory",
                   "Automatic bank transaction imports and categorization on Pro",
                 ].map((item) => (
@@ -1062,7 +1042,7 @@ function ComparePage() {
                 "Business base currency is locked to USD or CAD and can't be changed later",
                 "Automatic bank feeds and transaction categorization require Pro; receipt scanning is Pro or a paid Starter add-on",
                 "Optional online payments carry per-transaction fees when enabled",
-                "Payroll is US/Canada only and billed as a separate subscription",
+                "Payroll is a separate paid service with regional availability restrictions",
                 "Some support options depend on the subscription plan; check current Wave support terms",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-2">
