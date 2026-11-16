@@ -190,9 +190,9 @@ const atAGlanceRows: {
     wave: { status: "yes", label: "Core financial statements; confirm current plan details" },
   },
   {
-    category: "Multi-currency transactions",
-    finflow: { status: "yes", label: "Multi-currency; rate locked when recorded" },
-    wave: { status: "no", label: "Locked to USD or CAD at signup" },
+    category: "Multi-currency transaction handling",
+    finflow: { status: "yes", label: "Supported; rate locked when recorded" },
+    wave: { status: "partial", label: "Foreign-currency invoices and bills; base currency USD or CAD" },
   },
   {
     category: "Foreign-currency invoicing",
@@ -652,11 +652,10 @@ function ComparePage() {
         <div className="mt-12 space-y-14">
           <FeatureBlock icon={Wallet} title="Accounting and Bookkeeping">
             <p>
-              <strong>FinFlow Track</strong> provides core double-entry-style bookkeeping modules
-              including core accounting records to support invoicing, expense tracking, and reporting,
-              alongside day-to-day workflows like invoicing and expense tracking. It is a
-              self-service financial record-keeping and reporting tool rather than a licensed
-              accounting or tax-filing service.
+              <strong>FinFlow Track</strong> provides basic accounting workflows and records that support
+              invoicing, expense tracking, and reporting. It is a self-service financial
+              record-keeping and reporting tool rather than a licensed accounting or tax-filing
+              service.
             </p>
             <p>
               <strong>Wave</strong> uses proper double-entry accounting on every plan, including
@@ -751,8 +750,9 @@ function ComparePage() {
             <p>
               <strong>Wave's</strong> automation centers on its Pro-plan bank-feed pipeline: once a
               bank account is connected, Wave auto-imports transactions and auto-merges/categorizes
-              them based on your prior categorization patterns, plus automated late-payment
-              reminders. Wave uses an automated support chatbot ("Mave") for help-center questions.
+              them based on your prior categorization patterns. Pro users can also automate late-payment
+              reminders when online payments are enabled. Wave uses an automated support chatbot
+              ("Mave") for help-center questions.
               Wave does not currently publish a conversational AI assistant for querying your
               financial data the way FinFlow Track's AI Bookkeeper does.
             </p>
@@ -955,10 +955,10 @@ function ComparePage() {
           <div>
             <h3 className="font-semibold text-foreground">Wave</h3>
             <p className="mt-3 text-sm">
-              Wave states that live-person chat and email support are available Monday to Friday,
-              9 AM–4:45 PM Eastern. On the Pro plan this is included; on Starter, it requires an
-              optional paid add-on. Wave also runs an automated chatbot ("Mave") in its help center
-              for self-serve answers outside those hours.
+              Wave lists live-person chat and email support Monday to Friday, 9 AM–4:45 PM Eastern. Pro
+              includes this support; Starter access is listed for customers with an optional add-on.
+              Wave also runs an automated chatbot ("Mave") in its help center for self-serve answers
+              outside those hours.
             </p>
           </div>
         </div>
@@ -976,7 +976,6 @@ function ComparePage() {
                    "Free starting plan for basic accounting, invoicing, expenses, customers, and basic reports",
                   "Multi-currency support with exchange rates locked when recorded",
                   "AI Bookkeeper available on paid plans",
-                  "Multi-currency support for international workflows",
                   "Simpler, more focused feature set for small teams getting started",
                   "Transparent, predictable per-plan pricing without payment-processing lock-in",
                 ].map((item) => (
@@ -993,7 +992,7 @@ function ComparePage() {
                 {[
                   "Free Starter plan with unlimited invoices, estimates, bills, and bookkeeping records",
                   "Optional online invoice payments, subject to approval and transaction fees",
-                  "Expanded financial reporting on the Pro plan",
+                  "Pro plan adds automatic bank imports, categorization, and receipt scanning",
                   "Established accounting product with a longer operating history",
                   "Pro-plan access to third-party integrations; check Wave's current app directory",
                   "Automatic bank transaction imports and categorization on Pro",
