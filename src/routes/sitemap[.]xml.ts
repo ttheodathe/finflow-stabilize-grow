@@ -26,6 +26,7 @@ export const Route = createFileRoute("/sitemap.xml")({
           "/compare/finflow-track-vs-xero",
           "/compare/finflow-track-vs-wave",
           "/compare/finflow-track-vs-zoho-books",
+          "/tools/break-even-calculator",
           "/careers",
           "/press",
           "/integrations",
