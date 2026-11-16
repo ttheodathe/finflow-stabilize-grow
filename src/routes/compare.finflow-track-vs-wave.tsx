@@ -29,7 +29,6 @@ import {
 
 const SITE_URL = "https://www.finflowtrack.com";
 const PAGE_URL = `${SITE_URL}/compare/finflow-track-vs-wave`;
-const PUBLISHED_DATE = "2026-08-14";
 const REVIEWED_DATE = "2026-11-16";
 const REVIEWED_DATE_LABEL = "November 16, 2026";
 
@@ -85,7 +84,6 @@ export const Route = createFileRoute("/compare/finflow-track-vs-wave")({
             name: title,
             description,
             url: PAGE_URL,
-            datePublished: PUBLISHED_DATE,
             dateModified: REVIEWED_DATE,
             isPartOf: { "@type": "WebSite", name: "FinFlow Track", url: SITE_URL },
             publisher: { "@type": "Organization", name: "FinFlow Track", url: SITE_URL },
