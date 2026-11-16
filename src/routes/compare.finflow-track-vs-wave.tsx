@@ -585,8 +585,6 @@ function ComparePage() {
                   <span>Business</span>
                   <span className="font-semibold">$49/month</span>
                 </li>
-                <li className="flex items-center justify-between">
-                  
               </ul>
               <p className="mt-6 text-xs text-muted-foreground">
                 Market: Global · Currency: USD · Billing: Monthly · Date checked:{" "}
