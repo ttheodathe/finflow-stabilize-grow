@@ -153,7 +153,7 @@ const atAGlanceRows: {
   {
     category: "Paid plan starting price",
     finflow: { status: "yes", label: "$19/month (Professional)" },
-    wave: { status: "yes", label: "$19/month (Pro)" },
+    wave: { status: "yes", label: "$19 USD/month; $25 CAD/month (Pro)" },
   },
   {
     category: "International availability",
@@ -217,14 +217,14 @@ const atAGlanceRows: {
   },
   {
     category: "Third-party integrations",
-    finflow: { status: "no", label: "In development" },
-    wave: { status: "partial", label: "Native apps + Zapier, mainly Pro" },
+    finflow: { status: "no", label: "Not currently available" },
+    wave: { status: "partial", label: "Pro-plan feature; check current app directory" },
   },
   {
     category: "Best for",
     finflow: {
       status: "yes",
-      label: "Global businesses wanting multi-currency without upgrading",
+      label: "Global businesses needing multi-currency transaction handling",
     },
     wave: {
       status: "yes",
@@ -265,8 +265,8 @@ const freePlanRows: {
   },
   {
     feature: "Customers",
-    finflow: { status: "yes", label: "Unlimited" },
-    wave: { status: "yes", label: "Unlimited" },
+    finflow: { status: "yes", label: "Customer management" },
+    wave: { status: "yes", label: "Customer management" },
   },
   {
     feature: "Companies on this plan",
@@ -274,8 +274,8 @@ const freePlanRows: {
     wave: { status: "yes", label: "Multiple business profiles per login" },
   },
   {
-    feature: "Multi-currency (base currency)",
-    finflow: { status: "yes", label: "Multi-currency; rate locked when recorded" },
+    feature: "Multi-currency transactions",
+    finflow: { status: "partial", label: "Check plan availability; rate locked when recorded" },
     wave: { status: "no", label: "USD or CAD only" },
   },
   {
@@ -323,7 +323,7 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "Does FinFlow Track have a free plan?",
-    a: "Yes. FinFlow Track's Free plan includes basic accounting, unlimited invoicing, expense tracking, customer management, multi-currency support, and basic reports for one company and up to two team members, with no time limit.",
+    a: "Yes. FinFlow Track's Free plan includes basic accounting, invoice creation, expense tracking, customer management, and basic reports. Check the current pricing page for company, user, and multi-currency plan availability.",
   },
   {
     q: "Does Wave support multiple currencies?",
@@ -331,7 +331,7 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "Does FinFlow Track support multiple currencies?",
-    a: "Yes. FinFlow Track supports more than 50 ISO currencies as the base company currency, on every plan including Free, with currency selection also available at the invoice level.",
+    a: "Yes. FinFlow Track supports multi-currency workflows, with exchange rates locked when a transaction is recorded. Check current product and plan details for the currencies and workflows available to your account.",
   },
   {
     q: "Which is better for freelancers?",
@@ -406,14 +406,7 @@ function ComparePage() {
           </h1>
 
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            Both FinFlow Track and Wave offer a genuinely free starting plan, so this isn't a
-            "free vs. paid" comparison — it's about what each platform actually gives you at each
-            price point. Wave is an established accounting platform with built-in payment
-            processing, but as of {REVIEWED_DATE_LABEL} it's positioned squarely around the US and
-            Canada: new signups are limited to those markets, and your business's base currency is
-            locked to USD or CAD. FinFlow Track is a newer platform built for global use, with
-            multi-currency support, with exchange rates locked when transactions are recorded. This guide compares both
-            objectively, feature by feature, so you can decide which fits your business.
+            Both FinFlow Track and Wave offer a free starting plan, but the included workflows differ. Wave is available to businesses in the US and Canada, offers a free Starter plan, and provides optional online payments subject to eligibility and fees. Its business currency is selected during setup and cannot be changed later. FinFlow Track is built for global use, with multi-currency support and exchange rates locked when transactions are recorded. This guide compares their invoicing, expenses, reports, pricing, and plan limits.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-4">
@@ -449,9 +442,7 @@ function ComparePage() {
         <h2 className="text-3xl font-bold">FinFlow Track vs Wave: Quick Answer</h2>
         <div className="mt-6 space-y-4 text-lg leading-8 text-muted-foreground">
           <p>
-            <strong className="text-foreground">FinFlow Track</strong> is designed for freelancers,
-            startups, and small businesses anywhere in the world that want invoicing, expense
-            tracking, customer management, and basic reports on its Free plan. Paid plans add recurring invoices and the AI Bookkeeper, with company and team limits varying by plan.
+            <strong className="text-foreground">FinFlow Track</strong> offers basic accounting, invoicing, expense tracking, customer management, and basic reports on its Free plan. Paid plans add recurring invoices and the AI Bookkeeper, with company and team limits varying by plan.
           </p>
           <p>
             <strong className="text-foreground">Wave</strong> is an established accounting
@@ -461,11 +452,7 @@ function ComparePage() {
             CAD when the account is created.
           </p>
           <p>
-            FinFlow Track may be the better fit if you're outside the US/Canada, need multi-currency
-            support, or want paid-plan AI Bookkeeper functionality. Wave may be
-            the better fit if you're a US or Canadian business that wants built-in payment
-            processing and an established, widely-reviewed free tool without needing multi-currency
-            support.
+            FinFlow Track may be the better fit if you're outside the US/Canada, need multi-currency transaction handling, or want the AI Bookkeeper on a paid plan. Wave may be the better fit if you're a US or Canadian business that wants an established free accounting and invoicing plan, with optional online payments and Pro bank-feed automation.
           </p>
         </div>
       </section>
@@ -564,15 +551,10 @@ function ComparePage() {
         </div>
         <div className="mt-6 space-y-3 max-w-3xl text-muted-foreground leading-7">
           <p>
-            <strong className="text-foreground">FinFlow Track Free</strong> caps out at one company
-            and provides basic accounting, invoicing, expense tracking, customer management, and basic reports. Multi-currency is supported, with exchange rates locked when recorded. The AI Bookkeeper is available on paid plans.
+            <strong className="text-foreground">FinFlow Track Free</strong> includes basic accounting, invoice creation, expense tracking, customer management, and basic reports. The AI Bookkeeper and recurring invoices are paid-plan features; company and user limits vary by plan.
           </p>
           <p>
-            <strong className="text-foreground">Wave Starter</strong> has no invoice, estimate, or
-            bookkeeping-record limits and lets you accept online payments immediately, but automatic
-            bank feed connections and unlimited receipt scanning specifically require the Pro plan
-            (or a standalone receipt-scanning add-on), and it's only available to businesses signing
-            up from the US or Canada.
+            <strong className="text-foreground">Wave Starter</strong> includes unlimited invoices, estimates, bills, and bookkeeping records. Online payments are optional and subject to eligibility and processing fees. Automatic bank feeds and categorization require Pro; receipt scanning is included on Pro or available as a paid Starter add-on. New signups are limited to the US and Canada.
           </p>
         </div>
       </section>
@@ -750,10 +732,7 @@ function ComparePage() {
               <strong>FinFlow Track</strong> provides cash-flow reporting. Its AI Bookkeeper is a paid-plan feature; it should not be described as a formal cash-flow forecasting tool.
             </p>
             <p>
-              <strong>Wave</strong> includes a cash-flow-oriented dashboard and cash flow statement
-              on every plan, showing month-to-month and year-to-year comparisons to help identify
-              trends. Like FinFlow Track, this reflects historical data rather than a forward-looking
-              forecast.
+              <strong>Wave</strong> provides a cash-flow dashboard. Its current plan comparison distinguishes Starter and Pro reporting access; check Wave's live pricing page for the exact report availability before relying on a specific statement or report.
             </p>
           </FeatureBlock>
 
@@ -1066,7 +1045,7 @@ function ComparePage() {
                 "Newer product with a smaller track record than Wave",
                 "No built-in online payment collection on invoices yet",
                 "Third-party integration marketplace is still in development",
-                "No live bank feed connections yet — bank data comes in via CSV import",
+                "No live bank-feed connection is currently confirmed",
                 "No dedicated standalone cash-flow forecasting report yet",
                 "No direct, one-click Wave data import at this time",
               ].map((item) => (
@@ -1145,8 +1124,7 @@ function ComparePage() {
               <ul className="mt-6 space-y-4 text-sm text-muted-foreground">
                 <li>
                   <strong className="text-foreground">US or Canadian small businesses</strong> that
-                  want built-in online payment collection on invoices without a separate payment
-                  processor.
+                  want an optional online-payment feature and meet Wave's eligibility requirements.
                 </li>
                 <li>
                   <strong className="text-foreground">Freelancers who don't need multi-currency</strong>{" "}
