@@ -26,15 +26,16 @@ import {
 
 const SITE_URL = "https://finflowtrack.com";
 const PAGE_URL = `${SITE_URL}/compare/finflow-track-vs-quickbooks`;
-const REVIEWED_DATE = "2026-08-13";
-const REVIEWED_DATE_LABEL = "August 13, 2026";
+const PUBLISHED_DATE = "2026-08-13";
+const REVIEWED_DATE = "2026-11-16";
+const REVIEWED_DATE_LABEL = "November 16, 2026";
 
 export const Route = createFileRoute("/compare/finflow-track-vs-quickbooks")({
   component: ComparePage,
   head: () => {
-    const title = "FinFlow Track vs QuickBooks: Which Is Better?";
+    const title = "FinFlow Track vs QuickBooks: Free Plans, Features & Pricing Compared";
     const description =
-      "Compare FinFlow Track vs QuickBooks on pricing, invoicing, expenses, reporting, multi-currency and ease of use to find the right fit for your business.";
+      "Compare FinFlow Track and QuickBooks Free on plan limits, invoicing, expense tracking, reports, multi-currency support, and paid features.";
 
     return {
       meta: [
@@ -81,7 +82,7 @@ export const Route = createFileRoute("/compare/finflow-track-vs-quickbooks")({
             name: title,
             description,
             url: PAGE_URL,
-            datePublished: REVIEWED_DATE,
+            datePublished: PUBLISHED_DATE,
             dateModified: REVIEWED_DATE,
             isPartOf: { "@type": "WebSite", name: "FinFlow Track", url: SITE_URL },
             publisher: { "@type": "Organization", name: "FinFlow Track", url: SITE_URL },
@@ -148,9 +149,9 @@ const atAGlanceRows: {
     quickbooks: { status: "yes", label: "Small businesses, accountants" },
   },
   {
-    category: "Free plan (ongoing, not a trial)",
+    category: "Free plan",
     finflow: { status: "yes", label: "Yes — Free plan" },
-    quickbooks: { status: "no", label: "No permanent free plan" },
+    quickbooks: { status: "yes", label: "Free plan; usage limits apply" },
   },
   {
     category: "Invoicing",
@@ -164,7 +165,7 @@ const atAGlanceRows: {
   },
   {
     category: "AI receipt / document scanning",
-    finflow: { status: "yes" },
+    finflow: { status: "no", label: "Not currently available" },
     quickbooks: { status: "partial", label: "Varies by plan" },
   },
   {
@@ -174,17 +175,17 @@ const atAGlanceRows: {
   },
   {
     category: "Multi-currency",
-    finflow: { status: "yes", label: "50+ currencies" },
+    finflow: { status: "yes", label: "Rate locked when recorded" },
     quickbooks: { status: "partial", label: "Higher tiers only — verify" },
   },
   {
     category: "Conversational AI bookkeeper",
-    finflow: { status: "yes" },
+    finflow: { status: "partial", label: "Paid plans" },
     quickbooks: { status: "partial", label: "AI features vary — verify" },
   },
   {
     category: "Payroll",
-    finflow: { status: "partial", label: "Business plan and above" },
+    finflow: { status: "no", label: "Not available" },
     quickbooks: { status: "partial", label: "Separate add-on — verify" },
   },
   {
@@ -217,7 +218,11 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "Is FinFlow Track cheaper than QuickBooks?",
-    a: "FinFlow Track has a permanently free plan and paid tiers starting at $19/month. QuickBooks Online does not currently offer a permanent free plan; its paid tiers and promotional pricing change periodically, so you should check QuickBooks' official pricing page for current rates in your market before comparing costs directly.",
+    a: "Both products currently list a free plan in the U.S. FinFlow Track Free includes basic accounting, invoice creation, expense tracking, customer management, and basic reports. QuickBooks Free is more restricted: its U.S. pricing page lists one user, no accountant access, up to two invoices per month by default (eligible users who enable QuickBooks Payments may send more), and one connected bank account. Paid-plan prices and promotions change, so check both official pricing pages before comparing total cost.",
+  },
+  {
+    q: "Does QuickBooks have a free plan?",
+    a: "Yes. QuickBooks' U.S. pricing page currently lists a $0 Free plan. It is limited to one user with no accountant access, up to two invoices per month by default (eligible users who enable QuickBooks Payments may send more), and one connected bank account. Paid-plan prices and availability vary by market, so confirm the details for your country on Intuit's official pricing page.",
   },
   {
     q: "Is FinFlow Track a good QuickBooks alternative?",
@@ -229,15 +234,15 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "Is FinFlow Track good for freelancers?",
-    a: "Yes. Freelancers can use the Free plan for invoicing, expense tracking, and basic reporting for a single company, and upgrade later if they need inventory, purchase orders, or additional team members.",
+    a: "Yes. Freelancers can use FinFlow Track Free for invoice creation, expense tracking, customer management, and basic reports. Multiple company workspaces and team access are subject to plan limits; recurring invoices and the AI Bookkeeper are paid-plan features.",
   },
   {
     q: "Does FinFlow Track support multiple currencies?",
-    a: "Yes. FinFlow Track supports more than 50 ISO currencies at the invoice and company level, with currency-aware formatting and reporting.",
+    a: "Yes. FinFlow Track supports multi-currency transactions, and the exchange rate is locked when a transaction is recorded.",
   },
   {
     q: "Does FinFlow Track include invoicing?",
-    a: "Yes, invoicing is included on every plan, including the Free plan. Recurring invoices, credit notes, estimates, and payment tracking are also available.",
+    a: "Yes. Invoice creation is included on the Free plan. Invoices can be exported as PDFs and shared by email or secure link. Recurring invoices are available on paid plans.",
   },
   {
     q: "Can I move my data from QuickBooks to FinFlow Track?",
@@ -249,7 +254,7 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "Is FinFlow Track free?",
-    a: "FinFlow Track offers a permanently free plan (not a time-limited trial) that includes basic accounting, invoicing, expense tracking, customer management, and basic reports for one company and up to two team members. Paid plans unlock additional companies, users, and features.",
+    a: "FinFlow Track has a Free plan that includes basic accounting, invoice creation, expense tracking, customer management, and basic reports. Company and team limits depend on the plan. Paid plans add capabilities including recurring invoices and the AI Bookkeeper.",
   },
 ];
 
@@ -312,7 +317,7 @@ function ComparePage() {
           </span>
 
           <h1 className="mt-6 text-4xl font-bold tracking-tight lg:text-5xl">
-            FinFlow Track vs QuickBooks: Which Is Better for Small Businesses?
+            FinFlow Track vs QuickBooks: Free Plans and Features Compared
           </h1>
 
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
@@ -359,9 +364,9 @@ function ComparePage() {
           <p>
             <strong className="text-foreground">FinFlow Track</strong> is designed for freelancers,
             startups, and small businesses that want a straightforward way to manage invoicing,
-            expenses, multi-currency transactions, and financial reporting — with a permanently free
-            starting plan and paid tiers that add companies, users, inventory, payroll, and
-            AI-assisted bookkeeping as a business grows.
+            expenses, multi-currency transactions, and financial reporting — with a Free plan.
+            Paid tiers expand company and team limits and add features such as recurring invoices
+            and the AI Bookkeeper.
           </p>
           <p>
             <strong className="text-foreground">QuickBooks</strong> offers a mature accounting
@@ -429,14 +434,80 @@ function ComparePage() {
         </div>
       </section>
 
+      {/* FREE PLAN COMPARISON */}
+      <section className="container mx-auto max-w-6xl px-6 py-16">
+        <h2 className="text-3xl font-bold">FinFlow Track Free vs QuickBooks Free</h2>
+        <p className="mt-4 max-w-3xl text-muted-foreground">
+          Both products list a $0 plan in the U.S., but the included workflows differ. QuickBooks
+          Free has specific user, invoice, and bank connection limits. FinFlow Track Free focuses on
+          basic accounting, invoicing, expense tracking, customer records, and basic reports.
+        </p>
+        <div className="mt-8 overflow-x-auto rounded-2xl border bg-background">
+          <table className="min-w-full">
+            <thead className="bg-muted">
+              <tr>
+                <th scope="col" className="px-5 py-4 text-left text-sm font-semibold">Free-plan detail</th>
+                <th scope="col" className="px-5 py-4 text-center text-sm font-semibold">FinFlow Track Free</th>
+                <th scope="col" className="px-5 py-4 text-center text-sm font-semibold">QuickBooks Free (U.S.)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-t">
+                <th scope="row" className="px-5 py-4 text-left text-sm font-medium">Price</th>
+                <td className="px-5 py-4 text-center">$0/month</td>
+                <td className="px-5 py-4 text-center">$0/month</td>
+              </tr>
+              <tr className="border-t">
+                <th scope="row" className="px-5 py-4 text-left text-sm font-medium">Core workflows</th>
+                <td className="px-5 py-4 text-center">Basic accounting, invoices, expenses, customer records, and basic reports</td>
+                <td className="px-5 py-4 text-center">Income and expense tracking, invoicing, and core reports</td>
+              </tr>
+              <tr className="border-t">
+                <th scope="row" className="px-5 py-4 text-left text-sm font-medium">Users</th>
+                <td className="px-5 py-4 text-center">Plan limits apply</td>
+                <td className="px-5 py-4 text-center">1 user; no accountant access</td>
+              </tr>
+              <tr className="border-t">
+                <th scope="row" className="px-5 py-4 text-left text-sm font-medium">Invoices</th>
+                <td className="px-5 py-4 text-center">Invoice creation included</td>
+                <td className="px-5 py-4 text-center">2 per month by default; eligible QuickBooks Payments users may send more</td>
+              </tr>
+              <tr className="border-t">
+                <th scope="row" className="px-5 py-4 text-left text-sm font-medium">Bank connection</th>
+                <td className="px-5 py-4 text-center">Automatic bank feeds are not a listed feature</td>
+                <td className="px-5 py-4 text-center">1 connected bank account</td>
+              </tr>
+              <tr className="border-t">
+                <th scope="row" className="px-5 py-4 text-left text-sm font-medium">Recurring invoices and AI Bookkeeper</th>
+                <td className="px-5 py-4 text-center">Paid-plan features</td>
+                <td className="px-5 py-4 text-center">Check the current paid-plan feature list</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-4 text-sm text-muted-foreground">
+          QuickBooks Free limits and eligibility are based on the U.S. plan page. Availability can
+          differ by country. See the{" "}
+          <a
+            href="https://quickbooks.intuit.com/pricing/"
+            target="_blank"
+            rel="noopener noreferrer nofollow"
+            className="underline hover:text-foreground"
+          >
+            official QuickBooks pricing page
+          </a>
+          {" "}for current details.
+        </p>
+      </section>
+
       {/* PRICING */}
       <section className="container mx-auto max-w-6xl px-6 py-16">
         <h2 className="text-3xl font-bold">FinFlow Track vs QuickBooks Pricing</h2>
         <p className="mt-4 max-w-3xl text-muted-foreground">
           Pricing shown in USD, billed monthly. FinFlow Track pricing below reflects our current
-          published plans as of {REVIEWED_DATE_LABEL}. QuickBooks pricing changes frequently by
-          market, tier, and promotion — figures are intentionally omitted here; use the official
-          link to see current rates before purchasing.
+          published plans as of {REVIEWED_DATE_LABEL}. QuickBooks pricing varies by market and promotion. Its U.S. pricing page currently lists
+          a $0 Free plan with limits on users, invoices, and bank connections; paid-plan prices and
+          promotional offers should be checked on the official page before purchase.
         </p>
 
         <div className="mt-10 grid gap-6 md:grid-cols-2">
@@ -476,15 +547,15 @@ function ComparePage() {
           <div className="rounded-2xl border p-8">
             <h3 className="text-xl font-bold">QuickBooks</h3>
             <p className="mt-6 text-sm text-muted-foreground leading-7">
-              QuickBooks Online is sold across several subscription tiers (for example, entry-level
-              self-employed plans up through Simple Start, Essentials, Plus, and Advanced), with
-              pricing that varies by market, currency, and ongoing promotions. Intuit has changed
-              QuickBooks Online pricing more than once in 2026, and offers such as introductory
-              discounts or free trials are frequently time-limited and cannot always be combined.
+              QuickBooks’ U.S. pricing page currently lists a Free plan at $0/month, followed by
+              paid tiers such as Simple Start, Essentials, Plus, and Advanced. The Free plan is
+              limited to one user, does not include accountant access, allows up to two invoices
+              per month, and connects one bank account. Paid-plan pricing and introductory offers
+              vary by market and change over time.
             </p>
             <p className="mt-4 text-sm text-muted-foreground leading-7">
-              Payroll, payment processing, and bookkeeping services are typically billed as separate
-              add-ons rather than included in the base subscription price.
+              Payroll and payment processing have separate eligibility, plan, or transaction-fee
+              terms. Review the official plan comparison for the exact combination you need.
             </p>
             <a
               href="https://quickbooks.intuit.com/pricing/"
@@ -516,11 +587,11 @@ function ComparePage() {
           <div className="mt-12 space-y-14">
             <FeatureBlock icon={Wallet} title="Accounting and Bookkeeping">
               <p>
-                <strong>FinFlow Track</strong> provides core double-entry-style bookkeeping modules
-                including a chart of accounts, journals, a general ledger, and a trial balance,
-                alongside day-to-day workflows like invoicing and expense tracking. It is a
-                self-service financial record-keeping and reporting tool rather than a licensed
-                accounting or tax-filing service.
+                <strong>FinFlow Track</strong> supports day-to-day small-business financial
+                management: recording income and expenses, creating invoices, managing customer
+                records, and reviewing financial reports. Its feature set and limits vary by plan.
+                It is a self-service software tool, not a tax-filing service or a substitute for a
+                qualified accounting professional.
               </p>
               <p>
                 <strong>QuickBooks</strong> is a long-established accounting platform used by
@@ -533,9 +604,10 @@ function ComparePage() {
 
             <FeatureBlock icon={FileText} title="Invoicing">
               <p>
-                <strong>FinFlow Track</strong> includes invoice creation and customization,
-                recurring invoices, credit notes, estimates that convert to invoices, payment
-                tracking, and customer management — available starting on the Free plan.
+                <strong>FinFlow Track</strong> includes invoice creation and customer management on
+                the Free plan. Users can export invoices as PDFs and share them by email or secure
+                link. Recurring invoices are a paid-plan feature; do not assume other advanced
+                invoicing functions are included unless they are listed on the current pricing page.
               </p>
               <p>
                 <strong>QuickBooks</strong> also supports invoice creation, customization, and
@@ -548,10 +620,9 @@ function ComparePage() {
 
             <FeatureBlock icon={Receipt} title="Expense Tracking">
               <p>
-                <strong>FinFlow Track</strong> supports manual expense entry and categorization,
-                plus AI-assisted receipt and document scanning that automatically extracts vendor,
-                amount, currency, date, and category from an uploaded receipt or document image to
-                pre-fill an expense record for review.
+                <strong>FinFlow Track</strong> supports recording and categorizing business
+                expenses. Receipt scanning and automatic document extraction are not currently
+                listed as available product capabilities.
               </p>
               <p>
                 <strong>QuickBooks</strong> supports expense recording, categorization, and receipt
@@ -580,9 +651,8 @@ function ComparePage() {
             <FeatureBlock icon={BarChart3} title="Financial Reporting">
               <p>
                 <strong>FinFlow Track</strong> currently provides Profit &amp; Loss and Balance
-                Sheet reports, along with a Trial Balance, General Ledger, and Journals view under
-                its accounting module. Report depth (for example, more advanced or itemized
-                reporting) is plan-dependent, per FinFlow Track's published pricing tiers.
+                Sheet, cash flow, and receivables/payables aging. CSV exports are available;
+                report access and limits depend on the subscription plan.
               </p>
               <p>
                 <strong>QuickBooks</strong> offers a broader library of standard and customizable
@@ -594,10 +664,9 @@ function ComparePage() {
 
             <FeatureBlock icon={Globe} title="Multi-Currency">
               <p>
-                <strong>FinFlow Track</strong> supports more than 50 ISO currencies, with a default
-                currency set per company and currency selection available at the invoice level, so
-                businesses that invoice or transact internationally can record and report
-                transactions in the relevant currency.
+                <strong>FinFlow Track</strong> supports multi-currency transactions. The exchange
+                rate is locked when a transaction is recorded, helping preserve the rate used for
+                that entry in the financial records.
               </p>
               <p>
                 <strong>QuickBooks</strong> offers multi-currency functionality on some plans and
@@ -612,10 +681,8 @@ function ComparePage() {
                 <strong>FinFlow Track's AI Bookkeeper</strong> is a conversational assistant that
                 answers questions about your live business data — for example, revenue for a period,
                 top customers, which expense category is highest, or which invoices are overdue — by
-                querying your existing records. It does not autonomously post transactions or fully
-                automate bookkeeping on its own; it answers questions and surfaces insight.
-                Separately, FinFlow Track uses AI to extract structured data from uploaded receipts
-                and documents to speed up expense entry.
+                querying your existing records. It is available on paid plans and does not
+                autonomously post transactions, scan receipts, or fully automate bookkeeping.
               </p>
               <p>
                 <strong>QuickBooks</strong> has introduced its own AI-assisted features (such as
@@ -629,13 +696,12 @@ function ComparePage() {
               <p>
                 <strong>FinFlow Track's</strong> integration marketplace is still in development. As
                 of {REVIEWED_DATE_LABEL}, the product does not have a public catalog of live
-                third-party integrations; planned categories (payments, banking, productivity, CRM,
-                e-commerce, and automation) are listed on the{" "}
+                third-party integrations; planned categories (payments, banking, productivity, and automation) are listed on the{" "}
                 <Link to="/integrations" className="underline hover:text-foreground">
                   integrations page
                 </Link>{" "}
-                as future connections rather than currently available ones. Its Business plan
-                includes API access for custom connections.
+                as future connections rather than currently available ones. FinFlow Track does not
+                currently advertise a public third-party integration marketplace or API access.
               </p>
               <p>
                 <strong>QuickBooks</strong> has an established third-party app marketplace; Intuit
@@ -647,10 +713,9 @@ function ComparePage() {
 
             <FeatureBlock icon={Building2} title="Multiple Companies and Users">
               <p>
-                <strong>FinFlow Track</strong> supports multiple companies and team members within a
-                single account, with limits that scale by plan — from 1 company / 2 users on the
-                Free plan up to unlimited companies and users on Enterprise, per its published
-                pricing tiers.
+                <strong>FinFlow Track</strong> supports multiple company workspaces and team roles
+                within one account. The number of companies and users available depends on the
+                subscription plan; check the current pricing page for the applicable limits.
               </p>
               <p>
                 <strong>QuickBooks</strong> generally requires a separate subscription per company
@@ -778,12 +843,12 @@ function ComparePage() {
               <h2 className="text-2xl font-bold">FinFlow Track Strengths</h2>
               <ul className="mt-6 space-y-3 text-sm text-muted-foreground">
                 {[
-                  "Permanently free starting plan, not a time-limited trial",
-                  "Native multi-currency support across 50+ currencies",
-                  "Conversational AI Bookkeeper for quick answers about your own data",
-                  "AI-assisted receipt and document scanning for faster expense entry",
-                  "Simpler, more focused feature set for small teams getting started",
-                  "Transparent, predictable per-plan pricing",
+                  "Free plan for basic accounting, invoicing, expense tracking, customer records, and reports",
+                  "Multi-currency transactions with the exchange rate locked when recorded",
+                  "Paid-plan AI Bookkeeper for questions about recorded business data",
+                  "Invoice PDF export and sharing by email or secure link",
+                  "Multiple company workspaces and team roles, subject to plan limits",
+                  "Simpler, focused workflows for small businesses getting started",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2">
                     <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
@@ -837,8 +902,8 @@ function ComparePage() {
             <h2 className="text-2xl font-bold">QuickBooks Limitations</h2>
             <ul className="mt-6 space-y-3 text-sm text-muted-foreground">
               {[
-                "No permanent free plan; pricing and promotions change frequently",
-                "Payroll, payments, and bookkeeping services are typically billed as separate add-ons",
+                "The U.S. Free plan has strict limits on users, invoices, and bank connections",
+                "Payroll and payment processing have separate plan, eligibility, or transaction-fee terms",
                 "Feature availability is split across multiple plan tiers, which can make comparison shopping harder",
                 "Managing multiple companies generally requires a separate subscription per company",
               ].map((item) => (
@@ -873,8 +938,8 @@ function ComparePage() {
                 </li>
                 <li>
                   <strong className="text-foreground">Startups and small businesses</strong> that
-                  want to start on a free plan and upgrade as they add companies, users, or
-                  inventory.
+                  want to start on a free plan and add company workspaces or team members as
+                  their needs grow, subject to plan limits.
                 </li>
                 <li>
                   <strong className="text-foreground">
@@ -937,7 +1002,7 @@ function ComparePage() {
             "Export the records QuickBooks allows you to export (check current export options in your QuickBooks plan).",
             "Review customer and invoice information for accuracy before re-entering it.",
             "Review expense data and categorization so it maps cleanly to FinFlow Track's expense categories.",
-            "Create and configure your company in FinFlow Track, including currency and tax settings.",
+            "Create and configure your company in FinFlow Track, including its base currency and company details.",
             "Manually enter or bulk-upload supported records into FinFlow Track — there is currently no one-click QuickBooks importer.",
             "Verify financial totals (revenue, expenses, balances) match between the two systems before relying on FinFlow Track alone.",
             "Test day-to-day workflows — invoicing, expense entry, reporting — with a small set of real transactions.",
@@ -1000,7 +1065,7 @@ function ComparePage() {
               <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
                 <li>· Its current feature set matches your requirements</li>
                 <li>· You value a simpler, more focused interface</li>
-                <li>· You want to start on a permanently free plan</li>
+                <li>· You want to start with a Free plan and understand its included limits</li>
                 <li>· You need native multi-currency support without an add-on</li>
               </ul>
             </div>
@@ -1028,8 +1093,8 @@ function ComparePage() {
         <div className="container mx-auto max-w-4xl px-6 py-20 text-center">
           <h2 className="text-4xl font-bold">Start Free with FinFlow Track</h2>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-            Explore FinFlow Track and see whether its accounting, invoicing, and financial
-            management workflow fits your business.
+            Explore FinFlow Track and see whether its invoicing, expense tracking, customer records,
+            and reporting workflows fit your business.
           </p>
           <div className="mt-10 flex flex-wrap justify-center gap-4">
             <Link
