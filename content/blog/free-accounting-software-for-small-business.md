@@ -1,5 +1,5 @@
 ---
-title: "Free Accounting Software for Small Business: 4 Options Compared"
+title: "Free Accounting Software for Small Business"
 description: "Compare four free accounting plans for small businesses. Check invoicing, expense tracking, reports, bank feeds, user limits, and regional availability."
 slug: "free-accounting-software-for-small-business"
 author: "FinFlowTrack Editorial Team"
@@ -17,7 +17,7 @@ draft: false
 featured: false
 ---
 
-# Free Accounting Software for Small Business: 4 Options Compared
+# Free Accounting Software for Small Business
 
 "Free accounting software" sounds straightforward until you start comparing products.
 
