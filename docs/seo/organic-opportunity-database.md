@@ -46,14 +46,14 @@ Status: Initial live-data snapshot. Search volume is unavailable from this sourc
 | Free accounting software | TechnologyAdvice, NerdWallet, TechRepublic, and specialist comparison pages currently cover free-plan comparisons | Compare coverage, test evidence, regional eligibility, update dates, and whether FinFlow can add a genuinely useful transparent comparison |
 | Expense tracking | Not yet sufficiently researched | Retrieve current SERP competitors for exact GSC queries before deciding whether to update or consolidate |
 | Break-even analysis | SBA-related fixed-cost, variable-cost and contribution-margin queries are triggering the existing page; SBA already offers a basic calculator; Pearson and other calculator pages add target-profit / margin-of-safety outputs | Differentiate with transparent formulas, target-profit and margin-of-safety results, period consistency warnings, currency formatting, input validation, and explicit single-product limitations |
-| Cash-flow forecasting | Existing page has early clicks | Review SERP competitors and assess downloadable forecast template |
+| Cash-flow forecasting | SERP results include downloadable 13-week spreadsheets (Ataski, Aequo AP, Drip Capital), interactive forecast builders (Victor J. Parrish), and detailed rolling-forecast guides (ALOS, Eightx) | Compete through a useful spreadsheet with transparent formulas, clear assumptions, weekly roll-forward instructions, and accurate product boundaries; do not create another generic article |
 
 ## Scalable search assets
 
 | Asset | Search need supported | Evidence | Decision | Status |
 | --- | --- | --- | --- | --- |
 | Break-even calculator | Calculate break-even units/revenue, contribution margin, target-profit units, expected operating result, and margin of safety | Existing guide has 78 impressions, 0 clicks, avg position 27.69; SBA-related formula queries visible | BUILD: new interactive route /tools/break-even-calculator; linked from existing guide; assess organic tool visits, repeat use, signup assists and activation after deployment | In PR |
-| Cash-flow forecast template/calculator | Estimate cash receipts, outflows, and closing cash | Existing page has 36 impressions and 2 clicks | BUILD candidate after improving current guide | Proposed |
+| 13-week cash-flow forecast worksheet (CSV) | Schedule weekly cash receipts and payments, carry closing balances forward, and compare with a minimum cash buffer | Existing page has 36 impressions and 2 clicks; live SERP research surfaced multiple competing 13-week templates and builders | BUILD: added a formula-driven CSV worksheet in the existing page PR; assess downloads and assisted registrations after deployment | In PR |
 | Expense tracking template | Organize transaction date, vendor, category, amount, payment method, and receipt reference | Existing expense guide has 79 impressions | BUILD candidate only if it provides a usable downloadable template | Proposed |
 | Invoice template | Create a clear invoice with essential fields | Product relevance and existing invoice guide | Validate distinct intent and template usefulness before building | Proposed |
 
@@ -77,4 +77,5 @@ For each opportunity, record:
 | Date | Asset | Change | Evidence | Status |
 | --- | --- | --- | --- | --- |
 | 2026-11-16 | /tools/break-even-calculator + /blog/break-even-analysis-small-business | Added interactive single-product calculator with break-even units/revenue, contribution margin, target-profit units, expected profit/loss, margin of safety, period/currency controls, input validation and model limitations; linked from existing guide and sitemap | Latest 28-day GSC: 78 impressions, 0 clicks, avg position 27.69; visible SBA formula-query variants | Draft PR pending review |
+| 2026-11-16 | /blog/cash-flow-forecasting-small-business + /downloads/13-week-cash-flow-forecast-template.csv | Added rolling 13-week direct-cash workflow, realistic collection/payment assumptions, formula-driven CSV template, weekly roll-forward instructions, and accurate product-capability caveat | 36 impressions, 2 clicks, avg position 28.00; SERP review found competing downloadable and interactive 13-week tools | Draft PR pending review |
 | 2026-11-16 | /blog/free-accounting-software-for-small-business | Refreshed provider comparison and clarified FinFlow Track Free-plan scope; removed obsolete citation artifacts and unsupported feature statements | 597 impressions, 0 clicks, avg position 13.30 | Proposed for review |
