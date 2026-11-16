@@ -120,7 +120,7 @@ Not always. Compare the discount with your cash position and any cost of borrowi
 
 - [Small Business Cash Flow Management](/blog/small-business-cash-flow-management)
 - [Accounts Receivable Management](/blog/accounts-receivable-management)
-- [How to Track Business Expenses](/blog/how-to-track-business-expenses)
+- [How to Track Business Expenses](/blog/how-to-keep-track-of-business-expenses)
 - [Balance Sheet for Small Business](/blog/balance-sheet-for-small-business)
 - [Small Business Bookkeeping Checklist](/blog/small-business-bookkeeping-checklist)
 
