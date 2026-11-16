@@ -317,7 +317,7 @@ function ComparePage() {
           </span>
 
           <h1 className="mt-6 text-4xl font-bold tracking-tight lg:text-5xl">
-            FinFlow Track vs QuickBooks: Which Is Better for Small Businesses?
+            FinFlow Track vs QuickBooks: Free Plans and Features Compared
           </h1>
 
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
@@ -681,10 +681,8 @@ function ComparePage() {
                 <strong>FinFlow Track's AI Bookkeeper</strong> is a conversational assistant that
                 answers questions about your live business data — for example, revenue for a period,
                 top customers, which expense category is highest, or which invoices are overdue — by
-                querying your existing records. It does not autonomously post transactions or fully
-                automate bookkeeping on its own; it answers questions and surfaces insight.
-                The AI Bookkeeper is available on paid plans. It answers questions about recorded
-                business data; it does not scan receipts or automatically post transactions.
+                querying your existing records. It is available on paid plans and does not
+                autonomously post transactions, scan receipts, or fully automate bookkeeping.
               </p>
               <p>
                 <strong>QuickBooks</strong> has introduced its own AI-assisted features (such as
