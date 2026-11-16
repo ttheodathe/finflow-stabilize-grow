@@ -71,7 +71,11 @@ function BreakEvenCalculatorPage() {
   const [target, setTarget] = useState("3000");
 
   const result = useMemo(() => {
-    const f = Number(fixed), p = Number(price), v = Number(variable), e = Number(expected), t = Number(target);
+    // Fixed costs, selling price, variable cost, and expected units are required.
+    // A blank target-profit field is intentionally treated as a zero-profit target.
+    if ([fixed, price, variable, expected].some(value => value.trim() === "")) return null;
+    const f = Number(fixed), p = Number(price), v = Number(variable), e = Number(expected);
+    const t = target.trim() === "" ? 0 : Number(target);
     if (![f,p,v,e,t].every(Number.isFinite) || f < 0 || p <= 0 || v < 0 || e < 0 || t < 0 || v >= p) return null;
     const cm = p - v, ratio = cm / p, rawUnits = f / cm;
     const units = Math.ceil(rawUnits);
@@ -137,7 +141,7 @@ function BreakEvenCalculatorPage() {
 
         <section className="space-y-5" aria-live="polite" aria-labelledby="results-heading">
           <div><h2 id="results-heading" className="text-xl font-semibold">Your results</h2><p className="mt-1 text-sm text-muted-foreground">Calculated from your assumptions.</p></div>
-          {!result ? <div role="alert" className="rounded-xl border border-destructive/40 bg-destructive/5 p-5 text-sm"><strong>Check your inputs.</strong><p className="mt-1 text-muted-foreground">{Number(price) <= 0 ? "Selling price must be greater than zero." : Number(variable) >= Number(price) ? "Variable cost must be lower than selling price. Otherwise, there is no finite break-even point in this model." : "Enter valid, non-negative numbers in every field."}</p></div> : <>
+          {!result ? <div role="alert" className="rounded-xl border border-destructive/40 bg-destructive/5 p-5 text-sm"><strong>Check your inputs.</strong><p className="mt-1 text-muted-foreground">{[fixed, price, variable, expected].some(value => value.trim() === "") ? "Complete fixed costs, selling price, variable cost, and expected units. Target profit may be left blank." : Number(price) <= 0 ? "Selling price must be greater than zero." : Number(variable) >= Number(price) ? "Variable cost must be lower than selling price. Otherwise, there is no finite break-even point in this model." : "Enter valid, non-negative numbers in every field."}</p></div> : <>
             <div className="grid gap-3 sm:grid-cols-2">
               <Result label="Break-even units" value={fmt(result.units)} note={`Whole units per ${period}`} />
               <Result label="Break-even revenue" value={money(result.revenue, currency)} note={`Sales needed per ${period}`} />
