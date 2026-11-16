@@ -587,9 +587,7 @@ function ComparePage() {
                   <span className="font-semibold">$49/month</span>
                 </li>
                 <li className="flex items-center justify-between">
-                  <span>Enterprise</span>
-                  <span className="font-semibold">Custom pricing</span>
-                </li>
+                  
               </ul>
               <p className="mt-6 text-xs text-muted-foreground">
                 Market: Global · Currency: USD · Billing: Monthly · Date checked:{" "}
@@ -1063,7 +1061,7 @@ function ComparePage() {
                 "New signups currently limited to businesses in the US and Canada",
                 "Business base currency is locked to USD or CAD and can't be changed later",
                 "Automatic bank feeds and transaction categorization require Pro; receipt scanning is Pro or a paid Starter add-on",
-                "Online payment processing carries per-transaction fees on every plan",
+                "Optional online payments carry per-transaction fees when enabled",
                 "Payroll is US/Canada only and billed as a separate subscription",
                 "Some support options depend on the subscription plan; check current Wave support terms",
               ].map((item) => (
@@ -1140,7 +1138,7 @@ function ComparePage() {
                   <strong className="text-foreground">
                     Sellers on platforms like Etsy or PayPal
                   </strong>{" "}
-                  who want Wave's native integrations with those specific services.
+                  who should check Wave's current Pro-plan integration directory for supported connections.
                 </li>
               </ul>
             </div>
@@ -1233,7 +1231,7 @@ function ComparePage() {
               <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
                 <li>· You're a US or Canadian business</li>
                 <li>· You want optional online invoice payments and meet Wave's eligibility requirements</li>
-                <li>· You're comfortable with USD or CAD as your only base currency</li>
+                <li>· You're comfortable selecting USD or CAD as your business currency at setup</li>
                 <li>
                   · You want automated bank feeds and receipt scanning and are willing to pay for
                   Pro
