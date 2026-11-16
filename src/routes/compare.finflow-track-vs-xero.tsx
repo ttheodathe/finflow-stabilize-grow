@@ -10,7 +10,7 @@ const PUBLISHED_DATE = "2026-08-14";
 const REVIEWED_DATE = "2026-11-16";
 
 type Status = "yes" | "no" | "partial";
-function Mark({ status, children }: { status: Status; children: React.ReactNode }) {
+function Mark({ status, children }: { status: Status; children: string }) {
   return <span className="inline-flex items-start gap-2 text-sm">{status === "yes" ? <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600" aria-hidden="true" /> : status === "no" ? <Minus className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" /> : <span aria-hidden="true">◐</span>}<span>{children}</span></span>;
 }
 
@@ -71,7 +71,7 @@ export const Route = createFileRoute("/compare/finflow-track-vs-xero")({
 function ComparePage() {
   return <div className="bg-background">
     <SiteHeader />
-    <div className="border-b"><div className="container mx-auto max-w-7xl px-6 py-4"><nav aria-label="Breadcrumb" className="text-sm text-muted-foreground"><ol className="flex flex-wrap items-center gap-2"><li><Link to="/">Home</Link></li><li aria-hidden="true">/</li><li><Link to="/compare">Compare</Link></li><li aria-hidden="true">/</li><li aria-current="page" className="text-foreground">FinFlow Track vs Xero</li></ol></nav></div></div>
+    <div className="border-b"><div className="container mx-auto max-w-7xl px-6 py-4"><nav aria-label="Breadcrumb" className="text-sm text-muted-foreground"><ol className="flex flex-wrap items-center gap-2"><li><Link to="/">Home</Link></li><li aria-hidden="true">/</li><li><span>Compare</span></li><li aria-hidden="true">/</li><li aria-current="page" className="text-foreground">FinFlow Track vs Xero</li></ol></nav></div></div>
     <section className="border-b"><div className="container mx-auto max-w-5xl px-6 py-16">
       <span className="inline-flex rounded-full bg-primary/10 px-4 py-1 text-sm font-medium text-primary">Accounting Software Comparison</span>
       <h1 className="mt-6 text-4xl font-bold tracking-tight lg:text-5xl">FinFlow Track vs Xero: Free Plan, Pricing &amp; Features Compared</h1>
