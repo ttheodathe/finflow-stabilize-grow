@@ -29,15 +29,16 @@ import {
 
 const SITE_URL = "https://finflowtrack.com";
 const PAGE_URL = `${SITE_URL}/compare/finflow-track-vs-zoho-books`;
-const REVIEWED_DATE = "2026-08-14";
-const REVIEWED_DATE_LABEL = "August 14, 2026";
+const PUBLISHED_DATE = "2026-08-14";
+const REVIEWED_DATE = "2026-11-16";
+const REVIEWED_DATE_LABEL = "November 16, 2026";
 
 export const Route = createFileRoute("/compare/finflow-track-vs-zoho-books")({
   component: ComparePage,
   head: () => {
-    const title = "FinFlow Track vs Zoho Books: Which Is Better?";
+    const title = "FinFlow Track vs Zoho Books: Free Plan, Pricing & Features Compared";
     const description =
-      "Compare FinFlow Track vs Zoho Books on pricing, accounting, invoicing, expenses, inventory, multi-currency, automation and reporting.";
+      "Compare FinFlow Track plans with Zoho Books U.S. pricing, its $50,000 Free-plan revenue threshold, invoice limits, accounting features, and multi-currency availability.";
 
     return {
       meta: [
@@ -84,7 +85,7 @@ export const Route = createFileRoute("/compare/finflow-track-vs-zoho-books")({
             name: title,
             description,
             url: PAGE_URL,
-            datePublished: REVIEWED_DATE,
+            datePublished: PUBLISHED_DATE,
             dateModified: REVIEWED_DATE,
             isPartOf: { "@type": "WebSite", name: "FinFlow Track", url: SITE_URL },
             publisher: { "@type": "Organization", name: "FinFlow Track", url: SITE_URL },
@@ -147,7 +148,7 @@ const atAGlanceRows: {
 }[] = [
   {
     category: "Free plan (ongoing, not a trial)",
-    finflow: { status: "yes", label: "1 company, 2 users, no revenue cap" },
+    finflow: { status: "yes", label: "Basic accounting, invoices, expenses, customer records, basic reports" },
     zoho: { status: "partial", label: "1 user + 1 accountant, revenue under $50K/year" },
   },
   {
@@ -156,8 +157,8 @@ const atAGlanceRows: {
     zoho: { status: "yes", label: "$20/month, or $15/mo billed annually (Standard)" },
   },
   {
-    category: "Invoicing & estimates",
-    finflow: { status: "yes", label: "Unlimited, every plan" },
+    category: "Invoice creation",
+    finflow: { status: "yes", label: "Included on Free; published volume limit not specified" },
     zoho: { status: "partial", label: "Unlimited creation, but capped invoices/year by plan" },
   },
   {
@@ -172,7 +173,7 @@ const atAGlanceRows: {
   },
   {
     category: "Bank reconciliation",
-    finflow: { status: "partial", label: "Professional plan and above; CSV import" },
+    finflow: { status: "partial", label: "Professional plan and above; live-feed details not specified" },
     zoho: { status: "yes", label: "Free plan (manual); live bank feeds on Standard+" },
   },
   {
@@ -187,7 +188,7 @@ const atAGlanceRows: {
   },
   {
     category: "Multi-currency",
-    finflow: { status: "yes", label: "50+ currencies, every plan including Free" },
+    finflow: { status: "yes", label: "Multi-currency transactions; rate locked when recorded" },
     zoho: { status: "partial", label: "Professional plan and above" },
   },
   {
@@ -197,7 +198,7 @@ const atAGlanceRows: {
   },
   {
     category: "AI Bookkeeper / receipt scanning",
-    finflow: { status: "partial", label: "Professional plan and above" },
+    finflow: { status: "partial", label: "AI Bookkeeper on paid plans; receipt scanning not listed" },
     zoho: { status: "yes", label: "Receipt autoscan included from Free (50 scans/month)" },
   },
   {
@@ -245,17 +246,17 @@ const freePlanRows: {
 }[] = [
   {
     feature: "Who qualifies",
-    finflow: { status: "yes", label: "Anyone — no revenue limit" },
+    finflow: { status: "partial", label: "FinFlow pricing page does not state a revenue threshold" },
     zoho: { status: "partial", label: "Annual revenue under $50,000 (US)" },
   },
   {
     feature: "Users",
-    finflow: { status: "yes", label: "Up to 2" },
+    finflow: { status: "partial", label: "Free-plan user limit not specified on pricing page" },
     zoho: { status: "partial", label: "1 user + 1 accountant" },
   },
   {
-    feature: "Invoicing / estimates",
-    finflow: { status: "yes", label: "Unlimited" },
+    feature: "Invoice creation",
+    finflow: { status: "yes", label: "Included; annual volume limit not specified" },
     zoho: { status: "partial", label: "Up to 1,000 invoices/year" },
   },
   {
@@ -274,8 +275,8 @@ const freePlanRows: {
     zoho: { status: "yes", label: "Manual; live feeds require Standard" },
   },
   {
-    feature: "Full financial reports (P&L, Balance Sheet)",
-    finflow: { status: "no", label: "Basic reports only; full reports require Professional" },
+    feature: "Financial reports",
+    finflow: { status: "yes", label: "Basic reports included; advanced reports are paid-plan features" },
     zoho: { status: "yes", label: "Included, with 50+ report types" },
   },
   {
@@ -285,12 +286,12 @@ const freePlanRows: {
   },
   {
     feature: "Receipt / document AI scanning",
-    finflow: { status: "no", label: "Requires Professional" },
+    finflow: { status: "no", label: "Receipt scanning is not listed on the current pricing page" },
     zoho: { status: "yes", label: "50 autoscans/month" },
   },
   {
-    feature: "Multi-currency (base currency)",
-    finflow: { status: "yes", label: "50+ currencies" },
+    feature: "Multi-currency",
+    finflow: { status: "yes", label: "Exchange rate is locked when a transaction is recorded; confirm plan availability" },
     zoho: { status: "no", label: "Requires Professional" },
   },
   {
@@ -300,7 +301,7 @@ const freePlanRows: {
   },
   {
     feature: "Support",
-    finflow: { status: "yes", label: "Standard support" },
+    finflow: { status: "partial", label: "Free-plan support level not specified on pricing page" },
     zoho: { status: "partial", label: "Email only" },
   },
 ];
@@ -407,18 +408,11 @@ function ComparePage() {
           </span>
 
           <h1 className="mt-6 text-4xl font-bold tracking-tight lg:text-5xl">
-            FinFlow Track vs Zoho Books: Which Is Better for Small Businesses?
+            FinFlow Track vs Zoho Books: Free Plan, Pricing &amp; Features Compared
           </h1>
 
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            Zoho Books is a mature accounting platform with six pricing tiers, deep inventory
-            tools, and a broad app ecosystem. FinFlow Track is a newer, more focused platform built
-            around a smaller number of plans, with multi-currency support included from the free
-            tier. Neither is a simple "cheaper" or "more features" story — Zoho Books' free plan is
-            actually more feature-rich in several respects, but capped by revenue, while FinFlow
-            Track's free plan has no revenue ceiling but reserves accounting, inventory, and AI
-            bookkeeping for its paid tier. This guide compares both feature by feature so you can
-            see exactly where each one fits.
+            Zoho Books is a mature accounting platform with six U.S. pricing tiers and a broad accounting feature set. FinFlow Track publishes Free, Professional, and Business plans with capabilities that vary by tier. Zoho’s U.S. Free plan includes full financial reports and bank reconciliation but is subject to a $50,000 annual-revenue threshold, while FinFlow Track’s Free plan lists basic accounting, invoice creation, expense tracking, customer management, and basic reports. This comparison focuses on published plan details and flags where a provider does not specify a limit.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-4">
@@ -528,11 +522,7 @@ function ComparePage() {
       <section className="container mx-auto max-w-6xl px-6 py-16">
         <h2 className="text-3xl font-bold">FinFlow Track vs Zoho Books Free Plan</h2>
         <p className="mt-4 max-w-3xl text-muted-foreground">
-          Both platforms offer a genuinely free plan, but the trade-offs are different. FinFlow
-          Track's Free plan has no revenue restriction but keeps several core capabilities on its
-          paid tier. Zoho Books' Free plan unlocks more out of the gate — including full accounting
-          and bank reconciliation — but is limited to businesses earning under $50,000/year with a
-          single user. Checked on {REVIEWED_DATE_LABEL}.
+          Both platforms offer a Free plan, but the published limits differ. FinFlow Track lists basic accounting, invoice creation, expense tracking, customer management, and basic reports; its public pricing page does not state a revenue threshold, invoice-volume limit, or Free-plan user limit. Zoho Books’ U.S. Free plan includes full financial reports and bank reconciliation, but is limited to businesses under $50,000 in annual revenue, one user plus one accountant, and 1,000 invoices and expenses per year. Checked on {REVIEWED_DATE_LABEL}.
         </p>
 
         <div className="mt-8 overflow-x-auto rounded-2xl border bg-background">
@@ -577,10 +567,7 @@ function ComparePage() {
             outgrows either limit needs to upgrade.
           </p>
           <p>
-            FinFlow Track's Free plan has no revenue cap and supports a second team member, and
-            includes multi-currency support that Zoho Books doesn't unlock until its Professional
-            plan — but full accounting, inventory, and AI-assisted bookkeeping require upgrading to
-            Professional.
+            FinFlow Track’s published pricing page does not state a Free-plan revenue, invoice-volume, or user threshold. It lists inventory management, bank reconciliation, purchase orders, advanced reports, and role-based permissions under Professional. Multi-currency is supported by FinFlow Track, with the exchange rate locked when a transaction is recorded; confirm its availability on the plan you intend to use.
           </p>
         </div>
       </section>
@@ -720,9 +707,7 @@ function ComparePage() {
 
           <FeatureBlock icon={FileText} title="Invoicing">
             <p>
-              <strong>FinFlow Track</strong> includes unlimited invoice creation and customization,
-              estimates, payment status tracking, and customer management on every plan, including
-              Free. Recurring invoices and credit notes require the Professional plan.
+              <strong>FinFlow Track</strong> lists invoice creation on its Free plan. Its public pricing page does not specify an annual invoice-volume limit or confirm estimates, credit notes, or invoice customization by plan. Recurring invoices are a paid-plan feature; check the current pricing page for the exact plan and limits.
             </p>
             <p>
               <strong>Zoho Books</strong> includes invoicing, quotes, and recurring invoices on
@@ -749,9 +734,7 @@ function ComparePage() {
 
           <FeatureBlock icon={Landmark} title="Bank Connections and Reconciliation">
             <p>
-              <strong>FinFlow Track</strong> supports bank account tracking and reconciliation
-              starting on the Professional plan; statement data is imported via CSV file rather than
-              a live, automatic bank connection on any plan.
+              <strong>FinFlow Track</strong> lists bank reconciliation on its Professional plan. Its public pricing page does not specify whether reconciliation uses live bank feeds, CSV imports, or another workflow, so confirm the supported method before relying on it.
             </p>
             <p>
               <strong>Zoho Books</strong> includes bank reconciliation on its Free plan, and adds
@@ -793,9 +776,7 @@ function ComparePage() {
 
           <FeatureBlock icon={Globe} title="Multi-Currency Support">
             <p>
-              <strong>FinFlow Track</strong> supports more than 50 ISO currencies as the company's
-              base currency on every plan, including Free, with currency selection also available
-              at the invoice level.
+              <strong>FinFlow Track</strong> supports multi-currency transactions and locks the exchange rate when a transaction is recorded. The public pricing page does not specify a currency count or plan eligibility, so confirm those details for the plan you use.
             </p>
             <p>
               <strong>Zoho Books</strong> supports recording multi-currency transactions and
@@ -808,9 +789,7 @@ function ComparePage() {
 
           <FeatureBlock icon={Package} title="Inventory Management">
             <p>
-              <strong>FinFlow Track</strong> includes an inventory module — products, services,
-              multiple warehouses, and stock movement tracking — starting on the Professional plan
-              at $19/month.
+              <strong>FinFlow Track</strong> lists Inventory Management on its Professional plan at $19/month. The public pricing page does not itemize warehouse, serial-number, or batch-tracking capabilities, so we do not claim those specific functions here.
             </p>
             <p>
               <strong>Zoho Books</strong> adds basic inventory tracking (sales orders, purchase
@@ -826,12 +805,7 @@ function ComparePage() {
 
           <FeatureBlock icon={Sparkles} title="AI and Automation">
             <p>
-              <strong>FinFlow Track's AI Bookkeeper</strong> (Professional plan and above) is a
-              conversational assistant that answers questions about your live business data — for
-              example, revenue for a period, top customers, or which invoices are overdue — by
-              querying your existing records. Separately, its document AI extracts structured data
-              from uploaded receipts to speed up expense entry, also starting on Professional.
-              Neither is available on the Free plan.
+              <strong>FinFlow Track’s AI Bookkeeper</strong> is a paid-plan feature. This comparison does not claim receipt/document scanning because it is not listed on the current public pricing page. Zoho Books includes receipt/document autoscans on its Free plan, with 50 scans per month for Free and trial users.
             </p>
             <p>
               <strong>Zoho Books</strong> includes AI-assisted receipt "autoscanning" starting on
