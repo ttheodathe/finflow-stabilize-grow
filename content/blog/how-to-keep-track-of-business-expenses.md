@@ -420,6 +420,24 @@ Depending on the product, expense-management software may provide:
 
 Automation can reduce repetitive administrative work, but financial records should still be reviewed.
 
+# How to Choose an Expense-Tracking System
+
+Before choosing a spreadsheet or software product, compare it with the work your business actually needs to do. Useful evaluation questions include:
+
+- **Transaction capture:** Can you record purchases promptly and correct mistakes with a clear history?
+- **Consistent categories:** Can you apply a category structure that supports your reports?
+- **Supporting documents:** Can you attach or reliably reference receipts, supplier invoices, and payment confirmations?
+- **Reconciliation:** Can you compare recorded activity with bank, card, and payment-platform statements?
+- **Reporting:** Can you review expenses by category and period?
+- **Multiple users:** Can each person access only the information and actions they need?
+- **Currencies:** Does the system preserve the original transaction currency and explain how converted amounts are handled?
+- **Exports and access:** Can you retrieve your records if you change systems?
+- **Security and plan limits:** Are account protections, user limits, storage limits, and paid-plan boundaries suitable for the business?
+
+Do not assume a product includes automatic bank feeds, receipt scanning, approval workflows, or integrations. Verify each capability and its availability on the specific plan before relying on it.
+
+There is no universal best expense tracker. Choose the simplest system that keeps your records complete, reviewable, and manageable as transaction volume grows.
+
 # How FinFlowTrack Fits Into Expense Management
 
 Expense management becomes more useful when connected with other financial workflows.
@@ -540,6 +558,22 @@ Reconciliation
 
 Check the amount, date, supplier, category, refunds, duplicates, and unfamiliar charges.
 
+# How to Record Payment-Processing Fees
+
+Payment providers may deduct a processing fee before transferring the remaining amount to your bank account. The bank deposit may therefore be lower than the customer's original payment.
+
+For example:
+
+```text
+Customer payment: $1,000
+Processing fee:      $30
+Bank deposit:       $970
+```
+
+If you record only the $970 deposit without accounting for the original payment and fee, your records may not explain the full transaction. Keep the gross customer payment, provider fee, and net deposit traceable to one another. The exact journal entries and account treatment depend on your accounting method and chart of accounts.
+
+Also record refunds and chargebacks against the relevant transaction where practical. Do not classify transfers, refunds, or card repayments as ordinary expenses without checking what the transaction represents.
+
 # How Expense Tracking Supports Your P&L
 
 Expense records feed into financial reporting.
@@ -571,25 +605,50 @@ For example:
 
 Read [Balance Sheet for Small Business](/blog/balance-sheet-for-small-business) for more detail.
 
-# Monthly Business Expense Checklist
+# Business Expense Tracking Checklist
 
-Use this checklist at month-end:
+Use a checklist that matches the rhythm of your business. Record transactions promptly, then review them at regular intervals.
 
-- [ ] Record all business expenses
-- [ ] Separate personal and business transactions
-- [ ] Categorize transactions consistently
-- [ ] Save receipts and invoices
-- [ ] Check bank transactions
-- [ ] Check credit-card transactions
-- [ ] Reconcile financial accounts
-- [ ] Review recurring subscriptions
-- [ ] Identify unusual expenses
-- [ ] Compare expenses with the previous month
-- [ ] Compare expenses with revenue
-- [ ] Review outstanding bills
-- [ ] Investigate large changes
-- [ ] Securely retain financial records
-- [ ] Prepare information needed for financial reporting
+## As expenses occur
+
+- [ ] Record the transaction date, supplier, description, and amount.
+- [ ] Assign a consistent category.
+- [ ] Identify the payment account or method.
+- [ ] Save the receipt, invoice, or other supporting document.
+- [ ] Add a business purpose when the transaction may not be self-explanatory.
+
+## Weekly
+
+- [ ] Check for missing and duplicate transactions.
+- [ ] Review unfamiliar or unusual charges.
+- [ ] Organize receipts and supporting documents.
+- [ ] Check upcoming bills and recurring payments.
+- [ ] List unresolved questions for follow-up.
+
+## Monthly
+
+- [ ] Reconcile bank accounts, cards, and payment platforms.
+- [ ] Review expense totals by category.
+- [ ] Compare spending with previous months and business expectations.
+- [ ] Review recurring subscriptions and outstanding bills.
+- [ ] Investigate material changes and consider their cash-flow impact.
+
+## Quarterly
+
+- [ ] Review expense trends and major recurring commitments.
+- [ ] Compare project or customer costs where relevant.
+- [ ] Check whether the category structure still supports useful reporting.
+- [ ] Review whether the current tracking process remains practical.
+
+## Year-end or before professional review
+
+- [ ] Complete outstanding reconciliations.
+- [ ] Check annual expense totals and unresolved transactions.
+- [ ] Organize supporting records.
+- [ ] Prepare the information requested by your accountant or other qualified professional.
+- [ ] Retain and archive records according to the requirements that apply to your business.
+
+This checklist is a general recordkeeping workflow, not a tax-compliance calendar. Follow the recordkeeping and retention rules that apply in your jurisdiction.
 
 # Common Expense-Tracking Mistakes
 

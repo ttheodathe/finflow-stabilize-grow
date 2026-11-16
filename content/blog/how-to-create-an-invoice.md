@@ -843,7 +843,7 @@ If your business is managing invoices across spreadsheets, emails, and separate 
 
 - [Accounts Receivable Management](/blog/accounts-receivable-management)
 - [Small Business Cash Flow Management](/blog/small-business-cash-flow-management)
-- [How to Track Business Expenses](/blog/how-to-track-business-expenses)
+- [How to Track Business Expenses](/blog/how-to-keep-track-of-business-expenses)
 - [How to Do Bookkeeping for a Small Business](/blog/how-to-do-bookkeeping-for-a-small-business)
 - [Small Business Bookkeeping Checklist](/blog/small-business-bookkeeping-checklist)
 

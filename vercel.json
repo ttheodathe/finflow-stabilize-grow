@@ -1,4 +1,16 @@
 {
+  "redirects": [
+    {
+      "source": "/blog/how-to-track-business-expenses",
+      "destination": "/blog/how-to-keep-track-of-business-expenses",
+      "permanent": true
+    },
+    {
+      "source": "/blog/how-to-track-business-expenses/",
+      "destination": "/blog/how-to-keep-track-of-business-expenses",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",
