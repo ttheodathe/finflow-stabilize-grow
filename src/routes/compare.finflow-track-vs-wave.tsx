@@ -187,7 +187,7 @@ const atAGlanceRows: {
   {
     category: "Financial reports (P&L, balance sheet, cash flow)",
     finflow: { status: "yes", label: "Basic reports; check plan details" },
-    wave: { status: "partial", label: "Expanded reporting on Pro" },
+    wave: { status: "yes", label: "Core financial statements; confirm current plan details" },
   },
   {
     category: "Multi-currency transactions",
@@ -217,7 +217,7 @@ const atAGlanceRows: {
   {
     category: "Third-party integrations",
     finflow: { status: "no", label: "Not currently available" },
-    wave: { status: "partial", label: "Pro-plan feature; check current app directory" },
+    wave: { status: "partial", label: "Some integrations free; expanded catalog on Pro" },
   },
   {
     category: "Best for",
@@ -260,7 +260,7 @@ const freePlanRows: {
   {
     feature: "Financial reports",
     finflow: { status: "yes", label: "Basic reports" },
-    wave: { status: "partial", label: "Expanded reporting on Pro" },
+    wave: { status: "yes", label: "Dashboard and core reports; confirm current plan details" },
   },
   {
     feature: "Customers",
@@ -731,7 +731,7 @@ function ComparePage() {
               <strong>FinFlow Track</strong> provides financial reports including profit and loss, balance sheet, cash flow, and aging reports for receivables and payables, with CSV export. Check the current plan details for report availability.
             </p>
             <p>
-              <strong>Wave</strong> provides financial reports, with expanded reporting features included on Pro. Check Wave's live plan comparison for the current report set and plan eligibility.
+              <strong>Wave</strong> provides core financial statements, including profit and loss, balance sheet, and cash flow reports. The exact dashboard and reporting access can depend on plan and account; check Wave's current plan comparison and Help Center before relying on a specific report.
             </p>
           </FeatureBlock>
 
@@ -790,7 +790,7 @@ function ComparePage() {
               as future connections rather than currently available ones. Do not assume integrations or API access are included.
             </p>
             <p>
-              <strong>Wave</strong> lists third-party integrations as a Pro-plan feature. Because supported connections can change, consult Wave's current integration directory before relying on a specific app or automation workflow.
+              <strong>Wave</strong> offers some integrations on all plans, including Google Sheets, while a broader catalog of integrations is available on Pro. Availability can differ by app and region, so consult Wave's current integration directory before relying on a specific connection or automation workflow.
             </p>
           </FeatureBlock>
 
