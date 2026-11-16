@@ -309,7 +309,7 @@ const freePlanRows: {
 const faqs: { q: string; a: string }[] = [
   {
     q: "Is FinFlow Track better than Zoho Books?",
-    a: "Neither is universally better — the two products make different trade-offs. FinFlow Track keeps its Free plan open to any business (no revenue cap) and includes multi-currency support from day one, but reserves full accounting, bank reconciliation, inventory, and AI bookkeeping for its Professional plan and above. Zoho Books' Free plan is more feature-rich in several ways — it includes full accounting, bank reconciliation, recurring invoices, and online payments — but is capped to businesses earning under $50,000/year and a single user. Which is better depends on your revenue, team size, and whether you need multi-currency support before you're ready to pay.",
+    a: "Neither is universally better. FinFlow Track’s published Free plan lists basic accounting, invoice creation, expense tracking, customer management, and basic reports; Professional adds features such as bank reconciliation, inventory, and advanced reports. Its pricing page does not state a Free-plan revenue or invoice-volume threshold. Zoho Books’ U.S. Free plan includes full financial reports, bank reconciliation, recurring invoices, and online payments, but is capped at $50,000 in annual revenue and one user plus one accountant. Compare the workflows and limits your business needs.",
   },
   {
     q: "Is FinFlow Track cheaper than Zoho Books?",
@@ -317,7 +317,7 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "Is FinFlow Track a good Zoho Books alternative?",
-    a: "It can be, particularly for businesses that want multi-currency support without upgrading to a mid-tier plan, or that want a free plan with no revenue ceiling. Businesses that need Zoho's more mature inventory management, its native Zoho ecosystem integrations (CRM, Expense, Inventory), or advanced automation should weigh those specifically against FinFlow Track's current, smaller feature set before switching.",
+    a: "It may suit a business whose needs fit FinFlow Track’s published invoicing, expense tracking, customer management, and reporting workflows, or that values its multi-currency transaction handling. Businesses that rely on Zoho Books’ full accounting in the Free plan, native Zoho ecosystem integrations, advanced inventory, or established automation should compare those requirements carefully before switching.",
   },
   {
     q: "Does Zoho Books have a free plan?",
@@ -325,19 +325,19 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "Does FinFlow Track have a free plan?",
-    a: "Yes. FinFlow Track's Free plan has no revenue restriction and includes invoicing, expense tracking, customer management, multi-currency support, and basic reports for one company and up to two team members. Full accounting reports, bank reconciliation, inventory, and AI bookkeeping require the Professional plan.",
+    a: "Yes. FinFlow Track’s published Free plan includes basic accounting, invoice creation, expense tracking, customer management, and basic reports. Its current pricing page does not state a Free-plan revenue threshold, invoice-volume limit, or user limit. Professional is listed at $19/month and adds bank reconciliation, inventory management, purchase orders, advanced reports, and role-based permissions. FinFlow Track supports multi-currency transactions and locks the exchange rate when a transaction is recorded; confirm current plan availability on the pricing page.",
   },
   {
     q: "Which is better for small businesses?",
-    a: "A small business earning under $50,000/year that wants full accounting and bank reconciliation for free may prefer Zoho Books' Free plan. A business already past that revenue threshold, or one that specifically needs multi-currency support without paying for a mid-tier plan, may find FinFlow Track's pricing structure more straightforward. Businesses with complex inventory or multi-department needs are likely to eventually need Zoho Books' higher tiers.",
+    a: "A U.S. small business under $50,000 in annual revenue that wants full financial reports and bank reconciliation without a subscription may prefer Zoho Books Free. A business whose needs fit FinFlow Track’s basic accounting, invoicing, expense tracking, customer management, and basic reports may prefer its simpler plan structure. Businesses that need multi-currency, inventory, or additional users should compare exact plan limits and feature availability before choosing.",
   },
   {
     q: "Which supports multi-currency?",
-    a: "Both do, but differently. FinFlow Track includes multi-currency support (50+ currencies) as a base-currency and invoice-level feature on every plan, including Free. Zoho Books supports multi-currency transactions and reporting starting on its Professional plan ($50/month, or $40/month billed annually) — it isn't available on the Free or Standard plans.",
+    a: "FinFlow Track supports multi-currency transactions and locks the exchange rate when a transaction is recorded; check its current pricing page for plan availability. Zoho Books’ U.S. pricing page lists multi-currency transactions from the Professional plan, currently $50/month or $40/month billed annually. Zoho Free and Standard do not list multi-currency.",
   },
   {
     q: "Which has better inventory management?",
-    a: "It depends on how advanced your needs are. FinFlow Track offers inventory (products, services, multiple warehouses, stock movements) starting on its Professional plan at $19/month. Zoho Books offers basic inventory tracking (sales/purchase orders, price lists) starting on its Professional plan at $50/month, with advanced capabilities — composite items, serial and batch tracking, bin locations, and direct integrations with Etsy, eBay, Amazon, and Shopify — reserved for its Elite plan at $150/month. For straightforward inventory needs, FinFlow Track is more affordable; for complex, multi-warehouse retail or e-commerce inventory, Zoho Books' higher tiers currently offer more depth.",
+    a: "FinFlow Track’s pricing page lists Inventory Management on Professional at $19/month, but does not itemize warehouse, serial-number, or batch-tracking depth. Zoho Books lists inventory tracking from Professional ($50/month or $40 billed annually). Advanced inventory controls — including warehouses, composite items, serial and batch tracking, and bin locations — are listed on Elite ($150/month or $120 billed annually). Compare the exact inventory workflows you need before treating these plans as equivalent.",
   },
   {
     q: "Can I switch from Zoho Books to FinFlow Track?",
@@ -345,7 +345,7 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "Does FinFlow Track support AI bookkeeping?",
-    a: "Yes, on the Professional plan and above. FinFlow Track's AI Bookkeeper is a conversational assistant that answers questions about your live business data — such as revenue for a period or which invoices are overdue — and its AI document scanning extracts structured data (vendor, amount, date, category) from uploaded receipts to speed up expense entry. Both are unavailable on the Free plan.",
+    a: "FinFlow Track’s AI Bookkeeper is a paid-plan feature. Its current public pricing page does not list receipt/document scanning, so this comparison does not claim that FinFlow Track includes AI receipt extraction. Zoho Books lists receipt/document autoscans on its Free plan, with 50 scans per month for Free and trial users.",
   },
 ];
 
@@ -692,9 +692,7 @@ function ComparePage() {
         <div className="mt-12 space-y-14">
           <FeatureBlock icon={Wallet} title="Accounting and Bookkeeping">
             <p>
-              <strong>FinFlow Track's</strong> Free plan includes invoicing, expense tracking, and
-              basic reports. Full double-entry bookkeeping — chart of accounts, journal entries,
-              general ledger, and trial balance — requires the Professional plan and above.
+              <strong>FinFlow Track's</strong> Free plan includes basic accounting, invoice creation, expense tracking, customer management, and basic reports. The public pricing page lists advanced reports and bank reconciliation on Professional; it does not itemize every underlying ledger or journal capability by plan.
             </p>
             <p>
               <strong>Zoho Books</strong> includes full accounting on every plan, including Free:
@@ -719,10 +717,7 @@ function ComparePage() {
 
           <FeatureBlock icon={Receipt} title="Expense Tracking">
             <p>
-              <strong>FinFlow Track</strong> supports manual expense entry and categorization on
-              every plan, including Free. AI-assisted receipt and document scanning — which
-              extracts vendor, amount, currency, date, and category from an uploaded image —
-              requires the Professional plan.
+              <strong>FinFlow Track</strong> lists expense tracking on its Free plan. The public pricing page does not currently describe an AI receipt-scanning feature, so we do not claim automatic receipt extraction for FinFlow Track here.
             </p>
             <p>
               <strong>Zoho Books</strong> supports manual expense entry on every plan and includes
@@ -746,11 +741,7 @@ function ComparePage() {
 
           <FeatureBlock icon={BarChart3} title="Cash-Flow Management">
             <p>
-              <strong>FinFlow Track</strong> surfaces cash-flow visibility on the main dashboard,
-              drawing on recorded income and expense transactions. It does not currently include a
-              dedicated cash-flow forecasting report — cash-flow-style questions can be asked
-              conversationally through the AI Bookkeeper (Professional plan and above), which
-              analyzes existing recorded data rather than producing a formal projection.
+              <strong>FinFlow Track</strong>’s public pricing page lists basic reports on Free and advanced reports on Professional, but does not specifically list a dedicated cash-flow forecasting feature.
             </p>
             <p>
               <strong>Zoho Books</strong> includes a dedicated cash-flow forecasting tool starting
@@ -761,9 +752,7 @@ function ComparePage() {
 
           <FeatureBlock icon={BarChart3} title="Financial Reporting">
             <p>
-              <strong>FinFlow Track's</strong> Free plan includes basic reports; Profit &amp; Loss,
-              Balance Sheet, Trial Balance, General Ledger, and Journals require the Professional
-              plan and above.
+              <strong>FinFlow Track's</strong> Free plan includes basic reports, while Professional includes advanced reports. The current public pricing page does not itemize the exact report types available in each tier, so we avoid claiming specific statements or ledgers are gated unless product documentation confirms them.
             </p>
             <p>
               <strong>Zoho Books</strong> includes Profit &amp; Loss, Balance Sheet, and more than
@@ -820,8 +809,7 @@ function ComparePage() {
 
           <FeatureBlock icon={Clock} title="Projects and Time Tracking">
             <p>
-              <strong>FinFlow Track</strong> does not currently include a dedicated
-              projects/time-tracking module for job costing or project profitability.
+              <strong>FinFlow Track</strong> lists Projects on its Business plan, but its public pricing page does not specify project time-tracking or project-profitability functionality.
             </p>
             <p>
               <strong>Zoho Books</strong> includes project tracking, timesheet billing, and project
@@ -831,10 +819,7 @@ function ComparePage() {
 
           <FeatureBlock icon={Building2} title="Multiple Companies and User Roles">
             <p>
-              <strong>FinFlow Track</strong> supports multiple companies and team members within a
-              single account, with limits that scale by plan — from 1 company / 2 users on Free up
-              to unlimited companies and users on Enterprise. Custom, granular user roles are not
-              currently a distinct configurable feature.
+              <strong>FinFlow Track</strong> lists up to 5 companies and 15 team members on Professional, and up to 25 companies with unlimited team members on Business. The current public pricing page does not specify Free-plan company or user limits. Role-based permissions are listed on Professional.
             </p>
             <p>
               <strong>Zoho Books</strong> lets you run multiple businesses as separate
