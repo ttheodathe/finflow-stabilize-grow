@@ -137,8 +137,7 @@ export function SiteFooter() {
               <span className="text-lg font-bold tracking-tight">Finflow Track</span>
             </Link>
             <p className="mt-3 max-w-sm text-sm text-muted-foreground">
-              100% free accounting software for small businesses worldwide. Built modern, built for
-              you.
+              Accounting and financial management for freelancers, startups, NGOs, and small businesses. Start with the Free plan and explore paid options as your needs grow.
             </p>
             <NewsletterForm />
           </div>
