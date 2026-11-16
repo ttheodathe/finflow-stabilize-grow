@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import {
   ArrowRight,
   BarChart3,
@@ -131,6 +131,9 @@ function formatDate(iso: string): string {
 
 function BlogPage() {
   const [query, setQuery] = useState("");
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [newsletterStatus, setNewsletterStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [newsletterError, setNewsletterError] = useState("");
 
   const allPosts = useMemo(() => getAllPosts(), []);
   const featuredArticle = getFeaturedPosts()[0] ?? allPosts[0];
@@ -146,6 +149,35 @@ function BlogPage() {
         formatCategoryName(article.category).toLowerCase().includes(trimmed),
     );
   }, [query, latestArticles]);
+
+  async function handleNewsletterSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (newsletterStatus === "loading") return;
+
+    setNewsletterStatus("loading");
+    setNewsletterError("");
+
+    try {
+      const response = await fetch("/api/public/newsletter/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: newsletterEmail, source: "blog" }),
+      });
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(result.error ?? "Something went wrong. Please try again.");
+      }
+
+      setNewsletterEmail("");
+      setNewsletterStatus("success");
+    } catch (error) {
+      setNewsletterStatus("error");
+      setNewsletterError(
+        error instanceof Error ? error.message : "Something went wrong. Please try again.",
+      );
+    }
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -210,8 +242,17 @@ function BlogPage() {
             params={{ slug: featuredArticle.slug }}
             className="grid grid-cols-1 overflow-hidden rounded-3xl border border-slate-200 shadow-sm transition hover:shadow-md lg:grid-cols-2"
           >
-            <div className="flex aspect-[16/10] items-center justify-center bg-gradient-to-br from-slate-900 to-slate-700 lg:aspect-auto">
-              <BookOpen className="h-16 w-16 text-white/20" />
+            <div className="relative flex aspect-[16/10] items-center justify-center overflow-hidden bg-gradient-to-br from-slate-900 to-slate-700 lg:aspect-auto">
+              {featuredArticle.coverImage ? (
+                <img src={featuredArticle.coverImage} alt={featuredArticle.title} loading="eager" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-emerald-950 via-slate-900 to-slate-700">
+                  {(() => {
+                    const Icon = blogCategories.find((item) => item.slug === featuredArticle.category)?.icon ?? BookOpen;
+                    return <Icon className="h-16 w-16 text-white/35" aria-hidden="true" />;
+                  })()}
+                </div>
+              )}
             </div>
             <div className="flex flex-col justify-center bg-white p-8 sm:p-10">
               <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
@@ -328,8 +369,17 @@ function BlogPage() {
                 params={{ slug: article.slug }}
                 className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
               >
-                <div className="flex aspect-[16/9] items-center justify-center bg-slate-100">
-                  <BookOpen className="h-8 w-8 text-slate-300" />
+                <div className="relative flex aspect-[16/9] items-center justify-center overflow-hidden bg-slate-100">
+                  {article.coverImage ? (
+                    <img src={article.coverImage} alt={article.title} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-50 to-emerald-50">
+                      {(() => {
+                        const Icon = blogCategories.find((item) => item.slug === article.category)?.icon ?? BookOpen;
+                        return <Icon className="h-8 w-8 text-emerald-700/45" aria-hidden="true" />;
+                      })()}
+                    </div>
+                  )}
                 </div>
                 <div className="flex flex-1 flex-col p-6">
                   <span className="w-fit rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
@@ -464,27 +514,32 @@ function BlogPage() {
           <p className="mt-3 text-slate-600">
             New articles on accounting and small business finance, sent occasionally — no spam.
           </p>
-          <form
-            className="mx-auto mt-6 flex max-w-md flex-col gap-3 sm:flex-row"
-            onSubmit={(event) => event.preventDefault()}
-          >
-            <label htmlFor="newsletter-email" className="sr-only">
-              Email address
-            </label>
-            <input
-              id="newsletter-email"
-              type="email"
-              required
-              placeholder="you@business.com"
-              className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-            />
-            <button
-              type="submit"
-              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
-            >
-              Subscribe
-            </button>
-          </form>
+          {newsletterStatus === "success" ? (
+            <p role="status" aria-live="polite" className="mx-auto mt-6 max-w-md text-sm font-medium text-emerald-700">
+              You're subscribed. Thanks for following FinFlowTrack.
+            </p>
+          ) : (
+            <form className="mx-auto mt-6 flex max-w-md flex-col gap-3 sm:flex-row" onSubmit={handleNewsletterSubmit}>
+              <label htmlFor="newsletter-email" className="sr-only">Email address</label>
+              <input
+                id="newsletter-email"
+                type="email"
+                required
+                autoComplete="email"
+                value={newsletterEmail}
+                onChange={(event) => {
+                  setNewsletterEmail(event.target.value);
+                  if (newsletterStatus === "error") setNewsletterStatus("idle");
+                }}
+                placeholder="you@business.com"
+                className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+              />
+              <button type="submit" disabled={newsletterStatus === "loading"} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60">
+                {newsletterStatus === "loading" ? "Subscribing..." : "Subscribe"}
+              </button>
+            </form>
+          )}
+          {newsletterStatus === "error" && <p role="alert" className="mx-auto mt-3 max-w-md text-sm text-red-600">{newsletterError}</p>}
         </article>
       </section>
 
