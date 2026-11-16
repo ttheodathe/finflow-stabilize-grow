@@ -411,7 +411,7 @@ function BlogPage() {
         <div className="mx-auto max-w-4xl px-6 py-20">
           <div className="text-center">
             <h2 id="authors-heading" className="text-3xl font-bold tracking-tight text-slate-900">
-              Meet Our Contributors
+              About Our Editorial Team
             </h2>
           </div>
           <article className="mt-10 flex flex-col gap-6 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm sm:flex-row sm:items-center">
