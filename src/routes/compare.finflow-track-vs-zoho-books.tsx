@@ -313,7 +313,7 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "Is FinFlow Track cheaper than Zoho Books?",
-    a: `FinFlow Track's paid tiers start at $19/month (Professional) and $49/month (Business). Zoho Books spans a wider range — $20/month (or $15/month billed annually) for Standard up to $275/month for Ultimate, as of ${REVIEWED_DATE_LABEL} — plus optional add-ons for extra users, document autoscans, and other capabilities. For a business that only needs core invoicing, expenses, and multi-currency, FinFlow Track's entry-level paid plan is typically less expensive than Zoho Books' comparable tier. For a business that needs Zoho's deeper inventory or advanced-reporting features, its higher tiers reflect that added functionality.`,
+    a: `FinFlow Track lists Professional at $19/month and Business at $49/month. Zoho Books’ U.S. monthly prices range from $20 for Standard to $275 for Ultimate, with lower rates for annual billing. These plans are not feature-equivalent: Zoho’s Professional tier is $50/month ($40 billed annually) and is the first tier listing multi-currency transactions and inventory. Compare the actual workflows, included users, and add-ons rather than treating the lowest plan prices as direct equivalents. Pricing checked November 16, 2026.`,
   },
   {
     q: "Is FinFlow Track a good Zoho Books alternative?",
@@ -969,11 +969,11 @@ function ComparePage() {
             <h2 className="text-2xl font-bold">FinFlow Track Strengths</h2>
             <ul className="mt-6 space-y-3 text-sm text-muted-foreground">
               {[
-                "Free plan with no revenue restriction",
-                "Native multi-currency support across 50+ currencies on every plan, including Free",
-                "Simple, predictable four-plan structure",
-                "Inventory available starting at a lower price point ($19/month) than Zoho Books",
-                "AI Bookkeeper and AI receipt scanning included on Professional and above",
+                "Free plan lists basic accounting, invoicing, expenses, customer management, and basic reports; no revenue threshold is published",
+                "Multi-currency transaction handling with the exchange rate locked when recorded; plan availability should be confirmed",
+                "Published plan details make the main Free and paid tiers easy to compare",
+                "Professional lists inventory management at $19/month; compare exact inventory requirements",
+                "AI Bookkeeper is a paid-plan feature; receipt scanning is not listed on the public pricing page",
                 "No separate add-on marketplace to navigate for core functionality",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-2">
@@ -1031,7 +1031,7 @@ function ComparePage() {
               <h2 className="text-2xl font-bold">Zoho Books Limitations</h2>
               <ul className="mt-6 space-y-3 text-sm text-muted-foreground">
                 {[
-                  "Free plan is capped to businesses earning under $50,000/year and 1 user",
+                  "U.S. Free plan requires annual revenue below $50,000 and includes 1 user plus 1 accountant",
                   "Multi-currency isn't available until the Professional plan ($50/month)",
                   "Six pricing tiers, plus separate add-ons, take more effort to evaluate than a simple plan list",
                   "Extra users cost $3/month each beyond a plan's included seat count",
