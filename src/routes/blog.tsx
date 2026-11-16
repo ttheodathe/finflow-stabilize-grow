@@ -132,7 +132,9 @@ function formatDate(iso: string): string {
 function BlogPage() {
   const [query, setQuery] = useState("");
   const [newsletterEmail, setNewsletterEmail] = useState("");
-  const [newsletterStatus, setNewsletterStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [newsletterStatus, setNewsletterStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
   const [newsletterError, setNewsletterError] = useState("");
 
   const allPosts = useMemo(() => getAllPosts(), []);
@@ -244,11 +246,19 @@ function BlogPage() {
           >
             <div className="relative flex aspect-[16/10] items-center justify-center overflow-hidden bg-gradient-to-br from-slate-900 to-slate-700 lg:aspect-auto">
               {featuredArticle.coverImage ? (
-                <img src={featuredArticle.coverImage} alt={featuredArticle.title} loading="eager" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
+                <img
+                  src={featuredArticle.coverImage}
+                  alt={featuredArticle.title}
+                  loading="eager"
+                  decoding="async"
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-emerald-950 via-slate-900 to-slate-700">
                   {(() => {
-                    const Icon = blogCategories.find((item) => item.slug === featuredArticle.category)?.icon ?? BookOpen;
+                    const Icon =
+                      blogCategories.find((item) => item.slug === featuredArticle.category)?.icon ??
+                      BookOpen;
                     return <Icon className="h-16 w-16 text-white/35" aria-hidden="true" />;
                   })()}
                 </div>
@@ -371,11 +381,19 @@ function BlogPage() {
               >
                 <div className="relative flex aspect-[16/9] items-center justify-center overflow-hidden bg-slate-100">
                   {article.coverImage ? (
-                    <img src={article.coverImage} alt={article.title} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
+                    <img
+                      src={article.coverImage}
+                      alt={article.title}
+                      loading="lazy"
+                      decoding="async"
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-50 to-emerald-50">
                       {(() => {
-                        const Icon = blogCategories.find((item) => item.slug === article.category)?.icon ?? BookOpen;
+                        const Icon =
+                          blogCategories.find((item) => item.slug === article.category)?.icon ??
+                          BookOpen;
                         return <Icon className="h-8 w-8 text-emerald-700/45" aria-hidden="true" />;
                       })()}
                     </div>
@@ -515,12 +533,21 @@ function BlogPage() {
             New articles on accounting and small business finance, sent occasionally — no spam.
           </p>
           {newsletterStatus === "success" ? (
-            <p role="status" aria-live="polite" className="mx-auto mt-6 max-w-md text-sm font-medium text-emerald-700">
+            <p
+              role="status"
+              aria-live="polite"
+              className="mx-auto mt-6 max-w-md text-sm font-medium text-emerald-700"
+            >
               You're subscribed. Thanks for following FinFlowTrack.
             </p>
           ) : (
-            <form className="mx-auto mt-6 flex max-w-md flex-col gap-3 sm:flex-row" onSubmit={handleNewsletterSubmit}>
-              <label htmlFor="newsletter-email" className="sr-only">Email address</label>
+            <form
+              className="mx-auto mt-6 flex max-w-md flex-col gap-3 sm:flex-row"
+              onSubmit={handleNewsletterSubmit}
+            >
+              <label htmlFor="newsletter-email" className="sr-only">
+                Email address
+              </label>
               <input
                 id="newsletter-email"
                 type="email"
@@ -534,12 +561,20 @@ function BlogPage() {
                 placeholder="you@business.com"
                 className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
               />
-              <button type="submit" disabled={newsletterStatus === "loading"} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60">
+              <button
+                type="submit"
+                disabled={newsletterStatus === "loading"}
+                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+              >
                 {newsletterStatus === "loading" ? "Subscribing..." : "Subscribe"}
               </button>
             </form>
           )}
-          {newsletterStatus === "error" && <p role="alert" className="mx-auto mt-3 max-w-md text-sm text-red-600">{newsletterError}</p>}
+          {newsletterStatus === "error" && (
+            <p role="alert" className="mx-auto mt-3 max-w-md text-sm text-red-600">
+              {newsletterError}
+            </p>
+          )}
         </article>
       </section>
 
