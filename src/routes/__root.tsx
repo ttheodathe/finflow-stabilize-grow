@@ -91,32 +91,32 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "FinFlow Track — 100% Free Accounting Software for Small Businesses" },
+      { title: "FinFlow Track — Accounting & Financial Management for Small Businesses" },
       {
         name: "description",
         content:
-          "Modern, free accounting software for freelancers, small businesses, startups, NGOs, and African SMEs. Invoicing, expenses, multi-currency, AI bookkeeping. Free forever.",
+          "Accounting and financial management for freelancers, startups, NGOs, and small businesses. Create invoices, track expenses, and review financial reports. Start with the Free plan.",
       },
-      { name: "author", content: "Free Accounting" },
+      { name: "author", content: "FinFlow Track" },
       {
         property: "og:title",
-        content: "FinFlow Track — 100% Free Accounting Software for Small Businesses",
+        content: "FinFlow Track — Accounting & Financial Management for Small Businesses",
       },
       {
         property: "og:description",
         content:
-          "Modern, free accounting software for freelancers, small businesses, startups, NGOs, and African SMEs. Invoicing, expenses, multi-currency, AI bookkeeping. Free forever.",
+          "Accounting and financial management for freelancers, startups, NGOs, and small businesses. Create invoices, track expenses, and review financial reports. Start with the Free plan.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       {
         name: "twitter:title",
-        content: "FinFlow Track — 100% Free Accounting Software for Small Businesses",
+        content: "FinFlow Track — Accounting & Financial Management for Small Businesses",
       },
       {
         name: "twitter:description",
         content:
-          "Modern, free accounting software for freelancers, small businesses, startups, NGOs, and African SMEs. Invoicing, expenses, multi-currency, AI bookkeeping. Free forever.",
+          "Accounting and financial management for freelancers, startups, NGOs, and small businesses. Create invoices, track expenses, and review financial reports. Start with the Free plan.",
       },
       {
         property: "og:image",

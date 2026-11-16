@@ -2,6 +2,4 @@ User-agent: *
 
 Allow: /
 
-Host: https://finflowtrack.com
-
-Sitemap: https://finflowtrack.com/sitemap.xml
+Sitemap: https://www.finflowtrack.com/sitemap.xml

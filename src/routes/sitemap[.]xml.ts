@@ -5,7 +5,7 @@ export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
       GET: async () => {
-        const baseUrl = "https://finflowtrack.com";
+        const baseUrl = "https://www.finflowtrack.com";
 
         const pages = [
           "/",
@@ -13,14 +13,13 @@ export const Route = createFileRoute("/sitemap.xml")({
           "/pricing",
           "/features",
           "/security",
-          "/trust",
           "/privacy",
           "/terms",
+          "/refund",
+          "/testimonials",
           "/contact",
-          "/roadmap",
           "/changelog",
           "/help",
-          "/docs",
           "/blog",
           "/compare",
           "/compare/finflow-track-vs-quickbooks",
@@ -33,8 +32,6 @@ export const Route = createFileRoute("/sitemap.xml")({
           "/partners/apply",
         ];
 
-        const today = new Date().toISOString();
-
         // Blog articles are generated from content/blog/*.md — adding a new article
         // and pushing to GitHub automatically adds it here on the next build, with
         // no manual sitemap maintenance. Draft articles are excluded by getAllPosts().
@@ -42,7 +39,7 @@ export const Route = createFileRoute("/sitemap.xml")({
 
         const staticEntries = pages.map((page) => ({
           loc: `${baseUrl}${page}`,
-          lastmod: today,
+          lastmod: "",
           changefreq: "weekly",
           priority: page === "/" ? "1.0" : "0.8",
         }));
@@ -65,7 +62,7 @@ ${entries
     (entry) => `
 <url>
   <loc>${entry.loc}</loc>
-  <lastmod>${entry.lastmod}</lastmod>
+  ${entry.lastmod ? `<lastmod>${entry.lastmod}</lastmod>` : ""}
   <changefreq>${entry.changefreq}</changefreq>
   <priority>${entry.priority}</priority>
 </url>`,
