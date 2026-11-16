@@ -351,7 +351,7 @@ function BlogArticlePage() {
             Put This Into Practice in FinFlowTrack
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm text-slate-300">
-            Manage invoices, expenses, inventory, and reports in one connected platform.
+            Manage invoices, expenses, customer records, and financial reports in one place.
           </p>
           <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
