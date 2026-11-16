@@ -54,7 +54,7 @@ Save invoices, receipts, bills, bank statements, and payment confirmations. A tr
 
 Compare your bookkeeping records with bank and payment-provider statements regularly. Investigate missing transactions, duplicates, incorrect amounts, and timing differences instead of carrying unexplained differences forward.
 
-For a step-by-step routine, see the [small business bookkeeping checklist](/blog/content-blog-small-business-bookkeeping-checklist) and [how to keep track of business expenses](/blog/how-to-keep-track-of-business-expenses).
+For a step-by-step routine, see the [small business bookkeeping checklist](/blog/small-business-bookkeeping-checklist) and [how to keep track of business expenses](/blog/how-to-keep-track-of-business-expenses).
 
 ## Understand the three key financial statements
 
