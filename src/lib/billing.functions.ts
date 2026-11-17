@@ -3,6 +3,30 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { PlanKey } from "./paddle/config";
 
+async function requireActiveCompanyOwner(sb: any, companyId: string, userId: string) {
+  const [{ data: company, error: companyError }, { data: membership, error: memberError }] =
+    await Promise.all([
+      sb.from("companies").select("user_id").eq("id", companyId).maybeSingle(),
+      sb
+        .from("company_members")
+        .select("role,status")
+        .eq("company_id", companyId)
+        .eq("user_id", userId)
+        .maybeSingle(),
+    ]);
+
+  if (companyError) throw new Error(companyError.message);
+  if (memberError) throw new Error(memberError.message);
+  if (
+    !company ||
+    company.user_id !== userId ||
+    membership?.role !== "owner" ||
+    membership?.status !== "active"
+  ) {
+    throw new Error("Only the active company owner can manage billing.");
+  }
+}
+
 /**
  * Return the caller's most-recent subscription for a company (or user).
  * Uses RLS so users only see their own rows. Includes both Paddle and
@@ -17,24 +41,75 @@ export const getMySubscription = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     // biome-ignore lint/suspicious/noExplicitAny: dynamic schema
     const sb = context.supabase as any;
-    const base = () =>
-      sb.from("subscriptions").select("*").order("updated_at", { ascending: false }).limit(1);
+    let row: any | null = null;
+    let isCompanyOwner = true;
 
-    let rows: any[] | null = null;
     if (data.companyId) {
-      const res = await base().eq("company_id", data.companyId);
+      const [{ data: membership, error: memberError }, { data: company, error: companyError }] =
+        await Promise.all([
+          sb
+            .from("company_members")
+            .select("role,status")
+            .eq("company_id", data.companyId)
+            .eq("user_id", context.userId)
+            .maybeSingle(),
+          sb.from("companies").select("user_id").eq("id", data.companyId).maybeSingle(),
+        ]);
+      if (memberError) throw new Error(memberError.message);
+      if (companyError) throw new Error(companyError.message);
+      if (membership?.status !== "active" || !company?.user_id) return null;
+      isCompanyOwner = membership.role === "owner" && company.user_id === context.userId;
+
+      // Company-scoped and owner's account-level plans apply to active members.
+      // Read through the server-only client after membership verification, and
+      // redact provider/customer identifiers from non-owner responses.
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const adminBase = () =>
+        (supabaseAdmin as any)
+          .from("subscriptions")
+          .select("*")
+          .order("updated_at", { ascending: false })
+          .limit(1);
+      const ownerFilter = `owner_id.eq.${company.user_id},user_id.eq.${company.user_id}`;
+
+      const companyRow = await adminBase()
+        .eq("company_id", data.companyId)
+        .or(ownerFilter);
+      if (companyRow.error) throw new Error(companyRow.error.message);
+      row = companyRow.data?.[0] ?? null;
+
+      if (!row) {
+        const ownerRow = await adminBase().or(ownerFilter);
+        if (ownerRow.error) throw new Error(ownerRow.error.message);
+        row = ownerRow.data?.[0] ?? null;
+      }
+    } else {
+      const res = await sb
+        .from("subscriptions")
+        .select("*")
+        .or(`owner_id.eq.${context.userId},user_id.eq.${context.userId}`)
+        .order("updated_at", { ascending: false })
+        .limit(1);
       if (res.error) throw new Error(res.error.message);
-      rows = res.data;
+      row = res.data?.[0] ?? null;
     }
-    if (!rows?.length) {
-      // Fall back to the account-level row (webhooks may not set company_id).
-      const res = await base().or(
-        `owner_id.eq.${context.userId},user_id.eq.${context.userId}`,
-      );
-      if (res.error) throw new Error(res.error.message);
-      rows = res.data;
+
+    if (!row) return null;
+    if (!isCompanyOwner) {
+      return {
+        id: row.id,
+        plan: row.plan,
+        status: row.status,
+        billing_cycle: row.billing_cycle,
+        current_period_end: row.current_period_end,
+        cancel_at_period_end: row.cancel_at_period_end,
+        paddle_subscription_id: null,
+        paddle_customer_id: null,
+        polar_subscription_id: null,
+        polar_customer_id: null,
+      };
     }
-    return (rows?.[0] ?? null) as {
+    return row as {
       id: string;
       plan: PlanKey;
       status: string;
@@ -62,7 +137,9 @@ export const createFreeSubscription = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     // biome-ignore lint/suspicious/noExplicitAny: dynamic schema
     const sb = context.supabase as any;
-    const { data: row, error } = await sb
+    await requireActiveCompanyOwner(sb, data.companyId, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row, error } = await (supabaseAdmin as any)
       .from("subscriptions")
       .upsert(
         {
@@ -103,7 +180,9 @@ export const createPendingSubscription = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     // biome-ignore lint/suspicious/noExplicitAny: dynamic schema
     const sb = context.supabase as any;
-    const { data: row, error } = await sb
+    await requireActiveCompanyOwner(sb, data.companyId, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row, error } = await (supabaseAdmin as any)
       .from("subscriptions")
       .upsert(
         {
@@ -143,12 +222,18 @@ export const cancelSubscription = createServerFn({ method: "POST" })
     const sb = context.supabase as any;
     const { data: sub } = await sb
       .from("subscriptions")
-      .select("paddle_subscription_id, polar_subscription_id, owner_id")
+      .select("paddle_subscription_id, polar_subscription_id, owner_id, user_id, company_id")
       .or(
         `paddle_subscription_id.eq.${data.subscriptionId},polar_subscription_id.eq.${data.subscriptionId}`,
       )
       .maybeSingle();
     if (!sub) throw new Error("Subscription not found");
+    if (sub.owner_id ? sub.owner_id !== context.userId : sub.user_id !== context.userId) {
+      throw new Error("Only the subscription owner can manage billing.");
+    }
+    if (sub.company_id) {
+      await requireActiveCompanyOwner(sb, sub.company_id, context.userId);
+    }
 
     const isPolar = sub.polar_subscription_id === data.subscriptionId;
 
@@ -203,14 +288,34 @@ export const listInvoices = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     // biome-ignore lint/suspicious/noExplicitAny: dynamic schema
     const sb = context.supabase as any;
-    const { data: sub } = await sb
+    await requireActiveCompanyOwner(sb, data.companyId, context.userId);
+    const { data: company, error: companyError } = await sb
+      .from("companies")
+      .select("user_id")
+      .eq("id", data.companyId)
+      .single();
+    if (companyError) throw new Error(companyError.message);
+    const ownerFilter = `owner_id.eq.${company.user_id},user_id.eq.${company.user_id}`;
+    let subResult = await sb
       .from("subscriptions")
       .select("paddle_customer_id, polar_customer_id")
       .eq("company_id", data.companyId)
-      .or("paddle_customer_id.not.is.null,polar_customer_id.not.is.null")
+      .or(ownerFilter)
       .order("updated_at", { ascending: false })
       .limit(1)
       .maybeSingle();
+    if (subResult.error) throw new Error(subResult.error.message);
+    if (!subResult.data) {
+      subResult = await sb
+        .from("subscriptions")
+        .select("paddle_customer_id, polar_customer_id")
+        .or(ownerFilter)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (subResult.error) throw new Error(subResult.error.message);
+    }
+    const sub = subResult.data;
 
     if (sub?.polar_customer_id) {
       const env = process.env.POLAR_SERVER ?? "sandbox";
