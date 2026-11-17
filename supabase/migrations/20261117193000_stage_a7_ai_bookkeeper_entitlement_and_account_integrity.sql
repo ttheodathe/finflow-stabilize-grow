@@ -428,7 +428,7 @@ BEGIN
   definition := replace(definition, 'abs(i.total - amt)', 'abs((i.total - COALESCE(ip.paid, 0)) - amt)');
 
   old_fragment := 'IF conf >= 0.99 AND best.currency = ba.currency THEN';
-  new_fragment := 'IF conf >= 0.99 AND best.currency = ba.currency AND amt <= best.total + 0.000001 AND ba.gl_account_id IS NOT NULL AND EXISTS (SELECT 1 FROM public.accounts a WHERE a.id = ba.gl_account_id AND a.is_active = true AND (a.company_id = t.company_id OR (a.company_id IS NULL AND a.is_system = true))) THEN';
+  new_fragment := 'IF conf >= 0.99 AND best.currency = ba.currency AND amt <= best.total + 0.000001 AND ba.gl_account_id IS NOT NULL AND EXISTS (SELECT 1 FROM public.accounts a WHERE a.id = ba.gl_account_id AND a.is_active = true AND (a.company_id = t.company_id OR (a.company_id IS NULL AND a.is_system = true))) AND ba.currency = (SELECT c.currency FROM public.companies c WHERE c.id = t.company_id) THEN';
   IF position(old_fragment IN definition) = 0 THEN RAISE EXCEPTION 'Auto-match eligibility condition not found'; END IF;
   definition := replace(definition, old_fragment, new_fragment);
 
