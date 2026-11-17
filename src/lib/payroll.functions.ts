@@ -13,7 +13,7 @@ import { assertFeature } from "@/lib/features/plan-guard";
 // extraction/approval pipeline.
 // ---------------------------------------------------------------------------
 
-const AdjustmentLine = z.object({ label: z.string().min(1), amount: z.number().positive() });
+const AdjustmentLine = z.object({ label: z.string().trim().min(1).max(120), amount: z.number().finite().positive() });
 
 const GenerateInput = z.object({
   companyId: z.string().uuid(),
@@ -26,7 +26,7 @@ const GenerateInput = z.object({
   // added to gross before PAYE/statutory are computed. Deductions (loan
   // repayments etc.) are post-tax and subtracted from net pay directly.
   adjustments: z
-    .record(z.object({ additions: z.array(AdjustmentLine).default([]), deductions: z.array(AdjustmentLine).default([]) }))
+    .record(z.object({ additions: z.array(AdjustmentLine).max(20).default([]), deductions: z.array(AdjustmentLine).max(20).default([]) }))
     .optional()
     .default({}),
 });
@@ -117,6 +117,9 @@ export const generatePayRun = createServerFn({ method: "POST" })
     for (const emp of employees) {
       const category = emp.employment_type === "contract" ? "secondary_employer" : "permanent";
       const brackets = allBrackets.filter((b) => b.employee_category === category);
+      if (brackets.length === 0) {
+        throw new Error(`No effective payroll tax brackets are configured for ${category} employees.`);
+      }
 
       const empAdjustments = data.adjustments[emp.id] ?? { additions: [], deductions: [] };
       const additionsTotal = empAdjustments.additions.reduce((s, a) => s + a.amount, 0);
