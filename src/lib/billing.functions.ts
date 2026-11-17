@@ -307,7 +307,6 @@ export const listInvoices = createServerFn({ method: "POST" })
       subResult = await sb
         .from("subscriptions")
         .select("paddle_customer_id, polar_customer_id")
-        .is("company_id", null)
         .or(ownerFilter)
         .order("updated_at", { ascending: false })
         .limit(1)
