@@ -20,7 +20,10 @@ export async function getProgramSettings(): Promise<PartnerProgramSettings> {
     .single();
 
   if (error) throw new PartnerServiceError("FETCH_SETTINGS_FAILED", error.message);
-  return data as PartnerProgramSettings;
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    throw new PartnerServiceError("UPDATE_SETTINGS_FAILED", "The settings RPC returned an invalid response.");
+  }
+  return data as unknown as PartnerProgramSettings;
 }
 
 export async function updateProgramSettings(
