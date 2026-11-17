@@ -88,23 +88,6 @@ export const generatePayRun = createServerFn({ method: "POST" })
       throw new Error("No payroll tax brackets configured for this company. Set them up in Payroll Settings first.");
     }
 
-    const { data: payRun, error: runErr } = await supabase
-      .from("pay_runs")
-      .insert({
-        company_id: data.companyId,
-        period_start: data.periodStart,
-        period_end: data.periodEnd,
-        pay_date: data.payDate,
-        status: "draft",
-        notes: data.notes || null,
-        created_by: auth.user.id,
-        currency: employees[0]?.salary_currency ?? "USD",
-      } as never)
-      .select("id")
-      .single();
-    if (runErr || !payRun) throw new Error(runErr?.message ?? "Failed to create pay run");
-    const payRunId = (payRun as { id: string }).id;
-
     if (new Set(data.employeeIds).size !== data.employeeIds.length) {
       throw new Error("Duplicate employees are not allowed in a pay run.");
     }
