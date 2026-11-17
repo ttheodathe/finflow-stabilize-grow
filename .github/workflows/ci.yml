@@ -15,8 +15,6 @@ concurrency:
 
 jobs:
   validate:
-    permissions:
-      contents: write
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -88,23 +86,3 @@ jobs:
           POLAR_SERVER: sandbox
           RESEND_API_KEY: ci-placeholder
           GEMINI_API_KEY: ci-placeholder
-
-      - name: Commit formatted source to PR branch
-        if: github.event_name == 'pull_request' && github.head_ref == 'fix/a7-ai-bookkeeper-entitlement-and-reconciliation-v2'
-        env:
-          BRANCH: ${{ github.head_ref }}
-        run: |
-          git diff --name-only -z "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}" -- '*.js' '*.jsx' '*.ts' '*.tsx' '*.json' '*.css' '*.md' '*.yml' '*.yaml' > /tmp/changed-files
-          tar --null -czf /tmp/formatted-source.tgz -T /tmp/changed-files
-          git fetch origin "$BRANCH:refs/remotes/origin/$BRANCH"
-          git checkout -B "$BRANCH" "origin/$BRANCH"
-          tar -xzf /tmp/formatted-source.tgz -C .
-          xargs -0 -r git add -- < /tmp/changed-files
-          if git diff --cached --quiet; then
-            echo "No formatting changes to commit"
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "style: format AI Bookkeeper changes"
-          git push origin "HEAD:$BRANCH"
