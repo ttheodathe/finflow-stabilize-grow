@@ -130,16 +130,25 @@ function ExpensesPage() {
   async function load() {
     if (!companyId) return;
     const [exp, ven, acc] = await Promise.all([
-      supabase.from("expenses").select("*").eq("company_id", companyId).order("expense_date", { ascending: false }),
+      supabase
+        .from("expenses")
+        .select("*")
+        .eq("company_id", companyId)
+        .order("expense_date", { ascending: false }),
       // Fix (Jennifer QA — New Expense: "Vendor - No dropdown list for
       // selecting an existing vendor"): load the existing vendors table
       // (already used by Bills) instead of a free-text field.
-      supabase.from("vendors").select("id,name,tax_id,address").eq("company_id", companyId).order("name"),
+      supabase
+        .from("vendors")
+        .select("id,name,tax_id,address")
+        .eq("company_id", companyId)
+        .order("name"),
       // Fix (Jennifer QA — New Expense: "Category - No dropdown list of the
       // Account Titles... allow selection from the chart of accounts"):
       supabase
         .from("accounts")
-        .select("id,code,name,type").eq("company_id", companyId)
+        .select("id,code,name,type")
+        .eq("company_id", companyId)
         .eq("is_active", true)
         .eq("type", "expense")
         .order("code"),
@@ -269,7 +278,9 @@ function ExpensesPage() {
 
       await supabase.from("documents").update({ file_path: path }).eq("id", doc.id);
 
-      const { data: signed } = await supabase.storage.from("documents").createSignedUrl(path, 60 * 30);
+      const { data: signed } = await supabase.storage
+        .from("documents")
+        .createSignedUrl(path, 60 * 30);
       setReviewFileUrl(signed?.signedUrl ?? null);
       setReviewMimeType(file.type);
       setReviewDocId(doc.id);
@@ -402,9 +413,7 @@ function ExpensesPage() {
                   <Label>Supplier's Invoice Reference Number</Label>
                   <Input
                     value={form.supplier_invoice_number}
-                    onChange={(e) =>
-                      setForm({ ...form, supplier_invoice_number: e.target.value })
-                    }
+                    onChange={(e) => setForm({ ...form, supplier_invoice_number: e.target.value })}
                     placeholder="Needed for BIR reporting"
                   />
                 </div>

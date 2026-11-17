@@ -53,9 +53,7 @@ export async function resolvePlan(
       row = userRows?.[0];
     }
   } else {
-    const { data, error } = await base().or(
-      `owner_id.eq.${opts.userId},user_id.eq.${opts.userId}`,
-    );
+    const { data, error } = await base().or(`owner_id.eq.${opts.userId},user_id.eq.${opts.userId}`);
     if (error) return "free";
     row = data?.[0];
   }

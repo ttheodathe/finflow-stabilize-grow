@@ -100,10 +100,7 @@ export const askBookkeeper = createServerFn({ method: "POST" })
 
     const system = `You are an AI bookkeeper for a small business. Use only the JSON dataset below to answer questions concisely with concrete numbers. Compute revenue, profit, top customers, category spend, cash trends, overdue invoices, or inventory as needed. Format money with the invoice/expense currency. Be brief and useful. If data is missing, say so. Do not invent transactions, customers, balances, or accounting facts.\n\nDATA:\n${JSON.stringify(summary).slice(0, 60000)}`;
 
-    const reply = await callGemini(
-      [{ role: "system", content: system }, ...data.messages],
-      key,
-    );
+    const reply = await callGemini([{ role: "system", content: system }, ...data.messages], key);
     return { reply };
   });
 
