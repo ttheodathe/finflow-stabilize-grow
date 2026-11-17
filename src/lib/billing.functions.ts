@@ -60,9 +60,9 @@ export const getMySubscription = createServerFn({ method: "POST" })
       if (membership?.status !== "active" || !company?.user_id) return null;
       isCompanyOwner = membership.role === "owner" && company.user_id === context.userId;
 
-      // Read the effective company plan using the server-only client after
-      // confirming active membership. Collaborators receive plan metadata,
-      // never the owner's provider/customer identifiers.
+      // Company-scoped and owner's account-level plans apply to active members.
+      // Read through the server-only client after membership verification, and
+      // redact provider/customer identifiers from non-owner responses.
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const adminBase = () =>
         (supabaseAdmin as any)
@@ -121,7 +121,7 @@ export const getMySubscription = createServerFn({ method: "POST" })
       polar_subscription_id: string | null;
       polar_customer_id: string | null;
     } | null;
-  });/**
+  });**
  * subscriptions has UNIQUE(user_id) — every account has exactly one row.
  * Always upsert on user_id rather than select-then-insert, so re-running
  * this (e.g. switching plan choice, or retrying onboarding) never collides
@@ -226,7 +226,7 @@ export const cancelSubscription = createServerFn({ method: "POST" })
       )
       .maybeSingle();
     if (!sub) throw new Error("Subscription not found");
-    if (sub.owner_id !== context.userId && sub.user_id !== context.userId) {
+    if (sub.owner_id ? sub.owner_id !== context.userId : sub.user_id !== context.userId) {
       throw new Error("Only the subscription owner can manage billing.");
     }
     if (sub.company_id) {
@@ -307,6 +307,7 @@ export const listInvoices = createServerFn({ method: "POST" })
       subResult = await sb
         .from("subscriptions")
         .select("paddle_customer_id, polar_customer_id")
+        .is("company_id", null)
         .or(ownerFilter)
         .order("updated_at", { ascending: false })
         .limit(1)
