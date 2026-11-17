@@ -26,7 +26,7 @@ const GenerateInput = z.object({
   // added to gross before PAYE/statutory are computed. Deductions (loan
   // repayments etc.) are post-tax and subtracted from net pay directly.
   adjustments: z
-    .record(z.object({ additions: z.array(AdjustmentLine).max(20).default([]), deductions: z.array(AdjustmentLine).max(20).default([]) }))
+    .record(z.string(), z.object({ additions: z.array(AdjustmentLine).max(20).default([]), deductions: z.array(AdjustmentLine).max(20).default([]) }))
     .optional()
     .default({}),
 });
