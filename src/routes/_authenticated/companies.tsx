@@ -158,7 +158,23 @@ function CompanyPage() {
     setSaving(true);
     let error;
     if (company.id) {
-      const payload: any = { ...company };
+      // Explicitly allowlist editable business-profile fields. Never spread the
+      // fetched database row here: it also contains owner, organization and
+      // system-managed columns that must not be writable from this client.
+      const payload = {
+        name: company.name,
+        email: company.email,
+        phone: company.phone,
+        website: company.website,
+        address: company.address,
+        city: company.city,
+        state: company.state,
+        postal_code: company.postal_code,
+        country: company.country,
+        tax_number: company.tax_number,
+        currency: company.currency,
+        logo_url: company.logo_url,
+      };
       ({ error } = await supabase.from("companies").update(payload).eq("id", company.id));
     } else {
       // Fix: a brand-new company has no row in `company_members` yet, so it
