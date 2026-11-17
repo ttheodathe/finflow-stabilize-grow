@@ -75,6 +75,20 @@ jobs:
           docker cp supabase/tests/rls-policy-fixture.sql "$container_id:/tmp/rls-policy-fixture.sql"
           docker exec "$container_id" psql -U postgres -d finflow_rls_test -v ON_ERROR_STOP=1 -f /tmp/rls-policy-fixture.sql
 
+      - name: Apply payroll entitlement migration
+        run: |
+          container_id="$(docker ps --filter 'ancestor=postgres:16' --format '{{.ID}}' | head -n 1)"
+          test -n "$container_id"
+          docker cp supabase/migrations/20261118011000_stage_a7_complete_payroll_write_entitlement.sql "$container_id:/tmp/payroll-entitlement-migration.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_rls_test -v ON_ERROR_STOP=1 -f /tmp/payroll-entitlement-migration.sql
+
+      - name: Verify payroll entitlement enforcement
+        run: |
+          container_id="$(docker ps --filter 'ancestor=postgres:16' --format '{{.ID}}' | head -n 1)"
+          test -n "$container_id"
+          docker cp supabase/tests/payroll-entitlement-smoke.sql "$container_id:/tmp/payroll-entitlement-smoke.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_rls_test -v ON_ERROR_STOP=1 -f /tmp/payroll-entitlement-smoke.sql
+
       - name: Apply RLS policy consolidation migration
         run: |
           container_id="$(docker ps --filter 'ancestor=postgres:16' --format '{{.ID}}' | head -n 1)"
