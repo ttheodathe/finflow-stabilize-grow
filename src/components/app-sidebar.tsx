@@ -246,16 +246,18 @@ export function AppSidebar() {
 
     setEmail(user.email ?? "");
 
-    const [{ data: profile }, { data: memberRows }, { data: subRow }] = await Promise.all([
-      supabase.from("profiles").select("full_name, avatar_url").eq("id", user.id).single(),
-      supabase
-        .from("company_members")
-        .select("company:companies(id, name, is_default, created_at)")
-        .eq("user_id", user.id)
-        .eq("status", "active")
-        .order("created_at", { referencedTable: "companies", ascending: true }),
-      supabase.from("subscriptions").select("plan, status").eq("user_id", user.id).maybeSingle(),
-    ]);
+    const [{ data: profile }, { data: memberRows }, { data: subRow }, { data: defaultCompanyId }] =
+      await Promise.all([
+        supabase.from("profiles").select("full_name, avatar_url").eq("id", user.id).single(),
+        supabase
+          .from("company_members")
+          .select("company:companies(id, name, is_default, created_at)")
+          .eq("user_id", user.id)
+          .eq("status", "active")
+          .order("created_at", { referencedTable: "companies", ascending: true }),
+        supabase.from("subscriptions").select("plan, status").eq("user_id", user.id).maybeSingle(),
+        supabase.rpc("get_default_company_id"),
+      ]);
 
     setFullName(profile?.full_name ?? "");
     setAvatarUrl(profile?.avatar_url ?? null);
@@ -265,7 +267,11 @@ export function AppSidebar() {
 
     const storedId =
       typeof window !== "undefined" ? localStorage.getItem("currentCompanyId") : null;
-    const active = list.find((c) => c.id === storedId) ?? list.find((c) => c.is_default) ?? list[0];
+    const active =
+      list.find((c) => c.id === defaultCompanyId) ??
+      list.find((c) => c.id === storedId) ??
+      list.find((c) => c.is_default) ??
+      list[0];
 
     if (active) setCurrentCompanyId(active.id);
 
@@ -291,7 +297,12 @@ export function AppSidebar() {
     setUpgradeModalOpen(true);
   }
 
-  function switchCompany(id: string) {
+  async function switchCompany(id: string) {
+    const { error } = await supabase.rpc("set_default_company", { p_company_id: id });
+    if (error) {
+      toast.error("Could not save your default company");
+      return;
+    }
     setCurrentCompanyId(id);
     localStorage.setItem("currentCompanyId", id);
     window.dispatchEvent(new CustomEvent("company-changed", { detail: { companyId: id } }));
@@ -399,7 +410,7 @@ export function AppSidebar() {
         onOpenChange={setCreateCompanyOpen}
         onCreated={async (newCompanyId) => {
           await loadUserAndCompanies();
-          switchCompany(newCompanyId);
+          await switchCompany(newCompanyId);
         }}
       />
 
