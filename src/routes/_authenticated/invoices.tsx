@@ -546,8 +546,8 @@ function InvoicesPage() {
                     </SelectTrigger>
                     <SelectContent>
                       {STATUSES.map((s) => (
-                        <SelectItem key={s} value={s}>
-                          {s}
+                        <SelectItem key={s} value={s} disabled={s === "paid"}>
+                          {s === "paid" ? "paid (record a payment to settle)" : s}
                         </SelectItem>
                       ))}
                     </SelectContent>
