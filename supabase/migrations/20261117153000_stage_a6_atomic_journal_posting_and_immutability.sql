@@ -209,7 +209,7 @@ BEGIN
     reverses_entry_id, is_posted
   )
   VALUES (
-    v_entry.company_id, auth.uid(), pg_catalog.current_date,
+    v_entry.company_id, auth.uid(), CURRENT_DATE,
     CASE WHEN v_entry.reference IS NULL THEN NULL ELSE v_entry.reference || '-VOID' END,
     'Reversal of ' || COALESCE(v_entry.reference, v_entry.id::text)
       || CASE WHEN v_entry.memo IS NULL THEN '' ELSE ': ' || v_entry.memo END,
