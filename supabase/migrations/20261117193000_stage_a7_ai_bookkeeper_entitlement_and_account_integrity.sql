@@ -342,8 +342,14 @@ DECLARE
   definition text;
   old_fragment text;
   new_fragment text;
+  fragment_pos integer;
 BEGIN
   definition := pg_get_functiondef('public.ai_process_bank_transaction(uuid)'::regprocedure);
+
+  old_fragment := '  t RECORD; ba RECORD; best RECORD; amt numeric; conf numeric;';
+  new_fragment := '  t RECORD; ba RECORD; best RECORD; amt numeric; conf numeric; v_outstanding numeric;';
+  IF position(old_fragment IN definition) = 0 THEN RAISE EXCEPTION 'AI processor declaration fragment not found'; END IF;
+  definition := replace(definition, old_fragment, new_fragment);
 
   old_fragment := 'SELECT * INTO t FROM public.bank_transactions WHERE id = _txn_id;';
   new_fragment := 'SELECT * INTO t FROM public.bank_transactions WHERE id = _txn_id FOR UPDATE;';
@@ -406,6 +412,18 @@ BEGIN
   definition := replace(definition, old_fragment, new_fragment);
   definition := replace(definition, 'abs(b.total - amt)', 'abs((b.total - COALESCE(bp.paid, 0)) - amt)');
 
+  -- Lock the bill before refreshing its outstanding balance. Payment triggers
+  -- use the same parent-row lock, so concurrent AI/manual payments serialize.
+  old_fragment := 'IF best.id IS NOT NULL THEN' || chr(10) || '      conf := least(greatest(best.score, 0), 1);';
+  new_fragment := 'IF best.id IS NOT NULL THEN' || chr(10) ||
+    '      PERFORM b.id FROM public.bills b WHERE b.id = best.id AND b.company_id = t.company_id FOR UPDATE;' || chr(10) ||
+    '      SELECT b.total - COALESCE((SELECT SUM(bp.amount) FROM public.bill_payments bp WHERE bp.bill_id = b.id), 0) INTO v_outstanding FROM public.bills b WHERE b.id = best.id AND b.company_id = t.company_id;' || chr(10) ||
+    '      best.total := v_outstanding;' || chr(10) ||
+    '      conf := least(greatest(best.score, 0), 1);';
+  fragment_pos := position(old_fragment IN definition);
+  IF fragment_pos = 0 THEN RAISE EXCEPTION 'Bill candidate lock insertion point not found'; END IF;
+  definition := substring(definition FROM 1 FOR fragment_pos - 1) || new_fragment || substring(definition FROM fragment_pos + char_length(old_fragment));
+
   old_fragment := 'SELECT i.id, i.invoice_number, i.total, i.currency, c.id AS customer_id, c.name AS customer_name,';
   new_fragment := 'SELECT i.id, i.invoice_number, (i.total - COALESCE(ip.paid, 0)) AS total, i.currency, c.id AS customer_id, c.name AS customer_name,';
   IF position(old_fragment IN definition) = 0 THEN RAISE EXCEPTION 'Invoice match select fragment not found'; END IF;
@@ -426,6 +444,17 @@ BEGIN
   IF position(old_fragment IN definition) = 0 THEN RAISE EXCEPTION 'Invoice outstanding-balance predicate not found'; END IF;
   definition := replace(definition, old_fragment, new_fragment);
   definition := replace(definition, 'abs(i.total - amt)', 'abs((i.total - COALESCE(ip.paid, 0)) - amt)');
+
+  -- Apply the same lock-and-refresh sequence to invoice settlements.
+  old_fragment := 'IF best.id IS NOT NULL THEN' || chr(10) || '      conf := least(greatest(best.score, 0), 1);';
+  new_fragment := 'IF best.id IS NOT NULL THEN' || chr(10) ||
+    '      PERFORM i.id FROM public.invoices i WHERE i.id = best.id AND i.company_id = t.company_id FOR UPDATE;' || chr(10) ||
+    '      SELECT i.total - COALESCE((SELECT SUM(p.amount) FROM public.payments p WHERE p.invoice_id = i.id), 0) INTO v_outstanding FROM public.invoices i WHERE i.id = best.id AND i.company_id = t.company_id;' || chr(10) ||
+    '      best.total := v_outstanding;' || chr(10) ||
+    '      conf := least(greatest(best.score, 0), 1);';
+  fragment_pos := position(old_fragment IN definition);
+  IF fragment_pos = 0 THEN RAISE EXCEPTION 'Invoice candidate lock insertion point not found'; END IF;
+  definition := substring(definition FROM 1 FOR fragment_pos - 1) || new_fragment || substring(definition FROM fragment_pos + char_length(old_fragment));
 
   old_fragment := 'IF conf >= 0.99 AND best.currency = ba.currency THEN';
   new_fragment := 'IF conf >= 0.99 AND best.currency = ba.currency AND amt <= best.total + 0.000001 AND ba.gl_account_id IS NOT NULL AND EXISTS (SELECT 1 FROM public.accounts a WHERE a.id = ba.gl_account_id AND a.is_active = true AND (a.company_id = t.company_id OR (a.company_id IS NULL AND a.is_system = true))) AND ba.currency = (SELECT c.currency FROM public.companies c WHERE c.id = t.company_id) THEN';
@@ -473,6 +502,8 @@ BEGIN
     RAISE EXCEPTION 'AI processor pg_trgm function qualification is invalid';
   END IF;
   IF position('FOR UPDATE' IN processor) = 0
+     OR position('PERFORM b.id FROM public.bills b WHERE b.id = best.id AND b.company_id = t.company_id FOR UPDATE' IN processor) = 0
+     OR position('PERFORM i.id FROM public.invoices i WHERE i.id = best.id AND i.company_id = t.company_id FOR UPDATE' IN processor) = 0
      OR position('company_id = t.company_id' IN processor) = 0
      OR position('source_account_id' IN processor) = 0
      OR position('deposit_account_id' IN processor) = 0
