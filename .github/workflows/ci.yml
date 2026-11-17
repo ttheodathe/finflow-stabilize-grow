@@ -27,6 +27,16 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Refresh and validate npm lockfile
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Upload lockfile candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-lockfile-candidate
+          path: package-lock.json
+          retention-days: 1
+
       - name: Install dependencies
         run: npm ci
 
