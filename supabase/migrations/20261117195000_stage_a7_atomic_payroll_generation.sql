@@ -80,8 +80,8 @@ BEGIN
    FOR UPDATE;
 
   IF NOT FOUND OR v_member_status <> 'active'
-     OR v_member_role NOT IN ('owner', 'admin', 'accountant') THEN
-    RAISE EXCEPTION 'Only active company owners, admins and accountants may generate payroll'
+     OR v_member_role NOT IN ('owner', 'admin', 'payroll') THEN
+    RAISE EXCEPTION 'Only active company owners, admins and payroll managers may generate payroll'
       USING ERRCODE = '42501';
   END IF;
 
