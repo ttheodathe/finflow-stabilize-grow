@@ -86,6 +86,16 @@ jobs:
           POLAR_SERVER: sandbox
           RESEND_API_KEY: ci-placeholder
           GEMINI_API_KEY: ci-placeholder
+          LOVABLE_REACHABILITY_MANIFEST: "1"
+
+      - name: Upload bundle reachability report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bundle-reachability
+          path: node_modules/.lovable/reachability.json
+          if-no-files-found: warn
+          retention-days: 1
 
       - name: Enforce high-severity dependency audit
         run: npm audit
