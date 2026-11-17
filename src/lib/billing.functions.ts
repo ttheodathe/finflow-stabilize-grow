@@ -21,13 +21,32 @@ export const getMySubscription = createServerFn({ method: "POST" })
       sb.from("subscriptions").select("*").order("updated_at", { ascending: false }).limit(1);
 
     let rows: any[] | null = null;
+    let mayUseAccountSubscription = !data.companyId;
+
     if (data.companyId) {
       const res = await base().eq("company_id", data.companyId);
       if (res.error) throw new Error(res.error.message);
       rows = res.data;
+
+      if (!rows?.length) {
+        // An account-level subscription may unlock a company only for its
+        // active owner. A collaborator's personal subscription must never
+        // unlock paid features in another company's workspace.
+        const membership = await sb
+          .from("company_members")
+          .select("role,status")
+          .eq("company_id", data.companyId)
+          .eq("user_id", context.userId)
+          .maybeSingle();
+        if (membership.error) throw new Error(membership.error.message);
+        mayUseAccountSubscription =
+          membership.data?.status === "active" && membership.data?.role === "owner";
+      }
     }
-    if (!rows?.length) {
-      // Fall back to the account-level row (webhooks may not set company_id).
+
+    if (!rows?.length && mayUseAccountSubscription) {
+      // Account-level fallback is valid only outside a company context or
+      // when the current user is the active owner of the selected company.
       const res = await base().or(
         `owner_id.eq.${context.userId},user_id.eq.${context.userId}`,
       );
