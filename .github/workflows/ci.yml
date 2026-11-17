@@ -94,7 +94,7 @@ jobs:
           BRANCH: ${{ github.head_ref }}
         run: |
           cp package-lock.json /tmp/finflow-package-lock.json
-          git fetch origin "$BRANCH"
+          git fetch origin "$BRANCH:refs/remotes/origin/$BRANCH"
           git checkout -B "$BRANCH" "origin/$BRANCH"
           cp /tmp/finflow-package-lock.json package-lock.json
           git add package-lock.json
