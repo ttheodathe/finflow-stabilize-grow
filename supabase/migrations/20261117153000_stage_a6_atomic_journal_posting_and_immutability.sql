@@ -281,8 +281,12 @@ BEGIN
   END IF;
 
   IF NOT public.is_company_member(v_run.company_id)
-     OR public.get_company_role(v_run.company_id) = 'viewer'::public.company_member_role THEN
-    RAISE EXCEPTION 'Not permitted to post payroll for this company';
+     OR public.get_company_role(v_run.company_id) NOT IN (
+       'owner'::public.company_member_role,
+       'admin'::public.company_member_role,
+       'payroll'::public.company_member_role
+     ) THEN
+    RAISE EXCEPTION 'Only company owners, admins, or payroll-role members may post payroll';
   END IF;
 
   v_total_gross := COALESCE(v_run.total_gross, 0);
@@ -290,8 +294,8 @@ BEGIN
   v_statutory_liability := COALESCE(v_run.total_employee_deductions, 0) + v_employer_contrib;
   v_total_net := COALESCE(v_run.total_net, 0);
 
-  IF v_total_gross < 0 OR v_employer_contrib < 0
-     OR v_statutory_liability < 0 OR v_total_net < 0
+  IF v_total_gross < 0 OR v_run.total_employee_deductions < 0
+     OR v_employer_contrib < 0 OR v_statutory_liability < 0 OR v_total_net < 0
      OR v_total_gross + v_employer_contrib <= 0
      OR pg_catalog.round(v_total_gross + v_employer_contrib, 2)
         <> pg_catalog.round(v_statutory_liability + v_total_net, 2) THEN
