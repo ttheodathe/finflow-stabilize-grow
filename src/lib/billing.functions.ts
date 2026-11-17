@@ -121,7 +121,9 @@ export const getMySubscription = createServerFn({ method: "POST" })
       polar_subscription_id: string | null;
       polar_customer_id: string | null;
     } | null;
-  });**
+  });
+
+/**
  * subscriptions has UNIQUE(user_id) — every account has exactly one row.
  * Always upsert on user_id rather than select-then-insert, so re-running
  * this (e.g. switching plan choice, or retrying onboarding) never collides
