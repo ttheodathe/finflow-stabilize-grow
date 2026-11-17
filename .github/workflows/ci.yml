@@ -109,13 +109,7 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Format changed files in CI
-        if: github.event_name == 'pull_request'
-        run: |
-          git diff --name-only -z "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}" -- '*.js' '*.jsx' '*.ts' '*.tsx' '*.json' '*.css' '*.md' '*.yml' '*.yaml' > /tmp/changed-files
-          xargs -0 -r npx prettier --write < /tmp/changed-files
-
-      - name: Format changed files
+      - name: Check formatting of changed files
         if: github.event_name == 'pull_request'
         run: |
           git diff --name-only -z "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}" -- '*.js' '*.jsx' '*.ts' '*.tsx' '*.json' '*.css' '*.md' '*.yml' '*.yaml' | xargs -0 -r npx prettier --check
