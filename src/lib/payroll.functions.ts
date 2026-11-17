@@ -228,7 +228,7 @@ export const postPayRunToLedger = createServerFn({ method: "POST" })
     const { data: auth } = await supabase.auth.getUser();
     if (!auth.user) throw new Error("Not authenticated");
 
-    const { data: journalEntryId, error } = await supabase.rpc("post_payrun_to_ledger", {
+    const { data: journalEntryId, error } = await (supabase as any).rpc("post_payrun_to_ledger", {
       p_pay_run_id: data.payRunId,
       p_salary_expense_account_id: data.salaryExpenseAccountId,
       p_employer_tax_expense_account_id: data.employerTaxExpenseAccountId,
