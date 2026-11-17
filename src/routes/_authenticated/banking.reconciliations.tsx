@@ -115,7 +115,7 @@ function ReconciliationsPage() {
   async function toggle(t: Txn, value: boolean) {
     const { error } = await (supabase as any)
       .from("bank_transactions")
-      .update({ reconciled: value, reconciled_at: value ? new Date().toISOString() : null })
+      .update({ reconciled: value })
       .eq("id", t.id);
     if (error) return toast.error(error.message);
     setTxns((prev) => prev.map((x) => (x.id === t.id ? { ...x, reconciled: value } : x)));
@@ -126,7 +126,7 @@ function ReconciliationsPage() {
     if (ids.length === 0) return;
     const { error } = await (supabase as any)
       .from("bank_transactions")
-      .update({ reconciled: value, reconciled_at: value ? new Date().toISOString() : null })
+      .update({ reconciled: value })
       .in("id", ids);
     if (error) return toast.error(error.message);
     toast.success(value ? "Marked as reconciled" : "Marked as unreconciled");
