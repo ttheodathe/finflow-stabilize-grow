@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { calculatePayroll, type TaxBracket, type StatutoryContribution } from "@/lib/payroll-calc";
+import { assertFeature } from "@/lib/features/plan-guard";
 
 // ---------------------------------------------------------------------------
 // Pay run lifecycle: draft (payslips generated) -> approved (locked) ->
@@ -37,6 +38,7 @@ export const generatePayRun = createServerFn({ method: "POST" })
     const { supabase } = context;
     const { data: auth } = await supabase.auth.getUser();
     if (!auth.user) throw new Error("Not authenticated");
+    await assertFeature(supabase, { userId: context.userId, companyId: data.companyId }, "payroll");
 
     const { data: employees, error: empErr } = await supabase
       .from("employees")
@@ -45,6 +47,16 @@ export const generatePayRun = createServerFn({ method: "POST" })
       .in("id", data.employeeIds);
     if (empErr) throw new Error(empErr.message);
     if (!employees || employees.length === 0) throw new Error("No matching employees found");
+
+    const { data: company, error: companyErr } = await supabase
+      .from("companies")
+      .select("currency")
+      .eq("id", data.companyId)
+      .single();
+    if (companyErr || !company) throw new Error(companyErr?.message ?? "Company not found");
+    if (employees.some((employee) => employee.salary_currency !== company.currency)) {
+      throw new Error("Payroll currently requires every employee salary to use the company's base currency.");
+    }
 
     const terminated = employees.filter((e) => e.employment_status === "terminated");
     if (terminated.length > 0) {
@@ -110,6 +122,9 @@ export const generatePayRun = createServerFn({ method: "POST" })
 
       const result = calculatePayroll(effectiveGross, brackets, statutory);
       const finalNetPay = round2(result.netPay - deductionsTotal);
+      if (finalNetPay < 0) {
+        throw new Error("Employee deductions cannot exceed calculated net pay.");
+      }
 
       const { data: payslip, error: slipErr } = await supabase
         .from("payslips")
@@ -133,7 +148,7 @@ export const generatePayRun = createServerFn({ method: "POST" })
       const payslipId = (payslip as { id: string }).id;
 
       if (result.contributions.length > 0) {
-        await supabase.from("payslip_contributions").insert(
+        const { error: contributionErr } = await supabase.from("payslip_contributions").insert(
           result.contributions.map((c) => ({
             payslip_id: payslipId,
             name: c.name,
@@ -141,6 +156,7 @@ export const generatePayRun = createServerFn({ method: "POST" })
             employer_amount: c.employerAmount,
           })) as never,
         );
+        if (contributionErr) throw new Error(contributionErr.message);
       }
 
       const lineItems = [
@@ -148,7 +164,8 @@ export const generatePayRun = createServerFn({ method: "POST" })
         ...empAdjustments.deductions.map((d) => ({ payslip_id: payslipId, kind: "deduction" as const, label: d.label, amount: d.amount })),
       ];
       if (lineItems.length > 0) {
-        await supabase.from("payslip_line_items").insert(lineItems as never);
+        const { error: lineItemErr } = await supabase.from("payslip_line_items").insert(lineItems as never);
+        if (lineItemErr) throw new Error(lineItemErr.message);
       }
 
       totalGross += result.grossSalary;
@@ -158,7 +175,7 @@ export const generatePayRun = createServerFn({ method: "POST" })
       totalEmployerCost += result.totalEmployerCost;
     }
 
-    await supabase
+    const { error: totalsErr } = await supabase
       .from("pay_runs")
       .update({
         total_gross: round2(totalGross),
@@ -168,6 +185,7 @@ export const generatePayRun = createServerFn({ method: "POST" })
         total_employer_cost: round2(totalEmployerCost),
       })
       .eq("id", payRunId);
+    if (totalsErr) throw new Error(totalsErr.message);
 
     return { ok: true as const, payRunId, employeeCount: employees.length };
   });
@@ -194,10 +212,14 @@ export const approvePayRun = createServerFn({ method: "POST" })
     if (error || !run) throw new Error("Pay run not found");
     if (run.status !== "draft") throw new Error("Only draft pay runs can be approved");
 
-    await supabase
+    const { data: approved, error: approveErr } = await supabase
       .from("pay_runs")
       .update({ status: "approved", approved_by: auth.user.id, approved_at: new Date().toISOString() })
-      .eq("id", data.payRunId);
+      .eq("id", data.payRunId)
+      .eq("status", "draft")
+      .select("id")
+      .maybeSingle();
+    if (approveErr || !approved) throw new Error(approveErr?.message ?? "Pay run state changed before approval.");
 
     return { ok: true as const };
   });
@@ -256,6 +278,13 @@ export const cancelPayRun = createServerFn({ method: "POST" })
       .single();
     if (error || !run) throw new Error("Pay run not found");
     if (run.status === "paid") throw new Error("Can't cancel a pay run that's already been paid — it's posted to the ledger");
-    await supabase.from("pay_runs").update({ status: "cancelled" }).eq("id", data.payRunId);
+    const { data: cancelled, error: cancelErr } = await supabase
+      .from("pay_runs")
+      .update({ status: "cancelled" })
+      .eq("id", data.payRunId)
+      .in("status", ["draft", "approved"])
+      .select("id")
+      .maybeSingle();
+    if (cancelErr || !cancelled) throw new Error(cancelErr?.message ?? "Pay run state changed before cancellation.");
     return { ok: true as const };
   });
