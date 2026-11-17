@@ -160,12 +160,14 @@ BEGIN
      AND company_id = q.company_id
    FOR UPDATE;
 
-  IF NOT FOUND OR NOT ba.is_active THEN
-    RAISE EXCEPTION 'Bank account is missing, inactive, or belongs to another company';
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Bank account is missing or belongs to another company';
+  END IF;
+  IF NOT ba.is_active THEN
+    RAISE EXCEPTION 'Bank account is inactive';
   END IF;
 
   IF q.task_type = 'categorize_transaction' THEN
-    v_doc := NULL;
     -- Categorization is permitted without a mapped GL bank account.
     -- The proposed category account itself must be active and company-safe.
     IF q.proposed->>'category_account_id' IS NULL THEN
@@ -200,8 +202,11 @@ BEGIN
        AND company_id = q.company_id
      FOR UPDATE;
 
-    IF NOT FOUND OR v_doc.status NOT IN ('open', 'partial') THEN
-      RAISE EXCEPTION 'Proposed bill is missing, closed, or belongs to another company';
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'Proposed bill is missing or belongs to another company';
+    END IF;
+    IF v_doc.status NOT IN ('open', 'partial') THEN
+      RAISE EXCEPTION 'Proposed bill is not open for payment';
     END IF;
 
     IF v_doc.currency <> ba.currency THEN
@@ -254,8 +259,11 @@ BEGIN
        AND company_id = q.company_id
      FOR UPDATE;
 
-    IF NOT FOUND OR v_doc.status NOT IN ('sent', 'partial', 'overdue') THEN
-      RAISE EXCEPTION 'Proposed invoice is missing, not payable, or belongs to another company';
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'Proposed invoice is missing or belongs to another company';
+    END IF;
+    IF v_doc.status NOT IN ('sent', 'partial', 'overdue') THEN
+      RAISE EXCEPTION 'Proposed invoice is not open for payment';
     END IF;
 
     IF v_doc.currency <> ba.currency THEN
@@ -416,18 +424,13 @@ BEGIN
 
   old_fragment := '''Auto-matched by AI Bookkeeper from bank transaction: '' || t.description);';
   new_fragment := '''Auto-matched by AI Bookkeeper from bank transaction: '' || t.description, ba.gl_account_id);';
-  IF position(old_fragment IN definition) = 0 THEN RAISE EXCEPTION 'Bill payment insert values not found'; END IF;
+  IF position(old_fragment IN definition) = 0 THEN RAISE EXCEPTION 'AI payment insert values not found'; END IF;
   definition := replace(definition, old_fragment, new_fragment);
 
   old_fragment := 'INSERT INTO public.payments (company_id, user_id, invoice_id, customer_id, payment_date, amount, currency, method, reference, notes)';
   new_fragment := 'INSERT INTO public.payments (company_id, user_id, invoice_id, customer_id, payment_date, amount, currency, method, reference, notes, deposit_account_id)';
   IF position(old_fragment IN definition) = 0 THEN RAISE EXCEPTION 'Invoice payment insert columns not found'; END IF;
   definition := replace(definition, old_fragment, new_fragment);
-
-  old_fragment := '''Auto-matched by AI Bookkeeper from bank transaction: '' || t.description);';
-  -- The bill branch was already changed above, so replace only the remaining invoice values fragment.
-  IF position(old_fragment IN definition) = 0 THEN RAISE EXCEPTION 'Invoice payment insert values not found'; END IF;
-  definition := replace(definition, old_fragment, '''Auto-matched by AI Bookkeeper from bank transaction: '' || t.description, ba.gl_account_id);');
 
   IF position('extensions.extensions.similarity(' IN definition) > 0 THEN
     RAISE EXCEPTION 'Malformed pg_trgm qualification remains in AI processor';
