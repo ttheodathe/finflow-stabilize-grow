@@ -209,3 +209,33 @@ REVOKE ALL ON FUNCTION public.validate_bank_transaction_tenant_integrity() FROM 
 -- existing UI; its FK cascade invokes the balance-reversal trigger for both rows.
 REVOKE ALL ON TABLE public.bank_transfers FROM PUBLIC, anon, authenticated;
 GRANT SELECT, DELETE ON TABLE public.bank_transfers TO authenticated;
+
+-- Prevent deleting one side of a transfer ledger pair independently. A parent
+-- bank_transfers DELETE cascades after the parent row is gone, so that path is
+-- allowed and reverses both account balances through the existing balance trigger.
+CREATE OR REPLACE FUNCTION public.guard_bank_transfer_ledger_delete()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, public, pg_temp
+AS $function$
+BEGIN
+  IF OLD.bank_transfer_id IS NOT NULL
+     AND EXISTS (
+       SELECT 1 FROM public.bank_transfers bt
+        WHERE bt.id = OLD.bank_transfer_id
+     ) THEN
+    RAISE EXCEPTION 'Delete the parent bank transfer to reverse both ledger rows';
+  END IF;
+  RETURN OLD;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.guard_bank_transfer_ledger_delete() FROM PUBLIC, anon, authenticated;
+DROP TRIGGER IF EXISTS trg_guard_bank_transfer_ledger_delete ON public.bank_transactions;
+CREATE TRIGGER trg_guard_bank_transfer_ledger_delete
+BEFORE DELETE ON public.bank_transactions
+FOR EACH ROW EXECUTE FUNCTION public.guard_bank_transfer_ledger_delete();
+
+REVOKE ALL ON TABLE public.credit_notes FROM PUBLIC, anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.credit_notes TO authenticated;
