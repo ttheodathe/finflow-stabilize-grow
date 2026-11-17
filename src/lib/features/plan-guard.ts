@@ -5,7 +5,7 @@
  * calls assertFeature() so a locked plan can't reach the AI gateway.
  */
 import { normalizePlan, type PlanKey } from "@/lib/paddle/config";
-import { planHasFeature, requiredPlanName, type FeatureKey } from "./catalog";
+import { FEATURES, planHasFeature, requiredPlanName, type FeatureKey } from "./catalog";
 
 // "past_due" (a payment failed, for example the first charge after a trial) is deliberately NOT
 // entitled: the account is on the Free plan until the payment succeeds, then Polar's webhook
@@ -47,6 +47,6 @@ export async function assertFeature(
   const plan = await resolvePlan(supabase, opts);
   if (planHasFeature(plan, feature)) return;
   throw new Error(
-    `AI document scanning is available on the ${requiredPlanName(feature)} plan and above. Upgrade your plan to continue.`,
+    `${FEATURES[feature].label} is available on the ${requiredPlanName(feature)} plan and above. Upgrade your plan to continue.`,
   );
 }
