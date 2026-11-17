@@ -103,3 +103,34 @@ REVOKE INSERT, UPDATE, DELETE ON TABLE public.partner_applications FROM PUBLIC, 
 GRANT SELECT ON TABLE public.partner_applications TO authenticated;
 DROP POLICY IF EXISTS "anyone can submit a partner application" ON public.partner_applications;
 DROP POLICY IF EXISTS "staff can review applications" ON public.partner_applications;
+
+
+-- Protect the platform-staff flag from self-promotion through the own-profile policy.
+CREATE OR REPLACE FUNCTION public.protect_profile_staff_flag()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = pg_catalog, public, pg_temp
+AS $function$
+BEGIN
+  IF TG_OP = 'INSERT' AND current_user IN ('anon', 'authenticated') THEN
+    NEW.is_staff := FALSE;
+  ELSIF TG_OP = 'UPDATE' AND current_user IN ('anon', 'authenticated') THEN
+    NEW.is_staff := OLD.is_staff;
+  END IF;
+  IF TG_OP = 'UPDATE' THEN
+    NEW.updated_at := pg_catalog.now();
+  END IF;
+  RETURN NEW;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.protect_profile_staff_flag() FROM PUBLIC, anon, authenticated;
+DROP TRIGGER IF EXISTS trg_protect_profile_staff_flag ON public.profiles;
+CREATE TRIGGER trg_protect_profile_staff_flag
+BEFORE INSERT OR UPDATE ON public.profiles
+FOR EACH ROW EXECUTE FUNCTION public.protect_profile_staff_flag();
+
+-- Restrict self-service profile writes to ordinary profile fields only.
+REVOKE INSERT, UPDATE ON TABLE public.profiles FROM PUBLIC, anon, authenticated;
+GRANT INSERT (id, full_name) ON TABLE public.profiles TO authenticated;
+GRANT UPDATE (full_name, avatar_url, default_currency) ON TABLE public.profiles TO authenticated;
