@@ -160,8 +160,12 @@ function BookkeeperPage() {
     setLoading(true);
     try {
       const history = next.slice(1); // drop initial greeting
+      if (!companyId) throw new Error("Select a company before using AI Bookkeeper.");
       const { reply } = await ask({
-        data: { messages: history.map((m) => ({ role: m.role, content: m.content })) },
+        data: {
+          companyId,
+          messages: history.map((m) => ({ role: m.role, content: m.content })),
+        },
       });
       setMessages((m) => [...m, { role: "assistant", content: reply }]);
     } catch (e) {
