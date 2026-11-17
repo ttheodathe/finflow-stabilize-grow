@@ -79,7 +79,7 @@ export const getMySubscription = createServerFn({ method: "POST" })
       row = companyRow.data?.[0] ?? null;
 
       if (!row) {
-        const ownerRow = await adminBase().is("company_id", null).or(ownerFilter);
+        const ownerRow = await adminBase().or(ownerFilter);
         if (ownerRow.error) throw new Error(ownerRow.error.message);
         row = ownerRow.data?.[0] ?? null;
       }
