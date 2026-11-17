@@ -457,3 +457,38 @@ $$;
 
 REVOKE ALL ON FUNCTION public.ai_process_pending_transactions(uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.ai_process_pending_transactions(uuid) TO authenticated;
+
+DO $$
+DECLARE
+  processor text;
+  resolver text;
+  pending_fn text;
+BEGIN
+  processor := pg_get_functiondef('public.ai_process_bank_transaction(uuid)'::regprocedure);
+  resolver := pg_get_functiondef('public.ai_resolve_review_task(uuid,boolean)'::regprocedure);
+  pending_fn := pg_get_functiondef('public.ai_process_pending_transactions(uuid)'::regprocedure);
+
+  IF position('extensions.extensions.similarity(' IN processor) > 0
+     OR position('extensions.similarity(' IN processor) = 0 THEN
+    RAISE EXCEPTION 'AI processor pg_trgm function qualification is invalid';
+  END IF;
+  IF position('FOR UPDATE' IN processor) = 0
+     OR position('company_id = t.company_id' IN processor) = 0
+     OR position('source_account_id' IN processor) = 0
+     OR position('deposit_account_id' IN processor) = 0
+     OR position('ba.currency = (SELECT c.currency' IN processor) = 0 THEN
+    RAISE EXCEPTION 'AI processor is missing required locking, tenant, ledger or FX safeguards';
+  END IF;
+  IF position('t.reconciled OR t.is_transfer' IN resolver) = 0
+     OR position('source_account_id' IN resolver) = 0
+     OR position('deposit_account_id' IN resolver) = 0
+     OR position('v_company_currency' IN resolver) = 0
+     OR position('FOR UPDATE' IN resolver) = 0 THEN
+    RAISE EXCEPTION 'AI review resolver is missing required transaction, account or FX safeguards';
+  END IF;
+  IF position('company_has_active_ai_bookkeeper_plan' IN pending_fn) = 0
+     OR position('SKIP LOCKED' IN pending_fn) = 0 THEN
+    RAISE EXCEPTION 'AI pending processor is missing plan or concurrency protection';
+  END IF;
+END;
+$$;
