@@ -619,12 +619,13 @@ export const approveDocument = createServerFn({ method: "POST" })
       })
       .eq("id", doc.id);
 
-    await supabase.rpc("log_document_audit_event", {
+    const { error: auditError } = await (supabase as any).rpc("log_document_audit_event", {
       p_company_id: doc.company_id,
       p_document_id: doc.id,
       p_action: "document_approved",
       p_metadata: { linked_table: "expenses", linked_id: expense.id },
     });
+    if (auditError) throw new Error(auditError.message);
 
     return { ok: true as const, expenseId: expense.id as string };
   });
@@ -730,12 +731,13 @@ export const approveBillDocument = createServerFn({ method: "POST" })
       })
       .eq("id", doc.id);
 
-    await supabase.rpc("log_document_audit_event", {
+    const { error: auditError } = await (supabase as any).rpc("log_document_audit_event", {
       p_company_id: doc.company_id,
       p_document_id: doc.id,
       p_action: "document_approved",
       p_metadata: { linked_table: "bills", linked_id: (bill as { id: string }).id },
     });
+    if (auditError) throw new Error(auditError.message);
 
     return { ok: true as const, billId: (bill as { id: string }).id };
   });
@@ -809,7 +811,7 @@ export const approveItemsDocument = createServerFn({ method: "POST" })
       })
       .eq("id", doc.id);
 
-    await supabase.rpc("log_document_audit_event", {
+    const { error: auditError } = await (supabase as any).rpc("log_document_audit_event", {
       p_company_id: doc.company_id,
       p_document_id: doc.id,
       p_action: "document_approved",
@@ -819,6 +821,7 @@ export const approveItemsDocument = createServerFn({ method: "POST" })
         count: rows.length,
       },
     });
+    if (auditError) throw new Error(auditError.message);
 
     return { ok: true as const, count: rows.length };
   });
@@ -915,12 +918,13 @@ export const approveEstimateDocument = createServerFn({ method: "POST" })
       })
       .eq("id", doc.id);
 
-    await supabase.rpc("log_document_audit_event", {
+    const { error: auditError } = await (supabase as any).rpc("log_document_audit_event", {
       p_company_id: doc.company_id,
       p_document_id: doc.id,
       p_action: "document_approved",
       p_metadata: { linked_table: "estimates", linked_id: (estimate as { id: string }).id },
     });
+    if (auditError) throw new Error(auditError.message);
 
     return { ok: true as const, estimateId: (estimate as { id: string }).id };
   });
@@ -949,12 +953,13 @@ export const rejectDocument = createServerFn({ method: "POST" })
       })
       .eq("id", data.documentId);
 
-    await supabase.rpc("log_document_audit_event", {
+    const { error: auditError } = await (supabase as any).rpc("log_document_audit_event", {
       p_company_id: doc.company_id,
       p_document_id: data.documentId,
       p_action: "document_rejected",
       p_metadata: { reason: data.reason ?? null },
     });
+    if (auditError) throw new Error(auditError.message);
 
     return { ok: true as const };
   });
