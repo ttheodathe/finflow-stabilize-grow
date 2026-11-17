@@ -16,10 +16,12 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -40,8 +42,32 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Dependency audit report
+        run: |
+          npm audit --json > npm-audit.json || true
+          node --input-type=commonjs -e '
+            const fs = require("node:fs");
+            const report = JSON.parse(fs.readFileSync("npm-audit.json", "utf8"));
+            console.log("Vulnerability totals:", JSON.stringify(report.metadata?.vulnerabilities ?? {}));
+            for (const [name, item] of Object.entries(report.vulnerabilities ?? {})) {
+              console.log(`${item.severity}: ${name}; direct=${item.isDirect}; range=${item.range}; fix=${JSON.stringify(item.fixAvailable)}`);
+            }
+          '
+
+      - name: Upload dependency audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-report
+          path: npm-audit.json
+          retention-days: 1
+
       - name: Lint
         run: npm run lint
+
+      - name: Format changed files
+        if: github.event_name == 'pull_request'
+        run: |
+          git diff --name-only -z "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}" -- '*.js' '*.jsx' '*.ts' '*.tsx' '*.json' '*.css' '*.md' '*.yml' '*.yaml' | xargs -0 -r npx prettier --check
 
       - name: Production build
         run: npm run build
