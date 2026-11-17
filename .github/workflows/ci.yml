@@ -77,8 +77,5 @@ jobs:
           RESEND_API_KEY: ci-placeholder
           GEMINI_API_KEY: ci-placeholder
 
-      # Full dependency inventory is retained in the uploaded audit artifact.
-      # The current upstream picomatch advisory affects the build-only toolchain;
-      # enforce a clean audit for packages shipped to production.
-      - name: Enforce production dependency audit
-        run: npm audit --omit=dev
+      - name: Enforce high-severity dependency audit
+        run: npm audit
