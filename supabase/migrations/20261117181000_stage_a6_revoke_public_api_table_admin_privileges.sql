@@ -3,8 +3,6 @@
 REVOKE TRUNCATE, TRIGGER, REFERENCES ON ALL TABLES IN SCHEMA public
   FROM PUBLIC, anon, authenticated;
 
--- Prevent future public tables created by either migration owner from inheriting these grants.
-ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
-  REVOKE TRUNCATE, TRIGGER, REFERENCES ON TABLES FROM PUBLIC, anon, authenticated;
-ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public
+-- Prevent future public tables created by the PostgreSQL migration role from inheriting these grants.
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
   REVOKE TRUNCATE, TRIGGER, REFERENCES ON TABLES FROM PUBLIC, anon, authenticated;
