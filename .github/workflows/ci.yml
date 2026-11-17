@@ -88,6 +88,16 @@ jobs:
 
       - name: Production build
         run: npm run build
+        env:
+          VITE_SUPABASE_URL: https://ci-placeholder.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+          SUPABASE_URL: https://ci-placeholder.supabase.co
+          SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+          POLAR_ACCESS_TOKEN: ci-placeholder
+          POLAR_SERVER: sandbox
+          RESEND_API_KEY: ci-placeholder
+          GEMINI_API_KEY: ci-placeholder
+
       - name: Commit formatted source to PR branch
         if: github.event_name == 'pull_request' && github.head_ref == 'fix/a7-ai-bookkeeper-entitlement-and-reconciliation-v2'
         env:
@@ -107,13 +117,3 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "style: format AI Bookkeeper changes"
           git push origin "HEAD:$BRANCH"
-
-        env:
-          VITE_SUPABASE_URL: https://ci-placeholder.supabase.co
-          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
-          SUPABASE_URL: https://ci-placeholder.supabase.co
-          SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
-          POLAR_ACCESS_TOKEN: ci-placeholder
-          POLAR_SERVER: sandbox
-          RESEND_API_KEY: ci-placeholder
-          GEMINI_API_KEY: ci-placeholder
