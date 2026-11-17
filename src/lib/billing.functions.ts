@@ -41,52 +41,75 @@ export const getMySubscription = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     // biome-ignore lint/suspicious/noExplicitAny: dynamic schema
     const sb = context.supabase as any;
-    const base = () =>
-      sb.from("subscriptions").select("*").order("updated_at", { ascending: false }).limit(1);
-
     let row: any | null = null;
+    let isCompanyOwner = true;
+
     if (data.companyId) {
-      const { data: membership, error: memberError } = await sb
-        .from("company_members")
-        .select("role,status")
-        .eq("company_id", data.companyId)
-        .eq("user_id", context.userId)
-        .maybeSingle();
+      const [{ data: membership, error: memberError }, { data: company, error: companyError }] =
+        await Promise.all([
+          sb
+            .from("company_members")
+            .select("role,status")
+            .eq("company_id", data.companyId)
+            .eq("user_id", context.userId)
+            .maybeSingle(),
+          sb.from("companies").select("user_id").eq("id", data.companyId).maybeSingle(),
+        ]);
       if (memberError) throw new Error(memberError.message);
-      if (membership?.status !== "active") return null;
-
-      const { data: company, error: companyError } = await sb
-        .from("companies")
-        .select("user_id")
-        .eq("id", data.companyId)
-        .maybeSingle();
       if (companyError) throw new Error(companyError.message);
-      if (!company?.user_id) return null;
+      if (membership?.status !== "active" || !company?.user_id) return null;
+      isCompanyOwner = membership.role === "owner" && company.user_id === context.userId;
 
-      // A company-scoped subscription is shared with its active members, but
-      // only the actual company owner may use an account-level fallback.
-      const companyRow = await base()
+      // Read the effective company plan using the server-only client after
+      // confirming active membership. Collaborators receive plan metadata,
+      // never the owner's provider/customer identifiers.
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const adminBase = () =>
+        (supabaseAdmin as any)
+          .from("subscriptions")
+          .select("*")
+          .order("updated_at", { ascending: false })
+          .limit(1);
+      const ownerFilter = `owner_id.eq.${company.user_id},user_id.eq.${company.user_id}`;
+
+      const companyRow = await adminBase()
         .eq("company_id", data.companyId)
-        .or(`owner_id.eq.${company.user_id},user_id.eq.${company.user_id}`);
+        .or(ownerFilter);
       if (companyRow.error) throw new Error(companyRow.error.message);
       row = companyRow.data?.[0] ?? null;
 
-      if (!row && membership.role === "owner" && company.user_id === context.userId) {
-        const ownerRow = await base()
-          .is("company_id", null)
-          .or(`owner_id.eq.${context.userId},user_id.eq.${context.userId}`);
+      if (!row) {
+        const ownerRow = await adminBase().is("company_id", null).or(ownerFilter);
         if (ownerRow.error) throw new Error(ownerRow.error.message);
         row = ownerRow.data?.[0] ?? null;
       }
     } else {
-      const res = await base().or(
-        `owner_id.eq.${context.userId},user_id.eq.${context.userId}`,
-      );
+      const res = await sb
+        .from("subscriptions")
+        .select("*")
+        .or(`owner_id.eq.${context.userId},user_id.eq.${context.userId}`)
+        .order("updated_at", { ascending: false })
+        .limit(1);
       if (res.error) throw new Error(res.error.message);
       row = res.data?.[0] ?? null;
     }
 
-    return (row ?? null) as {
+    if (!row) return null;
+    if (!isCompanyOwner) {
+      return {
+        id: row.id,
+        plan: row.plan,
+        status: row.status,
+        billing_cycle: row.billing_cycle,
+        current_period_end: row.current_period_end,
+        cancel_at_period_end: row.cancel_at_period_end,
+        paddle_subscription_id: null,
+        paddle_customer_id: null,
+        polar_subscription_id: null,
+        polar_customer_id: null,
+      };
+    }
+    return row as {
       id: string;
       plan: PlanKey;
       status: string;
@@ -98,8 +121,7 @@ export const getMySubscription = createServerFn({ method: "POST" })
       polar_subscription_id: string | null;
       polar_customer_id: string | null;
     } | null;
-  });
-/**
+  });/**
  * subscriptions has UNIQUE(user_id) — every account has exactly one row.
  * Always upsert on user_id rather than select-then-insert, so re-running
  * this (e.g. switching plan choice, or retrying onboarding) never collides
