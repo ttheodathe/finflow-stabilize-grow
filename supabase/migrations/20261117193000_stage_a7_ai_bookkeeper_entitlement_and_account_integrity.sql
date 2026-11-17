@@ -419,6 +419,8 @@ BEGIN
     '      PERFORM b.id FROM public.bills b WHERE b.id = best.id AND b.company_id = t.company_id FOR UPDATE;' || chr(10) ||
     '      SELECT b.total - COALESCE((SELECT SUM(bp.amount) FROM public.bill_payments bp WHERE bp.bill_id = b.id), 0) INTO v_outstanding FROM public.bills b WHERE b.id = best.id AND b.company_id = t.company_id;' || chr(10) ||
     '      best.total := v_outstanding;' || chr(10) ||
+    '      best.score := (0.6 * (1 - least(abs(best.total - amt) / greatest(amt, 0.01), 1)) + 0.4 * coalesce(extensions.similarity(coalesce(best.customer_name, ''''), t.description), 0));' || chr(10) ||
+    '      best.score := (0.6 * (1 - least(abs(best.total - amt) / greatest(amt, 0.01), 1)) + 0.4 * coalesce(extensions.similarity(coalesce(best.vendor_name, ''''), t.description), 0));' || chr(10) ||
     '      conf := least(greatest(best.score, 0), 1);';
   fragment_pos := position(old_fragment IN definition);
   IF fragment_pos = 0 THEN RAISE EXCEPTION 'Bill candidate lock insertion point not found'; END IF;
