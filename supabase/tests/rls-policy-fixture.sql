@@ -11,9 +11,8 @@ $$;
 CREATE FUNCTION public.company_has_feature(p_company_id uuid, p_feature text)
 RETURNS boolean
 LANGUAGE sql STABLE
-AS $
-  SELECT current_setting('test.payroll_enabled', true) = 'true'
-$;
+AS 'SELECT current_setting(''test.payroll_enabled'', true) = ''true''';
+
 
 CREATE FUNCTION public.enforce_plan_feature()
 RETURNS trigger
