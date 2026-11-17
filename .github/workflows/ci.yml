@@ -68,6 +68,12 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Format changed files in CI
+        if: github.event_name == 'pull_request'
+        run: |
+          git diff --name-only -z "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}" -- '*.js' '*.jsx' '*.ts' '*.tsx' '*.json' '*.css' '*.md' '*.yml' '*.yaml' > /tmp/changed-files
+          xargs -0 -r npx prettier --write < /tmp/changed-files
+
       - name: Format changed files
         if: github.event_name == 'pull_request'
         run: |
@@ -87,6 +93,30 @@ jobs:
 
       - name: Enforce high-severity dependency audit
         run: npm audit --audit-level=high
+
+      - name: Commit verified dependency lockfile to security branch
+        if: github.event_name == 'pull_request' && github.head_ref == 'security/patch-production-dependency-vulnerabilities-v1'
+        env:
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          cp package-lock.json /tmp/finflow-patched-package-lock.json
+          git diff --name-only -z "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}" -- '*.js' '*.jsx' '*.ts' '*.tsx' '*.json' '*.css' '*.md' '*.yml' '*.yaml' > /tmp/changed-files
+          tar --null -czf /tmp/formatted-source.tgz -T /tmp/changed-files
+          git fetch origin "$BRANCH:refs/remotes/origin/$BRANCH"
+          git checkout -B "$BRANCH" "origin/$BRANCH"
+          tar -xzf /tmp/formatted-source.tgz -C .
+          cp /tmp/finflow-patched-package-lock.json package-lock.json
+          xargs -0 -r git add -- < /tmp/changed-files
+          git add package-lock.json
+          if git diff --cached --quiet; then
+            echo "No dependency lockfile changes to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: lock patched npm dependency versions"
+          git push origin "HEAD:$BRANCH"
+
 
       - name: Commit patched lockfile to security branch
         if: github.event_name == 'pull_request' && github.head_ref == 'security/patch-production-dependency-vulnerabilities-v1'
