@@ -376,7 +376,7 @@ BEGIN
   END IF;
 
   old_fragment := 'IF ba IS NULL THEN RETURN; END IF;';
-  new_fragment := 'IF ba IS NULL OR NOT ba.is_active THEN RETURN; END IF;';
+  new_fragment := 'IF ba IS NULL THEN RETURN; END IF;' || chr(10) || '  IF NOT ba.is_active THEN RETURN; END IF;';
   IF position(old_fragment IN definition) = 0 THEN
     IF position(new_fragment IN definition) = 0 THEN
       RAISE EXCEPTION 'Bank account active-state fragment not found';
