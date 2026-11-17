@@ -64,6 +64,21 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Generate formatted source artifact
+        if: github.event_name == 'pull_request'
+        run: |
+          git diff --name-only -z "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}" -- '*.js' '*.jsx' '*.ts' '*.tsx' '*.json' '*.css' '*.md' '*.yml' '*.yaml' > /tmp/changed-files
+          xargs -0 -r npx prettier --write < /tmp/changed-files
+          tar --null -czf /tmp/formatted-source.tgz -T /tmp/changed-files
+
+      - name: Upload formatted source
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: formatted-source
+          path: /tmp/formatted-source.tgz
+          retention-days: 1
+
       - name: Format changed files
         if: github.event_name == 'pull_request'
         run: |
