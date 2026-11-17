@@ -7,7 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { getInvitationByToken, acceptInvitation } from "@/services/team/invitation.service";
 import { supabase } from "@/integrations/supabase/client";
-import type { TeamInvitation } from "@/types/team.types";
+import type { PublicTeamInvitation } from "@/types/team.types";
 
 export const Route = createFileRoute("/invite/$token")({
   component: InvitationAcceptPage,
@@ -22,11 +22,11 @@ type Step = "loading" | "invalid" | "sign-in" | "sign-up" | "accepting" | "succe
 function InvitationAcceptPage() {
   const { token } = Route.useParams();
   const { invitation: initialInvitation } = Route.useLoaderData() as {
-    invitation: TeamInvitation | null;
+    invitation: PublicTeamInvitation | null;
   };
   const navigate = useNavigate();
 
-  const [invitation] = useState<TeamInvitation | null>(initialInvitation);
+  const [invitation] = useState<PublicTeamInvitation | null>(initialInvitation);
   const [step, setStep] = useState<Step>("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [password, setPassword] = useState("");
@@ -38,11 +38,7 @@ function InvitationAcceptPage() {
         setStep("invalid");
         return;
       }
-      if (invitation.status !== "pending") {
-        setStep("invalid");
-        return;
-      }
-      if (new Date(invitation.expires_at) < new Date()) {
+      if (invitation.status !== "pending" || new Date(invitation.expires_at) < new Date()) {
         setStep("invalid");
         return;
       }
@@ -51,20 +47,14 @@ function InvitationAcceptPage() {
       const activeEmail = userRes?.user?.email?.toLowerCase();
 
       if (activeEmail && activeEmail === invitation.email.toLowerCase()) {
-        // Already signed in as the invited user — accept directly.
         await tryAccept();
       } else if (activeEmail) {
-        // Signed in, but as a different account than the one invited.
-        // Sign that session out and fall through to sign-in/up as the right person,
-        // instead of hitting a dead-end EMAIL_MISMATCH error.
         await supabase.auth.signOut();
         setErrorMessage(
           `You were signed in as ${activeEmail}. Please continue as ${invitation.email} to accept this invitation.`
         );
         setStep("sign-up");
       } else {
-        // Determine sign-in vs sign-up by checking if a profile with this email exists.
-        // Simplest approach: default to sign-up; user can switch to "I already have an account".
         setStep("sign-up");
       }
     }
@@ -173,14 +163,13 @@ function InvitationAcceptPage() {
     );
   }
 
-  // sign-up / sign-in
   return (
     <CenteredCard>
       <h1 className="text-xl font-semibold">
-        Join {(invitation as any)?.company?.name ?? "the company"} on FinFlow Track
+        Join {invitation?.company.name ?? "the company"} on FinFlow Track
       </h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        You've been invited as <strong>{invitation?.role?.name}</strong>. Sign{" "}
+        You've been invited as <strong>{invitation?.role.name}</strong>. Sign{" "}
         {step === "sign-up" ? "up" : "in"} with <strong>{invitation?.email}</strong> to continue.
       </p>
 
