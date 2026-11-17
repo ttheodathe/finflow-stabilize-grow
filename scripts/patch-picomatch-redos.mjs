@@ -16,7 +16,14 @@ let source = fs.readFileSync(parsePath, "utf8");
 const marker = "/* FINFLOW_PICOMATCH_REDOS_GUARD */";
 
 if (source.includes(marker)) {
-  console.log("picomatch ReDoS mitigation already applied");
+  const patchIsComplete =
+    source.includes("const hasRepeatedPrefixOverlap") &&
+    !source.includes("const hasRepeatedCharPrefixOverlap") &&
+    source.includes("if (hasUnescapedStar(branch))");
+  if (!patchIsComplete) {
+    throw new Error("picomatch contains a partial FinFlow mitigation; refusing to continue");
+  }
+  console.log("picomatch ReDoS mitigation already applied and verified");
   process.exit(0);
 }
 
@@ -42,12 +49,9 @@ const starCheck = "\n\n  " + marker + "\n" +
 "  const hasUnescapedStar = pattern => {\n" +
 "    let escaped = false;\n" +
 "    let inBracket = false;\n" +
-"    let inQuote = false;\n\n" +
 "    for (const ch of pattern) {\n" +
 "      if (escaped) { escaped = false; continue; }\n" +
 "      if (ch === \"\\\\\") { escaped = true; continue; }\n" +
-"      if (ch === '\"') { inQuote = !inQuote; continue; }\n" +
-"      if (inQuote) continue;\n" +
 "      if (ch === \"[\" && !inBracket) { inBracket = true; continue; }\n" +
 "      if (ch === \"]\" && inBracket) { inBracket = false; continue; }\n" +
 "      if (!inBracket && ch === \"*\") return true;\n" +
