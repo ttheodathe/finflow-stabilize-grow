@@ -1,6 +1,9 @@
 -- Enforce the Payroll plan entitlement on every direct write surface.
 -- Existing historical rows remain readable and can be deleted for cleanup;
 -- creating or changing payroll configuration and payslip records is gated.
+
+-- This trigger function uses schema-qualified objects; an empty search path is safe.
+ALTER FUNCTION public.enforce_plan_feature() SET search_path = '';
 DROP TRIGGER IF EXISTS trg_enforce_payroll_tax_brackets_feature
   ON public.payroll_tax_brackets;
 CREATE TRIGGER trg_enforce_payroll_tax_brackets_feature
@@ -23,7 +26,7 @@ CREATE OR REPLACE FUNCTION public.enforce_payslip_child_payroll_feature()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = pg_catalog, public, pg_temp
+SET search_path = ''
 AS $function$
 DECLARE
   v_company_id uuid;
