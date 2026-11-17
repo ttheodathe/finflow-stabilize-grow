@@ -14,5 +14,7 @@ for (const pattern of ["+(*a)", "+(*)", "+(\"a*\")", "+(ab|abab)"]) {
 
 assert.ok(picomatch.isMatch("abcabc", "+(abc|def)"), "safe repeated extglobs should retain normal behavior");
 assert.ok(picomatch.isMatch("ab", "+(*(a)|*(b))"), "safe star-sequence rewrites should retain all branches");
+assert.ok(picomatch.isMatch("a*b", "+(a\\*b)"), "escaped stars should remain literal");
+assert.ok(picomatch.isMatch("*a", "+([*]a)"), "stars inside character classes should remain literal");
 
 console.log("picomatch ReDoS mitigation checks passed");
