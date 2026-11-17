@@ -4648,6 +4648,26 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      submit_partner_application: {
+        Args: {
+          p_partner_type: Database["public"]["Enums"]["partner_type"]
+          p_business_name: string
+          p_country: string
+          p_contact_email: string
+          p_terms_accepted: boolean
+          p_website?: string
+          p_industry?: string
+          p_business_type?: string
+          p_linkedin_url?: string
+          p_phone?: string
+          p_monthly_audience?: string
+          p_approx_clients?: string
+          p_motivation?: string
+          p_experience?: string
+          p_marketing_channels?: string[]
+        }
+        Returns: string
+      }
       touch_session: { Args: { p_session_id: string }; Returns: undefined }
       update_own_plan:
         | {
