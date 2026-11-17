@@ -29,8 +29,10 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Refresh and validate npm lockfile
-        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Refresh and patch vulnerable npm dependencies
+        run: |
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          npm audit fix --package-lock-only --ignore-scripts --no-fund
 
       - name: Upload lockfile candidate
         uses: actions/upload-artifact@v4
@@ -80,3 +82,6 @@ jobs:
           POLAR_SERVER: sandbox
           RESEND_API_KEY: ci-placeholder
           GEMINI_API_KEY: ci-placeholder
+
+      - name: Enforce high-severity dependency audit
+        run: npm audit --audit-level=high
