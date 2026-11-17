@@ -101,7 +101,16 @@ CREATE POLICY "tax returns view" ON public.tax_returns
   USING (public.is_company_member(company_id));
 CREATE POLICY "pay runs view" ON public.pay_runs
   FOR SELECT TO authenticated
-  USING (public.is_company_member(company_id));
+  USING (
+    public.is_company_member(company_id)
+    AND public.get_company_role(company_id) IN (
+      'owner'::public.company_member_role,
+      'admin'::public.company_member_role,
+      'accountant'::public.company_member_role,
+      'hr'::public.company_member_role,
+      'payroll'::public.company_member_role
+    )
+  );
 
 GRANT USAGE ON SCHEMA public, auth TO authenticated, anon;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated, anon;
