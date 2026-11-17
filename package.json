@@ -12,7 +12,8 @@
     "format": "prettier --write .",
     "postinstall": "node scripts/patch-picomatch-redos.mjs",
     "test:security": "node scripts/check-picomatch-redos.mjs",
-    "test:unit": "node --experimental-strip-types --test src/lib/*.test.ts"
+    "test:unit": "node --experimental-strip-types --test src/lib/*.test.ts",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
