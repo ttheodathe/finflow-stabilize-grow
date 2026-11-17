@@ -110,58 +110,22 @@ function JournalsPage() {
   // and marks the original as voided — the original stays visible with
   // full history instead of silently disappearing.
   async function voidEntry(entry: Entry) {
-    if (entry.voided_at) return;
+    if (entry.voided_at || entry.source_type !== "manual" || entry.reverses_entry_id) return;
     if (
       !confirm(
-        "Void this entry? This posts a reversing entry and keeps this one visible for audit history — it will not be deleted.",
+        "Void this manual entry? This posts a reversing entry and preserves the original for audit history.",
       )
     )
       return;
-    const { data: userRes } = await supabase.auth.getUser();
-    const uid = userRes.user?.id;
-    if (!uid) return;
 
-    const { data: reversal, error: e1 } = await supabase
-      .from("journal_entries" as any)
-      .insert(
-        scoped({
-          user_id: uid,
-          entry_date: new Date().toISOString().slice(0, 10),
-          reference: entry.reference ? `${entry.reference}-VOID` : null,
-          memo: `Reversal of ${entry.reference || entry.id}${entry.memo ? `: ${entry.memo}` : ""}`,
-          source_type: "reversal",
-          reverses_entry_id: entry.id,
-        }),
-      )
-      .select("id")
-      .single();
-    if (e1 || !reversal) {
-      toast.error(e1?.message ?? "Failed to create reversing entry");
+    const { error } = await supabase.rpc("void_manual_journal_entry", {
+      p_entry_id: entry.id,
+    });
+    if (error) {
+      toast.error(error.message);
       return;
     }
-    const reversalId = (reversal as any).id;
-    const reversedLines = entry.journal_lines.map((l) => ({
-      user_id: uid,
-      entry_id: reversalId,
-      account_id: l.account_id,
-      debit: Number(l.credit),
-      credit: Number(l.debit),
-      description: l.description ? `Reversal: ${l.description}` : "Reversal",
-    }));
-    const { error: e2 } = await supabase.from("journal_lines").insert(scoped(reversedLines));
-    if (e2) {
-      await supabase.from("journal_entries").delete().eq("id", reversalId);
-      toast.error(e2.message);
-      return;
-    }
-    const { error: e3 } = await supabase
-      .from("journal_entries")
-      .update({ voided_at: new Date().toISOString(), voided_by: uid, reversed_by_entry_id: reversalId })
-      .eq("id", entry.id);
-    if (e3) {
-      toast.error(e3.message);
-      return;
-    }
+
     toast.success("Entry voided — reversing entry posted");
     load();
   }
@@ -227,7 +191,7 @@ function JournalsPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-sm text-muted-foreground">{fmt(total)}</span>
-                    {!e.voided_at && !e.reverses_entry_id && (
+                    {!e.voided_at && !e.reverses_entry_id && e.source_type === "manual" && (
                       <Button
                         size="icon"
                         variant="ghost"
@@ -343,6 +307,7 @@ function NewEntryDialog({
         reference: reference || null,
         memo: memo || null,
         source_type: "manual",
+        is_posted: false,
       }))
       .select("id")
       .single();
@@ -359,18 +324,31 @@ function NewEntryDialog({
       credit: parseFloat(l.credit) || 0,
       description: l.description || null,
     }));
+    const entryId = (entry as any).id;
     const { error: e2 } = await supabase.from("journal_lines").insert(scoped(payload));
-    setSaving(false);
     if (e2) {
-      await supabase
-        .from("journal_entries")
-        .delete()
-        .eq("id", (entry as any).id);
+      await supabase.from("journal_entries").delete().eq("id", entryId).eq("is_posted", false);
+      setSaving(false);
       toast.error(e2.message);
-    } else {
-      toast.success("Entry posted");
-      onSaved();
+      return;
     }
+
+    const { data: posted, error: e3 } = await supabase
+      .from("journal_entries")
+      .update({ is_posted: true })
+      .eq("id", entryId)
+      .eq("is_posted", false)
+      .select("id")
+      .single();
+    setSaving(false);
+    if (e3 || !posted) {
+      await supabase.from("journal_entries").delete().eq("id", entryId).eq("is_posted", false);
+      toast.error(e3?.message ?? "Failed to post the balanced journal entry");
+      return;
+    }
+
+    toast.success("Entry posted");
+    onSaved();
   }
 
   return (
