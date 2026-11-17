@@ -105,11 +105,14 @@ export const generatePayRun = createServerFn({ method: "POST" })
     if (runErr || !payRun) throw new Error(runErr?.message ?? "Failed to create pay run");
     const payRunId = (payRun as { id: string }).id;
 
-    let totalGross = 0;
-    let totalEmployeeDeductions = 0;
-    let totalNet = 0;
-    let totalEmployerContributions = 0;
-    let totalEmployerCost = 0;
+    if (new Set(data.employeeIds).size !== data.employeeIds.length) {
+      throw new Error("Duplicate employees are not allowed in a pay run.");
+    }
+    if (employees.length !== data.employeeIds.length) {
+      throw new Error("One or more selected employees are unavailable in this company.");
+    }
+
+    const payslipPayload: Array<Record<string, unknown>> = [];
 
     for (const emp of employees) {
       const category = emp.employment_type === "contract" ? "secondary_employer" : "permanent";
@@ -126,68 +129,59 @@ export const generatePayRun = createServerFn({ method: "POST" })
         throw new Error("Employee deductions cannot exceed calculated net pay.");
       }
 
-      const { data: payslip, error: slipErr } = await supabase
-        .from("payslips")
-        .insert({
-          company_id: data.companyId,
-          pay_run_id: payRunId,
-          employee_id: emp.id,
-          base_salary: Number(emp.salary),
-          gross_salary: result.grossSalary,
-          taxable_income: result.taxableIncome,
-          paye: result.paye,
-          total_employee_deductions: round2(result.totalEmployeeDeductions + deductionsTotal),
-          net_pay: finalNetPay,
-          total_employer_contributions: result.totalEmployerContributions,
-          total_employer_cost: round2(result.totalEmployerCost),
-          currency: emp.salary_currency,
-        } as never)
-        .select("id")
-        .single();
-      if (slipErr || !payslip) throw new Error(slipErr?.message ?? "Failed to create payslip");
-      const payslipId = (payslip as { id: string }).id;
-
-      if (result.contributions.length > 0) {
-        const { error: contributionErr } = await supabase.from("payslip_contributions").insert(
-          result.contributions.map((c) => ({
-            payslip_id: payslipId,
-            name: c.name,
-            employee_amount: c.employeeAmount,
-            employer_amount: c.employerAmount,
-          })) as never,
-        );
-        if (contributionErr) throw new Error(contributionErr.message);
-      }
-
-      const lineItems = [
-        ...empAdjustments.additions.map((a) => ({ payslip_id: payslipId, kind: "addition" as const, label: a.label, amount: a.amount })),
-        ...empAdjustments.deductions.map((d) => ({ payslip_id: payslipId, kind: "deduction" as const, label: d.label, amount: d.amount })),
-      ];
-      if (lineItems.length > 0) {
-        const { error: lineItemErr } = await supabase.from("payslip_line_items").insert(lineItems as never);
-        if (lineItemErr) throw new Error(lineItemErr.message);
-      }
-
-      totalGross += result.grossSalary;
-      totalEmployeeDeductions += result.totalEmployeeDeductions + deductionsTotal;
-      totalNet += finalNetPay;
-      totalEmployerContributions += result.totalEmployerContributions;
-      totalEmployerCost += result.totalEmployerCost;
+      payslipPayload.push({
+        employee_id: emp.id,
+        base_salary: Number(emp.salary),
+        gross_salary: result.grossSalary,
+        taxable_income: result.taxableIncome,
+        paye: result.paye,
+        total_employee_deductions: round2(result.totalEmployeeDeductions + deductionsTotal),
+        net_pay: finalNetPay,
+        total_employer_contributions: result.totalEmployerContributions,
+        total_employer_cost: round2(result.totalEmployerCost),
+        currency: emp.salary_currency,
+        contributions: result.contributions.map((c) => ({
+          name: c.name,
+          employee_amount: c.employeeAmount,
+          employer_amount: c.employerAmount,
+        })),
+        line_items: [
+          ...empAdjustments.additions.map((a) => ({
+            kind: "addition",
+            label: a.label,
+            amount: a.amount,
+          })),
+          ...empAdjustments.deductions.map((d) => ({
+            kind: "deduction",
+            label: d.label,
+            amount: d.amount,
+          })),
+        ],
+      });
     }
 
-    const { error: totalsErr } = await supabase
-      .from("pay_runs")
-      .update({
-        total_gross: round2(totalGross),
-        total_employee_deductions: round2(totalEmployeeDeductions),
-        total_net: round2(totalNet),
-        total_employer_contributions: round2(totalEmployerContributions),
-        total_employer_cost: round2(totalEmployerCost),
-      })
-      .eq("id", payRunId);
-    if (totalsErr) throw new Error(totalsErr.message);
+    // One server-only RPC writes the pay run, payslips, contributions and
+    // adjustment lines in a single PostgreSQL transaction.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: payRunId, error: generationError } = await (supabaseAdmin as any).rpc(
+      "create_pay_run_atomic",
+      {
+        p_company_id: data.companyId,
+        p_user_id: auth.user.id,
+        p_period_start: data.periodStart,
+        p_period_end: data.periodEnd,
+        p_pay_date: data.payDate,
+        p_notes: data.notes || null,
+        p_currency: company.currency,
+        p_payslips: payslipPayload,
+      },
+    );
 
-    return { ok: true as const, payRunId, employeeCount: employees.length };
+    if (generationError || !payRunId) {
+      throw new Error(generationError?.message ?? "Failed to generate payroll atomically.");
+    }
+
+    return { ok: true as const, payRunId: payRunId as string, employeeCount: employees.length };
   });
 
 function round2(n: number) {
