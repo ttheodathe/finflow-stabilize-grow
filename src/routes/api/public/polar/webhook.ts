@@ -15,9 +15,10 @@ export const Route = createFileRoute("/api/public/polar/webhook")({
           return new Response(verified.error, { status: verified.status });
         }
         const { event } = verified;
-        const eventId = (event.data as { id?: string }).id
-          ? `${event.type}:${(event.data as { id: string }).id}`
-          : crypto.randomUUID();
+        // Polar's Standard Webhooks webhook-id is the stable event key.
+        // data.id is a resource ID reused across distinct events.
+        const eventId = request.headers.get("webhook-id");
+        if (!eventId) return new Response("Missing webhook-id", { status: 400 });
 
         const { supabaseAdmin: _admin } = await import("@/integrations/supabase/client.server");
         // biome-ignore lint/suspicious/noExplicitAny: schema types don't yet include billing tables
@@ -37,23 +38,41 @@ export const Route = createFileRoute("/api/public/polar/webhook")({
 
         if (insertEvent.error) {
           const code = (insertEvent.error as { code?: string }).code;
-          if (code === "23505") return new Response("ok (duplicate)", { status: 200 });
-          console.error("[polar-webhook] insert event failed:", insertEvent.error);
-          return new Response("Server error", { status: 500 });
+          if (code !== "23505") {
+            console.error("[polar-webhook] insert event failed:", insertEvent.error);
+            return new Response("Server error", { status: 500 });
+          }
+
+          // A previous attempt may have inserted the inbox row but failed
+          // during processing. Retry unprocessed rows; acknowledge only done rows.
+          const { data: existing, error: lookupError } = await supabaseAdmin
+            .from("billing_events")
+            .select("processed")
+            .eq("source", "polar")
+            .eq("polar_event_id", eventId)
+            .maybeSingle();
+          if (lookupError || !existing) {
+            console.error("[polar-webhook] duplicate event lookup failed:", lookupError);
+            return new Response("Server error", { status: 500 });
+          }
+          if (existing.processed) return new Response("ok (duplicate)", { status: 200 });
         }
 
         try {
           await handleEvent(event, supabaseAdmin);
-          await supabaseAdmin
+          const { error: processedError } = await supabaseAdmin
             .from("billing_events")
-            .update({ processed: true })
+            .update({ processed: true, error: null })
+            .eq("source", "polar")
             .eq("polar_event_id", eventId);
+          if (processedError) throw new Error("billing event completion update: " + processedError.message);
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e);
           console.error("[polar-webhook] handler failed:", msg);
           await supabaseAdmin
             .from("billing_events")
             .update({ processed: false, error: msg })
+            .eq("source", "polar")
             .eq("polar_event_id", eventId);
           return new Response("Handler error", { status: 500 });
         }
@@ -65,7 +84,10 @@ export const Route = createFileRoute("/api/public/polar/webhook")({
 });
 
 // biome-ignore lint/suspicious/noExplicitAny: admin client typed loosely
-async function handleEvent(event: { type: string; data: Record<string, unknown> }, admin: any) {
+async function handleEvent(
+  event: { type: string; timestamp?: string; data: Record<string, unknown> },
+  admin: any,
+) {
   const t = event.type;
 
   if (
@@ -104,23 +126,44 @@ async function handleEvent(event: { type: string; data: Record<string, unknown> 
     // signup). Upsert on user_id so this always updates that row in place;
     // upserting on polar_subscription_id would instead try to INSERT a
     // second row for the same user and fail on the user_id constraint.
-    const row = {
-      user_id: ownerId,
-      polar_subscription_id: sub.polar_subscription_id,
-      polar_customer_id: sub.polar_customer_id,
-      price_id: sub.price_id,
-      plan: sub.plan,
-      billing_cycle: sub.billing_cycle,
-      status,
-      current_period_start: sub.current_period_start,
-      current_period_end: sub.current_period_end,
-      cancel_at_period_end: sub.cancel_at_period_end,
-      company_id: companyId,
-      owner_id: ownerId,
-      updated_at: new Date().toISOString(),
-    };
-    const { error } = await admin.from("subscriptions").upsert(row, { onConflict: "user_id" });
-    if (error) throw new Error(`subscriptions upsert: ${error.message}`);
+    if (!companyId) {
+      console.warn("[polar-webhook] subscription event missing company_id metadata, skipping");
+      return;
+    }
+
+    const modifiedAt =
+      (event.data.modifiedAt as string | undefined) ??
+      (event.data.modified_at as string | undefined) ??
+      (event.data.createdAt as string | undefined) ??
+      (event.data.created_at as string | undefined) ??
+      event.timestamp;
+    const eventModifiedAt = modifiedAt ? new Date(modifiedAt) : null;
+    if (!eventModifiedAt || Number.isNaN(eventModifiedAt.getTime())) {
+      throw new Error("Polar subscription event has no valid modification timestamp");
+    }
+
+    const { data: applied, error } = await admin.rpc("apply_polar_subscription_event", {
+      p_user_id: ownerId,
+      p_company_id: companyId,
+      p_polar_subscription_id: sub.polar_subscription_id,
+      p_polar_customer_id: sub.polar_customer_id,
+      p_price_id: sub.price_id,
+      p_plan: sub.plan,
+      p_billing_cycle: sub.billing_cycle,
+      p_status: status,
+      p_current_period_start: sub.current_period_start,
+      p_current_period_end: sub.current_period_end,
+      p_cancel_at_period_end: sub.cancel_at_period_end,
+      p_event_modified_at: eventModifiedAt.toISOString(),
+    });
+    if (error) throw new Error("subscription event upsert: " + error.message);
+    if (!applied) {
+      console.info("[polar-webhook] stale subscription event ignored", {
+        eventType: t,
+        subscriptionId: sub.polar_subscription_id,
+        eventModifiedAt: eventModifiedAt.toISOString(),
+      });
+    }
 
     // Note: `customers` is this app's own AR/invoicing table (the tenant's
     // clients — requires name, company_id), not a Polar-customer mapping
