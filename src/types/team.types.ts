@@ -68,10 +68,19 @@ export interface CompanyMember {
   invited_by: string | null;
   created_at: string;
   updated_at: string;
-  // joined relations, populated by the service layer
   profile?: Profile;
   role?: Role;
   last_active_at?: string | null;
+}
+
+/** Minimal public data returned by get_public_team_invitation. */
+export interface PublicTeamInvitation {
+  email: string;
+  status: InvitationStatus;
+  expires_at: string;
+  company: { name: string };
+  role: { name: string };
+  inviter_name?: string;
 }
 
 export interface TeamInvitation {
@@ -83,18 +92,17 @@ export interface TeamInvitation {
   personal_message: string | null;
   status: InvitationStatus;
   expires_at: string;
-  invited_by: string;
+  invited_by: string | null;
   accepted_at: string | null;
   created_at: string;
   role?: Role;
   invited_by_profile?: Profile;
-  /** Not persisted — set in-memory by createInvitation/resendInvitation to report send outcome. */
   emailSent?: boolean;
 }
 
 export interface SeatUsage {
   used: number;
-  limit: number | null; // null = unlimited
+  limit: number | null;
 }
 
 export interface AuditLogEntry {
