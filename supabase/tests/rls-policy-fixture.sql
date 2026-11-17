@@ -41,8 +41,7 @@ LANGUAGE sql STABLE AS $$
 $$;
 
 CREATE TABLE public.organizations (
-  id uuid PRIMARY KEY, owner_id uuid,
-        description text
+  id uuid PRIMARY KEY, owner_id uuid
 );
 CREATE TABLE public.documents (id uuid PRIMARY KEY, company_id uuid);
 CREATE TABLE public.companies (
@@ -73,7 +72,8 @@ BEGIN
         role_id uuid,
         document_id uuid,
         payslip_id uuid,
-        owner_id uuid
+        owner_id uuid,
+        description text
       )', t
     );
   END LOOP;
