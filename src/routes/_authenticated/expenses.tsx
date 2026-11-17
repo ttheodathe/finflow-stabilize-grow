@@ -111,7 +111,8 @@ function ExpensesPage() {
     setCategorizing(true);
     const t = toast.loading("AI is categorizing uncategorized expenses…");
     try {
-      const { updated } = await runCategorize({});
+      if (!companyId) throw new Error("Select a company before categorizing expenses.");
+      const { updated } = await runCategorize({ data: { companyId } });
       toast.success(
         updated > 0
           ? `Categorized ${updated} expense${updated > 1 ? "s" : ""}`
