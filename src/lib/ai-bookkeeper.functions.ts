@@ -30,29 +30,51 @@ async function callGemini(messages: any[], key: string, jsonMode = false) {
 }
 
 const ChatInput = z.object({
-  messages: z.array(z.object({ role: z.enum(["user", "assistant"]), content: z.string() })).min(1),
+  companyId: z.string().uuid(),
+  messages: z.array(
+    z.object({ role: z.enum(["user", "assistant"]), content: z.string().max(4000) }),
+  ).min(1).max(30),
+});
+
+const CategorizeInput = z.object({
+  companyId: z.string().uuid(),
 });
 
 export const askBookkeeper = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => ChatInput.parse(d))
   .handler(async ({ data, context }) => {
-    const key = getGeminiApiKey();
     const { supabase } = context;
+    await assertFeature(
+      supabase,
+      { userId: context.userId, companyId: data.companyId },
+      "aiBookkeeper",
+    );
+    const { data: membership, error: membershipError } = await supabase
+      .from("company_members")
+      .select("id")
+      .eq("company_id", data.companyId)
+      .eq("user_id", context.userId)
+      .eq("status", "active")
+      .maybeSingle();
+    if (membershipError || !membership) throw new Error("You do not have access to this company.");
 
+    const key = getGeminiApiKey();
     const [inv, exp, cust, items] = await Promise.all([
       supabase
         .from("invoices")
         .select("invoice_number,status,total,currency,issue_date,due_date,customer_id")
+        .eq("company_id", data.companyId)
         .order("issue_date", { ascending: false })
         .limit(200),
       supabase
         .from("expenses")
         .select("vendor,category,amount,currency,expense_date")
+        .eq("company_id", data.companyId)
         .order("expense_date", { ascending: false })
         .limit(200),
-      supabase.from("customers").select("id,name,email").limit(200),
-      supabase.from("items").select("name,type,price,stock_quantity,track_inventory").limit(200),
+      supabase.from("customers").select("id,name").eq("company_id", data.companyId).limit(200),
+      supabase.from("items").select("name,type,price,stock_quantity,track_inventory").eq("company_id", data.companyId).limit(200),
     ]);
 
     const summary = {
@@ -70,13 +92,27 @@ export const askBookkeeper = createServerFn({ method: "POST" })
 
 export const categorizeExpenses = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .validator((d: unknown) => CategorizeInput.parse(d))
+  .handler(async ({ data, context }) => {
     const { supabase } = context;
-    await assertFeature(supabase, { userId: context.userId }, "documentAi");
+    await assertFeature(
+      supabase,
+      { userId: context.userId, companyId: data.companyId },
+      "documentAi",
+    );
+    const { data: membership, error: membershipError } = await supabase
+      .from("company_members")
+      .select("id")
+      .eq("company_id", data.companyId)
+      .eq("user_id", context.userId)
+      .eq("status", "active")
+      .maybeSingle();
+    if (membershipError || !membership) throw new Error("You do not have access to this company.");
     const key = getGeminiApiKey();
     const { data: rows, error } = await supabase
       .from("expenses")
       .select("id,vendor,description,amount,currency")
+      .eq("company_id", data.companyId)
       .or("category.is.null,category.eq.")
       .limit(50);
     if (error) throw new Error(error.message);
@@ -97,7 +133,7 @@ export const categorizeExpenses = createServerFn({ method: "POST" })
     for (const p of parsed) {
       if (!p?.id || !p?.category) continue;
       const cat = CATEGORIES.includes(p.category) ? p.category : "Other";
-      const { error: e } = await supabase.from("expenses").update({ category: cat }).eq("id", p.id);
+      const { error: e } = await supabase.from("expenses").update({ category: cat }).eq("id", p.id).eq("company_id", data.companyId);
       if (!e) updated++;
     }
     return { updated };
