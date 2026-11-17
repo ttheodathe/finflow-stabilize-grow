@@ -53,7 +53,7 @@ BEGIN
   END IF;
 
   IF p_period_start IS NULL OR p_period_end IS NULL OR p_pay_date IS NULL
-     OR p_period_start > p_period_end OR p_pay_date < p_period_end THEN
+     OR p_period_start > p_period_end THEN
     RAISE EXCEPTION 'Invalid payroll period or pay date';
   END IF;
 
