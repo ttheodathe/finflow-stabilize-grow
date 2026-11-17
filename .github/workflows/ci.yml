@@ -32,6 +32,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Verify dependency ReDoS mitigation
+        run: npm run test:security
+
       - name: Dependency audit report
         run: |
           npm audit --json > npm-audit.json || true
@@ -78,4 +81,4 @@ jobs:
           GEMINI_API_KEY: ci-placeholder
 
       - name: Enforce high-severity dependency audit
-        run: npm audit
+        run: node scripts/check-npm-audit.mjs
