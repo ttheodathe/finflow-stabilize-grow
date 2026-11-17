@@ -103,6 +103,9 @@ jobs:
           docker cp supabase/tests/rls-policy-smoke.sql "$container_id:/tmp/rls-policy-smoke.sql"
           docker exec "$container_id" psql -U postgres -d finflow_rls_test -v ON_ERROR_STOP=1 -f /tmp/rls-policy-smoke.sql
 
+      - name: Unit tests
+        run: npm run test:unit
+
       - name: Lint
         run: npm run lint
 
