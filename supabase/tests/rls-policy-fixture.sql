@@ -92,7 +92,7 @@ BEGIN
   ] LOOP
     EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t);
   END LOOP;
-END $;
+END $$;
 
 -- Baseline SELECT policies intentionally remain in place when the migration
 -- consolidates write policies. UPDATE statements also require row visibility.
