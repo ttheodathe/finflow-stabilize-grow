@@ -131,6 +131,6 @@ BEFORE INSERT OR UPDATE ON public.profiles
 FOR EACH ROW EXECUTE FUNCTION public.protect_profile_staff_flag();
 
 -- Restrict self-service profile writes to ordinary profile fields only.
-REVOKE INSERT, UPDATE ON TABLE public.profiles FROM PUBLIC, anon, authenticated;
+REVOKE INSERT, UPDATE, DELETE ON TABLE public.profiles FROM PUBLIC, anon, authenticated;
 GRANT INSERT (id, full_name) ON TABLE public.profiles TO authenticated;
 GRANT UPDATE (full_name, avatar_url, default_currency) ON TABLE public.profiles TO authenticated;
