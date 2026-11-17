@@ -228,66 +228,18 @@ export const postPayRunToLedger = createServerFn({ method: "POST" })
     const { data: auth } = await supabase.auth.getUser();
     if (!auth.user) throw new Error("Not authenticated");
 
-    const { data: run, error: runErr } = await supabase
-      .from("pay_runs")
-      .select("*")
-      .eq("id", data.payRunId)
-      .single();
-    if (runErr || !run) throw new Error("Pay run not found");
-    if (run.status !== "approved") throw new Error("Only approved pay runs can be posted/paid");
-
-    const totalGross = Number(run.total_gross);
-    const totalEmployerContrib = Number(run.total_employer_contributions);
-    const totalStatutoryLiability = Number(run.total_employee_deductions) + totalEmployerContrib;
-    const totalNet = Number(run.total_net);
-
-    const { data: entry, error: entryErr } = await supabase
-      .from("journal_entries" as any)
-      .insert({
-        company_id: run.company_id,
-        user_id: auth.user.id,
-        entry_date: run.pay_date,
-        reference: `PAYRUN-${run.id.slice(0, 8)}`,
-        memo: `Payroll for ${run.period_start} to ${run.period_end}`,
-        source_type: "payroll",
-      })
-      .select("id")
-      .single();
-    if (entryErr || !entry) throw new Error(entryErr?.message ?? "Failed to create journal entry");
-    const entryId = (entry as unknown as { id: string }).id;
-
-    const lines = [
-      { account_id: data.salaryExpenseAccountId, debit: totalGross, credit: 0, description: "Payroll: gross wages" },
-      { account_id: data.employerTaxExpenseAccountId, debit: totalEmployerContrib, credit: 0, description: "Payroll: employer statutory contributions" },
-      { account_id: data.statutoryPayableAccountId, debit: 0, credit: totalStatutoryLiability, description: "Payroll: PAYE + statutory contributions payable" },
-      { account_id: data.bankAccountId, debit: 0, credit: totalNet, description: "Payroll: net pay disbursed" },
-    ].filter((l) => l.debit > 0 || l.credit > 0);
-
-    const { error: linesErr } = await supabase.from("journal_lines" as any).insert(
-      lines.map((l) => ({
-        company_id: run.company_id,
-        user_id: auth.user!.id,
-        entry_id: entryId,
-        ...l,
-      })),
-    );
-    if (linesErr) throw new Error(linesErr.message);
-
-    await supabase
-      .from("pay_runs")
-      .update({ status: "paid", paid_at: new Date().toISOString(), journal_entry_id: entryId })
-      .eq("id", data.payRunId);
-
-    await supabase.from("audit_logs").insert({
-      company_id: run.company_id,
-      user_id: auth.user.id,
-      action: "pay_run_posted",
-      entity_type: "pay_runs",
-      entity_id: run.id,
-      metadata: { journal_entry_id: entryId, total_net: totalNet, total_gross: totalGross },
+    const { data: journalEntryId, error } = await supabase.rpc("post_payrun_to_ledger", {
+      p_pay_run_id: data.payRunId,
+      p_salary_expense_account_id: data.salaryExpenseAccountId,
+      p_employer_tax_expense_account_id: data.employerTaxExpenseAccountId,
+      p_statutory_payable_account_id: data.statutoryPayableAccountId,
+      p_bank_account_id: data.bankAccountId,
     });
+    if (error || !journalEntryId) {
+      throw new Error(error?.message ?? "Failed to post payroll to the ledger");
+    }
 
-    return { ok: true as const, journalEntryId: entryId };
+    return { ok: true as const, journalEntryId };
   });
 
 const CancelInput = z.object({ payRunId: z.string().uuid() });
