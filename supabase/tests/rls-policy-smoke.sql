@@ -83,7 +83,8 @@ INSERT INTO public.companies(id, organization_id) VALUES
  ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb','dddddddd-dddd-4ddd-8ddd-dddddddddddd');
 INSERT INTO public.tax_returns(id, company_id, status) VALUES
  ('11111111-1111-4111-8111-111111111111','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','draft'),
- ('22222222-2222-4222-8222-222222222222','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','submitted');
+ ('22222222-2222-4222-8222-222222222222','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','submitted'),
+ ('44444444-4444-4444-8444-444444444444','bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb','draft');
 INSERT INTO public.pay_runs(id, company_id, status) VALUES
  ('33333333-3333-4333-8333-333333333333','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','draft');
 
@@ -116,6 +117,12 @@ BEGIN
    WHERE id='22222222-2222-4222-8222-222222222222';
   GET DIAGNOSTICS n = ROW_COUNT;
   IF n <> 0 THEN RAISE EXCEPTION 'Accountant unexpectedly updated a submitted tax return'; END IF;
+
+  -- A member of company A must not update company B's return.
+  UPDATE public.tax_returns SET description='cross-tenant-attempt'
+   WHERE id='44444444-4444-4444-8444-444444444444';
+  GET DIAGNOSTICS n = ROW_COUNT;
+  IF n <> 0 THEN RAISE EXCEPTION 'Cross-tenant tax return update unexpectedly succeeded'; END IF;
 
   -- Company admins retain authority to update submitted returns.
   PERFORM set_config('test.company_role','admin',false);
