@@ -24,33 +24,45 @@ export async function resolvePlan(
   let row: { plan: string; status: string } | undefined;
 
   if (opts.companyId) {
-    const { data: companyRows, error: companyError } = await base().eq(
-      "company_id",
-      opts.companyId,
-    );
-    if (companyError) return "free";
+    const { data: membership, error: membershipError } = await supabase
+      .from("company_members")
+      .select("id,status")
+      .eq("company_id", opts.companyId)
+      .eq("user_id", opts.userId)
+      .maybeSingle();
+    if (membershipError || membership?.status !== "active") return "free";
+
+    const { data: company, error: companyError } = await supabase
+      .from("companies")
+      .select("user_id")
+      .eq("id", opts.companyId)
+      .maybeSingle();
+    if (companyError || !company?.user_id) return "free";
+
+    // Company-specific subscriptions and the owner's account-level
+    // subscription are shared with active members of this company. A
+    // collaborator's personal subscription is never used as the fallback.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const adminBase = () =>
+      (supabaseAdmin as any)
+        .from("subscriptions")
+        .select("plan,status")
+        .order("updated_at", { ascending: false })
+        .limit(1);
+    const ownerFilter = `owner_id.eq.${company.user_id},user_id.eq.${company.user_id}`;
+
+    const { data: companyRows, error: companySubscriptionError } = await adminBase()
+      .eq("company_id", opts.companyId)
+      .or(ownerFilter);
+    if (companySubscriptionError) return "free";
     row = companyRows?.[0];
 
     if (!row) {
-      // A user-level subscription may cover only companies that user owns.
-      // Being a member of a paid company must not unlock features in another
-      // company where the same user is merely a collaborator.
-      const { data: ownership, error: ownershipError } = await supabase
-        .from("company_members")
-        .select("id")
-        .eq("company_id", opts.companyId)
-        .eq("user_id", opts.userId)
-        .eq("role", "owner")
-        .eq("status", "active")
-        .maybeSingle();
-
-      if (ownershipError || !ownership) return "free";
-
-      const { data: userRows, error: userError } = await base()
+      const { data: ownerRows, error: ownerSubscriptionError } = await adminBase()
         .is("company_id", null)
-        .or(`owner_id.eq.${opts.userId},user_id.eq.${opts.userId}`);
-      if (userError) return "free";
-      row = userRows?.[0];
+        .or(ownerFilter);
+      if (ownerSubscriptionError) return "free";
+      row = ownerRows?.[0];
     }
   } else {
     const { data, error } = await base().or(`owner_id.eq.${opts.userId},user_id.eq.${opts.userId}`);
