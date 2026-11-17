@@ -28,7 +28,7 @@ export interface SubmitPartnerApplicationInput {
 // tenant-company one, unlike every other service in this codebase.
 export async function submitPartnerApplication(
   input: SubmitPartnerApplicationInput,
-): Promise<PartnerApplication> {
+): Promise<string> {
   if (!input.termsAccepted) {
     throw new PartnerServiceError(
       "TERMS_NOT_ACCEPTED",
@@ -55,7 +55,7 @@ export async function submitPartnerApplication(
   });
 
   if (error) throw new PartnerServiceError("SUBMIT_APPLICATION_FAILED", error.message);
-  return { id: data } as PartnerApplication;
+  return data;
 }
 
 // Staff-only listing/review — RLS restricts this to is_platform_staff().
