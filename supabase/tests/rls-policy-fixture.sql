@@ -92,7 +92,16 @@ BEGIN
   ] LOOP
     EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t);
   END LOOP;
-END $$;
+END $;
+
+-- Baseline SELECT policies intentionally remain in place when the migration
+-- consolidates write policies. UPDATE statements also require row visibility.
+CREATE POLICY "tax returns view" ON public.tax_returns
+  FOR SELECT TO authenticated
+  USING (public.is_company_member(company_id));
+CREATE POLICY "pay runs view" ON public.pay_runs
+  FOR SELECT TO authenticated
+  USING (public.is_company_member(company_id));
 
 GRANT USAGE ON SCHEMA public, auth TO authenticated, anon;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated, anon;
