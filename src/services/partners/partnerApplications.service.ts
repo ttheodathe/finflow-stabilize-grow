@@ -36,35 +36,26 @@ export async function submitPartnerApplication(
     );
   }
 
-  const { data: userData } = await supabase.auth.getUser();
-
-  const payload = {
-    user_id: userData.user?.id ?? null,
-    partner_type: input.partnerType,
-    business_name: input.businessName,
-    website: input.website ?? null,
-    country: input.country,
-    industry: input.industry ?? null,
-    business_type: input.businessType ?? null,
-    linkedin_url: input.linkedinUrl ?? null,
-    contact_email: input.contactEmail,
-    phone: input.phone ?? null,
-    monthly_audience: input.monthlyAudience ?? null,
-    approx_clients: input.approxClients ?? null,
-    motivation: input.motivation ?? null,
-    experience: input.experience ?? null,
-    marketing_channels: input.marketingChannels ?? null,
-    terms_accepted: input.termsAccepted,
-  };
-
-  const { data, error } = await supabase
-    .from("partner_applications")
-    .insert(payload)
-    .select("*")
-    .single();
+  const { data, error } = await supabase.rpc("submit_partner_application", {
+    p_partner_type: input.partnerType,
+    p_business_name: input.businessName,
+    p_country: input.country,
+    p_contact_email: input.contactEmail,
+    p_terms_accepted: input.termsAccepted,
+    p_website: input.website ?? null,
+    p_industry: input.industry ?? null,
+    p_business_type: input.businessType ?? null,
+    p_linkedin_url: input.linkedinUrl ?? null,
+    p_phone: input.phone ?? null,
+    p_monthly_audience: input.monthlyAudience ?? null,
+    p_approx_clients: input.approxClients ?? null,
+    p_motivation: input.motivation ?? null,
+    p_experience: input.experience ?? null,
+    p_marketing_channels: input.marketingChannels ?? null,
+  });
 
   if (error) throw new PartnerServiceError("SUBMIT_APPLICATION_FAILED", error.message);
-  return data as PartnerApplication;
+  return { id: data } as PartnerApplication;
 }
 
 // Staff-only listing/review — RLS restricts this to is_platform_staff().
