@@ -4,7 +4,7 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const picomatch = require("picomatch");
 
-for (const pattern of ["+(*a)", "+(ab|abab)"]) {
+for (const pattern of ["+(*a)", "+(*)", "+(\"a*\")", "+(ab|abab)"]) {
   const compiled = picomatch.makeRe(pattern);
   assert.ok(compiled, "expected a compiled regular expression");
   assert.ok(compiled.source.includes("\\+\\("), pattern + " was not literalized: " + compiled.source);
