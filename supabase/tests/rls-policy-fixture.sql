@@ -41,7 +41,8 @@ LANGUAGE sql STABLE AS $$
 $$;
 
 CREATE TABLE public.organizations (
-  id uuid PRIMARY KEY, owner_id uuid
+  id uuid PRIMARY KEY, owner_id uuid,
+        description text
 );
 CREATE TABLE public.documents (id uuid PRIMARY KEY, company_id uuid);
 CREATE TABLE public.companies (
