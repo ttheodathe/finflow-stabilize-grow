@@ -68,23 +68,26 @@ jobs:
           path: npm-audit.json
           retention-days: 1
 
-      - name: Install PostgreSQL client
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client
-
       - name: Build minimal Supabase-compatible RLS fixture
-        env:
-          PGPASSWORD: postgres
-        run: psql -h localhost -U postgres -d finflow_rls_test -v ON_ERROR_STOP=1 -f supabase/tests/rls-policy-fixture.sql
+        run: |
+          container_id="$(docker ps --filter 'ancestor=postgres:16' --format '{{.ID}}' | head -n 1)"
+          test -n "$container_id"
+          docker cp supabase/tests/rls-policy-fixture.sql "$container_id:/tmp/rls-policy-fixture.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_rls_test -v ON_ERROR_STOP=1 -f /tmp/rls-policy-fixture.sql
 
       - name: Apply RLS policy consolidation migration
-        env:
-          PGPASSWORD: postgres
-        run: psql -h localhost -U postgres -d finflow_rls_test -v ON_ERROR_STOP=1 -f supabase/migrations/20261118043000_consolidate_overlapping_company_and_tax_return_policies.sql
+        run: |
+          container_id="$(docker ps --filter 'ancestor=postgres:16' --format '{{.ID}}' | head -n 1)"
+          test -n "$container_id"
+          docker cp supabase/migrations/20261118043000_consolidate_overlapping_company_and_tax_return_policies.sql "$container_id:/tmp/rls-policy-migration.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_rls_test -v ON_ERROR_STOP=1 -f /tmp/rls-policy-migration.sql
 
       - name: Verify RLS policy catalog and authorization boundaries
-        env:
-          PGPASSWORD: postgres
-        run: psql -h localhost -U postgres -d finflow_rls_test -v ON_ERROR_STOP=1 -f supabase/tests/rls-policy-smoke.sql
+        run: |
+          container_id="$(docker ps --filter 'ancestor=postgres:16' --format '{{.ID}}' | head -n 1)"
+          test -n "$container_id"
+          docker cp supabase/tests/rls-policy-smoke.sql "$container_id:/tmp/rls-policy-smoke.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_rls_test -v ON_ERROR_STOP=1 -f /tmp/rls-policy-smoke.sql
 
       - name: Lint
         run: npm run lint
