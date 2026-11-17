@@ -99,7 +99,6 @@
     "vite": "^8.0.16"
   },
   "overrides": {
-    "postcss-selector-parser": "^6.1.5",
-    "picomatch": "4.0.8"
+    "postcss-selector-parser": "^6.1.5"
   }
 }
