@@ -8,6 +8,30 @@ CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$
   SELECT NULLIF(current_setting('request.jwt.claim.sub', true), '')::uuid
 $$;
 
+CREATE FUNCTION public.company_has_feature(p_company_id uuid, p_feature text)
+RETURNS boolean
+LANGUAGE sql STABLE
+AS $
+  SELECT current_setting('test.payroll_enabled', true) = 'true'
+$;
+
+CREATE FUNCTION public.enforce_plan_feature()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = 'pg_catalog', 'public', 'pg_temp'
+AS $function$
+DECLARE
+  v_feature text := TG_ARGV[0];
+BEGIN
+  IF NOT public.company_has_feature(NEW.company_id, v_feature) THEN
+    RAISE EXCEPTION 'feature_locked: % requires an active eligible plan', v_feature
+      USING ERRCODE = 'P0001';
+  END IF;
+  RETURN NEW;
+END;
+$function$;
+
 CREATE TYPE public.company_member_role AS ENUM ('owner','admin','accountant','hr','payroll','viewer');
 CREATE TYPE public.org_member_role AS ENUM ('owner','member');
 
