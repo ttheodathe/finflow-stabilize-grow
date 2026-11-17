@@ -59,7 +59,6 @@ export async function resolvePlan(
 
     if (!row) {
       const { data: ownerRows, error: ownerSubscriptionError } = await adminBase()
-        .is("company_id", null)
         .or(ownerFilter);
       if (ownerSubscriptionError) return "free";
       row = ownerRows?.[0];
