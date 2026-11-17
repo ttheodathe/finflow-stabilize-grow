@@ -19,7 +19,7 @@ AS $$
     OR EXISTS (
       SELECT 1
       FROM public.subscriptions s
-      JOIN public.company_members cm ON cm.user_id = s.user_id
+      JOIN public.company_members cm ON cm.user_id = s.user_id OR cm.user_id = s.owner_id
       WHERE cm.company_id = p_company_id
         AND cm.role::text = 'owner'
         AND cm.status::text = 'active'
