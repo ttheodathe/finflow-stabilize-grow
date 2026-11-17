@@ -29,16 +29,6 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Refresh and validate npm lockfile
-        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
-
-      - name: Upload lockfile candidate
-        uses: actions/upload-artifact@v4
-        with:
-          name: npm-lockfile-candidate
-          path: package-lock.json
-          retention-days: 1
-
       - name: Install dependencies
         run: npm ci
 
@@ -64,6 +54,12 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Format changed files in CI
+        if: github.event_name == 'pull_request'
+        run: |
+          git diff --name-only -z "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}" -- '*.js' '*.jsx' '*.ts' '*.tsx' '*.json' '*.css' '*.md' '*.yml' '*.yaml' > /tmp/changed-files
+          xargs -0 -r npx prettier --write < /tmp/changed-files
+
       - name: Format changed files
         if: github.event_name == 'pull_request'
         run: |
@@ -80,3 +76,6 @@ jobs:
           POLAR_SERVER: sandbox
           RESEND_API_KEY: ci-placeholder
           GEMINI_API_KEY: ci-placeholder
+
+      - name: Enforce high-severity dependency audit
+        run: npm audit
