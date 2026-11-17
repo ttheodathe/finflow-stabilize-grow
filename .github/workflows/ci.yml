@@ -106,6 +106,9 @@ jobs:
       - name: Unit tests
         run: npm run test:unit
 
+      - name: TypeScript typecheck
+        run: npm run typecheck
+
       - name: Lint
         run: npm run lint
 
