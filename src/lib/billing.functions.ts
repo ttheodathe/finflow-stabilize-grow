@@ -45,8 +45,6 @@ export const getMySubscription = createServerFn({ method: "POST" })
       sb.from("subscriptions").select("*").order("updated_at", { ascending: false }).limit(1);
 
     let row: any | null = null;
-    let isCompanyOwner = true;
-
     if (data.companyId) {
       const { data: membership, error: memberError } = await sb
         .from("company_members")
@@ -64,30 +62,19 @@ export const getMySubscription = createServerFn({ method: "POST" })
         .maybeSingle();
       if (companyError) throw new Error(companyError.message);
       if (!company?.user_id) return null;
-      isCompanyOwner = membership.role === "owner" && company.user_id === context.userId;
 
-      // Use the server-only service client after verifying active membership.
-      // This lets collaborators read the company's effective plan without
-      // exposing the owner's billing identifiers or their own personal plan.
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const ownerFilter = `owner_id.eq.${company.user_id},user_id.eq.${company.user_id}`;
-      const companyRow = await (supabaseAdmin as any)
-        .from("subscriptions")
-        .select("*")
+      // A company-scoped subscription is shared with its active members, but
+      // only the actual company owner may use an account-level fallback.
+      const companyRow = await base()
         .eq("company_id", data.companyId)
-        .or(ownerFilter)
-        .order("updated_at", { ascending: false })
-        .limit(1);
+        .or(`owner_id.eq.${company.user_id},user_id.eq.${company.user_id}`);
       if (companyRow.error) throw new Error(companyRow.error.message);
       row = companyRow.data?.[0] ?? null;
 
-      if (!row) {
-        const ownerRow = await (supabaseAdmin as any)
-          .from("subscriptions")
-          .select("*")
-          .or(ownerFilter)
-          .order("updated_at", { ascending: false })
-          .limit(1);
+      if (!row && membership.role === "owner" && company.user_id === context.userId) {
+        const ownerRow = await base()
+          .is("company_id", null)
+          .or(`owner_id.eq.${context.userId},user_id.eq.${context.userId}`);
         if (ownerRow.error) throw new Error(ownerRow.error.message);
         row = ownerRow.data?.[0] ?? null;
       }
@@ -99,22 +86,7 @@ export const getMySubscription = createServerFn({ method: "POST" })
       row = res.data?.[0] ?? null;
     }
 
-    if (!row) return null;
-    if (!isCompanyOwner) {
-      return {
-        id: row.id,
-        plan: row.plan,
-        status: row.status,
-        billing_cycle: row.billing_cycle,
-        current_period_end: row.current_period_end,
-        cancel_at_period_end: row.cancel_at_period_end,
-        paddle_subscription_id: null,
-        paddle_customer_id: null,
-        polar_subscription_id: null,
-        polar_customer_id: null,
-      };
-    }
-    return row as {
+    return (row ?? null) as {
       id: string;
       plan: PlanKey;
       status: string;
@@ -125,9 +97,8 @@ export const getMySubscription = createServerFn({ method: "POST" })
       paddle_customer_id: string | null;
       polar_subscription_id: string | null;
       polar_customer_id: string | null;
-    };
+    } | null;
   });
-
 /**
  * subscriptions has UNIQUE(user_id) — every account has exactly one row.
  * Always upsert on user_id rather than select-then-insert, so re-running
