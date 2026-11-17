@@ -88,7 +88,7 @@ type Line = {
   tax_rate: number;
 };
 
-const STATUSES = ["draft", "sent", "paid", "overdue"];
+const STATUSES = ["draft", "sent", "partial", "paid", "overdue"];
 
 function fmt(n: number, c = "USD") {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: c }).format(n || 0);
@@ -546,8 +546,12 @@ function InvoicesPage() {
                     </SelectTrigger>
                     <SelectContent>
                       {STATUSES.map((s) => (
-                        <SelectItem key={s} value={s} disabled={s === "paid"}>
-                          {s === "paid" ? "paid (record a payment to settle)" : s}
+                        <SelectItem key={s} value={s} disabled={s === "paid" || s === "partial"}>
+                          {s === "paid"
+                            ? "paid (record a payment to settle)"
+                            : s === "partial"
+                              ? "partial (calculated from payments)"
+                              : s}
                         </SelectItem>
                       ))}
                     </SelectContent>
