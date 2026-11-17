@@ -104,6 +104,11 @@ export async function revokeInvitation(invitationId: string): Promise<void> {
  * email and display metadata; it never exposes the bearer token or full row.
  */
 export async function getInvitationByToken(token: string): Promise<PublicTeamInvitation | null> {
+  // The database parameter is UUID-typed; reject malformed URLs before calling PostgREST.
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(token)) {
+    return null;
+  }
+
   const { data, error } = await supabase.rpc("get_public_team_invitation", {
     p_token: token,
   });
