@@ -301,21 +301,21 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM public.accounts a
      WHERE a.id = p_salary_expense_account_id
-       AND a.company_id = v_run.company_id AND a.is_active
+       AND a.company_id = v_run.company_id AND a.is_active AND a.type = 'expense'
   ) OR NOT EXISTS (
     SELECT 1 FROM public.accounts a
      WHERE a.id = p_employer_tax_expense_account_id
-       AND a.company_id = v_run.company_id AND a.is_active
+       AND a.company_id = v_run.company_id AND a.is_active AND a.type = 'expense'
   ) OR NOT EXISTS (
     SELECT 1 FROM public.accounts a
      WHERE a.id = p_statutory_payable_account_id
-       AND a.company_id = v_run.company_id AND a.is_active
+       AND a.company_id = v_run.company_id AND a.is_active AND a.type = 'liability'
   ) OR NOT EXISTS (
     SELECT 1 FROM public.accounts a
      WHERE a.id = p_bank_account_id
-       AND a.company_id = v_run.company_id AND a.is_active
+       AND a.company_id = v_run.company_id AND a.is_active AND a.type = 'asset'
   ) THEN
-    RAISE EXCEPTION 'All payroll accounts must be active and belong to the pay-run company';
+    RAISE EXCEPTION 'Payroll accounts must be active, company-owned, and have the correct account types';
   END IF;
 
   INSERT INTO public.journal_entries (
