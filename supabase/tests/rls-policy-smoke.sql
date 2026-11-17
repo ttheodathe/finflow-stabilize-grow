@@ -101,25 +101,25 @@ BEGIN
 
   -- Viewers cannot update draft tax returns.
   PERFORM set_config('test.company_role','viewer',false);
-  UPDATE public.tax_returns SET status='reviewed'
+  UPDATE public.tax_returns SET description='viewer-attempt'
    WHERE id='11111111-1111-4111-8111-111111111111';
   GET DIAGNOSTICS n = ROW_COUNT;
   IF n <> 0 THEN RAISE EXCEPTION 'Viewer unexpectedly updated a draft tax return'; END IF;
 
   -- Accountants can update draft returns but not submitted returns.
   PERFORM set_config('test.company_role','accountant',false);
-  UPDATE public.tax_returns SET status='reviewed'
+  UPDATE public.tax_returns SET description='accountant-draft'
    WHERE id='11111111-1111-4111-8111-111111111111';
   GET DIAGNOSTICS n = ROW_COUNT;
   IF n <> 1 THEN RAISE EXCEPTION 'Accountant could not update a draft tax return'; END IF;
-  UPDATE public.tax_returns SET status='amended'
+  UPDATE public.tax_returns SET description='accountant-submitted'
    WHERE id='22222222-2222-4222-8222-222222222222';
   GET DIAGNOSTICS n = ROW_COUNT;
   IF n <> 0 THEN RAISE EXCEPTION 'Accountant unexpectedly updated a submitted tax return'; END IF;
 
   -- Company admins retain authority to update submitted returns.
   PERFORM set_config('test.company_role','admin',false);
-  UPDATE public.tax_returns SET status='amended'
+  UPDATE public.tax_returns SET description='admin-submitted'
    WHERE id='22222222-2222-4222-8222-222222222222';
   GET DIAGNOSTICS n = ROW_COUNT;
   IF n <> 1 THEN RAISE EXCEPTION 'Admin could not update a submitted tax return'; END IF;
