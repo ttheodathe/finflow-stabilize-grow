@@ -98,6 +98,7 @@ DECLARE
   v_role text;
   v_outstanding numeric;
   v_paid numeric;
+  v_company_currency text;
 BEGIN
   SELECT *
     INTO q
@@ -167,6 +168,14 @@ BEGIN
     RAISE EXCEPTION 'Bank account is inactive';
   END IF;
 
+  SELECT currency
+    INTO v_company_currency
+    FROM public.companies
+   WHERE id = q.company_id;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Company not found';
+  END IF;
+
   IF q.task_type = 'categorize_transaction' THEN
     -- Categorization is permitted without a mapped GL bank account.
     -- The proposed category account itself must be active and company-safe.
@@ -211,6 +220,9 @@ BEGIN
 
     IF v_doc.currency <> ba.currency THEN
       RAISE EXCEPTION 'Bank account and bill currencies differ; an approved FX workflow is required';
+    END IF;
+    IF ba.currency <> v_company_currency THEN
+      RAISE EXCEPTION 'Foreign-currency settlement requires the normal payment workflow with a locked FX rate';
     END IF;
 
     IF ba.gl_account_id IS NULL OR NOT EXISTS (
@@ -268,6 +280,9 @@ BEGIN
 
     IF v_doc.currency <> ba.currency THEN
       RAISE EXCEPTION 'Bank account and invoice currencies differ; an approved FX workflow is required';
+    END IF;
+    IF ba.currency <> v_company_currency THEN
+      RAISE EXCEPTION 'Foreign-currency settlement requires the normal payment workflow with a locked FX rate';
     END IF;
 
     IF ba.gl_account_id IS NULL OR NOT EXISTS (
