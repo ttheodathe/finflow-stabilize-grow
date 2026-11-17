@@ -619,13 +619,11 @@ export const approveDocument = createServerFn({ method: "POST" })
       })
       .eq("id", doc.id);
 
-    await supabase.from("audit_logs").insert({
-      company_id: doc.company_id,
-      user_id: auth.user.id,
-      action: "document_approved",
-      entity_type: "documents",
-      entity_id: doc.id,
-      metadata: { linked_table: "expenses", linked_id: expense.id },
+    await supabase.rpc("log_document_audit_event", {
+      p_company_id: doc.company_id,
+      p_document_id: doc.id,
+      p_action: "document_approved",
+      p_metadata: { linked_table: "expenses", linked_id: expense.id },
     });
 
     return { ok: true as const, expenseId: expense.id as string };
@@ -732,13 +730,11 @@ export const approveBillDocument = createServerFn({ method: "POST" })
       })
       .eq("id", doc.id);
 
-    await supabase.from("audit_logs").insert({
-      company_id: doc.company_id,
-      user_id: auth.user.id,
-      action: "document_approved",
-      entity_type: "documents",
-      entity_id: doc.id,
-      metadata: { linked_table: "bills", linked_id: (bill as { id: string }).id },
+    await supabase.rpc("log_document_audit_event", {
+      p_company_id: doc.company_id,
+      p_document_id: doc.id,
+      p_action: "document_approved",
+      p_metadata: { linked_table: "bills", linked_id: (bill as { id: string }).id },
     });
 
     return { ok: true as const, billId: (bill as { id: string }).id };
@@ -813,13 +809,11 @@ export const approveItemsDocument = createServerFn({ method: "POST" })
       })
       .eq("id", doc.id);
 
-    await supabase.from("audit_logs").insert({
-      company_id: doc.company_id,
-      user_id: auth.user.id,
-      action: "document_approved",
-      entity_type: "documents",
-      entity_id: doc.id,
-      metadata: {
+    await supabase.rpc("log_document_audit_event", {
+      p_company_id: doc.company_id,
+      p_document_id: doc.id,
+      p_action: "document_approved",
+      p_metadata: {
         linked_table: "items",
         item_ids: (created ?? []).map((r: any) => r.id),
         count: rows.length,
@@ -921,13 +915,11 @@ export const approveEstimateDocument = createServerFn({ method: "POST" })
       })
       .eq("id", doc.id);
 
-    await supabase.from("audit_logs").insert({
-      company_id: doc.company_id,
-      user_id: auth.user.id,
-      action: "document_approved",
-      entity_type: "documents",
-      entity_id: doc.id,
-      metadata: { linked_table: "estimates", linked_id: (estimate as { id: string }).id },
+    await supabase.rpc("log_document_audit_event", {
+      p_company_id: doc.company_id,
+      p_document_id: doc.id,
+      p_action: "document_approved",
+      p_metadata: { linked_table: "estimates", linked_id: (estimate as { id: string }).id },
     });
 
     return { ok: true as const, estimateId: (estimate as { id: string }).id };
@@ -957,13 +949,11 @@ export const rejectDocument = createServerFn({ method: "POST" })
       })
       .eq("id", data.documentId);
 
-    await supabase.from("audit_logs").insert({
-      company_id: doc.company_id,
-      user_id: auth.user.id,
-      action: "document_rejected",
-      entity_type: "documents",
-      entity_id: data.documentId,
-      metadata: { reason: data.reason ?? null },
+    await supabase.rpc("log_document_audit_event", {
+      p_company_id: doc.company_id,
+      p_document_id: data.documentId,
+      p_action: "document_rejected",
+      p_metadata: { reason: data.reason ?? null },
     });
 
     return { ok: true as const };
