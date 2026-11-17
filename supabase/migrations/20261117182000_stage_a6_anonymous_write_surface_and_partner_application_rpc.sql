@@ -134,3 +134,12 @@ FOR EACH ROW EXECUTE FUNCTION public.protect_profile_staff_flag();
 REVOKE INSERT, UPDATE, DELETE ON TABLE public.profiles FROM PUBLIC, anon, authenticated;
 GRANT INSERT (id, full_name) ON TABLE public.profiles TO authenticated;
 GRANT UPDATE (full_name, avatar_url, default_currency) ON TABLE public.profiles TO authenticated;
+
+-- MAINTAIN is a separate PostgreSQL 17 table privilege; remove it from API roles too.
+REVOKE MAINTAIN ON ALL TABLES IN SCHEMA public FROM PUBLIC, anon, authenticated;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  REVOKE MAINTAIN ON TABLES FROM PUBLIC, anon, authenticated;
+
+-- Session lifecycle changes must use the scoped session RPCs, not direct table writes.
+REVOKE INSERT, UPDATE, DELETE ON TABLE public.user_sessions FROM PUBLIC, anon, authenticated;
+GRANT SELECT ON TABLE public.user_sessions TO authenticated;
