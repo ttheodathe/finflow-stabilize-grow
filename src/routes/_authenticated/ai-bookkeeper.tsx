@@ -160,8 +160,12 @@ function BookkeeperPage() {
     setLoading(true);
     try {
       const history = next.slice(1); // drop initial greeting
+      if (!companyId) throw new Error("Select a company before using AI Bookkeeper.");
       const { reply } = await ask({
-        data: { messages: history.map((m) => ({ role: m.role, content: m.content })) },
+        data: {
+          companyId,
+          messages: history.map((m) => ({ role: m.role, content: m.content })),
+        },
       });
       setMessages((m) => [...m, { role: "assistant", content: reply }]);
     } catch (e) {
@@ -210,7 +214,10 @@ function BookkeeperPage() {
             className="flex-1 overflow-y-auto rounded-xl border bg-card p-4 space-y-3"
           >
             {messages.map((m, i) => (
-              <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+              <div
+                key={i}
+                className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+              >
                 <div
                   className={`max-w-[80%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap ${m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}
                 >
@@ -230,7 +237,13 @@ function BookkeeperPage() {
           {messages.length <= 1 && (
             <div className="flex flex-wrap gap-2 mt-3">
               {SUGGESTIONS.map((s) => (
-                <Button key={s} variant="outline" size="sm" onClick={() => send(s)} disabled={loading}>
+                <Button
+                  key={s}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => send(s)}
+                  disabled={loading}
+                >
                   {s}
                 </Button>
               ))}
@@ -256,7 +269,11 @@ function BookkeeperPage() {
               disabled={loading || !input.trim()}
               className="bg-gradient-hero gap-1.5"
             >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}{" "}
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}{" "}
               Send
             </Button>
           </form>
