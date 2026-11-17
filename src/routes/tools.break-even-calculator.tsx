@@ -174,7 +174,7 @@ function BreakEvenCalculatorPage() {
 
       <div className="mt-10 rounded-2xl border bg-muted/30 p-6 sm:p-8">
         <h2 className="text-lg font-semibold">Continue learning</h2>
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">For the full explanation of fixed costs, variable costs, contribution margin, worked examples, and common modeling mistakes, read our <Link to="/blog/break-even-analysis-small-business" className="font-medium text-primary underline underline-offset-4">small-business break-even analysis guide</Link>.</p>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">For the full explanation of fixed costs, variable costs, contribution margin, worked examples, and common modeling mistakes, read our <Link to="/blog/$slug" params={{ slug: "break-even-analysis-small-business" }} className="font-medium text-primary underline underline-offset-4">small-business break-even analysis guide</Link>.</p>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">FinFlow Track helps organize invoices, expenses, and financial reports. This is an independent educational planning tool; it does not read or save your FinFlow Track account data.</p>
         <Link to="/signup" className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90">Explore FinFlow Track <ArrowRight className="h-4 w-4" /></Link>
       </div>
