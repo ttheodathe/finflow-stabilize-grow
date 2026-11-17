@@ -44,7 +44,10 @@ BEGIN
     ) THEN
       RAISE EXCEPTION 'Payment customer does not belong to this company';
     END IF;
-    IF NEW.deposit_account_id IS NOT NULL AND NOT EXISTS (
+    IF NEW.deposit_account_id IS NOT NULL
+       AND (TG_OP = 'INSERT' OR NEW.deposit_account_id IS DISTINCT FROM OLD.deposit_account_id
+            OR NEW.company_id IS DISTINCT FROM OLD.company_id)
+       AND NOT EXISTS (
       SELECT 1 FROM public.accounts a
        WHERE a.id = NEW.deposit_account_id
          AND a.company_id = NEW.company_id
@@ -81,7 +84,10 @@ BEGIN
     ) THEN
       RAISE EXCEPTION 'Bill payment vendor does not belong to this company';
     END IF;
-    IF NEW.source_account_id IS NOT NULL AND NOT EXISTS (
+    IF NEW.source_account_id IS NOT NULL
+       AND (TG_OP = 'INSERT' OR NEW.source_account_id IS DISTINCT FROM OLD.source_account_id
+            OR NEW.company_id IS DISTINCT FROM OLD.company_id)
+       AND NOT EXISTS (
       SELECT 1 FROM public.accounts a
        WHERE a.id = NEW.source_account_id
          AND a.company_id = NEW.company_id
@@ -123,7 +129,10 @@ BEGIN
     RAISE EXCEPTION 'Bank transaction account must belong to the transaction company';
   END IF;
 
-  IF NEW.category_account_id IS NOT NULL AND NOT EXISTS (
+  IF NEW.category_account_id IS NOT NULL
+     AND (TG_OP = 'INSERT' OR NEW.category_account_id IS DISTINCT FROM OLD.category_account_id
+          OR NEW.company_id IS DISTINCT FROM OLD.company_id)
+     AND NOT EXISTS (
     SELECT 1 FROM public.accounts a
      WHERE a.id = NEW.category_account_id
        AND a.is_active = true
