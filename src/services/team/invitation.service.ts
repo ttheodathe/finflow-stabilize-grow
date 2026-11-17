@@ -1,6 +1,6 @@
 import { supabase as _sb } from "@/integrations/supabase/client";
 const supabase = _sb as any;
-import type { CompanyMember, TeamInvitation } from "@/types/team.types";
+import type { CompanyMember, TeamInvitation, PublicTeamInvitation } from "@/types/team.types";
 import { TeamServiceError } from "@/types/team.types";
 import { mapRpcError } from "./team.service";
 
@@ -54,15 +54,11 @@ export async function createInvitation(input: CreateInvitationInput): Promise<Te
 }
 
 /**
- * Looks up the company name and inviter's display name for the email copy,
- * builds the accept-invite link, and posts to our own send-invitation
- * server route (which sends via Resend). Returns false — instead of
- * throwing — on any failure, so the invitation row is never at risk.
+ * Sends the invitation through our server route. The server resolves the
+ * recipient and token using its service-role client and checks authorization.
  */
 async function sendInvitationEmail(invitation: TeamInvitation): Promise<boolean> {
   try {
-    // The server looks up the recipient, company, inviter and link itself from the
-    // invitation record and checks that this user may send it. Only the id is sent.
     const { data: sessionRes } = await supabase.auth.getSession();
     const accessToken = sessionRes?.session?.access_token;
     if (!accessToken) throw new Error("Not signed in");
@@ -103,21 +99,27 @@ export async function revokeInvitation(invitationId: string): Promise<void> {
   if (error) throw new TeamServiceError("REVOKE_FAILED", error.message);
 }
 
-/** Public lookup used by the /invite/:token page — does not require membership. */
-export async function getInvitationByToken(token: string): Promise<TeamInvitation | null> {
-  const { data, error } = await supabase
-    .from("team_invitations")
-    .select(`${INVITATION_SELECT}, company:companies ( id, name )`)
-    .eq("token", token)
-    .maybeSingle();
+/**
+ * Public invitation landing-page lookup. The RPC returns only the invited
+ * email and display metadata; it never exposes the bearer token or full row.
+ */
+export async function getInvitationByToken(token: string): Promise<PublicTeamInvitation | null> {
+  // The database parameter is UUID-typed; reject malformed URLs before calling PostgREST.
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(token)) {
+    return null;
+  }
+
+  const { data, error } = await supabase.rpc("get_public_team_invitation", {
+    p_token: token,
+  });
 
   if (error) throw new TeamServiceError("FETCH_INVITATION_FAILED", error.message);
-  return (data as unknown as TeamInvitation) ?? null;
+  return (data as PublicTeamInvitation | null) ?? null;
 }
 
 /** Accept an invitation for the currently authenticated user. */
 export async function acceptInvitation(token: string): Promise<CompanyMember> {
   const { data, error } = await supabase.rpc("accept_team_invitation", { p_token: token });
   if (error) throw mapRpcError(error);
-  return data as CompanyMember;
+  return data as unknown as CompanyMember;
 }
