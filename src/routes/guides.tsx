@@ -1,29 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import { useMemo, useState } from "react";
+import { SiteHeader } from "@/components/SiteHeader";
 import {
   ArrowRight,
   BadgeCheck,
-  BarChart3,
   BookOpen,
-  Boxes,
   Building2,
-  Calculator,
-  CalendarClock,
   CheckCircle2,
-  Compass,
-  Download,
-  FileSpreadsheet,
+  CircleDollarSign,
   FileText,
-  Globe2,
-  Lightbulb,
-  Receipt,
-  Rocket,
-  Search,
-  ShieldCheck,
-  Sparkles,
-  TrendingUp,
+  LayoutDashboard,
+  ReceiptText,
+  Share2,
   Users,
   Wallet,
 } from "lucide-react";
@@ -32,732 +20,364 @@ export const Route = createFileRoute("/guides")({
   component: GuidesPage,
   head: () => ({
     meta: [
-      {
-        title: "FinFlow Track Getting Started — Invoices, Expenses & Reports",
-      },
+      { title: "FinFlow Track Guides | Set Up, Invoice and Track Payments" },
       {
         name: "description",
         content:
-          "Learn the essential FinFlow Track workflow: set up your business, create a client invoice, record expenses and review your financial reports.",
+          "Learn the FinFlow Track basics with practical, screenshot-led steps for business setup, customers, invoices, payments and receivables.",
       },
       {
         property: "og:title",
-        content: "FinFlow Track Getting Started Guide | First Invoice & Reports",
+        content: "FinFlow Track Guides | Your First Invoice",
       },
       {
         property: "og:description",
         content:
-          "Follow the FinFlow Track getting-started workflow: create your account, set up your service business, invoice a client, record payments and expenses, and review outstanding balances.",
+          "A practical, visual walkthrough of the core FinFlow Track workflows.",
       },
-      {
-        property: "og:type",
-        content: "website",
-      },
-      {
-        property: "og:url",
-        content: "https://www.finflowtrack.com/guides",
-      },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://www.finflowtrack.com/guides" },
     ],
     links: [
-      {
-        rel: "canonical",
-        href: "https://www.finflowtrack.com/guides",
-      },
-    ],
-    scripts: [
-      {
-        type: "application/ld+json",
-        children: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "CollectionPage",
-          name: "FinFlowTrack Guides",
-          description:
-            "Practical steps for service businesses setting up invoices, expenses and financial reporting.",
-          url: "https://www.finflowtrack.com/guides",
-        }),
-      },
+      { rel: "canonical", href: "https://www.finflowtrack.com/guides" },
     ],
   }),
 });
 
-const LAST_UPDATED = "July 12, 2026";
-
-interface LearningPath {
-  id: string;
+type GuideStep = {
+  number: string;
   title: string;
+  summary: string;
+  action: string;
+  href: string;
+  image?: string;
+  imageAlt?: string;
+  note?: string;
   icon: typeof BookOpen;
-  description: string;
-  guides: string[];
-}
+};
 
-const learningPaths: LearningPath[] = [
+const steps: GuideStep[] = [
   {
-    id: "accounting-fundamentals",
-    title: "Accounting Fundamentals",
-    icon: Calculator,
-    description: "The core concepts every business owner should understand.",
-    guides: [
-      "What is accounting?",
-      "Basic accounting terms every business owner should know",
-      "Revenue vs. profit explained",
-      "Understanding expenses",
-      "Cash flow management basics",
-      "Balance sheets explained",
-    ],
+    number: "01",
+    title: "Understand your dashboard",
+    summary:
+      "Start with the financial overview. Review the summary cards, customer balances and outstanding invoices before deciding what needs attention.",
+    action: "Open dashboard",
+    href: "/dashboard",
+    image: "/guides/dashboard-overview.webp",
+    imageAlt:
+      "Actual FinFlow Track desktop dashboard showing financial summary cards, revenue and expense chart, cash-flow chart and the left navigation.",
+    icon: LayoutDashboard,
   },
   {
-    id: "getting-started",
-    title: "Start with your first invoice",
-    icon: Rocket,
-    description:
-      "Set up your business and move from account creation to your first client invoice.",
-    guides: [
-      "Create your account and verify your email",
-      "Set up your service business",
-      "Add a client",
-      "Create and share your first invoice",
-      "Record a customer payment",
-      "Record an operating expense",
-      "Review outstanding invoices and reports",
-    ],
+    number: "02",
+    title: "Set up your business",
+    summary:
+      "Open Companies and choose the company workspace you want to use. Complete the business details shown in Company settings and save your changes. Use the correct business identity and base currency for this workspace.",
+    action: "Open companies",
+    href: "/companies",
+    image: "/guides/business-setup.webp",
+    imageAlt:
+      "Actual FinFlow Track Company settings screen showing the business details and address form.",
+    icon: Building2,
   },
   {
-    id: "invoicing-mastery",
-    title: "Invoicing Mastery",
-    icon: Receipt,
-    description: "Get paid faster with professional, well-structured invoices.",
-    guides: [
-      "How to create professional invoices",
-      "Invoice numbering best practices",
-      "Reducing late payments",
-      "Payment terms explained",
-      "Benefits of digital invoicing",
-    ],
-  },
-  {
-    id: "expense-management",
-    title: "Expense Management",
-    icon: Wallet,
-    description: "Keep spending organized and ready for reporting.",
-    guides: [
-      "Tracking business expenses",
-      "Expense categories explained",
-      "Receipt management",
-      "Business vs. personal expenses",
-      "Preparing expenses for tax reporting",
-    ],
-  },
-  {
-    id: "inventory-management",
-    title: "Inventory Management",
-    icon: Boxes,
-    description: "Stay on top of stock across products and warehouses.",
-    guides: [
-      "Inventory management basics",
-      "Stock tracking",
-      "Warehouse management",
-      "Preventing stock shortages",
-      "Inventory valuation basics",
-    ],
-  },
-  {
-    id: "small-business-finance",
-    title: "Small Business Finance",
-    icon: TrendingUp,
-    description: "Build healthier finances as your business grows.",
-    guides: [
-      "Startup finance basics",
-      "Creating business budgets",
-      "Improving profitability",
-      "Understanding financial reports",
-      "Cash flow management",
-    ],
-  },
-  {
-    id: "team-collaboration",
-    title: "Team & Business Collaboration",
+    number: "03",
+    title: "Add the customer you will invoice",
+    summary:
+      "Open Customers and use the page's add-customer action. Enter the customer's details, check them carefully, and save. Select this customer when you prepare the invoice.",
+    action: "Open customers",
+    href: "/customers",
+    image: "/guides/customer-list.webp",
+    imageAlt:
+      "Actual FinFlow Track Customers page showing the customer list and its add-customer action.",
     icon: Users,
-    description: "Coordinate finances across people and companies.",
-    guides: [
-      "Managing multiple companies",
-      "Inviting team members",
-      "User permissions",
-      "Financial workflow management",
-    ],
-  },
-];
-
-const roadmapSteps = [
-  {
-    title: "Create your account and verify your email",
-    description: "Sign up and verify your email to get started.",
   },
   {
-    title: "Set up your company",
-    description: "Add your service business details and create your workspace.",
+    number: "04",
+    title: "Create your first invoice",
+    summary:
+      "Open Invoices and choose New Invoice. Confirm the invoice number, select the customer, review issue and due dates, choose the currency, and add the products or services and their quantities and prices. Review subtotal, tax and total before selecting Save invoice.",
+    action: "Create an invoice",
+    href: "/invoices",
+    image: "/guides/invoice-create-desktop.webp",
+    imageAlt:
+      "Actual FinFlow Track desktop New invoice form showing invoice number, customer, dates, status, currency, line items and total.",
+    note:
+      "The supplied mobile screenshot shows the same New invoice form in a narrow phone viewport. The screenshot displays an empty line-item area and a zero total; enter real invoice items before saving.",
+    icon: ReceiptText,
   },
   {
-    title: "Add customers and suppliers",
-    description: "Add the client you plan to invoice.",
+    number: "05",
+    title: "Share the saved invoice",
+    summary:
+      "Return to Invoices and locate the invoice you saved. Open that invoice and use the sharing option actually presented by the application. Check the recipient and invoice details before sending or copying a customer-facing link.",
+    action: "Open invoices",
+    href: "/invoices",
+    image: "/guides/invoice-create-desktop.webp",
+    imageAlt:
+      "Actual FinFlow Track invoice list and New invoice screen. This is evidence of invoice creation, not a screenshot of the sharing dialog.",
+    note:
+      "The supplied screenshots do not show the invoice-sharing dialog or the final customer view. This step is a navigation guide, not a visually verified sharing demonstration.",
+    icon: Share2,
   },
   {
-    title: "Create invoices",
-    description: "Create and share an invoice, then record payments when received.",
+    number: "06",
+    title: "Record a customer payment",
+    summary:
+      "Open Payments received and choose Record payment. Select the invoice, enter the payment date and amount, choose the payment method and deposit account, and add a reference or note when needed. Review the details before saving.",
+    action: "Open payments received",
+    href: "/sales/payments",
+    image: "/guides/payment-record-form.webp",
+    imageAlt:
+      "Actual FinFlow Track Record payment dialog showing invoice selection, date, amount, method, deposit account, reference and notes.",
+    note:
+      "The payment form screenshot is genuine application evidence supplied by the product owner. Use the amount actually received and verify the invoice balance after saving.",
+    icon: CircleDollarSign,
   },
   {
-    title: "Track expenses",
-    description: "Log spending so your records stay accurate and complete.",
-  },
-  {
-    title: "Analyze reports",
-    description: "Review reports and check outstanding customer balances.",
-  },
-  {
-    title: "Grow your business",
-    description: "Use your financial clarity to make confident decisions.",
-  },
-];
-
-const popularGuides = [
-  {
-    title: "How to Create Your First Invoice",
-    description: "A step-by-step walkthrough for sending your first professional invoice.",
-    icon: Receipt,
-  },
-  {
-    title: "Complete Expense Tracking Guide",
-    description: "Everything you need to record, categorize, and report business expenses.",
+    number: "07",
+    title: "Review outstanding receivables",
+    summary:
+      "Return to the dashboard to review customer balances, the largest outstanding invoice and payment status. Use the available reports to review financial activity and investigate balances that need follow-up.",
+    action: "Open dashboard",
+    href: "/dashboard",
+    image: "/guides/receivables-dashboard.webp",
+    imageAlt:
+      "Actual FinFlow Track dashboard showing balance by customer, largest outstanding invoices, payment status and a reminder draft.",
+    note:
+      "Amounts and customer details in supplied screenshots are demonstration data. Do not treat them as a real business's financial records.",
     icon: Wallet,
   },
-  {
-    title: "How Accounting Software Helps Small Businesses",
-    description: "Why moving off spreadsheets saves time and reduces costly errors.",
-    icon: Lightbulb,
-  },
-  {
-    title: "Free Accounting Software: What to Look For",
-    description: "A practical checklist for evaluating free accounting tools.",
-    icon: BadgeCheck,
-  },
-  {
-    title: "Managing Multiple Businesses in One Place",
-    description: "How to keep separate companies organized without losing clarity.",
-    icon: Building2,
-  },
 ];
 
-interface BusinessTypeGroup {
-  id: string;
-  title: string;
-  icon: typeof Globe2;
-  guides: string[];
+function GuideScreenshot({
+  src,
+  alt,
+  mobile = false,
+}: {
+  src: string;
+  alt: string;
+  mobile?: boolean;
+}) {
+  return (
+    <figure className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+      <img
+        src={src}
+        alt={alt}
+        loading="lazy"
+        decoding="async"
+        className={
+          mobile
+            ? "mx-auto block max-h-[34rem] w-auto max-w-full object-contain"
+            : "block h-auto w-full object-contain"
+        }
+      />
+      <figcaption className="border-t border-slate-200 px-3 py-2 text-xs text-slate-500">
+        Genuine FinFlow Track application screenshot supplied for this guide.
+      </figcaption>
+    </figure>
+  );
 }
-
-const businessTypeGroups: BusinessTypeGroup[] = [
-  {
-    id: "freelancers",
-    title: "Freelancers",
-    icon: Sparkles,
-    guides: [
-      "Accounting tips for freelancers",
-      "Tracking freelance income",
-      "Managing client payments",
-    ],
-  },
-  {
-    id: "startups",
-    title: "Startups",
-    icon: Rocket,
-    guides: [
-      "Startup bookkeeping basics",
-      "Financial planning for early-stage teams",
-      "Preparing investor reporting",
-    ],
-  },
-  {
-    id: "small-businesses",
-    title: "Small Businesses",
-    icon: Building2,
-    guides: [
-      "Small business accounting checklist",
-      "Managing cash flow",
-      "Reducing operational costs",
-    ],
-  },
-  {
-    id: "ngos",
-    title: "NGOs",
-    icon: Globe2,
-    guides: [
-      "NGO financial reporting basics",
-      "Expense transparency",
-      "Budget management for programs",
-    ],
-  },
-];
-
-const freeResources = [
-  { title: "Invoice Template", icon: Receipt },
-  { title: "Expense Tracker Template", icon: FileSpreadsheet },
-  { title: "Business Budget Template", icon: Calculator },
-  { title: "Cash Flow Template", icon: TrendingUp },
-  { title: "Financial Reporting Checklist", icon: CheckCircle2 },
-];
-
-const expertInsights = [
-  {
-    title: "Accounting Trends for Small Businesses",
-    description: "What's shaping how small businesses manage their finances this year.",
-    icon: TrendingUp,
-  },
-  {
-    title: "The Future of Digital Bookkeeping",
-    description: "How cloud-based tools are replacing manual, paper-driven processes.",
-    icon: Compass,
-  },
-  {
-    title: "AI in Accounting: What It Means for You",
-    description: "A grounded look at where automation genuinely helps and where it doesn't.",
-    icon: Sparkles,
-  },
-  {
-    title: "Financial Automation Explained",
-    description: "How automating routine tasks frees up time for real decision-making.",
-    icon: BarChart3,
-  },
-];
-
-const faqs = [
-  {
-    question: "Is FinFlowTrack suitable for beginners?",
-    answer:
-      "Yes. FinFlowTrack is designed so people without a formal accounting background can manage invoices, expenses, and reports with confidence, supported by guides that explain each concept in plain language.",
-  },
-  {
-    question: "Can I learn accounting without experience?",
-    answer:
-      "Yes. Our Accounting Fundamentals learning path starts with the basics, like what accounting is and how revenue differs from profit, before moving into more practical, day-to-day topics.",
-  },
-  {
-    question: "What accounting tasks can FinFlowTrack help with?",
-    answer:
-      "FinFlowTrack helps you track income and expenses, create and send invoices, manage inventory, generate financial reports, and collaborate with your team across one or more company workspaces.",
-  },
-  {
-    question: "Can small businesses use free accounting software?",
-    answer:
-      "Yes. FinFlowTrack offers a free plan that covers core accounting and invoicing needs, with paid plans available as your business grows and needs more features or company workspaces.",
-  },
-  {
-    question: "How does accounting software improve financial accuracy?",
-    answer:
-      "Accounting software reduces manual data entry and calculation errors, keeps records organized in one place, and makes it easier to spot mistakes early through consistent, structured reporting.",
-  },
-];
 
 function GuidesPage() {
-  const [query, setQuery] = useState("");
-
-  const filteredPaths = useMemo(() => {
-    const initialPaths = learningPaths.filter((path) => path.id === "getting-started");
-    const trimmed = query.trim().toLowerCase();
-    if (!trimmed) return initialPaths;
-
-    return initialPaths
-      .map((path) => {
-        const pathMatches = path.title.toLowerCase().includes(trimmed);
-        const matchingGuides = path.guides.filter((guide) => guide.toLowerCase().includes(trimmed));
-        if (pathMatches) return path;
-        if (matchingGuides.length > 0) return { ...path, guides: matchingGuides };
-        return null;
-      })
-      .filter((path): path is LearningPath => path !== null);
-  }, [query]);
-
   return (
     <div className="min-h-screen bg-white">
       <SiteHeader />
-      {/* Hero */}
-      <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-slate-50 to-white">
-        <div className="mx-auto max-w-6xl px-6 py-20 sm:py-28">
-          <div className="mx-auto max-w-2xl text-center">
-            <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-sm font-medium text-slate-600 shadow-sm">
-              <BookOpen className="h-4 w-4 text-emerald-600" />
-              FinFlowTrack Academy
-            </span>
-            <h1 className="mt-6 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
-              Get from sign-up to your first client invoice
-            </h1>
-            <p className="mt-6 text-lg leading-relaxed text-slate-600">
-              A short, practical starting point for service businesses. Set up your workspace,
-              invoice a client, record payments and expenses, then review what remains outstanding.
-            </p>
 
-            <div className="mt-10">
-              <label htmlFor="guides-search" className="sr-only">
-                Search guides
-              </label>
-              <div className="relative mx-auto max-w-xl">
-                <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-                <input
-                  id="guides-search"
-                  type="text"
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search guides, e.g. 'cash flow' or 'invoicing'..."
-                  className="w-full rounded-xl border border-slate-300 bg-white py-3.5 pl-12 pr-4 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                />
-              </div>
-            </div>
-
-            <div className="mt-6 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <a
-                href="#learning-paths"
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
-              >
-                Browse Categories
-                <ArrowRight className="h-4 w-4" />
-              </a>
-            </div>
-          </div>
-
-          {/* Featured guide */}
-          <div className="mx-auto mt-14 max-w-3xl">
-            <article className="flex flex-col gap-6 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm sm:flex-row sm:items-center">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-50">
-                <Rocket className="h-7 w-7 text-emerald-600" />
-              </div>
-              <div>
-                <span className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
-                  Featured Guide
-                </span>
-                <h2 className="mt-1 text-lg font-bold text-slate-900">
-                  Your first finance workflow: from sign-up to receivables
-                </h2>
-                <p className="mt-2 text-sm text-slate-600">
-                  Follow the essential steps to create your business, send an invoice and understand
-                  which customer balances remain unpaid.
-                </p>
-                <a
-                  href="#roadmap"
-                  className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700 hover:text-emerald-800"
+      <main>
+        <section className="border-b border-slate-200 bg-gradient-to-b from-slate-50 to-white">
+          <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
+            <div className="mx-auto max-w-3xl text-center">
+              <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white px-4 py-1.5 text-sm font-medium text-emerald-800">
+                <BookOpen className="h-4 w-4" aria-hidden="true" />
+                FinFlow Track learning centre
+              </span>
+              <h1 className="mt-6 text-3xl font-bold tracking-tight text-slate-950 sm:text-5xl">
+                Your first invoice, step by step
+              </h1>
+              <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
+                Learn the essential workflow for an owner-led service business:
+                set up your company, add a customer, create an invoice, record
+                the payment and understand what is still outstanding.
+              </p>
+              <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+                <Link
+                  to="/signup"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-slate-950 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
                 >
-                  Start the roadmap
-                  <ArrowRight className="h-3.5 w-3.5" />
+                  Create your account <ArrowRight className="h-4 w-4" />
+                </Link>
+                <a
+                  href="#first-invoice"
+                  className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+                >
+                  Follow the walkthrough
                 </a>
               </div>
-            </article>
+            </div>
+
+            <div className="mx-auto mt-12 max-w-5xl">
+              <GuideScreenshot
+                src="/guides/dashboard-overview.webp"
+                alt="Actual FinFlow Track desktop dashboard overview with financial summary cards and charts."
+              />
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Your getting-started guide */}
-      <section
-        id="learning-paths"
-        aria-labelledby="paths-heading"
-        className="scroll-mt-20 mx-auto max-w-6xl px-6 py-20"
-      >
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 id="paths-heading" className="text-3xl font-bold tracking-tight text-slate-900">
-            Featured Learning Paths
-          </h2>
-          <p className="mt-4 text-slate-600">
-            One practical path from account setup to your first invoice and receivables review.
-          </p>
-        </div>
-
-        {filteredPaths.length === 0 ? (
-          <div className="mt-12 rounded-2xl border border-slate-200 bg-slate-50 p-10 text-center">
-            <p className="text-sm text-slate-600">
-              No guides match "{query}" yet. Try a different search term.
-            </p>
-          </div>
-        ) : (
-          <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredPaths.map((path) => (
-              <article
-                key={path.id}
-                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md"
-              >
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50">
-                  <path.icon className="h-5 w-5 text-emerald-600" />
-                </div>
-                <h3 className="mt-4 text-base font-semibold text-slate-900">{path.title}</h3>
-                <p className="mt-1.5 text-sm text-slate-600">{path.description}</p>
-                <ul className="mt-4 space-y-2">
-                  {path.guides.map((guide) => (
-                    <li key={guide}>
-                      <span className="flex items-start gap-2 text-sm text-slate-600 hover:text-emerald-700">
-                        <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
-                        {guide}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </article>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Beginner Roadmap */}
-      <section
-        id="roadmap"
-        aria-labelledby="roadmap-heading"
-        className="scroll-mt-20 border-t border-slate-100 bg-slate-50"
-      >
-        <div className="mx-auto max-w-6xl px-6 py-20">
-          <div className="mx-auto max-w-2xl text-center">
-            <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-sm font-medium text-slate-600 shadow-sm">
-              <Compass className="h-4 w-4 text-emerald-600" />
-              Roadmap
-            </span>
-            <h2
-              id="roadmap-heading"
-              className="mt-6 text-3xl font-bold tracking-tight text-slate-900"
-            >
-              New Business Owner Roadmap
-            </h2>
-            <p className="mt-4 text-slate-600">
-              Follow this path from your first sign-up to your first complete financial report.
-            </p>
-          </div>
-
-          <ol className="relative mt-14 space-y-8 border-l border-slate-200 pl-8 sm:mx-auto sm:max-w-2xl">
-            {roadmapSteps.map((step, index) => (
-              <li key={step.title} className="relative">
-                <span className="absolute -left-[calc(2rem+1px)] flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">
-                  {index + 1}
-                </span>
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <h3 className="text-sm font-semibold text-slate-900">{step.title}</h3>
-                  <p className="mt-1 text-sm text-slate-600">{step.description}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
-      {/* Popular Guides */}
-      <section aria-labelledby="popular-heading" className="hidden">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 id="popular-heading" className="text-3xl font-bold tracking-tight text-slate-900">
-            Popular Guides
-          </h2>
-          <p className="mt-4 text-slate-600">The guides business owners come back to most.</p>
-        </div>
-        <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {popularGuides.map((guide) => (
-            <a
-              key={guide.title}
-              href="#"
-              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md"
-            >
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50">
-                <guide.icon className="h-5 w-5 text-emerald-600" />
-              </div>
-              <h3 className="mt-4 text-base font-semibold text-slate-900">{guide.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">{guide.description}</p>
-              <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700">
-                Read guide
-                <ArrowRight className="h-3.5 w-3.5" />
-              </span>
-            </a>
-          ))}
-        </div>
-      </section>
-
-      {/* Guides by Business Type */}
-      <section aria-labelledby="business-type-heading" className="hidden">
-        <div className="mx-auto max-w-6xl px-6 py-20">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2
-              id="business-type-heading"
-              className="text-3xl font-bold tracking-tight text-slate-900"
-            >
-              Guides by Business Type
-            </h2>
-            <p className="mt-4 text-slate-600">
-              Find guidance tailored to how your organization operates.
-            </p>
-          </div>
-          <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {businessTypeGroups.map((group) => (
-              <article
-                key={group.id}
-                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
-              >
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50">
-                  <group.icon className="h-5 w-5 text-emerald-600" />
-                </div>
-                <h3 className="mt-4 text-base font-semibold text-slate-900">{group.title}</h3>
-                <ul className="mt-4 space-y-2">
-                  {group.guides.map((guide) => (
-                    <li key={guide}>
-                      <a
-                        href="#"
-                        className="flex items-start gap-2 text-sm text-slate-600 hover:text-emerald-700"
-                      >
-                        <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
-                        {guide}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Free Resources */}
-      <section aria-labelledby="resources-heading" className="hidden">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 id="resources-heading" className="text-3xl font-bold tracking-tight text-slate-900">
-            Free Resources
-          </h2>
-          <p className="mt-4 text-slate-600">
-            Practical templates to help you get organized right away.
-          </p>
-        </div>
-        <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
-          {freeResources.map((resource) => (
-            <a
-              key={resource.title}
-              href="#"
-              className="flex flex-col items-center rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm transition hover:shadow-md"
-            >
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50">
-                <resource.icon className="h-5 w-5 text-emerald-600" />
-              </div>
-              <h3 className="mt-4 text-sm font-semibold text-slate-900">{resource.title}</h3>
-              <span className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
-                <Download className="h-3.5 w-3.5" />
-                Download
-              </span>
-            </a>
-          ))}
-        </div>
-      </section>
-
-      {/* Expert Insights */}
-      <section aria-labelledby="insights-heading" className="hidden">
-        <div className="mx-auto max-w-6xl px-6 py-20">
-          <div className="mx-auto max-w-2xl text-center">
-            <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-sm font-medium text-slate-600 shadow-sm">
-              <Lightbulb className="h-4 w-4 text-emerald-600" />
-              FinFlowTrack Insights
-            </span>
-            <h2
-              id="insights-heading"
-              className="mt-6 text-3xl font-bold tracking-tight text-slate-900"
-            >
-              Perspectives on Where Accounting Is Headed
-            </h2>
-            <p className="mt-4 text-slate-600">
-              Grounded takes on the trends shaping financial management for growing businesses.
-            </p>
-          </div>
-          <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2">
-            {expertInsights.map((insight) => (
-              <a
-                key={insight.title}
-                href="#"
-                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md"
-              >
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50">
-                  <insight.icon className="h-5 w-5 text-emerald-600" />
-                </div>
-                <h3 className="mt-4 text-base font-semibold text-slate-900">{insight.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">{insight.description}</p>
-              </a>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section aria-labelledby="faq-heading" className="mx-auto max-w-4xl px-6 py-20">
-        <h2
-          id="faq-heading"
-          className="text-center text-3xl font-bold tracking-tight text-slate-900"
+        <section
+          id="first-invoice"
+          aria-labelledby="walkthrough-title"
+          className="mx-auto max-w-6xl scroll-mt-20 px-4 py-14 sm:px-6 sm:py-20"
         >
-          Frequently Asked Questions
-        </h2>
-        <div className="mt-12 space-y-6">
-          {faqs.map((faq) => (
-            <article
-              key={faq.question}
-              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+          <div className="mb-10 max-w-3xl">
+            <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">
+              First-use walkthrough
+            </p>
+            <h2
+              id="walkthrough-title"
+              className="mt-2 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl"
             >
-              <h3 className="text-base font-semibold text-slate-900">{faq.question}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">{faq.answer}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      {/* Trust strip */}
-      <section aria-labelledby="trust-heading" className="border-t border-slate-100 bg-slate-50">
-        <div className="mx-auto max-w-4xl px-6 py-10 text-center">
-          <h2 id="trust-heading" className="sr-only">
-            Trust and freshness
-          </h2>
-          <p className="flex items-center justify-center gap-2 text-xs text-slate-500">
-            <CalendarClock className="h-3.5 w-3.5" />
-            Guides last reviewed and updated {LAST_UPDATED}
-          </p>
-          <p className="mt-2 flex items-center justify-center gap-2 text-xs text-slate-500">
-            <ShieldCheck className="h-3.5 w-3.5" />
-            Written to reflect real FinFlowTrack features — see our{" "}
-            <Link to="/security" className="font-medium text-emerald-700 hover:text-emerald-800">
-              Security
-            </Link>{" "}
-            and{" "}
-            <Link to="/privacy" className="font-medium text-emerald-700 hover:text-emerald-800">
-              Privacy
-            </Link>{" "}
-            pages for details.
-          </p>
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section aria-labelledby="final-cta-heading" className="mx-auto max-w-6xl px-6 py-20">
-        <div className="rounded-3xl bg-slate-900 px-8 py-16 text-center sm:px-16">
-          <h2
-            id="final-cta-heading"
-            className="text-3xl font-bold tracking-tight text-white sm:text-4xl"
-          >
-            Ready to Simplify Your Business Finances?
-          </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-slate-300">
-            Put these guides into practice inside FinFlowTrack. Start free, no credit card required.
-          </p>
-          <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Link
-              to="/signup"
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100"
-            >
-              Start Free
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              to="/pricing"
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-            >
-              View Pricing
-            </Link>
-            <Link
-              to="/features"
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-            >
-              Explore Features
-            </Link>
+              From business setup to receivables
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">
+              Follow the numbered steps in order. Each action link opens the
+              relevant area of FinFlow Track. You can return to this page at any
+              time.
+            </p>
           </div>
-        </div>
-      </section>
+
+          <ol className="space-y-7">
+            {steps.map((step) => {
+              const Icon = step.icon;
+              return (
+                <li
+                  key={step.number}
+                  className="grid gap-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:gap-7 sm:p-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-start"
+                >
+                  <div>
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-950 text-sm font-bold text-white">
+                        {step.number}
+                      </span>
+                      <Icon
+                        className="h-5 w-5 text-emerald-700"
+                        aria-hidden="true"
+                      />
+                      <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Step {Number(step.number)}
+                      </span>
+                    </div>
+                    <h3 className="mt-4 text-xl font-semibold text-slate-950">
+                      {step.title}
+                    </h3>
+                    <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">
+                      {step.summary}
+                    </p>
+                    {step.note && (
+                      <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm leading-6 text-amber-900">
+                        {step.note}
+                      </p>
+                    )}
+                    <Link
+                      to={step.href}
+                      className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+                    >
+                      {step.action} <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </div>
+                  {step.image && (
+                    <GuideScreenshot
+                      src={step.image}
+                      alt={step.imageAlt ?? step.title}
+                    />
+                  )}
+                </li>
+              );
+            })}
+          </ol>
+
+          <div className="mt-8 grid gap-4 md:grid-cols-2">
+            <article className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                <BadgeCheck className="h-5 w-5 text-emerald-700" />
+                Mobile invoice view
+              </div>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                The supplied phone screenshot shows the New invoice form at a
+                narrow viewport. Review the customer, dates, currency, line
+                items and total before saving.
+              </p>
+              <div className="mt-4">
+                <GuideScreenshot
+                  src="/guides/invoice-create-mobile.webp"
+                  alt="Actual FinFlow Track mobile screenshot of the New invoice form, including customer, issue date, due date, currency, line items and Save invoice button."
+                  mobile
+                />
+              </div>
+            </article>
+            <article className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                <CheckCircle2 className="h-5 w-5 text-emerald-700" />
+                Before you finish
+              </div>
+              <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-600">
+                <li>• Confirm the invoice belongs to the correct company.</li>
+                <li>• Check customer, currency, dates and line-item totals.</li>
+                <li>• Record only payments actually received.</li>
+                <li>• Recheck the outstanding balance after recording payment.</li>
+              </ul>
+              <Link
+                to="/reports"
+                className="mt-5 inline-flex min-h-11 items-center gap-2 font-semibold text-emerald-800 hover:text-emerald-900"
+              >
+                Review financial reports <ArrowRight className="h-4 w-4" />
+              </Link>
+            </article>
+          </div>
+        </section>
+
+        <section className="border-t border-slate-200 bg-slate-50">
+          <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+            <div className="mx-auto max-w-3xl text-center">
+              <h2 className="text-2xl font-bold tracking-tight text-slate-950">
+                Need help with the next step?
+              </h2>
+              <p className="mt-3 text-sm leading-6 text-slate-600">
+                Open the relevant workspace and follow the on-screen actions.
+                If a control differs from the screenshots, use the current
+                application interface as the source of truth.
+              </p>
+              <div className="mt-6 flex flex-wrap justify-center gap-3">
+                <Link to="/companies" className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-100">
+                  <Building2 className="h-4 w-4" /> Companies
+                </Link>
+                <Link to="/customers" className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-100">
+                  <Users className="h-4 w-4" /> Customers
+                </Link>
+                <Link to="/invoices" className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-100">
+                  <FileText className="h-4 w-4" /> Invoices
+                </Link>
+                <Link to="/sales/payments" className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-100">
+                  <CircleDollarSign className="h-4 w-4" /> Payments
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-6xl px-4 py-12 text-center sm:px-6">
+          <p className="text-xs leading-5 text-slate-500">
+            Screenshots are genuine FinFlow Track application captures supplied
+            for this guide. Visible names and financial amounts are illustrative
+            demonstration data, not customer results. The sharing step is
+            described without a sharing screenshot because that screen was not
+            included in the supplied captures.
+          </p>
+        </section>
+      </main>
+
       <SiteFooter />
     </div>
   );
