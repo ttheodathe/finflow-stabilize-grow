@@ -154,8 +154,8 @@ function AuthPage() {
   return (
     <div className="min-h-screen bg-gradient-subtle flex items-center justify-center px-4 py-8 sm:py-12">
       <div className="w-full max-w-md">
-        <Link to="/" className="block text-center mb-8 text-2xl font-bold gradient-text">
-          FINFLOW TRACK
+        <Link to="/" className="mb-8 flex justify-center" aria-label="FinFlow Track home">
+          <img src="/logo.png" alt="FinFlow Track — Smart Finance. Clear Growth." className="h-12 w-auto max-w-[220px] object-contain" />
         </Link>
         <div className="bg-card border rounded-2xl shadow-elevated p-5 sm:p-8">
           <h1 className="text-2xl font-bold mb-1">
@@ -163,8 +163,8 @@ function AuthPage() {
           </h1>
           <p className="text-sm text-muted-foreground mb-6">
             {mode === "login"
-              ? "Sign in to your account."
-              : "Free plan available. No credit card needed to sign up."}
+              ? "Sign in to continue managing your business finances."
+              : "Set up your business, send client invoices and keep track of what is still unpaid."}
           </p>
           <Button
             type="button"
