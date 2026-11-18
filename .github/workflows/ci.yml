@@ -168,6 +168,18 @@ jobs:
           docker cp supabase/tests/partner-submission-dedup-smoke.sql "$container_id:/tmp/partner-submission-dedup-smoke.sql"
           docker exec "$container_id" psql -U postgres -d finflow_partner_dedup_test -v ON_ERROR_STOP=1 -f /tmp/partner-submission-dedup-smoke.sql
 
+      - name: Verify anonymous public-table access allowlist
+        run: |
+          container_id="$(docker ps --filter 'ancestor=postgres:16' --format '{{.ID}}' | head -n 1)"
+          test -n "$container_id"
+          docker exec "$container_id" psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "CREATE DATABASE finflow_anon_acl_test"
+          docker cp supabase/tests/anon-table-access-fixture.sql "$container_id:/tmp/anon-table-access-fixture.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_anon_acl_test -v ON_ERROR_STOP=1 -f /tmp/anon-table-access-fixture.sql
+          docker cp supabase/migrations/20261118140000_revoke_anonymous_public_table_access.sql "$container_id:/tmp/anon-table-access-migration.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_anon_acl_test -v ON_ERROR_STOP=1 -f /tmp/anon-table-access-migration.sql
+          docker cp supabase/tests/anon-table-access-smoke.sql "$container_id:/tmp/anon-table-access-smoke.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_anon_acl_test -v ON_ERROR_STOP=1 -f /tmp/anon-table-access-smoke.sql
+
       - name: Unit tests
         run: npm run test:unit
 
