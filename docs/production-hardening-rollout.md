@@ -27,6 +27,8 @@ Apply these migrations to the production Supabase project in timestamp order:
 
 After Phase 1, verify that the existing public partner application form still submits and existing invoice links still open.
 
+The legacy direct partner RPC remains temporarily executable during this compatibility window and is not yet protected by the new server-side quota. Keep the interval between Phase 1 and Phase 3 short; apply the final revocation migration promptly after the new deployment passes its smoke checks.
+
 ## Phase 2 — deploy the application
 
 Deploy the commit containing the new server routes and UI. Verify using test/sample records:
