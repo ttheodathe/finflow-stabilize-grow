@@ -47,9 +47,9 @@ $$;
 SET LOCAL ROLE anon;
 DO $$
 BEGIN
-  IF pg_catalog.has_function_privilege(current_user,
+  IF NOT pg_catalog.has_function_privilege(current_user,
     'public.submit_partner_application(public.partner_type,text,text,text,boolean,text,text,text,text,text,text,text,text,text,text[])', 'EXECUTE') THEN
-    RAISE EXCEPTION 'legacy anonymous submission RPC remains executable';
+    RAISE EXCEPTION 'legacy public submission path was disabled before the new app is deployed';
   END IF;
   IF pg_catalog.has_function_privilege(current_user,
     'public.submit_partner_application_server(public.partner_type,text,text,text,boolean,text,text,text,text,text,text,text,text,text,text[],uuid)', 'EXECUTE') THEN

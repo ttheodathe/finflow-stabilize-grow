@@ -193,6 +193,10 @@ jobs:
           docker exec "$container_id" psql -U postgres -d finflow_partner_email_test -v ON_ERROR_STOP=1 -f /tmp/partner-rate-limit-migration.sql
           docker cp supabase/tests/partner-email-validation-smoke.sql "$container_id:/tmp/partner-email-validation-smoke.sql"
           docker exec "$container_id" psql -U postgres -d finflow_partner_email_test -v ON_ERROR_STOP=1 -f /tmp/partner-email-validation-smoke.sql
+          docker cp supabase/rollout/post-deploy/revoke_legacy_partner_application_rpc.sql "$container_id:/tmp/partner-rpc-revocation-migration.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_partner_email_test -v ON_ERROR_STOP=1 -f /tmp/partner-rpc-revocation-migration.sql
+          docker cp supabase/tests/partner-application-rpc-revocation-smoke.sql "$container_id:/tmp/partner-application-rpc-revocation-smoke.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_partner_email_test -v ON_ERROR_STOP=1 -f /tmp/partner-application-rpc-revocation-smoke.sql
 
       - name: Verify invoice share link expiry and revocation
         run: |
@@ -203,6 +207,10 @@ jobs:
           docker exec "$container_id" psql -U postgres -d finflow_invoice_share_test -v ON_ERROR_STOP=1 -f /tmp/invoice-share-link-fixture.sql
           docker cp supabase/migrations/20261118180000_invoice_share_link_lifecycle.sql "$container_id:/tmp/invoice-share-link-migration.sql"
           docker exec "$container_id" psql -U postgres -d finflow_invoice_share_test -v ON_ERROR_STOP=1 -f /tmp/invoice-share-link-migration.sql
+          docker cp supabase/tests/invoice-share-link-prepare-smoke.sql "$container_id:/tmp/invoice-share-link-prepare-smoke.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_invoice_share_test -v ON_ERROR_STOP=1 -f /tmp/invoice-share-link-prepare-smoke.sql
+          docker cp supabase/rollout/post-deploy/set_invoice_share_link_default_expiry.sql "$container_id:/tmp/invoice-share-link-default-expiry.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_invoice_share_test -v ON_ERROR_STOP=1 -f /tmp/invoice-share-link-default-expiry.sql
           docker cp supabase/tests/invoice-share-link-smoke.sql "$container_id:/tmp/invoice-share-link-smoke.sql"
           docker exec "$container_id" psql -U postgres -d finflow_invoice_share_test -v ON_ERROR_STOP=1 -f /tmp/invoice-share-link-smoke.sql
 
