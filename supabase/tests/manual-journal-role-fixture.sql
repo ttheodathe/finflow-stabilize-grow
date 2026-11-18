@@ -47,7 +47,7 @@ AS $$ SELECT public.get_company_role(p_company_id) IN ('owner','admin') $$;
 
 CREATE FUNCTION public.assert_journal_entry_balanced(p_entry_id uuid)
 RETURNS void LANGUAGE plpgsql SECURITY DEFINER
-AS $ BEGIN RETURN; END; $;
+AS $$ BEGIN RETURN; END; $$;
 
 GRANT EXECUTE ON FUNCTION public.is_company_member(uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.get_company_role(uuid) TO authenticated;
