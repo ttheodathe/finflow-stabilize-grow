@@ -37,7 +37,10 @@ export const Route = createFileRoute("/api/invoices/share-link")({
             invoice.company_id,
           );
           if (!role || role === "viewer") {
-            return Response.json({ error: "Not allowed to manage this invoice link" }, { status: 403 });
+            return Response.json(
+              { error: "Not allowed to manage this invoice link" },
+              { status: 403 },
+            );
           }
 
           const update =
