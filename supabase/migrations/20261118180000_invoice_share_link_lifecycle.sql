@@ -3,11 +3,7 @@ ALTER TABLE public.invoices
   ADD COLUMN IF NOT EXISTS share_token_expires_at timestamptz,
   ADD COLUMN IF NOT EXISTS share_token_revoked_at timestamptz;
 
--- New invoice links expire after 90 days. Existing rows retain NULL (no expiry)
--- until an owner explicitly regenerates or revokes their link.
-ALTER TABLE public.invoices
-  ALTER COLUMN share_token_expires_at
-  SET DEFAULT (now() + interval '90 days');
+-- The default expiry is applied after the new invoice UI is deployed.
 
 CREATE OR REPLACE FUNCTION public.get_public_invoice(p_token uuid)
 RETURNS jsonb
