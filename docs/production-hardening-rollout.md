@@ -16,10 +16,10 @@ This runbook deliberately separates additive preparation from enforcement so the
 
 Apply these migrations to the production Supabase project in timestamp order:
 
-1. `20261118170000_partner_application_server_rate_limit.sql`
+1. `20261118025042_partner_application_server_rate_limit.sql`
    - Creates the private rate-limit table and service-role-only functions.
    - Keeps the legacy public partner submission RPC executable temporarily, so the currently deployed form continues to work.
-2. `20261118180000_invoice_share_link_lifecycle.sql`
+2. `20261118025047_invoice_share_link_lifecycle.sql`
    - Adds nullable expiry/revocation fields.
    - Updates public invoice lookup to reject explicitly revoked or expired tokens.
    - Existing rows keep NULL lifecycle fields, so all existing invoice links remain valid.
