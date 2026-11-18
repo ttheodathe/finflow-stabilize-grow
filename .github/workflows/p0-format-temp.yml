@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   format:
@@ -31,6 +31,25 @@ jobs:
             src/routes/index.tsx \
             src/routes/onboarding.tsx \
             src/routes/pricing.tsx
+      - name: Commit only formatter changes to the remediation branch
+        run: |
+          if ! git diff --quiet; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add -- \
+              src/components/SiteFooter.tsx \
+              src/components/SiteHeader.tsx \
+              src/routes/auth.tsx \
+              src/routes/features.tsx \
+              src/routes/guides.tsx \
+              src/routes/index.tsx \
+              src/routes/onboarding.tsx \
+              src/routes/pricing.tsx
+            git commit -m 'style(p0): format the eight P0 files with Prettier'
+            git push origin "HEAD:refs/heads/${GITHUB_HEAD_REF}"
+          else
+            echo 'The eight P0 files already match Prettier.'
+          fi
       - name: Export formatted source files
         uses: actions/upload-artifact@v4
         with:
