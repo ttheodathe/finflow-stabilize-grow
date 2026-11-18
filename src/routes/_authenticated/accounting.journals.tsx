@@ -77,10 +77,29 @@ function JournalsPage() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [canManageJournals, setCanManageJournals] = useState(false);
 
   async function load() {
-    if (!companyId) return;
+    if (!companyId) {
+      setCanManageJournals(false);
+      return;
+    }
     setLoading(true);
+    const { data: authData } = await supabase.auth.getUser();
+    const userId = authData.user?.id;
+    let roleKey: string | null = null;
+    if (userId) {
+      const { data: member } = await supabase
+        .from("company_members")
+        .select("status, role:roles(key)")
+        .eq("company_id", companyId)
+        .eq("user_id", userId)
+        .eq("status", "active")
+        .maybeSingle();
+      const roleRecord = Array.isArray(member?.role) ? member.role[0] : member?.role;
+      roleKey = roleRecord?.key ?? null;
+    }
+    setCanManageJournals(["owner", "admin", "accountant"].includes(roleKey ?? ""));
     const [entRes, accRes] = await Promise.all([
       supabase
         .from("journal_entries" as any)
@@ -140,6 +159,12 @@ function JournalsPage() {
             not deleted, so your books keep a full audit trail.
           </p>
         </div>
+        {!canManageJournals && (
+          <p className="text-xs text-muted-foreground mt-2">
+            Only owners, admins, and accountants can create or void manual journal entries.
+          </p>
+        )}
+        {canManageJournals && (
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -157,6 +182,7 @@ function JournalsPage() {
             }}
           />
         </Dialog>
+        )}
       </div>
       {loading ? (
         <div className="text-muted-foreground">Loading…</div>
@@ -191,7 +217,7 @@ function JournalsPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-sm text-muted-foreground">{fmt(total)}</span>
-                    {!e.voided_at && !e.reverses_entry_id && e.source_type === "manual" && (
+                    {canManageJournals && !e.voided_at && !e.reverses_entry_id && e.source_type === "manual" && (
                       <Button
                         size="icon"
                         variant="ghost"
