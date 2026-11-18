@@ -96,7 +96,19 @@ BEGIN
         document_id uuid,
         payslip_id uuid,
         owner_id uuid,
-        description text
+        description text,
+        approved_by uuid,
+        approved_at timestamptz,
+        total_gross numeric,
+        total_employee_deductions numeric,
+        total_net numeric,
+        total_employer_contributions numeric,
+        total_employer_cost numeric,
+        journal_entry_id uuid,
+        paid_at timestamptz,
+        created_by uuid,
+        created_at timestamptz DEFAULT now(),
+        updated_at timestamptz DEFAULT now()
       )', t
     );
   END LOOP;
@@ -122,6 +134,15 @@ END $$;
 CREATE POLICY "tax returns view" ON public.tax_returns
   FOR SELECT TO authenticated
   USING (public.is_company_member(company_id));
+CREATE POLICY "hr roles select payslips" ON public.payslips
+  FOR SELECT TO authenticated
+  USING (public.is_company_member(company_id));
+CREATE POLICY "hr roles select payslip_contributions" ON public.payslip_contributions
+  FOR SELECT TO authenticated
+  USING (public.is_company_member((SELECT p.company_id FROM public.payslips p WHERE p.id=payslip_contributions.payslip_id)));
+CREATE POLICY "hr roles select payslip_line_items" ON public.payslip_line_items
+  FOR SELECT TO authenticated
+  USING (public.is_company_member((SELECT p.company_id FROM public.payslips p WHERE p.id=payslip_line_items.payslip_id)));
 CREATE POLICY "pay runs view" ON public.pay_runs
   FOR SELECT TO authenticated
   USING (
