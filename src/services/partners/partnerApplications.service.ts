@@ -36,26 +36,24 @@ export async function submitPartnerApplication(
     );
   }
 
-  const { data, error } = await supabase.rpc("submit_partner_application", {
-    p_partner_type: input.partnerType,
-    p_business_name: input.businessName,
-    p_country: input.country,
-    p_contact_email: input.contactEmail,
-    p_terms_accepted: input.termsAccepted,
-    p_website: input.website ?? undefined,
-    p_industry: input.industry ?? undefined,
-    p_business_type: input.businessType ?? undefined,
-    p_linkedin_url: input.linkedinUrl ?? undefined,
-    p_phone: input.phone ?? undefined,
-    p_monthly_audience: input.monthlyAudience ?? undefined,
-    p_approx_clients: input.approxClients ?? undefined,
-    p_motivation: input.motivation ?? undefined,
-    p_experience: input.experience ?? undefined,
-    p_marketing_channels: input.marketingChannels ?? undefined,
+  const { data: sessionData } = await supabase.auth.getSession();
+  const accessToken = sessionData.session?.access_token;
+  const response = await fetch("/api/partners/submit-application", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    },
+    body: JSON.stringify(input),
   });
-
-  if (error) throw new PartnerServiceError("SUBMIT_APPLICATION_FAILED", error.message);
-  return data;
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || !result.applicationId) {
+    throw new PartnerServiceError(
+      "SUBMIT_APPLICATION_FAILED",
+      result.error ?? "Failed to submit partner application",
+    );
+  }
+  return result.applicationId as string;
 }
 
 // Staff-only listing/review — RLS restricts this to is_platform_staff().
