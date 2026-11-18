@@ -134,13 +134,4 @@ GRANT EXECUTE ON FUNCTION public.submit_partner_application_server(
   text, text, text, text, text[], uuid
 ) TO service_role;
 
--- Remove direct public access to the legacy RPC; all submissions now pass through
--- the server endpoint, which applies the IP quota before calling the server-only RPC.
-REVOKE ALL ON FUNCTION public.submit_partner_application(
-  public.partner_type, text, text, text, boolean, text, text, text, text,
-  text, text, text, text, text, text[]
-) FROM PUBLIC, anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.submit_partner_application(
-  public.partner_type, text, text, text, boolean, text, text, text, text,
-  text, text, text, text, text, text[]
-) TO service_role;
+-- Legacy anonymous execution is revoked only after the new app route is deployed.
