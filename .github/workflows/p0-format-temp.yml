@@ -1,0 +1,47 @@
+name: Temporary P0 formatter export
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout remediation branch
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Apply repository Prettier configuration to the eight P0 files
+        run: |
+          npx prettier --write \
+            src/components/SiteFooter.tsx \
+            src/components/SiteHeader.tsx \
+            src/routes/auth.tsx \
+            src/routes/features.tsx \
+            src/routes/guides.tsx \
+            src/routes/index.tsx \
+            src/routes/onboarding.tsx \
+            src/routes/pricing.tsx
+      - name: Export formatted source files
+        uses: actions/upload-artifact@v4
+        with:
+          name: p0-prettier-formatted
+          path: |
+            src/components/SiteFooter.tsx
+            src/components/SiteHeader.tsx
+            src/routes/auth.tsx
+            src/routes/features.tsx
+            src/routes/guides.tsx
+            src/routes/index.tsx
+            src/routes/onboarding.tsx
+            src/routes/pricing.tsx
+          retention-days: 1
