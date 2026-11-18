@@ -15,7 +15,9 @@ VALUES
  ('cccccccc-cccc-4ccc-8ccc-cccccccccccc','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',1000,'USD','active'),
  ('dddddddd-dddd-4ddd-8ddd-dddddddddddd','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',600,'USD','active');
 
-DO $$
+SET ROLE service_role;
+
+DO $
 DECLARE
   v_payload jsonb := jsonb_build_array(jsonb_build_object(
     'employee_id','cccccccc-cccc-4ccc-8ccc-cccccccccccc',
@@ -44,8 +46,6 @@ DECLARE
   v_after integer;
 BEGIN
   PERFORM set_config('test.payroll_enabled','true',false);
-  SET LOCAL ROLE service_role;
-
   IF has_function_privilege('service_role',
        'public.create_pay_run_atomic(uuid,uuid,date,date,date,text,text,jsonb)','EXECUTE') IS NOT TRUE THEN
     RAISE EXCEPTION 'service_role must be allowed to execute atomic payroll generation';
@@ -160,5 +160,6 @@ BEGIN
   IF v_after <> v_before THEN
     RAISE EXCEPTION 'Invalid batch left a partial pay run behind';
   END IF;
-END $$;
+END $;
+
 RESET ROLE;
