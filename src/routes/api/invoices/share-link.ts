@@ -6,8 +6,7 @@ export const Route = createFileRoute("/api/invoices/share-link")({
     handlers: {
       POST: async ({ request }) => {
         try {
-          const { authenticate, getActiveRoleKey } =
-            await import("@/lib/api-auth.server");
+          const { authenticate } = await import("@/lib/api-auth.server");
           const caller = await authenticate(request);
           if (caller instanceof Response) return caller;
 
@@ -31,12 +30,17 @@ export const Route = createFileRoute("/api/invoices/share-link")({
             return Response.json({ error: "Invoice not found" }, { status: 404 });
           }
 
-          const role = await getActiveRoleKey(
-            caller.admin,
-            caller.userId,
-            invoice.company_id,
-          );
-          if (!role || role === "viewer") {
+          const { data: membership } = await caller.admin
+            .from("company_members")
+            .select("status, role:roles(key)")
+            .eq("company_id", invoice.company_id)
+            .eq("user_id", caller.userId)
+            .eq("status", "active")
+            .maybeSingle();
+          const membershipRole = Array.isArray(membership?.role)
+            ? membership.role[0]
+            : membership?.role;
+          if (!membership || !membershipRole?.key || membershipRole.key === "viewer") {
             return Response.json(
               { error: "Not allowed to manage this invoice link" },
               { status: 403 },
