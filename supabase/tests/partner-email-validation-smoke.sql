@@ -1,25 +1,25 @@
 \set ON_ERROR_STOP on
 BEGIN;
 SET LOCAL ROLE anon;
+SELECT public.submit_partner_application(
+  'affiliate'::public.partner_type,
+  'CI Email Validation',
+  'Rwanda',
+  'Applicant+CI@Example.com',
+  TRUE
+) AS valid_id \gset
+
+RESET ROLE;
+SELECT CASE WHEN EXISTS (
+  SELECT 1 FROM public.partner_applications
+  WHERE id = :'valid_id'::uuid
+    AND contact_email = 'applicant+ci@example.com'
+    AND status = 'pending'
+) THEN 1 ELSE 1/0 END AS valid_email_stored;
+
+SET LOCAL ROLE anon;
 DO $$
-DECLARE
-  v_id uuid;
 BEGIN
-  v_id := public.submit_partner_application(
-    'affiliate'::public.partner_type,
-    'CI Email Validation',
-    'Rwanda',
-    'Applicant+CI@Example.com',
-    TRUE
-  );
-
-  IF NOT EXISTS (
-    SELECT 1 FROM public.partner_applications
-    WHERE id=v_id AND contact_email='applicant+ci@example.com' AND status='pending'
-  ) THEN
-    RAISE EXCEPTION 'valid email was not normalized and stored';
-  END IF;
-
   BEGIN
     PERFORM public.submit_partner_application(
       'affiliate'::public.partner_type,
