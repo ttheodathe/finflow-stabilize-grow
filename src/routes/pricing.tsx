@@ -200,7 +200,6 @@ function PricingPage() {
                   "Advanced Reports",
                   "Role-Based Permissions",
                   "AI Bookkeeper",
-                  "AI Bookkeeper",
                   "Priority Email Support",
                 ].map((item) => (
                   <li key={item} className="flex items-center">
