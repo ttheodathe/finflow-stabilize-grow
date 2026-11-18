@@ -6,9 +6,7 @@ export const Route = createFileRoute("/api/partners/submit-application")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const ipHeader =
-          request.headers.get("x-vercel-forwarded-for") ??
-          request.headers.get("x-forwarded-for");
+        const ipHeader = request.headers.get("x-forwarded-for");
         const ip = ipHeader?.split(",")[0]?.trim() ?? "";
         if (!ip || !isIP(ip)) {
           return Response.json({ error: "Unable to verify request origin" }, { status: 400 });
@@ -29,7 +27,7 @@ export const Route = createFileRoute("/api/partners/submit-application")({
           return Response.json({ error: "Application service is not configured" }, { status: 503 });
         }
 
-        // Vercel overwrites x-forwarded-for with the connecting client's public IP.
+        // Use only Vercel's platform-overwritten x-forwarded-for client IP header.
         // Store only an HMAC, never the raw address.
         const ipHash = createHmac("sha256", serviceKey).update(ip).digest("hex");
         const { data: allowed, error: limitError } = await admin.rpc(
