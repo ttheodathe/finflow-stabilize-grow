@@ -233,13 +233,10 @@ CREATE POLICY "staff delete partners"
   ON public.partners FOR DELETE TO authenticated
   USING (public.is_platform_staff());
 
--- PAY RUNS: read roles remain broader than write roles; split the old ALL policy.
+-- PAY RUNS: generation is service-role-only; authenticated users may only
+-- approve/cancel through the narrow UPDATE columns granted by the follow-up
+-- payroll integrity migration. Never expose direct INSERT or DELETE.
 DROP POLICY IF EXISTS "hr roles write pay_runs" ON public.pay_runs;
-CREATE POLICY "payroll roles insert pay_runs"
-  ON public.pay_runs FOR INSERT TO public
-  WITH CHECK (public.is_company_member(company_id) AND public.get_company_role(company_id) = ANY (
-    ARRAY['owner'::public.company_member_role,'admin'::public.company_member_role,'accountant'::public.company_member_role,'payroll'::public.company_member_role]
-  ));
 CREATE POLICY "payroll roles update pay_runs"
   ON public.pay_runs FOR UPDATE TO public
   USING (public.is_company_member(company_id) AND public.get_company_role(company_id) = ANY (
@@ -248,12 +245,6 @@ CREATE POLICY "payroll roles update pay_runs"
   WITH CHECK (public.is_company_member(company_id) AND public.get_company_role(company_id) = ANY (
     ARRAY['owner'::public.company_member_role,'admin'::public.company_member_role,'accountant'::public.company_member_role,'payroll'::public.company_member_role]
   ));
-CREATE POLICY "payroll roles delete pay_runs"
-  ON public.pay_runs FOR DELETE TO public
-  USING (public.is_company_member(company_id) AND public.get_company_role(company_id) = ANY (
-    ARRAY['owner'::public.company_member_role,'admin'::public.company_member_role,'accountant'::public.company_member_role,'payroll'::public.company_member_role]
-  ));
-
 -- PAYROLL STATUTORY CONTRIBUTIONS.
 DROP POLICY IF EXISTS "hr roles write statutory" ON public.payroll_statutory_contributions;
 CREATE POLICY "payroll roles insert statutory"
@@ -296,85 +287,15 @@ CREATE POLICY "payroll roles delete tax brackets"
     ARRAY['owner'::public.company_member_role,'admin'::public.company_member_role,'payroll'::public.company_member_role]
   ));
 
--- PAYSLIP CONTRIBUTIONS.
+-- PAYSLIP CONTRIBUTIONS: generated only by create_pay_run_atomic (service role).
+-- Preserve the pre-existing SELECT policy; do not add authenticated write policies.
 DROP POLICY IF EXISTS "hr roles write payslip_contributions" ON public.payslip_contributions;
-CREATE POLICY "payroll roles insert payslip contributions"
-  ON public.payslip_contributions FOR INSERT TO public
-  WITH CHECK (
-    public.is_company_member((SELECT p.company_id FROM public.payslips p WHERE p.id = payslip_contributions.payslip_id))
-    AND public.get_company_role((SELECT p.company_id FROM public.payslips p WHERE p.id = payslip_contributions.payslip_id))
-      = ANY (ARRAY['owner'::public.company_member_role,'admin'::public.company_member_role,'payroll'::public.company_member_role])
-  );
-CREATE POLICY "payroll roles update payslip contributions"
-  ON public.payslip_contributions FOR UPDATE TO public
-  USING (
-    public.is_company_member((SELECT p.company_id FROM public.payslips p WHERE p.id = payslip_contributions.payslip_id))
-    AND public.get_company_role((SELECT p.company_id FROM public.payslips p WHERE p.id = payslip_contributions.payslip_id))
-      = ANY (ARRAY['owner'::public.company_member_role,'admin'::public.company_member_role,'payroll'::public.company_member_role])
-  )
-  WITH CHECK (
-    public.is_company_member((SELECT p.company_id FROM public.payslips p WHERE p.id = payslip_contributions.payslip_id))
-    AND public.get_company_role((SELECT p.company_id FROM public.payslips p WHERE p.id = payslip_contributions.payslip_id))
-      = ANY (ARRAY['owner'::public.company_member_role,'admin'::public.company_member_role,'payroll'::public.company_member_role])
-  );
-CREATE POLICY "payroll roles delete payslip contributions"
-  ON public.payslip_contributions FOR DELETE TO public
-  USING (
-    public.is_company_member((SELECT p.company_id FROM public.payslips p WHERE p.id = payslip_contributions.payslip_id))
-    AND public.get_company_role((SELECT p.company_id FROM public.payslips p WHERE p.id = payslip_contributions.payslip_id))
-      = ANY (ARRAY['owner'::public.company_member_role,'admin'::public.company_member_role,'payroll'::public.company_member_role])
-  );
-
--- PAYSLIP LINE ITEMS.
+-- PAYSLIP LINE ITEMS: generated only by create_pay_run_atomic (service role).
+-- Preserve the pre-existing SELECT policy; do not add authenticated write policies.
 DROP POLICY IF EXISTS "hr roles write payslip_line_items" ON public.payslip_line_items;
-CREATE POLICY "payroll roles insert payslip line items"
-  ON public.payslip_line_items FOR INSERT TO public
-  WITH CHECK (
-    public.is_company_member((SELECT p.company_id FROM public.payslips p WHERE p.id = payslip_line_items.payslip_id))
-    AND public.get_company_role((SELECT p.company_id FROM public.payslips p WHERE p.id = payslip_line_items.payslip_id))
-      = ANY (ARRAY['owner'::public.company_member_role,'admin'::public.company_member_role,'payroll'::public.company_member_role])
-  );
-CREATE POLICY "payroll roles update payslip line items"
-  ON public.payslip_line_items FOR UPDATE TO public
-  USING (
-    public.is_company_member((SELECT p.company_id FROM public.payslips p WHERE p.id = payslip_line_items.payslip_id))
-    AND public.get_company_role((SELECT p.company_id FROM public.payslips p WHERE p.id = payslip_line_items.payslip_id))
-      = ANY (ARRAY['owner'::public.company_member_role,'admin'::public.company_member_role,'payroll'::public.company_member_role])
-  )
-  WITH CHECK (
-    public.is_company_member((SELECT p.company_id FROM public.payslips p WHERE p.id = payslip_line_items.payslip_id))
-    AND public.get_company_role((SELECT p.company_id FROM public.payslips p WHERE p.id = payslip_line_items.payslip_id))
-      = ANY (ARRAY['owner'::public.company_member_role,'admin'::public.company_member_role,'payroll'::public.company_member_role])
-  );
-CREATE POLICY "payroll roles delete payslip line items"
-  ON public.payslip_line_items FOR DELETE TO public
-  USING (
-    public.is_company_member((SELECT p.company_id FROM public.payslips p WHERE p.id = payslip_line_items.payslip_id))
-    AND public.get_company_role((SELECT p.company_id FROM public.payslips p WHERE p.id = payslip_line_items.payslip_id))
-      = ANY (ARRAY['owner'::public.company_member_role,'admin'::public.company_member_role,'payroll'::public.company_member_role])
-  );
-
--- PAYSLIPS.
+-- PAYSLIPS: generated only by create_pay_run_atomic (service role).
+-- Preserve the pre-existing SELECT policy; do not add authenticated write policies.
 DROP POLICY IF EXISTS "hr roles write payslips" ON public.payslips;
-CREATE POLICY "payroll roles insert payslips"
-  ON public.payslips FOR INSERT TO public
-  WITH CHECK (public.is_company_member(company_id) AND public.get_company_role(company_id) = ANY (
-    ARRAY['owner'::public.company_member_role,'admin'::public.company_member_role,'payroll'::public.company_member_role]
-  ));
-CREATE POLICY "payroll roles update payslips"
-  ON public.payslips FOR UPDATE TO public
-  USING (public.is_company_member(company_id) AND public.get_company_role(company_id) = ANY (
-    ARRAY['owner'::public.company_member_role,'admin'::public.company_member_role,'payroll'::public.company_member_role]
-  ))
-  WITH CHECK (public.is_company_member(company_id) AND public.get_company_role(company_id) = ANY (
-    ARRAY['owner'::public.company_member_role,'admin'::public.company_member_role,'payroll'::public.company_member_role]
-  ));
-CREATE POLICY "payroll roles delete payslips"
-  ON public.payslips FOR DELETE TO public
-  USING (public.is_company_member(company_id) AND public.get_company_role(company_id) = ANY (
-    ARRAY['owner'::public.company_member_role,'admin'::public.company_member_role,'payroll'::public.company_member_role]
-  ));
-
 -- ROLE PERMISSIONS: preserve global/company member reads and admin management.
 DROP POLICY IF EXISTS "role_permissions managed by admins" ON public.role_permissions;
 DROP POLICY IF EXISTS "role_permissions readable" ON public.role_permissions;
