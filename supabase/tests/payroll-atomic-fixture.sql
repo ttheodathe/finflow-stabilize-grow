@@ -174,3 +174,6 @@ GRANT USAGE ON SCHEMA auth TO authenticated;
 GRANT EXECUTE ON FUNCTION auth.uid() TO authenticated;
 GRANT SELECT ON public.pay_runs, public.payslips,
   public.payslip_contributions, public.payslip_line_items TO authenticated;
+-- Mirror the production read grants used by authenticated ledger screens and smoke checks.
+-- RLS remains enabled in production; this disposable fixture tests the SQL privilege boundary.
+GRANT SELECT ON public.journal_entries, public.journal_lines TO authenticated;
