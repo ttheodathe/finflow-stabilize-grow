@@ -278,8 +278,7 @@ function PricingPage() {
               </div>
 
               <p className="mt-4 text-muted-foreground">
-                Tailored solutions for organizations requiring custom deployments, integrations, and
-                enterprise support.
+                Custom pricing for organizations with requirements that need a direct discussion with our team.
               </p>
 
               <div className="mt-8">
@@ -374,10 +373,7 @@ function PricingPage() {
             <h2 className="text-4xl font-bold">Pricing That Grows With Your Business</h2>
 
             <p className="mt-6 text-lg text-muted-foreground max-w-3xl mx-auto">
-              We believe accounting software should be transparent, predictable, and scalable.
-              Rather than charging for every small feature, our plans are designed around how
-              businesses naturally grow—adding more companies, users, and advanced capabilities as
-              your organization expands.
+              Choose a plan based on the company and team limits shown above. Review the included features and confirm any important requirement with our team before upgrading.
             </p>
           </div>
 
@@ -398,8 +394,7 @@ function PricingPage() {
               <h3 className="text-xl font-semibold">Upgrade When Ready</h3>
 
               <p className="mt-4 text-muted-foreground">
-                Start with the features you need today and unlock more companies, users, automation,
-                and reporting as your business evolves.
+                Move to a plan with more company capacity, team members and financial tools when you need them.
               </p>
             </div>
 
@@ -409,8 +404,7 @@ function PricingPage() {
               <h3 className="text-xl font-semibold">Transparent Billing</h3>
 
               <p className="mt-4 text-muted-foreground">
-                No hidden fees, surprise upgrades, or confusing pricing structures. Clear
-                subscriptions make planning easier.
+                Review the listed monthly price, company limit and team limit before selecting a plan.
               </p>
             </div>
           </div>
