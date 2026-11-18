@@ -58,7 +58,7 @@ export const Route = createFileRoute("/api/send-invoice")({
               new Date(invoice.share_token_expires_at).getTime() <= Date.now())
           ) {
             return Response.json(
-              { error: "Invoice sharing link is revoked or expired. Regenerate it before sending." },
+              { error: "Invoice link is revoked or expired. Regenerate it before sending." },
               { status: 409 },
             );
           }
