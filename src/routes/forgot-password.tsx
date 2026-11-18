@@ -46,11 +46,13 @@ function ForgotPassword() {
       <div className="w-full max-w-md bg-card border rounded-2xl shadow-elevated p-5 sm:p-8">
         <h1 className="text-2xl font-bold mb-2">Reset password</h1>
         <p className="text-sm text-muted-foreground mb-6">
-          Enter your account email. If it matches an account, we'll send a secure link to set a new password.
+          Enter your account email. If it matches an account, we'll send a secure link to set a new
+          password.
         </p>
         {sent ? (
           <div role="status" aria-live="polite" className="rounded-lg border bg-muted/30 p-4 text-sm">
-            If an account matches <strong>{email}</strong>, a reset link will arrive shortly. Check your inbox and spam folder.
+            If an account matches <strong>{email}</strong>, a reset link will arrive shortly. Check
+            your inbox and spam folder.
           </div>
         ) : (
           <form onSubmit={handle} className="space-y-4">
@@ -68,7 +70,9 @@ function ForgotPassword() {
               />
             </div>
             {errorMessage && (
-              <p role="alert" className="text-sm text-destructive">{errorMessage}</p>
+              <p role="alert" className="text-sm text-destructive">
+                {errorMessage}
+              </p>
             )}
             <Button type="submit" disabled={loading} className="w-full bg-gradient-hero">
               {loading ? "Sending…" : "Send reset link"}
