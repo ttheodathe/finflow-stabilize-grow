@@ -1,5 +1,5 @@
 -- Applies after the migration in the ephemeral CI database.
-DO $$
+DO $smoke1$
 DECLARE
   n integer;
 BEGIN
@@ -91,7 +91,7 @@ BEGIN
      OR has_table_privilege('authenticated','public.payslip_line_items','DELETE') THEN
     RAISE EXCEPTION 'Authenticated users must not directly write generated payslip records';
   END IF;
-END $;
+END $smoke1$;
 
 INSERT INTO public.companies(id, organization_id) VALUES
  ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','cccccccc-cccc-4ccc-8ccc-cccccccccccc'),
@@ -108,7 +108,7 @@ SELECT set_config('test.company_id','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',false
 SELECT set_config('test.organization_id','cccccccc-cccc-4ccc-8ccc-cccccccccccc',false);
 SELECT set_config('test.org_admin','false',false);
 
-DO $$
+DO $smoke2$
 DECLARE n integer;
 BEGIN
   -- Tenant A must not see tenant B's company.
@@ -152,5 +152,5 @@ BEGIN
    WHERE id='33333333-3333-4333-8333-333333333333';
   GET DIAGNOSTICS n = ROW_COUNT;
   IF n <> 1 THEN RAISE EXCEPTION 'Accountant could not update a pay run'; END IF;
-END $$;
+END $smoke2$;
 RESET ROLE;
