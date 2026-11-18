@@ -11,10 +11,7 @@ export const Route = createFileRoute("/api/partners/submit-application")({
           request.headers.get("x-forwarded-for");
         const ip = ipHeader?.split(",")[0]?.trim() ?? "";
         if (!ip || !isIP(ip)) {
-          return Response.json(
-            { error: "Unable to verify request origin" },
-            { status: 400 },
-          );
+          return Response.json({ error: "Unable to verify request origin" }, { status: 400 });
         }
 
         let body: Record<string, unknown>;
@@ -24,34 +21,24 @@ export const Route = createFileRoute("/api/partners/submit-application")({
           return Response.json({ error: "Invalid JSON" }, { status: 400 });
         }
 
-        const { supabaseAdmin: _admin } = await import(
-          "@/integrations/supabase/client.server"
-        );
+        const { supabaseAdmin: _admin } = await import("@/integrations/supabase/client.server");
         // biome-ignore lint/suspicious/noExplicitAny: service-role client is used only in this server handler.
         const admin = _admin as any;
         const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
         if (!serviceKey) {
-          return Response.json(
-            { error: "Application service is not configured" },
-            { status: 503 },
-          );
+          return Response.json({ error: "Application service is not configured" }, { status: 503 });
         }
 
         // Vercel overwrites x-forwarded-for with the connecting client's public IP.
         // Store only an HMAC, never the raw address.
-        const ipHash = createHmac("sha256", serviceKey)
-          .update(ip)
-          .digest("hex");
+        const ipHash = createHmac("sha256", serviceKey).update(ip).digest("hex");
         const { data: allowed, error: limitError } = await admin.rpc(
           "consume_partner_application_rate_limit",
           { p_ip_hash: ipHash },
         );
         if (limitError) {
           console.error("[partners] rate-limit check failed:", limitError);
-          return Response.json(
-            { error: "Application service temporarily unavailable" },
-            { status: 503 },
-          );
+          return Response.json({ error: "Application service temporarily unavailable" }, { status: 503 });
         }
         if (allowed !== true) {
           return Response.json(
