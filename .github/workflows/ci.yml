@@ -224,6 +224,12 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Print Prettier normalization diff for invoice link files
+        if: always()
+        run: |
+          npx prettier --write src/routes/api/invoices/share-link.ts src/routes/_authenticated/invoices.tsx
+          git diff -- src/routes/api/invoices/share-link.ts src/routes/_authenticated/invoices.tsx
+
       - name: Check formatting of changed files
         if: github.event_name == 'pull_request'
         run: |
