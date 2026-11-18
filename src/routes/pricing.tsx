@@ -13,6 +13,7 @@ import {
   Users,
 } from "lucide-react";
 import { PlanCheckoutButton } from "@/components/PlanCheckoutButton";
+import { PLANS } from "@/lib/paddle/config";
 
 export const Route = createFileRoute("/pricing")({
   component: PricingPage,
@@ -138,7 +139,7 @@ function PricingPage() {
               </p>
 
               <div className="mt-8 text-4xl font-bold">
-                $0
+                {PLANS.free.priceMonthly === null ? "Custom" : `${PLANS.free.priceMonthly}`}
                 <span className="text-base font-normal text-muted-foreground">/month</span>
               </div>
 
@@ -184,7 +185,7 @@ function PricingPage() {
               </p>
 
               <div className="mt-8">
-                <span className="text-5xl font-bold">$19</span>
+                <span className="text-5xl font-bold">{PLANS.pro.priceMonthly === null ? "Custom" : `${PLANS.pro.priceMonthly}`}</span>
 
                 <span className="ml-2 text-muted-foreground">/month</span>
               </div>
@@ -233,7 +234,7 @@ function PricingPage() {
               </p>
 
               <div className="mt-8">
-                <span className="text-5xl font-bold">$49</span>
+                <span className="text-5xl font-bold">{PLANS.business.priceMonthly === null ? "Custom" : `${PLANS.business.priceMonthly}`}</span>
 
                 <span className="ml-2 text-muted-foreground">/month</span>
               </div>
