@@ -78,32 +78,14 @@ BEGIN
       NEW.journal_entry_id := OLD.journal_entry_id;
       NEW.paid_at := OLD.paid_at;
     ELSIF OLD.status = 'approved' AND NEW.status = 'paid' THEN
+      -- Only the security-definer ledger RPC sets this transaction-local flag,
+      -- after it has created and posted the balanced payroll journal entry.
       IF pg_catalog.current_setting('app.payroll_posting', true) IS DISTINCT FROM 'true'
          OR NEW.journal_entry_id IS NULL
          OR NEW.paid_at IS NULL
          OR NEW.approved_by IS DISTINCT FROM OLD.approved_by
-         OR NEW.approved_at IS DISTINCT FROM OLD.approved_at
-         OR NOT EXISTS (
-           SELECT 1
-           FROM public.journal_entries j
-           WHERE j.id = NEW.journal_entry_id
-             AND j.company_id = OLD.company_id
-             AND j.source_type = 'payroll'
-             AND j.source_id = OLD.id
-             AND j.is_posted = true
-         )
-         OR NOT EXISTS (
-           SELECT 1
-           FROM public.journal_lines jl
-           WHERE jl.entry_id = NEW.journal_entry_id
-         )
-         OR (
-           SELECT pg_catalog.round(COALESCE(pg_catalog.sum(jl.debit), 0), 2)
-                = pg_catalog.round(COALESCE(pg_catalog.sum(jl.credit), 0), 2)
-           FROM public.journal_lines jl
-           WHERE jl.entry_id = NEW.journal_entry_id
-         ) IS NOT TRUE THEN
-        RAISE EXCEPTION 'A pay run can be marked paid only by a balanced posted payroll journal entry'
+         OR NEW.approved_at IS DISTINCT FROM OLD.approved_at THEN
+        RAISE EXCEPTION 'A pay run can be marked paid only by the payroll ledger-posting RPC'
           USING ERRCODE = '42501';
       END IF;
     ELSE
@@ -264,6 +246,6 @@ END;
 $function$;
 
 REVOKE ALL ON FUNCTION public.post_payrun_to_ledger(uuid,uuid,uuid,uuid,uuid) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.post_payrun_to_ledger(uuid,uuid,uuid,uuid,uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.post_payrun_to_ledger(uuid,uuid,uuid,uuid,uuid) TO authenticated, service_role;
 
 COMMIT;
