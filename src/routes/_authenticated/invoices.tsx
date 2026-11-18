@@ -30,7 +30,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, X, Download, Mail, MailCheck, Loader2, Link2, Copy, RefreshCw, Link2Off } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  X,
+  Download,
+  Mail,
+  MailCheck,
+  Loader2,
+  Link2,
+  Copy,
+  RefreshCw,
+  Link2Off,
+} from "lucide-react";
 import { toast } from "sonner";
 import { CurrencySelect } from "@/components/currency-select";
 import { useDefaultCurrency } from "@/hooks/use-currency";
@@ -142,18 +155,22 @@ function InvoicesPage() {
     const [inv, cust, cat, ws, comp] = await Promise.all([
       supabase
         .from("invoices")
-        .select("*, customers(name,email)").eq("company_id", companyId)
+        .select("*, customers(name,email)")
+        .eq("company_id", companyId)
         .order("issue_date", { ascending: false }),
       supabase.from("customers").select("id,name").eq("company_id", companyId).order("name"),
       supabase
         .from("items")
-        .select("id,name,price,tax_rate,type,stock_quantity,track_inventory").eq("company_id", companyId)
+        .select("id,name,price,tax_rate,type,stock_quantity,track_inventory")
+        .eq("company_id", companyId)
         .eq("is_active", true)
         .order("name"),
       u.user
         ? supabase
             .from("workspace_settings")
-            .select("invoice_prefix,invoice_next_number,default_payment_terms_days,default_invoice_notes")
+            .select(
+              "invoice_prefix,invoice_next_number,default_payment_terms_days,default_invoice_notes",
+            )
             .eq("user_id", u.user.id)
             .maybeSingle()
         : Promise.resolve({ data: null }),
@@ -177,8 +194,7 @@ function InvoicesPage() {
   function isShareLinkActive(inv: Invoice) {
     return (
       !inv.share_token_revoked_at &&
-      (!inv.share_token_expires_at ||
-        new Date(inv.share_token_expires_at).getTime() > Date.now())
+      (!inv.share_token_expires_at || new Date(inv.share_token_expires_at).getTime() > Date.now())
     );
   }
 
@@ -228,9 +244,7 @@ function InvoicesPage() {
         share_token_revoked_at: result.revokedAt,
       };
       setShareDialogInvoice(updated);
-      setItems((current) =>
-        current.map((item) => (item.id === updated.id ? updated : item)),
-      );
+      setItems((current) => current.map((item) => (item.id === updated.id ? updated : item)));
       toast.success(
         action === "revoke"
           ? "Invoice link revoked."
@@ -304,9 +318,7 @@ function InvoicesPage() {
   function openNew() {
     setEditing(null);
     const issueDate = new Date().toISOString().slice(0, 10);
-    const dueDate = new Date(
-      Date.now() + (invSettings.defaultPaymentTermsDays || 0) * 86400000,
-    )
+    const dueDate = new Date(Date.now() + (invSettings.defaultPaymentTermsDays || 0) * 86400000)
       .toISOString()
       .slice(0, 10);
     setForm({
@@ -339,7 +351,8 @@ function InvoicesPage() {
     });
     const { data } = await supabase
       .from("invoice_items")
-      .select("item_id,description,quantity,unit_price,tax_rate").eq("company_id", companyId)
+      .select("item_id,description,quantity,unit_price,tax_rate")
+      .eq("company_id", companyId)
       .eq("invoice_id", i.id);
     setLines(
       (data ?? []).map((d: any) => ({
@@ -409,11 +422,17 @@ function InvoicesPage() {
       const { error } = await supabase.from("invoices").update(payload).eq("id", editing.id);
       if (error) return toast.error(error.message);
     } else {
-      const { data, error } = await supabase.from("invoices").insert(scoped(payload)).select("id").single();
+      const { data, error } = await supabase
+        .from("invoices")
+        .insert(scoped(payload))
+        .select("id")
+        .single();
       if (error || !data) {
         if (error?.message?.includes("invoice_weekly_limit_reached")) {
           setUpgradeOpen(true);
-          return toast.error("Free plan allows up to 20 invoices per 7 days. Upgrade for unlimited.");
+          return toast.error(
+            "Free plan allows up to 20 invoices per 7 days. Upgrade for unlimited.",
+          );
         }
         return toast.error(error?.message ?? "Insert failed");
       }
@@ -499,13 +518,15 @@ function InvoicesPage() {
       inv.customer_id
         ? supabase
             .from("customers")
-            .select("name,email,address").eq("company_id", companyId)
+            .select("name,email,address")
+            .eq("company_id", companyId)
             .eq("id", inv.customer_id)
             .maybeSingle()
         : Promise.resolve({ data: null }),
       supabase
         .from("invoice_items")
-        .select("description,quantity,unit_price,tax_rate").eq("company_id", companyId)
+        .select("description,quantity,unit_price,tax_rate")
+        .eq("company_id", companyId)
         .eq("invoice_id", inv.id),
     ]);
     let logoSigned: string | null = null;
@@ -564,219 +585,223 @@ function InvoicesPage() {
               </DialogHeader>
               <form onSubmit={save} className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label>Invoice number</Label>
-                  <Input
-                    required
-                    value={form.invoice_number}
-                    onChange={(e) => setForm({ ...form, invoice_number: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label>Customer</Label>
-                  <Select
-                    value={form.customer_id}
-                    onValueChange={(v) => setForm({ ...form, customer_id: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select customer" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {customers.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <Label>Issue date</Label>
-                  <Input
-                    type="date"
-                    value={form.issue_date}
-                    onChange={(e) => setForm({ ...form, issue_date: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label>Due date</Label>
-                  <Input
-                    type="date"
-                    value={form.due_date}
-                    onChange={(e) => setForm({ ...form, due_date: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label>Status</Label>
-                  <Select
-                    value={form.status}
-                    onValueChange={(v) => setForm({ ...form, status: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {STATUSES.map((s) => (
-                        <SelectItem key={s} value={s} disabled={s === "paid" || s === "partial"}>
-                          {s === "paid"
-                            ? "paid (record a payment to settle)"
-                            : s === "partial"
-                              ? "partial (calculated from payments)"
-                              : s}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div>
-                <Label>Currency</Label>
-                <CurrencySelect
-                  value={form.currency}
-                  onValueChange={(v) => setForm({ ...form, currency: v })}
-                />
-              </div>
-
-              <div className="border rounded-lg p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>Line items</Label>
-                  <div className="flex gap-2">
-                    <Select value="" onValueChange={addCatalog}>
-                      <SelectTrigger className="w-48 h-8">
-                        <SelectValue placeholder="+ Add from catalog" />
+                  <div>
+                    <Label>Invoice number</Label>
+                    <Input
+                      required
+                      value={form.invoice_number}
+                      onChange={(e) => setForm({ ...form, invoice_number: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label>Customer</Label>
+                    <Select
+                      value={form.customer_id}
+                      onValueChange={(v) => setForm({ ...form, customer_id: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select customer" />
                       </SelectTrigger>
                       <SelectContent>
-                        {catalog.length === 0 && (
-                          <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                            No products/services yet
-                          </div>
-                        )}
-                        {catalog.map((c) => {
-                          const stockLabel =
-                            c.type === "product" && c.track_inventory
-                              ? ` · stock: ${Number(c.stock_quantity ?? 0)}`
-                              : "";
-                          return (
-                            <SelectItem key={c.id} value={c.id}>
-                              {c.name} — {fmt(c.price, form.currency)}
-                              {stockLabel}
-                            </SelectItem>
-                          );
-                        })}
+                        {customers.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
-                    <Button type="button" size="sm" variant="outline" onClick={addBlank}>
-                      + Blank
-                    </Button>
                   </div>
                 </div>
-
-                {lines.length === 0 ? (
-                  <div className="text-sm text-muted-foreground text-center py-6">
-                    Add a product or service to get started.
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <Label>Issue date</Label>
+                    <Input
+                      type="date"
+                      value={form.issue_date}
+                      onChange={(e) => setForm({ ...form, issue_date: e.target.value })}
+                    />
                   </div>
-                ) : (
-                  <div className="space-y-2">
-                    {lines.map((l, i) => {
-                      const amount = (Number(l.quantity) || 0) * (Number(l.unit_price) || 0);
-                      const cat = l.item_id ? catalog.find((c) => c.id === l.item_id) : null;
-                      const tracks = cat?.type === "product" && cat.track_inventory;
-                      const stock = tracks ? Number(cat!.stock_quantity ?? 0) : null;
-                      const over = stock !== null && Number(l.quantity) > stock;
-                      return (
-                        <div key={i} className="grid grid-cols-12 gap-2 items-end">
-                          <div className="col-span-5">
-                            <Input
-                              placeholder="Description"
-                              value={l.description}
-                              onChange={(e) => updateLine(i, { description: e.target.value })}
-                            />
-                            {stock !== null && (
-                              <div
-                                className={`text-[11px] mt-0.5 ${over ? "text-rose-600" : "text-muted-foreground"}`}
-                              >
-                                Stock: {stock}
-                                {over ? ` — insufficient (need ${l.quantity})` : ""}
-                              </div>
-                            )}
-                          </div>
-                          <div className="col-span-1">
-                            <Input
-                              type="number"
-                              step="0.01"
-                              value={l.quantity}
-                              onChange={(e) => updateLine(i, { quantity: Number(e.target.value) })}
-                            />
-                          </div>
-                          <div className="col-span-2">
-                            <Input
-                              type="number"
-                              step="0.01"
-                              value={l.unit_price}
-                              onChange={(e) =>
-                                updateLine(i, { unit_price: Number(e.target.value) })
-                              }
-                            />
-                          </div>
-                          <div className="col-span-1">
-                            <Input
-                              type="number"
-                              step="0.01"
-                              value={l.tax_rate}
-                              onChange={(e) => updateLine(i, { tax_rate: Number(e.target.value) })}
-                            />
-                          </div>
-                          <div className="col-span-2 text-right text-sm tabular-nums">
-                            {fmt(amount + amount * (l.tax_rate / 100), form.currency)}
-                          </div>
-                          <div className="col-span-1 text-right">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => removeLine(i)}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                    <div className="grid grid-cols-12 gap-2 text-xs text-muted-foreground pt-1 border-t">
-                      <div className="col-span-5">Description</div>
-                      <div className="col-span-1">Qty</div>
-                      <div className="col-span-2">Unit price</div>
-                      <div className="col-span-1">Tax %</div>
-                      <div className="col-span-2 text-right">Amount</div>
-                      <div className="col-span-1"></div>
+                  <div>
+                    <Label>Due date</Label>
+                    <Input
+                      type="date"
+                      value={form.due_date}
+                      onChange={(e) => setForm({ ...form, due_date: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label>Status</Label>
+                    <Select
+                      value={form.status}
+                      onValueChange={(v) => setForm({ ...form, status: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {STATUSES.map((s) => (
+                          <SelectItem key={s} value={s} disabled={s === "paid" || s === "partial"}>
+                            {s === "paid"
+                              ? "paid (record a payment to settle)"
+                              : s === "partial"
+                                ? "partial (calculated from payments)"
+                                : s}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label>Currency</Label>
+                  <CurrencySelect
+                    value={form.currency}
+                    onValueChange={(v) => setForm({ ...form, currency: v })}
+                  />
+                </div>
+
+                <div className="border rounded-lg p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Line items</Label>
+                    <div className="flex gap-2">
+                      <Select value="" onValueChange={addCatalog}>
+                        <SelectTrigger className="w-48 h-8">
+                          <SelectValue placeholder="+ Add from catalog" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {catalog.length === 0 && (
+                            <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                              No products/services yet
+                            </div>
+                          )}
+                          {catalog.map((c) => {
+                            const stockLabel =
+                              c.type === "product" && c.track_inventory
+                                ? ` · stock: ${Number(c.stock_quantity ?? 0)}`
+                                : "";
+                            return (
+                              <SelectItem key={c.id} value={c.id}>
+                                {c.name} — {fmt(c.price, form.currency)}
+                                {stockLabel}
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                      <Button type="button" size="sm" variant="outline" onClick={addBlank}>
+                        + Blank
+                      </Button>
                     </div>
                   </div>
-                )}
-              </div>
 
-              <div className="flex justify-end">
-                <div className="w-64 space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Subtotal</span>
-                    <span className="tabular-nums">{fmt(totals.subtotal, form.currency)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Tax</span>
-                    <span className="tabular-nums">{fmt(totals.tax, form.currency)}</span>
-                  </div>
-                  <div className="flex justify-between font-semibold text-base border-t pt-1">
-                    <span>Total</span>
-                    <span className="tabular-nums">{fmt(totals.total, form.currency)}</span>
+                  {lines.length === 0 ? (
+                    <div className="text-sm text-muted-foreground text-center py-6">
+                      Add a product or service to get started.
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {lines.map((l, i) => {
+                        const amount = (Number(l.quantity) || 0) * (Number(l.unit_price) || 0);
+                        const cat = l.item_id ? catalog.find((c) => c.id === l.item_id) : null;
+                        const tracks = cat?.type === "product" && cat.track_inventory;
+                        const stock = tracks ? Number(cat!.stock_quantity ?? 0) : null;
+                        const over = stock !== null && Number(l.quantity) > stock;
+                        return (
+                          <div key={i} className="grid grid-cols-12 gap-2 items-end">
+                            <div className="col-span-5">
+                              <Input
+                                placeholder="Description"
+                                value={l.description}
+                                onChange={(e) => updateLine(i, { description: e.target.value })}
+                              />
+                              {stock !== null && (
+                                <div
+                                  className={`text-[11px] mt-0.5 ${over ? "text-rose-600" : "text-muted-foreground"}`}
+                                >
+                                  Stock: {stock}
+                                  {over ? ` — insufficient (need ${l.quantity})` : ""}
+                                </div>
+                              )}
+                            </div>
+                            <div className="col-span-1">
+                              <Input
+                                type="number"
+                                step="0.01"
+                                value={l.quantity}
+                                onChange={(e) =>
+                                  updateLine(i, { quantity: Number(e.target.value) })
+                                }
+                              />
+                            </div>
+                            <div className="col-span-2">
+                              <Input
+                                type="number"
+                                step="0.01"
+                                value={l.unit_price}
+                                onChange={(e) =>
+                                  updateLine(i, { unit_price: Number(e.target.value) })
+                                }
+                              />
+                            </div>
+                            <div className="col-span-1">
+                              <Input
+                                type="number"
+                                step="0.01"
+                                value={l.tax_rate}
+                                onChange={(e) =>
+                                  updateLine(i, { tax_rate: Number(e.target.value) })
+                                }
+                              />
+                            </div>
+                            <div className="col-span-2 text-right text-sm tabular-nums">
+                              {fmt(amount + amount * (l.tax_rate / 100), form.currency)}
+                            </div>
+                            <div className="col-span-1 text-right">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => removeLine(i)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      <div className="grid grid-cols-12 gap-2 text-xs text-muted-foreground pt-1 border-t">
+                        <div className="col-span-5">Description</div>
+                        <div className="col-span-1">Qty</div>
+                        <div className="col-span-2">Unit price</div>
+                        <div className="col-span-1">Tax %</div>
+                        <div className="col-span-2 text-right">Amount</div>
+                        <div className="col-span-1"></div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-end">
+                  <div className="w-64 space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Subtotal</span>
+                      <span className="tabular-nums">{fmt(totals.subtotal, form.currency)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Tax</span>
+                      <span className="tabular-nums">{fmt(totals.tax, form.currency)}</span>
+                    </div>
+                    <div className="flex justify-between font-semibold text-base border-t pt-1">
+                      <span>Total</span>
+                      <span className="tabular-nums">{fmt(totals.total, form.currency)}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <Button type="submit" className="w-full bg-gradient-hero">
-                Save invoice
-              </Button>
-            </form>
+                <Button type="submit" className="w-full bg-gradient-hero">
+                  Save invoice
+                </Button>
+              </form>
             </DialogContent>
           </Dialog>
         )}
@@ -795,7 +820,11 @@ function InvoicesPage() {
           )}
         </div>
       )}
-      <UpgradePlanModal open={upgradeOpen} onOpenChange={setUpgradeOpen} currentPlan={plan as PlanKey} />
+      <UpgradePlanModal
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        currentPlan={plan as PlanKey}
+      />
 
       <div className="bg-card border rounded-xl">
         {items.length === 0 ? (
