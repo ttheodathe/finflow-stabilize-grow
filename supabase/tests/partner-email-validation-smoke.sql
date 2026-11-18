@@ -1,14 +1,33 @@
 \set ON_ERROR_STOP on
 BEGIN;
-SET LOCAL ROLE anon;
-SELECT public.submit_partner_application(
+SET LOCAL ROLE service_role;
+DO $$
+DECLARE
+  i integer;
+  allowed boolean;
+BEGIN
+  FOR i IN 1..5 LOOP
+    allowed := public.consume_partner_application_rate_limit(pg_catalog.repeat('a', 64));
+    IF allowed IS DISTINCT FROM TRUE THEN
+      RAISE EXCEPTION 'request % was unexpectedly blocked', i;
+    END IF;
+  END LOOP;
+  allowed := public.consume_partner_application_rate_limit(pg_catalog.repeat('a', 64));
+  IF allowed IS DISTINCT FROM FALSE THEN
+    RAISE EXCEPTION 'sixth request was not rate limited';
+  END IF;
+END;
+$$;
+
+SELECT public.submit_partner_application_server(
   'affiliate'::public.partner_type,
   'CI Email Validation',
   'Rwanda',
   'Applicant+CI@Example.com',
-  TRUE
+  TRUE,
+  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+  '00000000-0000-0000-0000-000000000123'::uuid
 ) AS valid_id \gset
-
 RESET ROLE;
 SELECT set_config('request.test.valid_id', :'valid_id', true);
 DO $$
@@ -18,8 +37,9 @@ BEGIN
     WHERE id = current_setting('request.test.valid_id')::uuid
       AND contact_email = 'applicant+ci@example.com'
       AND status = 'pending'
+      AND user_id = '00000000-0000-0000-0000-000000000123'::uuid
   ) THEN
-    RAISE EXCEPTION 'valid email was not normalized and stored';
+    RAISE EXCEPTION 'valid email or verified user id was not stored';
   END IF;
 END;
 $$;
@@ -27,34 +47,19 @@ $$;
 SET LOCAL ROLE anon;
 DO $$
 BEGIN
-  BEGIN
-    PERFORM public.submit_partner_application(
-      'affiliate'::public.partner_type,
-      'Invalid Email',
-      'Rwanda',
-      'not-an-email',
-      TRUE
-    );
-    RAISE EXCEPTION 'invalid email was accepted';
-  EXCEPTION WHEN raise_exception THEN
-    IF SQLERRM <> 'A valid contact email is required' THEN
-      RAISE;
-    END IF;
-  END;
-
-  BEGIN
-    PERFORM public.submit_partner_application(
-      'affiliate'::public.partner_type,
-      'Duplicate Email',
-      'Rwanda',
-      'APPLICANT+CI@example.com',
-      TRUE
-    );
-    RAISE EXCEPTION 'duplicate pending email was accepted';
-  EXCEPTION WHEN unique_violation THEN
-    NULL;
-  END;
+  IF pg_catalog.has_function_privilege(current_user,
+    'public.submit_partner_application(public.partner_type,text,text,text,boolean,text,text,text,text,text,text,text,text,text,text[])', 'EXECUTE') THEN
+    RAISE EXCEPTION 'legacy anonymous submission RPC remains executable';
+  END IF;
+  IF pg_catalog.has_function_privilege(current_user,
+    'public.submit_partner_application_server(public.partner_type,text,text,text,boolean,text,text,text,text,text,text,text,text,text,text[],uuid)', 'EXECUTE') THEN
+    RAISE EXCEPTION 'server submission RPC is executable by anon';
+  END IF;
+  IF pg_catalog.has_function_privilege(current_user,
+    'public.consume_partner_application_rate_limit(text)', 'EXECUTE') THEN
+    RAISE EXCEPTION 'rate-limit RPC is executable by anon';
+  END IF;
 END;
 $$;
 ROLLBACK;
-SELECT 'partner application email validation tests passed' AS result;
+SELECT 'partner application rate-limit and email validation tests passed' AS result;

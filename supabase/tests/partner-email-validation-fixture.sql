@@ -1,3 +1,7 @@
+DO $$ BEGIN CREATE ROLE anon; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE ROLE authenticated; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE ROLE service_role; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
 CREATE TYPE public.partner_type AS ENUM (
   'affiliate','bookkeeping_firm','accounting_firm','accountant',
   'tax_consultant','educator','influencer','reseller'

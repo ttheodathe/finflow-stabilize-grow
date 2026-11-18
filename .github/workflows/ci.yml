@@ -189,6 +189,8 @@ jobs:
           docker exec "$container_id" psql -U postgres -d finflow_partner_email_test -v ON_ERROR_STOP=1 -f /tmp/partner-email-validation-fixture.sql
           docker cp supabase/migrations/20261118150000_fix_partner_application_email_validation.sql "$container_id:/tmp/partner-email-validation-migration.sql"
           docker exec "$container_id" psql -U postgres -d finflow_partner_email_test -v ON_ERROR_STOP=1 -f /tmp/partner-email-validation-migration.sql
+          docker cp supabase/migrations/20261118170000_partner_application_server_rate_limit.sql "$container_id:/tmp/partner-rate-limit-migration.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_partner_email_test -v ON_ERROR_STOP=1 -f /tmp/partner-rate-limit-migration.sql
           docker cp supabase/tests/partner-email-validation-smoke.sql "$container_id:/tmp/partner-email-validation-smoke.sql"
           docker exec "$container_id" psql -U postgres -d finflow_partner_email_test -v ON_ERROR_STOP=1 -f /tmp/partner-email-validation-smoke.sql
 
