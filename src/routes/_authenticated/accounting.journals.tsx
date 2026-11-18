@@ -85,6 +85,7 @@ function JournalsPage() {
       return;
     }
     setLoading(true);
+    setCanManageJournals(false);
     const { data: authData } = await supabase.auth.getUser();
     const userId = authData.user?.id;
     let roleKey: string | null = null;
