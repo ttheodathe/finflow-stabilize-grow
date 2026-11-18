@@ -30,7 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, X, Download, Mail, MailCheck, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Download, Mail, MailCheck, Loader2, Link2, Copy, RefreshCw, Link2Off } from "lucide-react";
 import { toast } from "sonner";
 import { CurrencySelect } from "@/components/currency-select";
 import { useDefaultCurrency } from "@/hooks/use-currency";
@@ -68,6 +68,8 @@ type Invoice = {
   currency: string;
   customers?: { name: string; email: string | null } | null;
   share_token: string;
+  share_token_expires_at: string | null;
+  share_token_revoked_at: string | null;
   sent_at: string | null;
 };
 type Customer = { id: string; name: string };
@@ -125,6 +127,8 @@ function InvoicesPage() {
   const { plan } = useSubscriptionLimits(companyId);
   const [companyName, setCompanyName] = useState("Finflow Track");
   const [sendingId, setSendingId] = useState<string | null>(null);
+  const [shareDialogInvoice, setShareDialogInvoice] = useState<Invoice | null>(null);
+  const [shareActionBusy, setShareActionBusy] = useState(false);
 
   async function loadWeeklyUsage() {
     if (!companyId) return;
@@ -168,6 +172,75 @@ function InvoicesPage() {
       });
     }
     if (comp.data?.name) setCompanyName(comp.data.name);
+  }
+
+  function isShareLinkActive(inv: Invoice) {
+    return (
+      !inv.share_token_revoked_at &&
+      (!inv.share_token_expires_at ||
+        new Date(inv.share_token_expires_at).getTime() > Date.now())
+    );
+  }
+
+  async function copyInvoiceShareLink() {
+    if (!shareDialogInvoice || !isShareLinkActive(shareDialogInvoice)) return;
+    const url = `${window.location.origin}/invoice/${shareDialogInvoice.share_token}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Invoice link copied.");
+    } catch {
+      toast.error("Unable to copy the invoice link.");
+    }
+  }
+
+  async function updateInvoiceShareLink(action: "revoke" | "regenerate") {
+    if (!shareDialogInvoice) return;
+    setShareActionBusy(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) {
+        toast.error("Your session has expired. Please sign in again.");
+        return;
+      }
+
+      const response = await fetch("/api/invoices/share-link", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          invoiceId: shareDialogInvoice.id,
+          action,
+        }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        toast.error(result.error ?? "Unable to update invoice link.");
+        return;
+      }
+
+      const updated = {
+        ...shareDialogInvoice,
+        share_token: result.shareToken,
+        share_token_expires_at: result.expiresAt,
+        share_token_revoked_at: result.revokedAt,
+      };
+      setShareDialogInvoice(updated);
+      setItems((current) =>
+        current.map((item) => (item.id === updated.id ? updated : item)),
+      );
+      toast.success(
+        action === "revoke"
+          ? "Invoice link revoked."
+          : "New invoice link generated. The previous link no longer works.",
+      );
+    } catch {
+      toast.error("Unable to update invoice link. Please try again.");
+    } finally {
+      setShareActionBusy(false);
+    }
   }
 
   async function sendInvoiceEmail(inv: Invoice) {
@@ -736,7 +809,7 @@ function InvoicesPage() {
                 <TableHead>Date</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Total</TableHead>
-                <TableHead className="w-32"></TableHead>
+                <TableHead className="w-40"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -752,6 +825,14 @@ function InvoicesPage() {
                   </TableCell>
                   <TableCell className="text-right">{fmt(Number(i.total), i.currency)}</TableCell>
                   <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setShareDialogInvoice(i)}
+                      title="Manage invoice sharing link"
+                    >
+                      <Link2 className="h-4 w-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -792,6 +873,65 @@ function InvoicesPage() {
           </Table>
         )}
       </div>
+
+      <Dialog
+        open={Boolean(shareDialogInvoice)}
+        onOpenChange={(open) => {
+          if (!open) setShareDialogInvoice(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Invoice sharing link</DialogTitle>
+          </DialogHeader>
+          {shareDialogInvoice && (
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <p className="font-medium">{shareDialogInvoice.invoice_number}</p>
+                <p className="text-sm text-muted-foreground">
+                  {isShareLinkActive(shareDialogInvoice)
+                    ? "This link is active."
+                    : "This link is revoked or expired."}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {shareDialogInvoice.share_token_expires_at
+                    ? `Expires ${new Date(shareDialogInvoice.share_token_expires_at).toLocaleString()}`
+                    : "Existing link has no expiry until you regenerate it."}
+                </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Button
+                  onClick={copyInvoiceShareLink}
+                  disabled={!isShareLinkActive(shareDialogInvoice)}
+                >
+                  <Copy className="mr-2 h-4 w-4" />
+                  Copy active link
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => updateInvoiceShareLink("regenerate")}
+                  disabled={shareActionBusy}
+                >
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Generate new link
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => updateInvoiceShareLink("revoke")}
+                  disabled={shareActionBusy || !isShareLinkActive(shareDialogInvoice)}
+                >
+                  <Link2Off className="mr-2 h-4 w-4" />
+                  Revoke link
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Generating a new link immediately invalidates the previous link. Existing customer
+                links remain unchanged until you revoke or regenerate them.
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
