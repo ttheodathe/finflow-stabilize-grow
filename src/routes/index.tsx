@@ -178,7 +178,6 @@ function LandingPage() {
         <Hero />
         <HowItWorks />
         <Features />
-        <AiSection />
         <Trust />
         <Pricing />
         <Faq />
