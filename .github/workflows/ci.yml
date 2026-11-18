@@ -194,6 +194,18 @@ jobs:
           docker cp supabase/tests/partner-email-validation-smoke.sql "$container_id:/tmp/partner-email-validation-smoke.sql"
           docker exec "$container_id" psql -U postgres -d finflow_partner_email_test -v ON_ERROR_STOP=1 -f /tmp/partner-email-validation-smoke.sql
 
+      - name: Verify invoice share link expiry and revocation
+        run: |
+          container_id="$(docker ps --filter 'ancestor=postgres:16' --format '{{.ID}}' | head -n 1)"
+          test -n "$container_id"
+          docker exec "$container_id" psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "CREATE DATABASE finflow_invoice_share_test"
+          docker cp supabase/tests/invoice-share-link-fixture.sql "$container_id:/tmp/invoice-share-link-fixture.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_invoice_share_test -v ON_ERROR_STOP=1 -f /tmp/invoice-share-link-fixture.sql
+          docker cp supabase/migrations/20261118180000_invoice_share_link_lifecycle.sql "$container_id:/tmp/invoice-share-link-migration.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_invoice_share_test -v ON_ERROR_STOP=1 -f /tmp/invoice-share-link-migration.sql
+          docker cp supabase/tests/invoice-share-link-smoke.sql "$container_id:/tmp/invoice-share-link-smoke.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_invoice_share_test -v ON_ERROR_STOP=1 -f /tmp/invoice-share-link-smoke.sql
+
       - name: Verify manual journal role authorization
         run: |
           container_id="$(docker ps --filter 'ancestor=postgres:16' --format '{{.ID}}' | head -n 1)"
