@@ -160,6 +160,102 @@ BEGIN
   IF v_after <> v_before THEN
     RAISE EXCEPTION 'Invalid batch left a partial pay run behind';
   END IF;
+
+  PERFORM set_config('test.pay_run_id',v_run_id::text,false);
 END $test$;
+
+RESET ROLE;
+
+INSERT INTO public.accounts(id,company_id,is_active,type) VALUES
+ ('11111111-1111-4111-8111-111111111111','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',true,'expense'),
+ ('22222222-2222-4222-8222-222222222222','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',true,'expense'),
+ ('33333333-3333-4333-8333-333333333333','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',true,'liability'),
+ ('44444444-4444-4444-8444-444444444444','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',true,'asset');
+
+SET ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub','bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',false);
+
+DO $state$
+DECLARE
+  v_run_id uuid := current_setting('test.pay_run_id')::uuid;
+  v_entry_id uuid;
+  v_approved_by uuid;
+  v_approved_at timestamptz;
+  v_count integer;
+  v_debits numeric;
+  v_credits numeric;
+BEGIN
+  -- Authenticated callers cannot mark a draft run paid directly.
+  BEGIN
+    UPDATE public.pay_runs SET status='paid' WHERE id=v_run_id;
+    RAISE EXCEPTION 'Direct draft-to-paid transition unexpectedly succeeded';
+  EXCEPTION WHEN insufficient_privilege THEN
+    IF SQLERRM NOT LIKE 'Invalid pay-run status transition: draft -> paid%' THEN RAISE; END IF;
+  END;
+
+  -- Financial totals are not writable by authenticated users.
+  BEGIN
+    UPDATE public.pay_runs SET total_net=0 WHERE id=v_run_id;
+    RAISE EXCEPTION 'Direct pay-run total modification unexpectedly succeeded';
+  EXCEPTION WHEN insufficient_privilege THEN
+    IF SQLERRM NOT LIKE 'permission denied for table pay_runs%' THEN RAISE; END IF;
+  END;
+
+  -- Approval is allowed, but approver identity and timestamp are server-stamped.
+  UPDATE public.pay_runs
+     SET status='approved',
+         approved_by='eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
+         approved_at='2000-01-01T00:00:00Z'
+   WHERE id=v_run_id;
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  IF v_count <> 1 THEN RAISE EXCEPTION 'Payroll member could not approve a draft pay run'; END IF;
+
+  SELECT approved_by,approved_at INTO v_approved_by,v_approved_at
+    FROM public.pay_runs WHERE id=v_run_id;
+  IF v_approved_by IS DISTINCT FROM auth.uid() OR v_approved_at IS NULL
+     OR v_approved_at = '2000-01-01T00:00:00Z'::timestamptz THEN
+    RAISE EXCEPTION 'Approval metadata was not server-stamped';
+  END IF;
+
+  -- The ledger RPC sets its private transaction flag and posts a balanced entry.
+  v_entry_id := public.post_payrun_to_ledger(
+    v_run_id,
+    '11111111-1111-4111-8111-111111111111',
+    '22222222-2222-4222-8222-222222222222',
+    '33333333-3333-4333-8333-333333333333',
+    '44444444-4444-4444-8444-444444444444'
+  );
+
+  IF NOT EXISTS (
+    SELECT 1 FROM public.pay_runs
+    WHERE id=v_run_id AND status='paid'
+      AND journal_entry_id=v_entry_id AND paid_at IS NOT NULL
+  ) THEN
+    RAISE EXCEPTION 'Ledger RPC did not complete the pay-run state transition';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.journal_entries
+    WHERE id=v_entry_id AND is_posted=true
+      AND source_type='payroll' AND source_id=v_run_id
+  ) THEN
+    RAISE EXCEPTION 'Payroll journal entry was not posted and linked';
+  END IF;
+
+  SELECT count(*),COALESCE(sum(debit),0),COALESCE(sum(credit),0)
+    INTO v_count,v_debits,v_credits
+    FROM public.journal_lines WHERE entry_id=v_entry_id;
+  IF v_count <> 4 OR round(v_debits,2) <> round(v_credits,2)
+     OR round(v_debits,2) <> 1120 THEN
+    RAISE EXCEPTION 'Payroll journal lines are missing or unbalanced';
+  END IF;
+
+  -- Paid is terminal; authenticated users cannot reverse or rewrite the run.
+  BEGIN
+    UPDATE public.pay_runs SET status='cancelled' WHERE id=v_run_id;
+    RAISE EXCEPTION 'Paid pay run was unexpectedly reversible';
+  EXCEPTION WHEN insufficient_privilege THEN
+    IF SQLERRM NOT LIKE 'Invalid pay-run status transition: paid -> cancelled%' THEN RAISE; END IF;
+  END;
+END $state$;
 
 RESET ROLE;
