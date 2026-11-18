@@ -42,12 +42,12 @@ export const Route = createFileRoute("/guides")({
       },
       {
         property: "og:title",
-        content: "FinFlowTrack Guides | Accounting & Business Management Resources",
+        content: "FinFlow Track Getting Started Guide | First Invoice & Reports",
       },
       {
         property: "og:description",
         content:
-          "Learn accounting, invoicing, expense tracking, inventory management, and financial management with practical FinFlowTrack guides for businesses.",
+          "Follow the FinFlow Track getting-started workflow: create your account, set up your service business, invoice a client, record payments and expenses, and review outstanding balances.",
       },
       {
         property: "og:type",
