@@ -42,12 +42,12 @@ export const Route = createFileRoute("/guides")({
       },
       {
         property: "og:title",
-        content: "FinFlowTrack Guides | Accounting & Business Management Resources",
+        content: "FinFlow Track Getting Started Guide | First Invoice & Reports",
       },
       {
         property: "og:description",
         content:
-          "Learn accounting, invoicing, expense tracking, inventory management, and financial management with practical FinFlowTrack guides for businesses.",
+          "Follow the FinFlow Track getting-started workflow: create your account, set up your service business, invoice a client, record payments and expenses, and review outstanding balances.",
       },
       {
         property: "og:type",
@@ -109,7 +109,8 @@ const learningPaths: LearningPath[] = [
     id: "getting-started",
     title: "Start with your first invoice",
     icon: Rocket,
-    description: "Set up your business and move from account creation to your first client invoice.",
+    description:
+      "Set up your business and move from account creation to your first client invoice.",
     guides: [
       "Create your account and verify your email",
       "Set up your service business",
@@ -199,12 +200,18 @@ const roadmapSteps = [
     title: "Add customers and suppliers",
     description: "Add the client you plan to invoice.",
   },
-  { title: "Create invoices", description: "Create and share an invoice, then record payments when received." },
+  {
+    title: "Create invoices",
+    description: "Create and share an invoice, then record payments when received.",
+  },
   {
     title: "Track expenses",
     description: "Log spending so your records stay accurate and complete.",
   },
-  { title: "Analyze reports", description: "Review reports and check outstanding customer balances." },
+  {
+    title: "Analyze reports",
+    description: "Review reports and check outstanding customer balances.",
+  },
   {
     title: "Grow your business",
     description: "Use your financial clarity to make confident decisions.",
@@ -382,7 +389,8 @@ function GuidesPage() {
               Get from sign-up to your first client invoice
             </h1>
             <p className="mt-6 text-lg leading-relaxed text-slate-600">
-              A short, practical starting point for service businesses. Set up your workspace, invoice a client, record payments and expenses, then review what remains outstanding.
+              A short, practical starting point for service businesses. Set up your workspace,
+              invoice a client, record payments and expenses, then review what remains outstanding.
             </p>
 
             <div className="mt-10">
@@ -427,7 +435,8 @@ function GuidesPage() {
                   Your first finance workflow: from sign-up to receivables
                 </h2>
                 <p className="mt-2 text-sm text-slate-600">
-                  Follow the essential steps to create your business, send an invoice and understand which customer balances remain unpaid.
+                  Follow the essential steps to create your business, send an invoice and understand
+                  which customer balances remain unpaid.
                 </p>
                 <a
                   href="#roadmap"
@@ -478,9 +487,7 @@ function GuidesPage() {
                 <ul className="mt-4 space-y-2">
                   {path.guides.map((guide) => (
                     <li key={guide}>
-                      <span
-                        className="flex items-start gap-2 text-sm text-slate-600 hover:text-emerald-700"
-                      >
+                      <span className="flex items-start gap-2 text-sm text-slate-600 hover:text-emerald-700">
                         <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
                         {guide}
                       </span>
@@ -562,10 +569,7 @@ function GuidesPage() {
       </section>
 
       {/* Guides by Business Type */}
-      <section
-        aria-labelledby="business-type-heading"
-        className="hidden"
-      >
+      <section aria-labelledby="business-type-heading" className="hidden">
         <div className="mx-auto max-w-6xl px-6 py-20">
           <div className="mx-auto max-w-2xl text-center">
             <h2

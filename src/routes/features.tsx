@@ -38,8 +38,7 @@ import { PLANS, type PlanKey } from "@/lib/paddle/config";
  * drift from what each plan actually unlocks.
  */
 
-const PAGE_TITLE =
-  "FinFlow Track Product — Invoicing, Expenses & Receivables";
+const PAGE_TITLE = "FinFlow Track Product — Invoicing, Expenses & Receivables";
 const PAGE_DESC =
   "See how FinFlow Track helps service businesses create client invoices, record payments and expenses, and review outstanding receivables and financial reports.";
 
@@ -276,7 +275,9 @@ function FeaturesPage() {
             Follow every invoice through to payment.
           </h1>
           <p className="mt-8 max-w-3xl text-lg leading-8 text-muted-foreground">
-            Create and share client invoices, record payments, track operating expenses and review outstanding customer balances. Explore the additional financial tools available across the plans.
+            Create and share client invoices, record payments, track operating expenses and review
+            outstanding customer balances. Explore the additional financial tools available across
+            the plans.
           </p>
           <div className="mt-10 flex flex-wrap gap-4">
             <Link
