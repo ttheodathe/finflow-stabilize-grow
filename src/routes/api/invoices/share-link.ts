@@ -11,8 +11,7 @@ export const Route = createFileRoute("/api/invoices/share-link")({
           if (caller instanceof Response) return caller;
 
           const body = await request.json().catch(() => ({}));
-          const invoiceId =
-            typeof body?.invoiceId === "string" ? body.invoiceId : "";
+          const invoiceId = typeof body?.invoiceId === "string" ? body.invoiceId : "";
           const action = body?.action;
           if (!invoiceId || (action !== "revoke" && action !== "regenerate")) {
             return Response.json(
@@ -63,9 +62,7 @@ export const Route = createFileRoute("/api/invoices/share-link")({
             .update(update)
             .eq("id", invoiceId)
             .eq("company_id", invoice.company_id)
-            .select(
-              "share_token, share_token_expires_at, share_token_revoked_at",
-            )
+            .select("share_token, share_token_expires_at, share_token_revoked_at")
             .single();
 
           if (error || !data) {
