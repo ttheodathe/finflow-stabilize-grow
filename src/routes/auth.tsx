@@ -54,6 +54,7 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const passwordMinLength = mode === "signup" ? 12 : 6;
 
   useEffect(() => setMode(initialMode), [initialMode]);
 
@@ -226,7 +227,7 @@ function AuthPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  minLength={mode === "signup" ? 12 : 6}
+                  minLength={passwordMinLength}
                   className="h-11 pr-12"
                 />
                 <button
