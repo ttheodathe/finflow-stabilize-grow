@@ -17,7 +17,7 @@ VALUES
 
 SET ROLE service_role;
 
-DO $
+DO $test$
 DECLARE
   v_payload jsonb := jsonb_build_array(jsonb_build_object(
     'employee_id','cccccccc-cccc-4ccc-8ccc-cccccccccccc',
@@ -160,6 +160,6 @@ BEGIN
   IF v_after <> v_before THEN
     RAISE EXCEPTION 'Invalid batch left a partial pay run behind';
   END IF;
-END $;
+END $test$;
 
 RESET ROLE;
