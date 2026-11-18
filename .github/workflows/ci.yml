@@ -192,6 +192,18 @@ jobs:
           docker cp supabase/tests/partner-email-validation-smoke.sql "$container_id:/tmp/partner-email-validation-smoke.sql"
           docker exec "$container_id" psql -U postgres -d finflow_partner_email_test -v ON_ERROR_STOP=1 -f /tmp/partner-email-validation-smoke.sql
 
+      - name: Verify manual journal role authorization
+        run: |
+          container_id="$(docker ps --filter 'ancestor=postgres:16' --format '{{.ID}}' | head -n 1)"
+          test -n "$container_id"
+          docker exec "$container_id" psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "CREATE DATABASE finflow_journal_role_test"
+          docker cp supabase/tests/manual-journal-role-fixture.sql "$container_id:/tmp/manual-journal-role-fixture.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_journal_role_test -v ON_ERROR_STOP=1 -f /tmp/manual-journal-role-fixture.sql
+          docker cp supabase/migrations/20261118160000_restrict_manual_journal_write_roles.sql "$container_id:/tmp/manual-journal-role-migration.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_journal_role_test -v ON_ERROR_STOP=1 -f /tmp/manual-journal-role-migration.sql
+          docker cp supabase/tests/manual-journal-role-smoke.sql "$container_id:/tmp/manual-journal-role-smoke.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_journal_role_test -v ON_ERROR_STOP=1 -f /tmp/manual-journal-role-smoke.sql
+
       - name: Unit tests
         run: npm run test:unit
 
