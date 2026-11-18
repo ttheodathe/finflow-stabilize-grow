@@ -66,6 +66,8 @@ BEGIN
       END IF;
       NEW.approved_by := auth.uid();
       NEW.approved_at := pg_catalog.now();
+      NEW.journal_entry_id := NULL;
+      NEW.paid_at := NULL;
     ELSIF OLD.status IN ('draft','approved') AND NEW.status = 'cancelled' THEN
       IF auth.uid() IS NULL THEN
         RAISE EXCEPTION 'Authentication is required to cancel a pay run'
@@ -96,8 +98,8 @@ BEGIN
            WHERE jl.entry_id = NEW.journal_entry_id
          )
          OR (
-           SELECT pg_catalog.round(pg_catalog.coalesce(pg_catalog.sum(jl.debit), 0), 2)
-                = pg_catalog.round(pg_catalog.coalesce(pg_catalog.sum(jl.credit), 0), 2)
+           SELECT pg_catalog.round(COALESCE(pg_catalog.sum(jl.debit), 0), 2)
+                = pg_catalog.round(COALESCE(pg_catalog.sum(jl.credit), 0), 2)
            FROM public.journal_lines jl
            WHERE jl.entry_id = NEW.journal_entry_id
          ) IS NOT TRUE THEN
