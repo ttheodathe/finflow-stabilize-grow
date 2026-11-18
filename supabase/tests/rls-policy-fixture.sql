@@ -101,6 +101,7 @@ BEGIN
         payslip_id uuid,
         owner_id uuid,
         description text,
+        notes text,
         approved_by uuid,
         approved_at timestamptz,
         total_gross numeric,
