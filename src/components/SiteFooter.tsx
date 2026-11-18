@@ -9,8 +9,6 @@ const footerLinks = [
     links: [
       { label: "Features", to: "/features" },
       { label: "Pricing", to: "/pricing" },
-      { label: "Reviews", to: "/testimonials" },
-      { label: "Integrations", to: "/integrations" },
       { label: "Changelog", to: "/changelog" },
     ],
   },
@@ -22,7 +20,6 @@ const footerLinks = [
       { label: "Careers", to: "/careers" },
       { label: "Partners", to: "/partners/apply" },
       { label: "Press", to: "/press" },
-      { label: "Testimonials", to: "/testimonials" },
     ],
   },
   {
