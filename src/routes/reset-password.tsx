@@ -41,7 +41,7 @@ function ResetPassword() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            minLength={6}
+            minLength={12}
           />
         </div>
         <Button type="submit" disabled={loading} className="w-full bg-gradient-hero">
