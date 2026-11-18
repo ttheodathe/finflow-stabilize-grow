@@ -20,7 +20,7 @@ export const Route = createFileRoute("/api/partners/submit-application")({
         }
 
         const { supabaseAdmin: _admin } = await import("@/integrations/supabase/client.server");
-        // biome-ignore lint/suspicious/noExplicitAny: service-role client is used only in this server handler.
+        // biome-ignore lint/suspicious/noExplicitAny: server-only service-role client.
         const admin = _admin as any;
         const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
         if (!serviceKey) {
