@@ -200,6 +200,7 @@ function PricingPage() {
                   "Advanced Reports",
                   "Role-Based Permissions",
                   "AI Bookkeeper",
+                  "AI Bookkeeper",
                   "Priority Email Support",
                 ].map((item) => (
                   <li key={item} className="flex items-center">
@@ -388,8 +389,7 @@ function PricingPage() {
               <h3 className="text-xl font-semibold">Built for Every Business</h3>
 
               <p className="mt-4 text-muted-foreground">
-                Whether you're a freelancer or a multinational organization, there's a plan designed
-                for your stage of growth.
+                Start with a service business and choose more capacity as your team grows.
               </p>
             </div>
 
