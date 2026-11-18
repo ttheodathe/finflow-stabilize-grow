@@ -156,6 +156,18 @@ jobs:
           docker cp supabase/tests/partner-approval-smoke.sql "$container_id:/tmp/partner-approval-smoke.sql"
           docker exec "$container_id" psql -U postgres -d finflow_partner_approval_test -v ON_ERROR_STOP=1 -f /tmp/partner-approval-smoke.sql
 
+      - name: Verify pending partner application deduplication
+        run: |
+          container_id="$(docker ps --filter 'ancestor=postgres:16' --format '{{.ID}}' | head -n 1)"
+          test -n "$container_id"
+          docker exec "$container_id" psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "CREATE DATABASE finflow_partner_dedup_test"
+          docker cp supabase/tests/partner-submission-dedup-fixture.sql "$container_id:/tmp/partner-submission-dedup-fixture.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_partner_dedup_test -v ON_ERROR_STOP=1 -f /tmp/partner-submission-dedup-fixture.sql
+          docker cp supabase/migrations/20261118130000_partner_application_pending_email_uniqueness.sql "$container_id:/tmp/partner-submission-dedup-migration.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_partner_dedup_test -v ON_ERROR_STOP=1 -f /tmp/partner-submission-dedup-migration.sql
+          docker cp supabase/tests/partner-submission-dedup-smoke.sql "$container_id:/tmp/partner-submission-dedup-smoke.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_partner_dedup_test -v ON_ERROR_STOP=1 -f /tmp/partner-submission-dedup-smoke.sql
+
       - name: Unit tests
         run: npm run test:unit
 
