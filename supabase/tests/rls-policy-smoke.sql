@@ -107,6 +107,7 @@ SET ROLE authenticated;
 SELECT set_config('test.company_id','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',false);
 SELECT set_config('test.organization_id','cccccccc-cccc-4ccc-8ccc-cccccccccccc',false);
 SELECT set_config('test.org_admin','false',false);
+SELECT set_config('request.jwt.claim.sub','bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',false);
 
 DO $smoke2$
 DECLARE n integer;
