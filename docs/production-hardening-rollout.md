@@ -46,12 +46,12 @@ Do not proceed if these checks fail.
 
 ## Phase 3 — final enforcement (only after Phase 2 passes)
 
-Apply these migrations:
+Apply these post-deployment SQL scripts from `supabase/rollout/post-deploy/` using the Supabase SQL editor or a controlled `psql` session. They are deliberately outside `supabase/migrations/` so a routine `supabase db push` cannot apply them before the app deployment:
 
-1. `20261118171000_revoke_legacy_partner_application_rpc.sql`
+1. `revoke_legacy_partner_application_rpc.sql`
    - Removes anonymous and authenticated direct execution of the legacy partner RPC.
    - Keeps execution available to the service role.
-2. `20261118181000_set_invoice_share_link_default_expiry.sql`
+2. `set_invoice_share_link_default_expiry.sql`
    - Sets a 90-day expiry default for invoices created after this point.
    - Existing invoices remain unchanged; their NULL expiry is preserved until an owner explicitly regenerates or revokes the link.
 
