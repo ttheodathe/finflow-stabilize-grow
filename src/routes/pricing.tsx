@@ -20,12 +20,12 @@ export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
       {
-        title: "Pricing | FinFlowTrack Accounting Software Plans for Growing Businesses",
+        title: "FinFlow Track Pricing — Plans for Service Businesses",
       },
       {
         name: "description",
         content:
-          "Explore FinFlowTrack pricing plans designed for freelancers, startups, NGOs, and growing businesses. Choose flexible accounting software plans with invoicing, inventory, reporting, and team collaboration.",
+          "Compare FinFlow Track plans for service businesses. Start with invoicing, expense tracking and basic reports, then add team, reconciliation and advanced reporting features as your business needs grow.",
       },
     ],
   }),
@@ -44,15 +44,13 @@ function PricingPage() {
           </span>
 
           <h1 className="mt-6 text-5xl font-bold tracking-tight lg:text-6xl">
-            Choose the Plan That
+            Choose the right tools
             <br />
-            Grows With Your Business
+            for your next stage
           </h1>
 
           <p className="mt-8 max-w-3xl text-lg leading-8 text-muted-foreground">
-            FinFlowTrack provides flexible accounting solutions for freelancers, startups,
-            nonprofits, and growing companies. Start with what you need today and upgrade as your
-            business expands.
+            Start with the essentials for sending client invoices, recording expenses and understanding your finances. Move to a higher plan when your team or reporting needs expand.
           </p>
 
           <div className="mt-10 flex flex-wrap gap-4">
@@ -78,10 +76,10 @@ function PricingPage() {
           <div className="rounded-xl border p-8">
             <ShieldCheck className="mb-5 h-10 w-10 text-primary" />
 
-            <h3 className="text-xl font-semibold">Secure Billing</h3>
+            <h3 className="text-xl font-semibold">Plan options</h3>
 
             <p className="mt-4 text-muted-foreground">
-              Your account information and payment data are handled with modern security practices.
+              Choose a plan based on the companies, team members and financial tools your business needs.
             </p>
           </div>
 
@@ -108,10 +106,10 @@ function PricingPage() {
           <div className="rounded-xl border p-8">
             <Lock className="mb-5 h-10 w-10 text-primary" />
 
-            <h3 className="text-xl font-semibold">No Hidden Costs</h3>
+            <h3 className="text-xl font-semibold">Compare before upgrading</h3>
 
             <p className="mt-4 text-muted-foreground">
-              Clear pricing designed to help businesses plan confidently.
+              Review the listed plan price and included limits before choosing.
             </p>
           </div>
         </div>
@@ -122,11 +120,10 @@ function PricingPage() {
       <section className="bg-muted/40">
         <div className="container mx-auto max-w-7xl px-6 py-20">
           <div className="text-center">
-            <h2 className="text-4xl font-bold">Plans Designed For Every Stage</h2>
+            <h2 className="text-4xl font-bold">Plans for the way your business works</h2>
 
             <p className="mt-6 text-muted-foreground">
-              Whether you are starting alone or managing a growing company, FinFlowTrack scales with
-              your needs.
+              Start with one business and the core finance workflow. Upgrade when you need more companies, team capacity or advanced tools.
             </p>
           </div>
 
@@ -137,7 +134,7 @@ function PricingPage() {
               <h3 className="text-2xl font-bold">Free</h3>
 
               <p className="mt-3 text-muted-foreground">
-                For individuals and small businesses getting started.
+                For a service business getting its invoices and expenses organized.
               </p>
 
               <div className="mt-8 text-4xl font-bold">
@@ -183,8 +180,7 @@ function PricingPage() {
               </div>
 
               <p className="mt-4 text-muted-foreground">
-                Designed for growing businesses that need collaboration, automation, inventory, and
-                advanced reporting.
+                For service teams that need more company and team capacity, reconciliation and advanced reporting.
               </p>
 
               <div className="mt-8">
@@ -232,8 +228,7 @@ function PricingPage() {
               </div>
 
               <p className="mt-4 text-muted-foreground">
-                Built for established businesses managing multiple departments, users, and
-                companies.
+                For established teams that need the broader Business plan feature set.
               </p>
 
               <div className="mt-8">
@@ -325,8 +320,7 @@ function PricingPage() {
           <h2 className="text-4xl font-bold">Compare Plans</h2>
 
           <p className="mt-6 text-muted-foreground max-w-3xl mx-auto">
-            Every FinFlowTrack subscription includes secure cloud accounting. Upgrade when your
-            business needs additional companies, users, automation, and advanced financial tools.
+            Compare the included features and limits before selecting a plan. Feature access is subject to the current plan configuration.
           </p>
         </div>
 
