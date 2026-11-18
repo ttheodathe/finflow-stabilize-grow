@@ -61,14 +61,21 @@ function ResetPassword() {
           />
         </div>
         {errorMessage && (
-          <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+          <div
+            role="alert"
+            className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
+          >
             {errorMessage}
             <a href="/forgot-password" className="ml-1 underline underline-offset-2">
               Request another link
             </a>
           </div>
         )}
-        <Button type="submit" disabled={loading || password.length < 12} className="w-full bg-gradient-hero">
+        <Button
+          type="submit"
+          disabled={loading || password.length < 12}
+          className="w-full bg-gradient-hero"
+        >
           {loading ? "Updating…" : "Update password"}
         </Button>
       </form>
