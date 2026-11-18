@@ -261,8 +261,7 @@ BEGIN
 
   RETURN v_entry_id;
 END;
-$function$
-
+$function$;
 
 REVOKE ALL ON FUNCTION public.post_payrun_to_ledger(uuid,uuid,uuid,uuid,uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.post_payrun_to_ledger(uuid,uuid,uuid,uuid,uuid) TO authenticated;
