@@ -226,7 +226,7 @@ function AuthPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  minLength={mode === "signup" ? 12 : undefined}
+                  minLength={mode === "signup" ? 12 : 6}
                   className="h-11 pr-12"
                 />
                 <button
@@ -239,11 +239,6 @@ function AuthPage() {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              {mode === "signup" && (
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Use at least 12 characters for a stronger password.
-                </p>
-              )}
             </div>
             <Button
               type="submit"
