@@ -103,6 +103,28 @@ jobs:
           docker cp supabase/tests/rls-policy-smoke.sql "$container_id:/tmp/rls-policy-smoke.sql"
           docker exec "$container_id" psql -U postgres -d finflow_rls_test -v ON_ERROR_STOP=1 -f /tmp/rls-policy-smoke.sql
 
+      - name: Create isolated atomic payroll database
+        run: |
+          container_id="$(docker ps --filter 'ancestor=postgres:16' --format '{{.ID}}' | head -n 1)"
+          test -n "$container_id"
+          docker exec "$container_id" psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "CREATE DATABASE finflow_payroll_atomic_test"
+
+      - name: Build atomic payroll fixture and apply RPC migration
+        run: |
+          container_id="$(docker ps --filter 'ancestor=postgres:16' --format '{{.ID}}' | head -n 1)"
+          test -n "$container_id"
+          docker cp supabase/tests/payroll-atomic-fixture.sql "$container_id:/tmp/payroll-atomic-fixture.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_payroll_atomic_test -v ON_ERROR_STOP=1 -f /tmp/payroll-atomic-fixture.sql
+          docker cp supabase/migrations/20261117224524_stage_a7_atomic_payroll_generation.sql "$container_id:/tmp/atomic-payroll-migration.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_payroll_atomic_test -v ON_ERROR_STOP=1 -f /tmp/atomic-payroll-migration.sql
+
+      - name: Verify atomic payroll generation and financial integrity
+        run: |
+          container_id="$(docker ps --filter 'ancestor=postgres:16' --format '{{.ID}}' | head -n 1)"
+          test -n "$container_id"
+          docker cp supabase/tests/payroll-atomic-smoke.sql "$container_id:/tmp/payroll-atomic-smoke.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_payroll_atomic_test -v ON_ERROR_STOP=1 -f /tmp/payroll-atomic-smoke.sql
+
       - name: Unit tests
         run: npm run test:unit
 
