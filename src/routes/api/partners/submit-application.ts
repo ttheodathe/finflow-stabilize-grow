@@ -36,7 +36,10 @@ export const Route = createFileRoute("/api/partners/submit-application")({
         );
         if (limitError) {
           console.error("[partners] rate-limit check failed:", limitError);
-          return Response.json({ error: "Application service temporarily unavailable" }, { status: 503 });
+          return Response.json(
+            { error: "Application service temporarily unavailable" },
+            { status: 503 },
+          );
         }
         if (allowed !== true) {
           return Response.json(
