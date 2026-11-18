@@ -352,10 +352,11 @@ function GuidesPage() {
   const [query, setQuery] = useState("");
 
   const filteredPaths = useMemo(() => {
+    const initialPaths = learningPaths.filter((path) => path.id === "getting-started");
     const trimmed = query.trim().toLowerCase();
-    if (!trimmed) return learningPaths;
+    if (!trimmed) return initialPaths;
 
-    return learningPaths
+    return initialPaths
       .map((path) => {
         const pathMatches = path.title.toLowerCase().includes(trimmed);
         const matchingGuides = path.guides.filter((guide) => guide.toLowerCase().includes(trimmed));
@@ -441,7 +442,7 @@ function GuidesPage() {
         </div>
       </section>
 
-      {/* Featured Learning Paths */}
+      {/* Your getting-started guide */}
       <section
         id="learning-paths"
         aria-labelledby="paths-heading"
@@ -452,7 +453,7 @@ function GuidesPage() {
             Featured Learning Paths
           </h2>
           <p className="mt-4 text-slate-600">
-            Structured guides organized around the way you actually run your business.
+            One practical path from account setup to your first invoice and receivables review.
           </p>
         </div>
 
@@ -532,7 +533,7 @@ function GuidesPage() {
       </section>
 
       {/* Popular Guides */}
-      <section aria-labelledby="popular-heading" className="mx-auto max-w-6xl px-6 py-20">
+      <section aria-labelledby="popular-heading" className="hidden">
         <div className="mx-auto max-w-2xl text-center">
           <h2 id="popular-heading" className="text-3xl font-bold tracking-tight text-slate-900">
             Popular Guides
@@ -563,7 +564,7 @@ function GuidesPage() {
       {/* Guides by Business Type */}
       <section
         aria-labelledby="business-type-heading"
-        className="border-t border-slate-100 bg-slate-50"
+        className="hidden"
       >
         <div className="mx-auto max-w-6xl px-6 py-20">
           <div className="mx-auto max-w-2xl text-center">
@@ -607,7 +608,7 @@ function GuidesPage() {
       </section>
 
       {/* Free Resources */}
-      <section aria-labelledby="resources-heading" className="mx-auto max-w-6xl px-6 py-20">
+      <section aria-labelledby="resources-heading" className="hidden">
         <div className="mx-auto max-w-2xl text-center">
           <h2 id="resources-heading" className="text-3xl font-bold tracking-tight text-slate-900">
             Free Resources
@@ -637,7 +638,7 @@ function GuidesPage() {
       </section>
 
       {/* Expert Insights */}
-      <section aria-labelledby="insights-heading" className="border-t border-slate-100 bg-slate-50">
+      <section aria-labelledby="insights-heading" className="hidden">
         <div className="mx-auto max-w-6xl px-6 py-20">
           <div className="mx-auto max-w-2xl text-center">
             <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-sm font-medium text-slate-600 shadow-sm">
