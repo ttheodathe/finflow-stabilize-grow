@@ -39,9 +39,9 @@ import { PLANS, type PlanKey } from "@/lib/paddle/config";
  */
 
 const PAGE_TITLE =
-  "Features | FinFlowTrack - Invoicing, Accounting, Inventory, Payroll and Reports";
+  "FinFlow Track Product — Invoicing, Expenses & Receivables";
 const PAGE_DESC =
-  "See what FinFlowTrack includes: invoicing, expenses and bills, accounting, bank reconciliation, inventory, payroll and HR, tax tracking, financial reports and an AI Bookkeeper.";
+  "See how FinFlow Track helps service businesses create client invoices, record payments and expenses, and review outstanding receivables and financial reports.";
 
 export const Route = createFileRoute("/features")({
   component: FeaturesPage,
@@ -233,7 +233,7 @@ const trust = [
 const faqs = [
   {
     q: "Who is FinFlowTrack for?",
-    a: "Freelancers, small businesses, startups and NGOs that want invoicing, expenses, accounting and reports in one place.",
+    a: "Owner-led service businesses and small teams that need clear invoicing, expense tracking and financial reporting.",
   },
   {
     q: "Is there a free plan?",
@@ -270,16 +270,13 @@ function FeaturesPage() {
       <section className="border-b">
         <div className="container mx-auto max-w-7xl px-6 py-20">
           <span className="inline-flex rounded-full bg-primary/10 px-4 py-1 text-sm font-medium text-primary">
-            FinFlowTrack Features
+            FinFlow Track product
           </span>
           <h1 className="mt-6 text-5xl font-bold tracking-tight lg:text-6xl">
-            Know your numbers.
-            <br />
-            Run your books in one place.
+            Follow every invoice through to payment.
           </h1>
           <p className="mt-8 max-w-3xl text-lg leading-8 text-muted-foreground">
-            Invoicing, expenses and bills, accounting, banking, inventory, payroll, tax tracking and
-            financial reports on one cloud platform for freelancers, small businesses and NGOs.
+            Create and share client invoices, record payments, track operating expenses and review outstanding customer balances. Explore the additional financial tools available across the plans.
           </p>
           <div className="mt-10 flex flex-wrap gap-4">
             <Link

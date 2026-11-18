@@ -1,5 +1,5 @@
 import { startPolarCheckout } from "@/lib/polar/checkout-client";
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase as _sb } from "@/integrations/supabase/client";
 // Schema drift: generated Database types lag behind applied migrations.
@@ -274,6 +274,9 @@ function OnboardingPage() {
   return (
     <div className="min-h-screen bg-gradient-subtle px-4 py-6 sm:py-10">
       <div className="mx-auto max-w-2xl">
+        <Link to="/" className="mb-8 flex justify-center" aria-label="FinFlow Track home">
+          <img src="/logo.png" alt="FinFlow Track — Smart Finance. Clear Growth." className="h-12 w-auto max-w-[220px] object-contain" />
+        </Link>
         {resuming ? (
           <div className="flex items-center justify-center py-24 text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading your setup…
@@ -284,7 +287,7 @@ function OnboardingPage() {
               {firstName ? `Welcome, ${firstName}` : "Welcome to FinFlow Track"}
             </h1>
             <p className="text-center text-muted-foreground mb-8">
-              Just your name and company to get started.
+              Set up your business first. Then you can create an invoice, record expenses and see what customers still owe.
             </p>
 
             <div className="mb-8 flex items-center justify-between">
@@ -368,7 +371,7 @@ function OnboardingPage() {
 
                   <fieldset>
                     <legend className="mb-2 text-sm font-medium">
-                      What do you want to do first?
+                      What would you like to do first in your business?
                     </legend>
                     <div className="flex flex-wrap gap-2">
                       {GOALS.map((g) => (

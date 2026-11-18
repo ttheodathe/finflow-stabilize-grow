@@ -33,12 +33,12 @@ export const Route = createFileRoute("/guides")({
   head: () => ({
     meta: [
       {
-        title: "FinFlowTrack Guides | Accounting & Business Management Resources",
+        title: "FinFlow Track Getting Started — Invoices, Expenses & Reports",
       },
       {
         name: "description",
         content:
-          "Learn accounting, invoicing, expense tracking, inventory management, and financial management with practical FinFlowTrack guides for businesses.",
+          "Learn the essential FinFlow Track workflow: set up your business, create a client invoice, record expenses and review your financial reports.",
       },
       {
         property: "og:title",
@@ -72,7 +72,7 @@ export const Route = createFileRoute("/guides")({
           "@type": "CollectionPage",
           name: "FinFlowTrack Guides",
           description:
-            "Practical accounting and business management guides for freelancers, startups, and growing businesses.",
+            "Practical steps for service businesses setting up invoices, expenses and financial reporting.",
           url: "https://www.finflowtrack.com/guides",
         }),
       },
@@ -107,16 +107,17 @@ const learningPaths: LearningPath[] = [
   },
   {
     id: "getting-started",
-    title: "Getting Started With FinFlowTrack",
+    title: "Start with your first invoice",
     icon: Rocket,
-    description: "Everything you need to set up and start using the platform.",
+    description: "Set up your business and move from account creation to your first client invoice.",
     guides: [
-      "Creating your FinFlowTrack account",
-      "Setting up your company workspace",
-      "Adding customers and suppliers",
-      "Creating your first invoice",
-      "Recording your first expense",
-      "Understanding the dashboard",
+      "Create your account and verify your email",
+      "Set up your service business",
+      "Add a client",
+      "Create and share your first invoice",
+      "Record a customer payment",
+      "Record an operating expense",
+      "Review outstanding invoices and reports",
     ],
   },
   {
@@ -187,23 +188,23 @@ const learningPaths: LearningPath[] = [
 
 const roadmapSteps = [
   {
-    title: "Create your FinFlowTrack account",
+    title: "Create your account and verify your email",
     description: "Sign up and verify your email to get started.",
   },
   {
     title: "Set up your company",
-    description: "Add your business details and create your first workspace.",
+    description: "Add your service business details and create your workspace.",
   },
   {
     title: "Add customers and suppliers",
-    description: "Build the contacts you'll invoice and purchase from.",
+    description: "Add the client you plan to invoice.",
   },
-  { title: "Create invoices", description: "Bill your customers and start tracking payments." },
+  { title: "Create invoices", description: "Create and share an invoice, then record payments when received." },
   {
     title: "Track expenses",
     description: "Log spending so your records stay accurate and complete.",
   },
-  { title: "Analyze reports", description: "Check income, expenses, and cash flow at a glance." },
+  { title: "Analyze reports", description: "Review reports and check outstanding customer balances." },
   {
     title: "Grow your business",
     description: "Use your financial clarity to make confident decisions.",
@@ -351,10 +352,11 @@ function GuidesPage() {
   const [query, setQuery] = useState("");
 
   const filteredPaths = useMemo(() => {
+    const initialPaths = learningPaths.filter((path) => path.id === "getting-started");
     const trimmed = query.trim().toLowerCase();
-    if (!trimmed) return learningPaths;
+    if (!trimmed) return initialPaths;
 
-    return learningPaths
+    return initialPaths
       .map((path) => {
         const pathMatches = path.title.toLowerCase().includes(trimmed);
         const matchingGuides = path.guides.filter((guide) => guide.toLowerCase().includes(trimmed));
@@ -377,11 +379,10 @@ function GuidesPage() {
               FinFlowTrack Academy
             </span>
             <h1 className="mt-6 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
-              Learn Smarter Ways to Manage Your Business Finances
+              Get from sign-up to your first client invoice
             </h1>
             <p className="mt-6 text-lg leading-relaxed text-slate-600">
-              Explore practical accounting guides, tutorials, and resources designed to help
-              freelancers, startups, and growing businesses improve financial management.
+              A short, practical starting point for service businesses. Set up your workspace, invoice a client, record payments and expenses, then review what remains outstanding.
             </p>
 
             <div className="mt-10">
@@ -423,11 +424,10 @@ function GuidesPage() {
                   Featured Guide
                 </span>
                 <h2 className="mt-1 text-lg font-bold text-slate-900">
-                  New Business Owner Roadmap: From Sign-Up to First Report
+                  Your first finance workflow: from sign-up to receivables
                 </h2>
                 <p className="mt-2 text-sm text-slate-600">
-                  A complete walkthrough for setting up FinFlowTrack and running your first full
-                  accounting cycle.
+                  Follow the essential steps to create your business, send an invoice and understand which customer balances remain unpaid.
                 </p>
                 <a
                   href="#roadmap"
@@ -442,7 +442,7 @@ function GuidesPage() {
         </div>
       </section>
 
-      {/* Featured Learning Paths */}
+      {/* Your getting-started guide */}
       <section
         id="learning-paths"
         aria-labelledby="paths-heading"
@@ -453,7 +453,7 @@ function GuidesPage() {
             Featured Learning Paths
           </h2>
           <p className="mt-4 text-slate-600">
-            Structured guides organized around the way you actually run your business.
+            One practical path from account setup to your first invoice and receivables review.
           </p>
         </div>
 
@@ -478,13 +478,12 @@ function GuidesPage() {
                 <ul className="mt-4 space-y-2">
                   {path.guides.map((guide) => (
                     <li key={guide}>
-                      <a
-                        href="#"
+                      <span
                         className="flex items-start gap-2 text-sm text-slate-600 hover:text-emerald-700"
                       >
                         <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
                         {guide}
-                      </a>
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -534,7 +533,7 @@ function GuidesPage() {
       </section>
 
       {/* Popular Guides */}
-      <section aria-labelledby="popular-heading" className="mx-auto max-w-6xl px-6 py-20">
+      <section aria-labelledby="popular-heading" className="hidden">
         <div className="mx-auto max-w-2xl text-center">
           <h2 id="popular-heading" className="text-3xl font-bold tracking-tight text-slate-900">
             Popular Guides
@@ -565,7 +564,7 @@ function GuidesPage() {
       {/* Guides by Business Type */}
       <section
         aria-labelledby="business-type-heading"
-        className="border-t border-slate-100 bg-slate-50"
+        className="hidden"
       >
         <div className="mx-auto max-w-6xl px-6 py-20">
           <div className="mx-auto max-w-2xl text-center">
@@ -609,7 +608,7 @@ function GuidesPage() {
       </section>
 
       {/* Free Resources */}
-      <section aria-labelledby="resources-heading" className="mx-auto max-w-6xl px-6 py-20">
+      <section aria-labelledby="resources-heading" className="hidden">
         <div className="mx-auto max-w-2xl text-center">
           <h2 id="resources-heading" className="text-3xl font-bold tracking-tight text-slate-900">
             Free Resources
@@ -639,7 +638,7 @@ function GuidesPage() {
       </section>
 
       {/* Expert Insights */}
-      <section aria-labelledby="insights-heading" className="border-t border-slate-100 bg-slate-50">
+      <section aria-labelledby="insights-heading" className="hidden">
         <div className="mx-auto max-w-6xl px-6 py-20">
           <div className="mx-auto max-w-2xl text-center">
             <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-sm font-medium text-slate-600 shadow-sm">

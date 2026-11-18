@@ -13,6 +13,7 @@ import {
   Users,
 } from "lucide-react";
 import { PlanCheckoutButton } from "@/components/PlanCheckoutButton";
+import { PLANS } from "@/lib/paddle/config";
 
 export const Route = createFileRoute("/pricing")({
   component: PricingPage,
@@ -20,12 +21,12 @@ export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
       {
-        title: "Pricing | FinFlowTrack Accounting Software Plans for Growing Businesses",
+        title: "FinFlow Track Pricing — Plans for Service Businesses",
       },
       {
         name: "description",
         content:
-          "Explore FinFlowTrack pricing plans designed for freelancers, startups, NGOs, and growing businesses. Choose flexible accounting software plans with invoicing, inventory, reporting, and team collaboration.",
+          "Compare FinFlow Track plans for service businesses. Start with invoicing, expense tracking and basic reports, then add team, reconciliation and advanced reporting features as your business needs grow.",
       },
     ],
   }),
@@ -44,15 +45,13 @@ function PricingPage() {
           </span>
 
           <h1 className="mt-6 text-5xl font-bold tracking-tight lg:text-6xl">
-            Choose the Plan That
+            Choose the right tools
             <br />
-            Grows With Your Business
+            for your next stage
           </h1>
 
           <p className="mt-8 max-w-3xl text-lg leading-8 text-muted-foreground">
-            FinFlowTrack provides flexible accounting solutions for freelancers, startups,
-            nonprofits, and growing companies. Start with what you need today and upgrade as your
-            business expands.
+            Start with the essentials for sending client invoices, recording expenses and understanding your finances. Move to a higher plan when your team or reporting needs expand.
           </p>
 
           <div className="mt-10 flex flex-wrap gap-4">
@@ -78,10 +77,10 @@ function PricingPage() {
           <div className="rounded-xl border p-8">
             <ShieldCheck className="mb-5 h-10 w-10 text-primary" />
 
-            <h3 className="text-xl font-semibold">Secure Billing</h3>
+            <h3 className="text-xl font-semibold">Plan options</h3>
 
             <p className="mt-4 text-muted-foreground">
-              Your account information and payment data are handled with modern security practices.
+              Choose a plan based on the companies, team members and financial tools your business needs.
             </p>
           </div>
 
@@ -108,10 +107,10 @@ function PricingPage() {
           <div className="rounded-xl border p-8">
             <Lock className="mb-5 h-10 w-10 text-primary" />
 
-            <h3 className="text-xl font-semibold">No Hidden Costs</h3>
+            <h3 className="text-xl font-semibold">Compare before upgrading</h3>
 
             <p className="mt-4 text-muted-foreground">
-              Clear pricing designed to help businesses plan confidently.
+              Review the listed plan price and included limits before choosing.
             </p>
           </div>
         </div>
@@ -122,11 +121,10 @@ function PricingPage() {
       <section className="bg-muted/40">
         <div className="container mx-auto max-w-7xl px-6 py-20">
           <div className="text-center">
-            <h2 className="text-4xl font-bold">Plans Designed For Every Stage</h2>
+            <h2 className="text-4xl font-bold">Plans for the way your business works</h2>
 
             <p className="mt-6 text-muted-foreground">
-              Whether you are starting alone or managing a growing company, FinFlowTrack scales with
-              your needs.
+              Start with one business and the core finance workflow. Upgrade when you need more companies, team capacity or advanced tools.
             </p>
           </div>
 
@@ -137,11 +135,11 @@ function PricingPage() {
               <h3 className="text-2xl font-bold">Free</h3>
 
               <p className="mt-3 text-muted-foreground">
-                For individuals and small businesses getting started.
+                For a service business getting its invoices and expenses organized.
               </p>
 
               <div className="mt-8 text-4xl font-bold">
-                $0
+                {PLANS.free.priceMonthly === null ? "Custom" : "$" + PLANS.free.priceMonthly}
                 <span className="text-base font-normal text-muted-foreground">/month</span>
               </div>
 
@@ -183,12 +181,11 @@ function PricingPage() {
               </div>
 
               <p className="mt-4 text-muted-foreground">
-                Designed for growing businesses that need collaboration, automation, inventory, and
-                advanced reporting.
+                For service teams that need more company and team capacity, reconciliation and advanced reporting.
               </p>
 
               <div className="mt-8">
-                <span className="text-5xl font-bold">$19</span>
+                <span className="text-5xl font-bold">{PLANS.pro.priceMonthly === null ? "Custom" : "$" + PLANS.pro.priceMonthly}</span>
 
                 <span className="ml-2 text-muted-foreground">/month</span>
               </div>
@@ -203,6 +200,7 @@ function PricingPage() {
                   "Bank Reconciliation",
                   "Advanced Reports",
                   "Role-Based Permissions",
+                  "AI Bookkeeper",
                   "Priority Email Support",
                 ].map((item) => (
                   <li key={item} className="flex items-center">
@@ -232,12 +230,11 @@ function PricingPage() {
               </div>
 
               <p className="mt-4 text-muted-foreground">
-                Built for established businesses managing multiple departments, users, and
-                companies.
+                For established teams that need the broader Business plan feature set.
               </p>
 
               <div className="mt-8">
-                <span className="text-5xl font-bold">$49</span>
+                <span className="text-5xl font-bold">{PLANS.business.priceMonthly === null ? "Custom" : "$" + PLANS.business.priceMonthly}</span>
 
                 <span className="ml-2 text-muted-foreground">/month</span>
               </div>
@@ -282,8 +279,7 @@ function PricingPage() {
               </div>
 
               <p className="mt-4 text-muted-foreground">
-                Tailored solutions for organizations requiring custom deployments, integrations, and
-                enterprise support.
+                Custom pricing for organizations with requirements that need a direct discussion with our team.
               </p>
 
               <div className="mt-8">
@@ -292,16 +288,10 @@ function PricingPage() {
 
               <ul className="mt-8 space-y-4">
                 {[
-                  "Unlimited Companies",
-                  "Unlimited Users",
-                  "Dedicated Account Manager",
-                  "Custom Integrations",
-                  "Advanced Security",
-                  "Priority Infrastructure",
-                  "Migration Assistance",
-                  "Training",
-                  "SLA Options",
-                  "Enterprise Support",
+                  "Custom company limits",
+                  "Custom user limits",
+                  "Discuss your organization’s requirements",
+                  "Contact the team for plan details",
                 ].map((item) => (
                   <li key={item} className="flex items-center">
                     <Check className="mr-3 h-5 w-5 text-green-600" />
@@ -325,8 +315,7 @@ function PricingPage() {
           <h2 className="text-4xl font-bold">Compare Plans</h2>
 
           <p className="mt-6 text-muted-foreground max-w-3xl mx-auto">
-            Every FinFlowTrack subscription includes secure cloud accounting. Upgrade when your
-            business needs additional companies, users, automation, and advanced financial tools.
+            Compare the included features and limits before selecting a plan. Feature access is subject to the current plan configuration.
           </p>
         </div>
 
@@ -361,7 +350,7 @@ function PricingPage() {
                 ["AI Bookkeeper", "—", "✓", "✓", "✓"],
                 ["Financial Reports", "Basic", "Advanced", "Advanced", "Enterprise"],
                 ["API Access", "—", "—", "✓", "✓"],
-                ["Priority Support", "—", "Email", "Priority", "Dedicated"],
+                ["Support level", "Standard", "Priority email", "Priority", "Enterprise support"],
               ].map((row) => (
                 <tr key={row[0]} className="border-t">
                   <td className="px-6 py-5 font-medium">{row[0]}</td>
@@ -385,10 +374,7 @@ function PricingPage() {
             <h2 className="text-4xl font-bold">Pricing That Grows With Your Business</h2>
 
             <p className="mt-6 text-lg text-muted-foreground max-w-3xl mx-auto">
-              We believe accounting software should be transparent, predictable, and scalable.
-              Rather than charging for every small feature, our plans are designed around how
-              businesses naturally grow—adding more companies, users, and advanced capabilities as
-              your organization expands.
+              Choose a plan based on the company and team limits shown above. Review the included features and confirm any important requirement with our team before upgrading.
             </p>
           </div>
 
@@ -399,8 +385,7 @@ function PricingPage() {
               <h3 className="text-xl font-semibold">Built for Every Business</h3>
 
               <p className="mt-4 text-muted-foreground">
-                Whether you're a freelancer or a multinational organization, there's a plan designed
-                for your stage of growth.
+                Start with a service business and choose more capacity as your team grows.
               </p>
             </div>
 
@@ -410,8 +395,7 @@ function PricingPage() {
               <h3 className="text-xl font-semibold">Upgrade When Ready</h3>
 
               <p className="mt-4 text-muted-foreground">
-                Start with the features you need today and unlock more companies, users, automation,
-                and reporting as your business evolves.
+                Move to a plan with more company capacity, team members and financial tools when you need them.
               </p>
             </div>
 
@@ -421,50 +405,13 @@ function PricingPage() {
               <h3 className="text-xl font-semibold">Transparent Billing</h3>
 
               <p className="mt-4 text-muted-foreground">
-                No hidden fees, surprise upgrades, or confusing pricing structures. Clear
-                subscriptions make planning easier.
+                Review the listed monthly price, company limit and team limit before selecting a plan.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* SECURITY & COMPLIANCE */}
-
-      <section className="container mx-auto max-w-7xl px-6 py-24">
-        <div className="grid gap-12 lg:grid-cols-2">
-          <div>
-            <ShieldCheck className="mb-6 h-12 w-12 text-primary" />
-
-            <h2 className="text-4xl font-bold">Secure Payments & Trusted Billing</h2>
-
-            <p className="mt-6 leading-8 text-muted-foreground">
-              FinFlowTrack is committed to protecting customer information throughout the
-              subscription lifecycle. Billing systems are designed with modern security practices to
-              safeguard payment and account data.
-            </p>
-          </div>
-
-          <div className="space-y-5">
-            {[
-              "Encrypted payment processing",
-              "Secure customer authentication",
-              "Role-based account management",
-              "Subscription history",
-              "Transparent invoices",
-              "Automatic renewal controls",
-              "Cancellation controls",
-              "Privacy-focused billing",
-            ].map((item) => (
-              <div key={item} className="flex items-center rounded-xl border p-5">
-                <ShieldCheck className="mr-4 h-5 w-5 text-primary" />
-
-                {item}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
       {/* FAQ */}
 
       <section className="bg-muted/40">
@@ -510,9 +457,7 @@ function PricingPage() {
               <h3 className="text-xl font-semibold">Are my financial records secure?</h3>
 
               <p className="mt-4 text-muted-foreground leading-8">
-                FinFlowTrack is built using modern security practices including encrypted
-                communications, authentication controls, audit logging, and role-based permissions
-                to help protect your business information.
+                Review the Security and Privacy pages for the current descriptions of account access and data handling. We do not claim independent security certifications on this pricing page.
               </p>
             </div>
 
@@ -520,66 +465,7 @@ function PricingPage() {
               <h3 className="text-xl font-semibold">Do you offer Enterprise solutions?</h3>
 
               <p className="mt-4 text-muted-foreground leading-8">
-                Yes. Enterprise customers can request custom deployments, onboarding assistance,
-                advanced integrations, dedicated support, and tailored commercial agreements.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* WHY TRUST FINFLOWTRACK */}
-
-      <section>
-        <div className="container mx-auto max-w-7xl px-6 py-24">
-          <div className="text-center">
-            <h2 className="text-4xl font-bold">Why Trust FinFlowTrack?</h2>
-
-            <p className="mx-auto mt-6 max-w-3xl text-lg text-muted-foreground">
-              Trust is essential when managing financial information. FinFlowTrack is designed with
-              transparency, security, and long-term reliability at its core.
-            </p>
-          </div>
-
-          <div className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-xl border p-8">
-              <ShieldCheck className="mb-5 h-10 w-10 text-primary" />
-
-              <h3 className="font-semibold text-xl">Secure Platform</h3>
-
-              <p className="mt-4 text-muted-foreground">
-                Modern authentication, encrypted communications, and permission-based access.
-              </p>
-            </div>
-
-            <div className="rounded-xl border p-8">
-              <BadgeCheck className="mb-5 h-10 w-10 text-primary" />
-
-              <h3 className="font-semibold text-xl">Transparent Pricing</h3>
-
-              <p className="mt-4 text-muted-foreground">
-                Clear subscription plans with no hidden charges or unexpected upgrades.
-              </p>
-            </div>
-
-            <div className="rounded-xl border p-8">
-              <Users className="mb-5 h-10 w-10 text-primary" />
-
-              <h3 className="font-semibold text-xl">Built for Teams</h3>
-
-              <p className="mt-4 text-muted-foreground">
-                Collaborate securely using role-based permissions, invitations, and multi-company
-                support.
-              </p>
-            </div>
-
-            <div className="rounded-xl border p-8">
-              <Sparkles className="mb-5 h-10 w-10 text-primary" />
-
-              <h3 className="font-semibold text-xl">Continuous Innovation</h3>
-
-              <p className="mt-4 text-muted-foreground">
-                Regular product improvements, new features, and ongoing platform enhancements.
+                The Enterprise plan is listed as custom pricing. Contact us to discuss your organization’s requirements and confirm availability.
               </p>
             </div>
           </div>
@@ -597,8 +483,7 @@ function PricingPage() {
           </h2>
 
           <p className="mx-auto mt-8 max-w-3xl text-lg text-muted-foreground">
-            Join businesses using FinFlowTrack to simplify accounting, invoicing, inventory,
-            payroll, financial reporting, and team collaboration from one secure cloud platform.
+            Create a business workspace, send a client invoice and keep a clearer record of payments and expenses.
           </p>
 
           <div className="mt-12 flex flex-wrap justify-center gap-4">

@@ -1,16 +1,14 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Menu, Wallet, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { HiringPill } from "@/components/HiringPill";
 
 const navLinks = [
-  { label: "Features", to: "/features" as const },
+  { label: "How it works", to: "/features" as const },
   { label: "Pricing", to: "/pricing" as const },
-  { label: "AI", to: "/" as const, hash: "ai" },
-  { label: "Reviews", to: "/testimonials" as const },
-  { label: "Careers", to: "/careers" as const },
+  { label: "Guides", to: "/guides" as const },
 ];
 
 /**
@@ -33,11 +31,8 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-hero shadow-glow">
-            <Wallet className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
-          </div>
-          <span className="text-lg font-bold tracking-tight">FinFlow Track</span>
+        <Link to="/" className="flex items-center gap-3" aria-label="FinFlow Track home">
+          <img src="/logo.png" alt="FinFlow Track — Smart Finance. Clear Growth." className="h-10 w-auto max-w-[190px] object-contain" />
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">

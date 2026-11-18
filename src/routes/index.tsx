@@ -7,7 +7,6 @@ import {
   Check,
   FileText,
   Receipt,
-  Wallet,
   BarChart3,
   Globe2,
   Sparkles,
@@ -22,9 +21,9 @@ import { Badge } from "@/components/ui/badge";
 import { PLANS, type PlanKey } from "@/lib/paddle/config";
 
 const SITE_URL = "https://www.finflowtrack.com/";
-const PAGE_TITLE = "FinFlow Track — Accounting & Cash Flow Software for Small Businesses";
+const PAGE_TITLE = "FinFlow Track — Invoicing, Payments & Cash Flow for Service Businesses";
 const PAGE_DESC =
-  "Know your numbers, control your cash flow and grow your business. Invoicing, expenses, multi-currency bookkeeping and financial reports for freelancers, SMEs and NGOs. Start on the Free plan.";
+  "Create client invoices, record payments and expenses, and see what customers still owe. Financial management for owner-led service businesses and small teams.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -138,16 +137,20 @@ const features = [
 
 const steps = [
   {
-    title: "Create your account",
-    desc: "Sign up with your email. No credit card is needed for the Free plan.",
+    title: "Create your business",
+    desc: "Sign up, verify your email and set up your service business workspace.",
   },
   {
-    title: "Set up your company",
-    desc: "Add your business name and choose your base currency during onboarding.",
+    title: "Send a client invoice",
+    desc: "Add a customer, prepare an invoice and share it as a PDF, email or secure link.",
   },
   {
-    title: "Record and review",
-    desc: "Create invoices, log expenses, and open reports to see where you stand.",
+    title: "Record payments and expenses",
+    desc: "Keep a record of payments received and the operating costs your business incurs.",
+  },
+  {
+    title: "Review what is outstanding",
+    desc: "Use invoice status and receivables reports to see which customer balances need attention.",
   },
 ];
 
@@ -175,7 +178,6 @@ function LandingPage() {
         <Hero />
         <HowItWorks />
         <Features />
-        <AiSection />
         <Trust />
         <Pricing />
         <Faq />
@@ -204,19 +206,16 @@ function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-hero shadow-glow">
-            <Wallet className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
-          </div>
-          <span className="text-lg font-bold tracking-tight">FinFlow Track</span>
+        <Link to="/" className="flex items-center gap-3" aria-label="FinFlow Track home">
+          <img src="/logo.png" alt="FinFlow Track — Smart Finance. Clear Growth." className="h-10 w-auto max-w-[190px] object-contain" />
         </Link>
         <nav aria-label="Main" className="hidden items-center gap-8 md:flex">
           <Link to="/features" className={navLink}>
-            Features
+            How it works
           </Link>
-          <a href="#ai" className={navLink}>
-            AI
-          </a>
+          <Link to="/guides" className={navLink}>
+            Guides
+          </Link>
           <Link to="/pricing" className={navLink}>
             Pricing
           </Link>
@@ -260,9 +259,9 @@ function Header() {
             <Link to="/features" onClick={() => setOpen(false)} className="text-sm font-medium">
               Features
             </Link>
-            <a href="#ai" onClick={() => setOpen(false)} className="text-sm font-medium">
-              AI
-            </a>
+            <Link to="/guides" onClick={() => setOpen(false)} className="text-sm font-medium">
+              Guides
+            </Link>
             <Link to="/pricing" onClick={() => setOpen(false)} className="text-sm font-medium">
               Pricing
             </Link>
@@ -306,15 +305,13 @@ function Hero() {
             className="mb-6 gap-1.5 border-border/60 bg-card/80 px-3 py-1.5 text-xs font-medium"
           >
             <Sparkles className="h-3.5 w-3.5 text-accent" />
-            Accounting for freelancers, SMEs and NGOs
+            Finance clarity for service businesses
           </Badge>
           <h1 className="text-4xl font-bold leading-[1.1] tracking-tight md:text-6xl">
-            Know your numbers. <span className="gradient-text">Control your cash flow.</span> Grow
-            your business.
+            Turn every invoice into a clearer picture of your cash flow.
           </h1>
           <p className="mt-6 text-lg leading-relaxed text-muted-foreground md:text-xl">
-            Invoicing, expenses and financial reports in one place, so you always know who owes you,
-            what you owe and where your business stands.
+            Create and share client invoices, record the payments you receive, track operating expenses and see which customer balances still need attention.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button asChild size="lg" className="bg-gradient-hero shadow-glow hover:opacity-95">
@@ -341,51 +338,77 @@ function Hero() {
 }
 
 /**
- * Illustrative preview built from real report names in the app.
- * Figures are labelled as sample data. Replace with a real screenshot
- * (e.g. /public/screenshots/reports.webp) when one is available.
+ * Conceptual product preview using real invoice concepts from the application.
+ * Every customer and amount shown here is illustrative sample data.
  */
 function ReportsPreview() {
-  const rows = [
-    { label: "Current", w: "w-4/5" },
-    { label: "1–30 days overdue", w: "w-2/5" },
-    { label: "31–60 days overdue", w: "w-1/4" },
-    { label: "60+ days overdue", w: "w-[12%]" },
+  const invoices = [
+    { number: "INV-1048", customer: "Northstar Studio", due: "Due Nov 24", amount: "$1,250", status: "Awaiting payment" },
+    { number: "INV-1047", customer: "Brightline Consulting", due: "Due Nov 16", amount: "$840", status: "Overdue" },
+    { number: "INV-1046", customer: "Fieldwork Digital", due: "Paid Nov 12", amount: "$2,100", status: "Paid" },
   ];
   return (
-    <figure className="mx-auto mt-14 max-w-3xl">
+    <figure className="mx-auto mt-14 max-w-5xl">
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-elevated">
-        <div
-          className="flex flex-wrap gap-1 border-b border-border bg-muted/40 p-2 text-xs font-medium"
-          aria-hidden="true"
-        >
-          {["Profit & Loss", "Balance Sheet", "Cash Flow", "AR Aging", "AP Aging"].map((t) => (
-            <span
-              key={t}
-              className={`rounded-md px-3 py-1.5 ${
-                t === "AR Aging" ? "bg-card shadow-soft" : "text-muted-foreground"
-              }`}
-            >
-              {t}
-            </span>
-          ))}
-        </div>
-        <div className="p-6">
-          <div className="text-sm font-semibold">Receivables aging</div>
-          <div className="mt-4 space-y-3">
-            {rows.map((r) => (
-              <div key={r.label} className="flex items-center gap-3 text-xs">
-                <span className="w-36 flex-none text-muted-foreground">{r.label}</span>
-                <div className="h-3 flex-1 rounded-full bg-muted">
-                  <div className={`h-3 rounded-full bg-gradient-hero ${r.w}`} />
-                </div>
-              </div>
-            ))}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-muted/30 px-5 py-4">
+          <div>
+            <div className="text-sm font-semibold">Invoice overview</div>
+            <div className="mt-0.5 text-xs text-muted-foreground">Illustrative service-business workspace</div>
           </div>
+          <span className="rounded-full bg-secondary/15 px-3 py-1 text-xs font-semibold text-secondary-foreground">Sample workspace</span>
+        </div>
+        <div className="grid gap-3 p-5 sm:grid-cols-3">
+          <div className="rounded-xl border border-border p-4">
+            <div className="text-xs text-muted-foreground">Invoices issued</div>
+            <div className="mt-2 text-2xl font-semibold tabular-nums">12</div>
+            <div className="mt-1 text-xs text-muted-foreground">Example count</div>
+          </div>
+          <div className="rounded-xl border border-border p-4">
+            <div className="text-xs text-muted-foreground">Recorded as paid</div>
+            <div className="mt-2 text-2xl font-semibold tabular-nums">$4,200</div>
+            <div className="mt-1 text-xs text-muted-foreground">Example amount</div>
+          </div>
+          <div className="rounded-xl border border-border p-4">
+            <div className="text-xs text-muted-foreground">Still outstanding</div>
+            <div className="mt-2 text-2xl font-semibold tabular-nums text-primary">$2,090</div>
+            <div className="mt-1 text-xs text-muted-foreground">Example amount</div>
+          </div>
+        </div>
+        <div className="overflow-x-auto px-5 pb-5">
+          <table className="w-full min-w-[520px] text-left text-sm">
+            <thead>
+              <tr className="border-b border-border text-xs text-muted-foreground">
+                <th className="py-3 pr-4 font-medium">Invoice</th>
+                <th className="py-3 pr-4 font-medium">Customer</th>
+                <th className="py-3 pr-4 font-medium">Due date</th>
+                <th className="py-3 pr-4 text-right font-medium">Amount</th>
+                <th className="py-3 pl-4 text-right font-medium">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {invoices.map((invoice) => (
+                <tr key={invoice.number} className="border-b border-border/70 last:border-0">
+                  <td className="py-3 pr-4 font-medium">{invoice.number}</td>
+                  <td className="py-3 pr-4 text-muted-foreground">{invoice.customer}</td>
+                  <td className="py-3 pr-4 text-muted-foreground">{invoice.due}</td>
+                  <td className="py-3 pr-4 text-right tabular-nums">{invoice.amount}</td>
+                  <td className="py-3 pl-4 text-right">
+                    <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
+                      invoice.status === "Paid"
+                        ? "bg-secondary/15 text-secondary-foreground"
+                        : invoice.status === "Overdue"
+                          ? "bg-destructive/10 text-destructive"
+                          : "bg-muted text-muted-foreground"
+                    }`}>{invoice.status}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
       <figcaption className="mt-3 text-center text-xs text-muted-foreground">
-        Illustration of the AR Aging report using sample data, not real customer figures.
+        Conceptual preview. All names, counts and amounts are illustrative, not customer records or product performance claims.
       </figcaption>
     </figure>
   );
@@ -400,10 +423,10 @@ function HowItWorks() {
             Getting started
           </Badge>
           <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
-            Up and running in three steps
+            From company setup to cash flow clarity in four steps
           </h2>
         </div>
-        <ol className="mt-12 grid gap-6 md:grid-cols-3">
+        <ol className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {steps.map((s, i) => (
             <li key={s.title} className="rounded-2xl border border-border bg-card p-7">
               <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-full bg-gradient-hero text-sm font-bold text-primary-foreground">
@@ -428,10 +451,10 @@ function Features() {
             Features
           </Badge>
           <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
-            Everything you need to run the books
+            A clearer view of the money moving through your business
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            One platform for invoicing, expenses, banking imports and reporting.{" "}
+            Follow the money from the invoice you send to the payment you record and the expenses you manage.{" "}
             <Link to="/features" className="font-medium text-primary underline underline-offset-2">
               See all features
             </Link>

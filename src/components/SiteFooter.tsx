@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { CheckCircle2, Loader2, Wallet } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { HiringPill } from "@/components/HiringPill";
 
@@ -9,8 +9,6 @@ const footerLinks = [
     links: [
       { label: "Features", to: "/features" },
       { label: "Pricing", to: "/pricing" },
-      { label: "Reviews", to: "/testimonials" },
-      { label: "Integrations", to: "/integrations" },
       { label: "Changelog", to: "/changelog" },
     ],
   },
@@ -22,7 +20,6 @@ const footerLinks = [
       { label: "Careers", to: "/careers" },
       { label: "Partners", to: "/partners/apply" },
       { label: "Press", to: "/press" },
-      { label: "Testimonials", to: "/testimonials" },
     ],
   },
   {
@@ -130,14 +127,11 @@ export function SiteFooter() {
       <div className="mx-auto max-w-7xl px-6 py-12">
         <div className="grid gap-8 md:grid-cols-5">
           <div className="md:col-span-2">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-hero">
-                <Wallet className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
-              </div>
-              <span className="text-lg font-bold tracking-tight">Finflow Track</span>
+            <Link to="/" className="flex items-center gap-3" aria-label="FinFlow Track home">
+              <img src="/logo.png" alt="FinFlow Track — Smart Finance. Clear Growth." className="h-10 w-auto max-w-[190px] object-contain" />
             </Link>
             <p className="mt-3 max-w-sm text-sm text-muted-foreground">
-              Accounting and financial management for freelancers, startups, NGOs, and small businesses. Start with the Free plan and explore paid options as your needs grow.
+              Invoices, recorded payments, expenses and financial visibility for owner-led service businesses and small teams.
             </p>
             <NewsletterForm />
           </div>
@@ -162,7 +156,7 @@ export function SiteFooter() {
         </div>
         <div className="mt-10 flex flex-col items-start justify-between gap-3 border-t border-border pt-6 text-xs text-muted-foreground md:flex-row md:items-center">
           <div>© {new Date().getFullYear()} FINFLOW TRACK. All rights reserved.</div>
-          <div>Made for freelancers, startups, NGOs, and SMEs worldwide.</div>
+          <div>Smart finance. Clear growth.</div>
         </div>
       </div>
     </footer>
