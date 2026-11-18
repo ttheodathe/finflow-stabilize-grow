@@ -139,6 +139,23 @@ jobs:
           docker cp supabase/tests/payroll-atomic-smoke.sql "$container_id:/tmp/payroll-atomic-smoke.sql"
           docker exec "$container_id" psql -U postgres -d finflow_payroll_atomic_test -v ON_ERROR_STOP=1 -f /tmp/payroll-atomic-smoke.sql
 
+      - name: Create isolated partner approval database
+        run: |
+          container_id="$(docker ps --filter 'ancestor=postgres:16' --format '{{.ID}}' | head -n 1)"
+          test -n "$container_id"
+          docker exec "$container_id" psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "CREATE DATABASE finflow_partner_approval_test"
+
+      - name: Verify partner approval state and commission guards
+        run: |
+          container_id="$(docker ps --filter 'ancestor=postgres:16' --format '{{.ID}}' | head -n 1)"
+          test -n "$container_id"
+          docker cp supabase/tests/partner-approval-fixture.sql "$container_id:/tmp/partner-approval-fixture.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_partner_approval_test -v ON_ERROR_STOP=1 -f /tmp/partner-approval-fixture.sql
+          docker cp supabase/migrations/20261118110000_stage_a8_guard_partner_application_approval.sql "$container_id:/tmp/partner-approval-migration.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_partner_approval_test -v ON_ERROR_STOP=1 -f /tmp/partner-approval-migration.sql
+          docker cp supabase/tests/partner-approval-smoke.sql "$container_id:/tmp/partner-approval-smoke.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_partner_approval_test -v ON_ERROR_STOP=1 -f /tmp/partner-approval-smoke.sql
+
       - name: Unit tests
         run: npm run test:unit
 
