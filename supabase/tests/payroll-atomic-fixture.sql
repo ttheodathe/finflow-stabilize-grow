@@ -80,8 +80,6 @@ CREATE TABLE public.pay_runs (
   total_employer_contributions numeric NOT NULL,
   total_employer_cost numeric NOT NULL,
   journal_entry_id uuid,
-  notes text,
-  created_by uuid,
   approved_by uuid,
   approved_at timestamptz,
   paid_at timestamptz,
