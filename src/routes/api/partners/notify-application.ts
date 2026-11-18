@@ -5,7 +5,7 @@ export const Route = createFileRoute("/api/partners/notify-application")({
     handlers: {
       POST: async ({ request }) => {
         const authHeader = request.headers.get("Authorization");
-        const token = authHeader?.replace(/^Bearer\s+/i, "");
+        const token = authHeader?.replace(/^Bearer\\s+/i, "");
         if (!token) return new Response("Missing bearer token", { status: 401 });
 
         let body: { applicationId?: string };
@@ -59,33 +59,42 @@ export const Route = createFileRoute("/api/partners/notify-application")({
   },
 });
 
+function escapeHtml(value: string): string {
+  const entities: Record<string, string> = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  };
+  return value.replace(/[&<>"']/g, (character) => entities[character]);
+}
+
 function buildApplicationEmail(application: {
   status: string;
   business_name: string;
   admin_notes: string | null;
 }): { subject: string | null; html: string } {
   const { status, business_name, admin_notes } = application;
+  const safeBusinessName = escapeHtml(business_name);
+  const safeAdminNotes = escapeHtml(admin_notes ?? "");
 
   if (status === "approved") {
     return {
       subject: "You're approved — welcome to the FinFlowTrack Partner Program",
-      html: `<p>Hi ${business_name},</p><p>Your partner application has been approved. Sign in to FinFlowTrack and visit <a href="https://finflowtrack.com/partners">your partner dashboard</a> to get your referral link.</p>`,
+      html: `<p>Hi ${safeBusinessName},</p><p>Your partner application has been approved. Sign in to FinFlowTrack and visit <a href="https://finflowtrack.com/partners">your partner dashboard</a> to get your referral link.</p>`,
     };
   }
   if (status === "rejected") {
     return {
       subject: "Update on your FinFlowTrack partner application",
-      html: `<p>Hi ${business_name},</p><p>Thanks for applying to the FinFlowTrack Partner Program. After review, we're not able to move forward with your application at this time.${
-        admin_notes ? ` ${admin_notes}` : ""
-      }</p>`,
+      html: `<p>Hi ${safeBusinessName},</p><p>Thanks for applying to the FinFlowTrack Partner Program. After review, we're not able to move forward with your application at this time.${safeAdminNotes ? ` ${safeAdminNotes}` : ""}</p>`,
     };
   }
   if (status === "needs_more_info") {
     return {
       subject: "A quick question about your FinFlowTrack partner application",
-      html: `<p>Hi ${business_name},</p><p>We're reviewing your partner application and need a bit more information before we can proceed.${
-        admin_notes ? ` ${admin_notes}` : ""
-      } Please reply to this email with details.</p>`,
+      html: `<p>Hi ${safeBusinessName},</p><p>We're reviewing your partner application and need a bit more information before we can proceed.${safeAdminNotes ? ` ${safeAdminNotes}` : ""} Please reply to this email with details.</p>`,
     };
   }
   return { subject: null, html: "" };
