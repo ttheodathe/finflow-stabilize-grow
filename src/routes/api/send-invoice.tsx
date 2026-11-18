@@ -32,7 +32,7 @@ export const Route = createFileRoute("/api/send-invoice")({
           const { data: invoice } = await caller.admin
             .from("invoices")
             .select(
-              "id, company_id, invoice_number, total, currency, due_date, share_token, customers(name, email)",
+              "id, company_id, invoice_number, total, currency, due_date, share_token, share_token_expires_at, share_token_revoked_at, customers(name, email)",
             )
             .eq("id", invoiceId)
             .maybeSingle();
@@ -51,8 +51,16 @@ export const Route = createFileRoute("/api/send-invoice")({
           if (!customer?.email) {
             return Response.json({ error: "Customer email is required" }, { status: 400 });
           }
-          if (!invoice.share_token) {
-            return Response.json({ error: "Invoice has no share link" }, { status: 409 });
+          if (
+            !invoice.share_token ||
+            invoice.share_token_revoked_at ||
+            (invoice.share_token_expires_at &&
+              new Date(invoice.share_token_expires_at).getTime() <= Date.now())
+          ) {
+            return Response.json(
+              { error: "Invoice sharing link is revoked or expired. Regenerate it before sending." },
+              { status: 409 },
+            );
           }
 
           const { data: company } = await caller.admin
