@@ -44,8 +44,7 @@ export const Route = createFileRoute("/api/partners/submit-application")({
         if (allowed !== true) {
           return Response.json(
             {
-              error:
-                "Too many applications from this network. Please try again later.",
+              error: "Too many applications from this network. Please try again later.",
             },
             { status: 429, headers: { "Retry-After": "3600" } },
           );
@@ -65,27 +64,24 @@ export const Route = createFileRoute("/api/partners/submit-application")({
           userId = data.user.id;
         }
 
-        const { data, error } = await admin.rpc(
-          "submit_partner_application_server",
-          {
-            p_partner_type: body.partnerType,
-            p_business_name: body.businessName,
-            p_country: body.country,
-            p_contact_email: body.contactEmail,
-            p_terms_accepted: body.termsAccepted,
-            p_website: body.website ?? null,
-            p_industry: body.industry ?? null,
-            p_business_type: body.businessType ?? null,
-            p_linkedin_url: body.linkedinUrl ?? null,
-            p_phone: body.phone ?? null,
-            p_monthly_audience: body.monthlyAudience ?? null,
-            p_approx_clients: body.approxClients ?? null,
-            p_motivation: body.motivation ?? null,
-            p_experience: body.experience ?? null,
-            p_marketing_channels: body.marketingChannels ?? null,
-            p_user_id: userId,
-          },
-        );
+        const { data, error } = await admin.rpc("submit_partner_application_server", {
+          p_partner_type: body.partnerType,
+          p_business_name: body.businessName,
+          p_country: body.country,
+          p_contact_email: body.contactEmail,
+          p_terms_accepted: body.termsAccepted,
+          p_website: body.website ?? null,
+          p_industry: body.industry ?? null,
+          p_business_type: body.businessType ?? null,
+          p_linkedin_url: body.linkedinUrl ?? null,
+          p_phone: body.phone ?? null,
+          p_monthly_audience: body.monthlyAudience ?? null,
+          p_approx_clients: body.approxClients ?? null,
+          p_motivation: body.motivation ?? null,
+          p_experience: body.experience ?? null,
+          p_marketing_channels: body.marketingChannels ?? null,
+          p_user_id: userId,
+        });
         if (error) {
           return Response.json({ error: error.message }, { status: 400 });
         }
