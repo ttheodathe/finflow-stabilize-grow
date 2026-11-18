@@ -226,8 +226,8 @@ jobs:
 
       - name: Print normalized invoice file formatting
         run: |
-          npx prettier --write src/routes/api/invoices/share-link.ts src/routes/_authenticated/invoices.tsx
-          git diff -- src/routes/api/invoices/share-link.ts src/routes/_authenticated/invoices.tsx
+          npx prettier --write src/routes/api/partners/submit-application.ts src/routes/api/invoices/share-link.ts src/routes/_authenticated/invoices.tsx
+          git diff -- src/routes/api/partners/submit-application.ts src/routes/api/invoices/share-link.ts src/routes/_authenticated/invoices.tsx
 
       - name: Check formatting of changed files
         if: github.event_name == 'pull_request'
