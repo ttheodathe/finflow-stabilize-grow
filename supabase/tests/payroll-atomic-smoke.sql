@@ -127,7 +127,7 @@ BEGIN
     );
     RAISE EXCEPTION 'Duplicate employee payload unexpectedly succeeded';
   EXCEPTION WHEN raise_exception THEN
-    IF SQLERRM = 'Duplicate employee payload unexpectedly succeeded' THEN RAISE; END IF;
+    IF SQLERRM NOT LIKE 'Duplicate employees are not allowed%' THEN RAISE; END IF;
   END;
 
   v_bad_totals := jsonb_set(v_payload,'{0,net_pay}','951'::jsonb);
@@ -138,7 +138,7 @@ BEGIN
     );
     RAISE EXCEPTION 'Inconsistent payslip totals unexpectedly succeeded';
   EXCEPTION WHEN raise_exception THEN
-    IF SQLERRM = 'Inconsistent payslip totals unexpectedly succeeded' THEN RAISE; END IF;
+    IF SQLERRM NOT LIKE 'Payslip totals do not reconcile%' THEN RAISE; END IF;
   END;
 
   -- If a later employee in a batch is invalid, no partial pay run is written.
@@ -154,7 +154,7 @@ BEGIN
     );
     RAISE EXCEPTION 'Invalid later payslip unexpectedly succeeded';
   EXCEPTION WHEN raise_exception THEN
-    IF SQLERRM = 'Invalid later payslip unexpectedly succeeded' THEN RAISE; END IF;
+    IF SQLERRM NOT LIKE 'Employee salary changed during payroll generation%' THEN RAISE; END IF;
   END;
   SELECT count(*) INTO v_after FROM public.pay_runs;
   IF v_after <> v_before THEN
