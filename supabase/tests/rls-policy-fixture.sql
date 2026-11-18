@@ -2,6 +2,13 @@
 -- This runs only inside an ephemeral GitHub Actions PostgreSQL service.
 CREATE ROLE authenticated;
 CREATE ROLE anon;
+DO $roles$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='service_role') THEN
+    CREATE ROLE service_role;
+  END IF;
+END;
+$roles$;
 CREATE SCHEMA auth;
 CREATE TABLE auth.users (id uuid PRIMARY KEY, email text);
 CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$
