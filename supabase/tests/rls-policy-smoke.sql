@@ -45,24 +45,13 @@ BEGIN
       'staff insert partners',
       'staff update partners',
       'staff delete partners',
-      'payroll roles insert pay_runs',
       'payroll roles update pay_runs',
-      'payroll roles delete pay_runs',
       'payroll roles insert statutory',
       'payroll roles update statutory',
       'payroll roles delete statutory',
       'payroll roles insert tax brackets',
       'payroll roles update tax brackets',
       'payroll roles delete tax brackets',
-      'payroll roles insert payslip contributions',
-      'payroll roles update payslip contributions',
-      'payroll roles delete payslip contributions',
-      'payroll roles insert payslip line items',
-      'payroll roles update payslip line items',
-      'payroll roles delete payslip line items',
-      'payroll roles insert payslips',
-      'payroll roles update payslips',
-      'payroll roles delete payslips',
       'members or admins read role permissions',
       'company admins insert role permissions',
       'company admins update role permissions',
@@ -73,10 +62,36 @@ BEGIN
       'company admins delete roles',
       'company admins or members update tax returns'
     );
-  IF n <> 65 THEN
-    RAISE EXCEPTION 'Expected 65 replacement policies, found %', n;
+  IF n <> 54 THEN
+    RAISE EXCEPTION 'Expected 54 replacement policies, found %', n;
   END IF;
-END $$;
+  IF has_table_privilege('authenticated','public.pay_runs','INSERT')
+     OR has_table_privilege('authenticated','public.pay_runs','DELETE') THEN
+    RAISE EXCEPTION 'Authenticated users must not insert or delete pay runs directly';
+  END IF;
+  IF NOT has_column_privilege('authenticated','public.pay_runs','status','UPDATE')
+     OR NOT has_column_privilege('authenticated','public.pay_runs','approved_by','UPDATE')
+     OR NOT has_column_privilege('authenticated','public.pay_runs','approved_at','UPDATE') THEN
+    RAISE EXCEPTION 'Authenticated approval/cancellation columns are not writable';
+  END IF;
+  IF has_column_privilege('authenticated','public.pay_runs','total_gross','UPDATE')
+     OR has_column_privilege('authenticated','public.pay_runs','total_net','UPDATE')
+     OR has_column_privilege('authenticated','public.pay_runs','journal_entry_id','UPDATE')
+     OR has_column_privilege('authenticated','public.pay_runs','paid_at','UPDATE') THEN
+    RAISE EXCEPTION 'Authenticated users can modify protected pay-run financial fields';
+  END IF;
+  IF has_table_privilege('authenticated','public.payslips','INSERT')
+     OR has_table_privilege('authenticated','public.payslips','UPDATE')
+     OR has_table_privilege('authenticated','public.payslips','DELETE')
+     OR has_table_privilege('authenticated','public.payslip_contributions','INSERT')
+     OR has_table_privilege('authenticated','public.payslip_contributions','UPDATE')
+     OR has_table_privilege('authenticated','public.payslip_contributions','DELETE')
+     OR has_table_privilege('authenticated','public.payslip_line_items','INSERT')
+     OR has_table_privilege('authenticated','public.payslip_line_items','UPDATE')
+     OR has_table_privilege('authenticated','public.payslip_line_items','DELETE') THEN
+    RAISE EXCEPTION 'Authenticated users must not directly write generated payslip records';
+  END IF;
+END $;
 
 INSERT INTO public.companies(id, organization_id) VALUES
  ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','cccccccc-cccc-4ccc-8ccc-cccccccccccc'),
