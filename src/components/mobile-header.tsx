@@ -92,10 +92,7 @@ export function MobileHeader() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center gap-2 border-b bg-background px-3 shadow-sm lg:hidden">
-      <SidebarTrigger
-        aria-label="Open navigation menu"
-        className="h-11 w-11 shrink-0"
-      />
+      <SidebarTrigger aria-label="Open navigation menu" className="h-11 w-11 shrink-0" />
 
       <Link to="/dashboard" className="flex min-w-0 flex-1 items-center gap-2">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-hero text-xs font-bold text-white">
@@ -122,7 +119,9 @@ export function MobileHeader() {
         </DropdownMenuTrigger>
 
         <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuLabel className="truncate">{fullName || email || "Your account"}</DropdownMenuLabel>
+          <DropdownMenuLabel className="truncate">
+            {fullName || email || "Your account"}
+          </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => navigate({ to: "/settings" })}>
             Settings
