@@ -189,7 +189,7 @@ jobs:
           docker exec "$container_id" psql -U postgres -d finflow_partner_email_test -v ON_ERROR_STOP=1 -f /tmp/partner-email-validation-fixture.sql
           docker cp supabase/migrations/20261118150000_fix_partner_application_email_validation.sql "$container_id:/tmp/partner-email-validation-migration.sql"
           docker exec "$container_id" psql -U postgres -d finflow_partner_email_test -v ON_ERROR_STOP=1 -f /tmp/partner-email-validation-migration.sql
-          docker cp supabase/migrations/20261118170000_partner_application_server_rate_limit.sql "$container_id:/tmp/partner-rate-limit-migration.sql"
+          docker cp supabase/migrations/20261118025042_partner_application_server_rate_limit.sql "$container_id:/tmp/partner-rate-limit-migration.sql"
           docker exec "$container_id" psql -U postgres -d finflow_partner_email_test -v ON_ERROR_STOP=1 -f /tmp/partner-rate-limit-migration.sql
           docker cp supabase/tests/partner-email-validation-smoke.sql "$container_id:/tmp/partner-email-validation-smoke.sql"
           docker exec "$container_id" psql -U postgres -d finflow_partner_email_test -v ON_ERROR_STOP=1 -f /tmp/partner-email-validation-smoke.sql
@@ -205,7 +205,7 @@ jobs:
           docker exec "$container_id" psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "CREATE DATABASE finflow_invoice_share_test"
           docker cp supabase/tests/invoice-share-link-fixture.sql "$container_id:/tmp/invoice-share-link-fixture.sql"
           docker exec "$container_id" psql -U postgres -d finflow_invoice_share_test -v ON_ERROR_STOP=1 -f /tmp/invoice-share-link-fixture.sql
-          docker cp supabase/migrations/20261118180000_invoice_share_link_lifecycle.sql "$container_id:/tmp/invoice-share-link-migration.sql"
+          docker cp supabase/migrations/20261118025047_invoice_share_link_lifecycle.sql "$container_id:/tmp/invoice-share-link-migration.sql"
           docker exec "$container_id" psql -U postgres -d finflow_invoice_share_test -v ON_ERROR_STOP=1 -f /tmp/invoice-share-link-migration.sql
           docker cp supabase/tests/invoice-share-link-prepare-smoke.sql "$container_id:/tmp/invoice-share-link-prepare-smoke.sql"
           docker exec "$container_id" psql -U postgres -d finflow_invoice_share_test -v ON_ERROR_STOP=1 -f /tmp/invoice-share-link-prepare-smoke.sql
