@@ -22,9 +22,9 @@ import { Badge } from "@/components/ui/badge";
 import { PLANS, type PlanKey } from "@/lib/paddle/config";
 
 const SITE_URL = "https://www.finflowtrack.com/";
-const PAGE_TITLE = "FinFlow Track — Accounting & Cash Flow Software for Small Businesses";
+const PAGE_TITLE = "FinFlow Track — Invoicing, Payments & Cash Flow for Service Businesses";
 const PAGE_DESC =
-  "Know your numbers, control your cash flow and grow your business. Invoicing, expenses, multi-currency bookkeeping and financial reports for freelancers, SMEs and NGOs. Start on the Free plan.";
+  "Create client invoices, record payments and expenses, and see what customers still owe. Financial management for owner-led service businesses and small teams.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -204,19 +204,16 @@ function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-hero shadow-glow">
-            <Wallet className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
-          </div>
-          <span className="text-lg font-bold tracking-tight">FinFlow Track</span>
+        <Link to="/" className="flex items-center gap-3" aria-label="FinFlow Track home">
+          <img src="/logo.png" alt="FinFlow Track — Smart Finance. Clear Growth." className="h-10 w-auto max-w-[190px] object-contain" />
         </Link>
         <nav aria-label="Main" className="hidden items-center gap-8 md:flex">
           <Link to="/features" className={navLink}>
-            Features
+            How it works
           </Link>
-          <a href="#ai" className={navLink}>
-            AI
-          </a>
+          <Link to="/guides" className={navLink}>
+            Guides
+          </Link>
           <Link to="/pricing" className={navLink}>
             Pricing
           </Link>
@@ -260,9 +257,9 @@ function Header() {
             <Link to="/features" onClick={() => setOpen(false)} className="text-sm font-medium">
               Features
             </Link>
-            <a href="#ai" onClick={() => setOpen(false)} className="text-sm font-medium">
-              AI
-            </a>
+            <Link to="/guides" onClick={() => setOpen(false)} className="text-sm font-medium">
+              Guides
+            </Link>
             <Link to="/pricing" onClick={() => setOpen(false)} className="text-sm font-medium">
               Pricing
             </Link>
@@ -306,15 +303,13 @@ function Hero() {
             className="mb-6 gap-1.5 border-border/60 bg-card/80 px-3 py-1.5 text-xs font-medium"
           >
             <Sparkles className="h-3.5 w-3.5 text-accent" />
-            Accounting for freelancers, SMEs and NGOs
+            Finance clarity for service businesses
           </Badge>
           <h1 className="text-4xl font-bold leading-[1.1] tracking-tight md:text-6xl">
-            Know your numbers. <span className="gradient-text">Control your cash flow.</span> Grow
-            your business.
+            Turn every invoice into a clearer picture of your cash flow.
           </h1>
           <p className="mt-6 text-lg leading-relaxed text-muted-foreground md:text-xl">
-            Invoicing, expenses and financial reports in one place, so you always know who owes you,
-            what you owe and where your business stands.
+            Create and share client invoices, record the payments you receive, track operating expenses and see which customer balances still need attention.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button asChild size="lg" className="bg-gradient-hero shadow-glow hover:opacity-95">
@@ -428,10 +423,10 @@ function Features() {
             Features
           </Badge>
           <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
-            Everything you need to run the books
+            A clearer view of the money moving through your business
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            One platform for invoicing, expenses, banking imports and reporting.{" "}
+            Follow the money from the invoice you send to the payment you record and the expenses you manage.{" "}
             <Link to="/features" className="font-medium text-primary underline underline-offset-2">
               See all features
             </Link>
