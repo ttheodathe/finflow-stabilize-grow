@@ -1,4 +1,4 @@
-\\set ON_ERROR_STOP on
+\set ON_ERROR_STOP on
 BEGIN;
 
 -- Legacy token is preserved and remains accessible because its expiry/revocation
