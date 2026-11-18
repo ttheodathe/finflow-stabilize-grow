@@ -66,7 +66,7 @@ export const Route = createFileRoute("/api/partners/submit-application")({
         let userId: string | null = null;
         const authorization = request.headers.get("Authorization");
         if (authorization) {
-          const match = authorization.match(/^Bearer\\s+(.+)$/i);
+          const match = authorization.match(/^Bearer\s+(.+)$/i);
           if (!match) {
             return Response.json({ error: "Invalid session" }, { status: 401 });
           }
