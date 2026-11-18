@@ -180,6 +180,18 @@ jobs:
           docker cp supabase/tests/anon-table-access-smoke.sql "$container_id:/tmp/anon-table-access-smoke.sql"
           docker exec "$container_id" psql -U postgres -d finflow_anon_acl_test -v ON_ERROR_STOP=1 -f /tmp/anon-table-access-smoke.sql
 
+      - name: Verify partner application email validation
+        run: |
+          container_id="$(docker ps --filter 'ancestor=postgres:16' --format '{{.ID}}' | head -n 1)"
+          test -n "$container_id"
+          docker exec "$container_id" psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "CREATE DATABASE finflow_partner_email_test"
+          docker cp supabase/tests/partner-email-validation-fixture.sql "$container_id:/tmp/partner-email-validation-fixture.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_partner_email_test -v ON_ERROR_STOP=1 -f /tmp/partner-email-validation-fixture.sql
+          docker cp supabase/migrations/20261118150000_fix_partner_application_email_validation.sql "$container_id:/tmp/partner-email-validation-migration.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_partner_email_test -v ON_ERROR_STOP=1 -f /tmp/partner-email-validation-migration.sql
+          docker cp supabase/tests/partner-email-validation-smoke.sql "$container_id:/tmp/partner-email-validation-smoke.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_partner_email_test -v ON_ERROR_STOP=1 -f /tmp/partner-email-validation-smoke.sql
+
       - name: Unit tests
         run: npm run test:unit
 
