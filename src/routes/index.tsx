@@ -7,7 +7,6 @@ import {
   Check,
   FileText,
   Receipt,
-  Wallet,
   BarChart3,
   Globe2,
   Sparkles,
