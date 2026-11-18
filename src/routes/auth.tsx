@@ -15,7 +15,12 @@ function getSafeNextPath(value?: string): string | null {
     return null;
   }
   // Never allow a return path to bypass account setup or create an auth loop.
-  if (value === "/auth" || value.startsWith("/auth?") || value === "/onboarding" || value.startsWith("/onboarding?")) {
+  if (
+    value === "/auth" ||
+    value.startsWith("/auth?") ||
+    value === "/onboarding" ||
+    value.startsWith("/onboarding?")
+  ) {
     return null;
   }
   return value;
@@ -102,7 +107,9 @@ function AuthPage() {
       if (error) throw error;
     } catch (err) {
       console.error("[auth] Google OAuth failed:", err);
-      toast.error(err instanceof Error ? err.message : "Couldn't continue with Google. Please try again.");
+      toast.error(
+        err instanceof Error ? err.message : "Couldn't continue with Google. Please try again.",
+      );
       setGoogleLoading(false);
     }
   }
@@ -155,7 +162,11 @@ function AuthPage() {
     <div className="min-h-screen bg-gradient-subtle flex items-center justify-center px-4 py-8 sm:py-12">
       <div className="w-full max-w-md">
         <Link to="/" className="mb-8 flex justify-center" aria-label="FinFlow Track home">
-          <img src="/logo.png" alt="FinFlow Track — Smart Finance. Clear Growth." className="h-12 w-auto max-w-[220px] object-contain" />
+          <img
+            src="/logo.png"
+            alt="FinFlow Track — Smart Finance. Clear Growth."
+            className="h-12 w-auto max-w-[220px] object-contain"
+          />
         </Link>
         <div className="bg-card border rounded-2xl shadow-elevated p-5 sm:p-8">
           <h1 className="text-2xl font-bold mb-1">
@@ -174,20 +185,41 @@ function AuthPage() {
             className="mb-5 h-11 w-full gap-3"
           >
             {googleLoading ? (
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent" aria-hidden="true" />
+              <span
+                className="h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent"
+                aria-hidden="true"
+              />
             ) : (
               <svg aria-hidden="true" viewBox="0 0 48 48" className="h-5 w-5">
-                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5Z" transform="translate(0 5)" />
-                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.25 5.47-4.72 7.16l7.62 5.91c4.45-4.11 7.14-10.16 7.14-17.54Z" />
-                <path fill="#FBBC05" d="M10.53 28.59A14.4 14.4 0 0 1 9.75 24c0-1.59.27-3.13.76-4.59l-7.98-6.19A23.9 23.9 0 0 0 0 24c0 3.87.93 7.52 2.56 10.78l7.97-6.19Z" transform="translate(0 0)" />
-                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.9-5.91l-7.62-5.91c-2.11 1.42-4.81 2.27-8.28 2.27-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48Z" />
+                <path
+                  fill="#EA4335"
+                  d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5Z"
+                  transform="translate(0 5)"
+                />
+                <path
+                  fill="#4285F4"
+                  d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.25 5.47-4.72 7.16l7.62 5.91c4.45-4.11 7.14-10.16 7.14-17.54Z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M10.53 28.59A14.4 14.4 0 0 1 9.75 24c0-1.59.27-3.13.76-4.59l-7.98-6.19A23.9 23.9 0 0 0 0 24c0 3.87.93 7.52 2.56 10.78l7.97-6.19Z"
+                  transform="translate(0 0)"
+                />
+                <path
+                  fill="#34A853"
+                  d="M24 48c6.48 0 11.93-2.13 15.9-5.91l-7.62-5.91c-2.11 1.42-4.81 2.27-8.28 2.27-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48Z"
+                />
               </svg>
             )}
             {googleLoading ? "Connecting to Google…" : `Continue with Google`}
           </Button>
           <div className="relative mb-5">
-            <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
-            <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-3 text-muted-foreground">Or continue with email</span></div>
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-3 text-muted-foreground">Or continue with email</span>
+            </div>
           </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === "signup" && (

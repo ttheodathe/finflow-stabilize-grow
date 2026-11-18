@@ -51,7 +51,9 @@ function PricingPage() {
           </h1>
 
           <p className="mt-8 max-w-3xl text-lg leading-8 text-muted-foreground">
-            Start with the essentials for sending client invoices, recording expenses and understanding your finances. Move to a higher plan when your team or reporting needs expand.
+            Start with the essentials for sending client invoices, recording expenses and
+            understanding your finances. Move to a higher plan when your team or reporting needs
+            expand.
           </p>
 
           <div className="mt-10 flex flex-wrap gap-4">
@@ -80,7 +82,8 @@ function PricingPage() {
             <h3 className="text-xl font-semibold">Plan options</h3>
 
             <p className="mt-4 text-muted-foreground">
-              Choose a plan based on the companies, team members and financial tools your business needs.
+              Choose a plan based on the companies, team members and financial tools your business
+              needs.
             </p>
           </div>
 
@@ -124,7 +127,8 @@ function PricingPage() {
             <h2 className="text-4xl font-bold">Plans for the way your business works</h2>
 
             <p className="mt-6 text-muted-foreground">
-              Start with one business and the core finance workflow. Upgrade when you need more companies, team capacity or advanced tools.
+              Start with one business and the core finance workflow. Upgrade when you need more
+              companies, team capacity or advanced tools.
             </p>
           </div>
 
@@ -181,11 +185,14 @@ function PricingPage() {
               </div>
 
               <p className="mt-4 text-muted-foreground">
-                For service teams that need more company and team capacity, reconciliation and advanced reporting.
+                For service teams that need more company and team capacity, reconciliation and
+                advanced reporting.
               </p>
 
               <div className="mt-8">
-                <span className="text-5xl font-bold">{PLANS.pro.priceMonthly === null ? "Custom" : "$" + PLANS.pro.priceMonthly}</span>
+                <span className="text-5xl font-bold">
+                  {PLANS.pro.priceMonthly === null ? "Custom" : "$" + PLANS.pro.priceMonthly}
+                </span>
 
                 <span className="ml-2 text-muted-foreground">/month</span>
               </div>
@@ -234,7 +241,11 @@ function PricingPage() {
               </p>
 
               <div className="mt-8">
-                <span className="text-5xl font-bold">{PLANS.business.priceMonthly === null ? "Custom" : "$" + PLANS.business.priceMonthly}</span>
+                <span className="text-5xl font-bold">
+                  {PLANS.business.priceMonthly === null
+                    ? "Custom"
+                    : "$" + PLANS.business.priceMonthly}
+                </span>
 
                 <span className="ml-2 text-muted-foreground">/month</span>
               </div>
@@ -279,7 +290,8 @@ function PricingPage() {
               </div>
 
               <p className="mt-4 text-muted-foreground">
-                Custom pricing for organizations with requirements that need a direct discussion with our team.
+                Custom pricing for organizations with requirements that need a direct discussion
+                with our team.
               </p>
 
               <div className="mt-8">
@@ -315,7 +327,8 @@ function PricingPage() {
           <h2 className="text-4xl font-bold">Compare Plans</h2>
 
           <p className="mt-6 text-muted-foreground max-w-3xl mx-auto">
-            Compare the included features and limits before selecting a plan. Feature access is subject to the current plan configuration.
+            Compare the included features and limits before selecting a plan. Feature access is
+            subject to the current plan configuration.
           </p>
         </div>
 
@@ -374,7 +387,8 @@ function PricingPage() {
             <h2 className="text-4xl font-bold">Pricing That Grows With Your Business</h2>
 
             <p className="mt-6 text-lg text-muted-foreground max-w-3xl mx-auto">
-              Choose a plan based on the company and team limits shown above. Review the included features and confirm any important requirement with our team before upgrading.
+              Choose a plan based on the company and team limits shown above. Review the included
+              features and confirm any important requirement with our team before upgrading.
             </p>
           </div>
 
@@ -395,7 +409,8 @@ function PricingPage() {
               <h3 className="text-xl font-semibold">Upgrade When Ready</h3>
 
               <p className="mt-4 text-muted-foreground">
-                Move to a plan with more company capacity, team members and financial tools when you need them.
+                Move to a plan with more company capacity, team members and financial tools when you
+                need them.
               </p>
             </div>
 
@@ -405,7 +420,8 @@ function PricingPage() {
               <h3 className="text-xl font-semibold">Transparent Billing</h3>
 
               <p className="mt-4 text-muted-foreground">
-                Review the listed monthly price, company limit and team limit before selecting a plan.
+                Review the listed monthly price, company limit and team limit before selecting a
+                plan.
               </p>
             </div>
           </div>
@@ -457,7 +473,9 @@ function PricingPage() {
               <h3 className="text-xl font-semibold">Are my financial records secure?</h3>
 
               <p className="mt-4 text-muted-foreground leading-8">
-                Review the Security and Privacy pages for the current descriptions of account access and data handling. We do not claim independent security certifications on this pricing page.
+                Review the Security and Privacy pages for the current descriptions of account access
+                and data handling. We do not claim independent security certifications on this
+                pricing page.
               </p>
             </div>
 
@@ -465,7 +483,8 @@ function PricingPage() {
               <h3 className="text-xl font-semibold">Do you offer Enterprise solutions?</h3>
 
               <p className="mt-4 text-muted-foreground leading-8">
-                The Enterprise plan is listed as custom pricing. Contact us to discuss your organization’s requirements and confirm availability.
+                The Enterprise plan is listed as custom pricing. Contact us to discuss your
+                organization’s requirements and confirm availability.
               </p>
             </div>
           </div>
@@ -483,7 +502,8 @@ function PricingPage() {
           </h2>
 
           <p className="mx-auto mt-8 max-w-3xl text-lg text-muted-foreground">
-            Create a business workspace, send a client invoice and keep a clearer record of payments and expenses.
+            Create a business workspace, send a client invoice and keep a clearer record of payments
+            and expenses.
           </p>
 
           <div className="mt-12 flex flex-wrap justify-center gap-4">

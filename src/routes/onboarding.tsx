@@ -275,7 +275,11 @@ function OnboardingPage() {
     <div className="min-h-screen bg-gradient-subtle px-4 py-6 sm:py-10">
       <div className="mx-auto max-w-2xl">
         <Link to="/" className="mb-8 flex justify-center" aria-label="FinFlow Track home">
-          <img src="/logo.png" alt="FinFlow Track — Smart Finance. Clear Growth." className="h-12 w-auto max-w-[220px] object-contain" />
+          <img
+            src="/logo.png"
+            alt="FinFlow Track — Smart Finance. Clear Growth."
+            className="h-12 w-auto max-w-[220px] object-contain"
+          />
         </Link>
         {resuming ? (
           <div className="flex items-center justify-center py-24 text-muted-foreground">
@@ -287,7 +291,8 @@ function OnboardingPage() {
               {firstName ? `Welcome, ${firstName}` : "Welcome to FinFlow Track"}
             </h1>
             <p className="text-center text-muted-foreground mb-8">
-              Set up your business first. Then you can create an invoice, record expenses and see what customers still owe.
+              Set up your business first. Then you can create an invoice, record expenses and see
+              what customers still owe.
             </p>
 
             <div className="mb-8 flex items-center justify-between">
@@ -497,7 +502,8 @@ function OnboardingPage() {
                 <div className="p-4 sm:p-5">
                   <p className="text-sm font-semibold">A look at your workspace</p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    After setup, you can add customers, create invoices, record expenses and explore reports.
+                    After setup, you can add customers, create invoices, record expenses and explore
+                    reports.
                   </p>
                 </div>
                 <div

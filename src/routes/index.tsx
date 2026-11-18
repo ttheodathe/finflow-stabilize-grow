@@ -207,7 +207,11 @@ function Header() {
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         <Link to="/" className="flex items-center gap-3" aria-label="FinFlow Track home">
-          <img src="/logo.png" alt="FinFlow Track — Smart Finance. Clear Growth." className="h-10 w-auto max-w-[190px] object-contain" />
+          <img
+            src="/logo.png"
+            alt="FinFlow Track — Smart Finance. Clear Growth."
+            className="h-10 w-auto max-w-[190px] object-contain"
+          />
         </Link>
         <nav aria-label="Main" className="hidden items-center gap-8 md:flex">
           <Link to="/features" className={navLink}>
@@ -311,7 +315,8 @@ function Hero() {
             Turn every invoice into a clearer picture of your cash flow.
           </h1>
           <p className="mt-6 text-lg leading-relaxed text-muted-foreground md:text-xl">
-            Create and share client invoices, record the payments you receive, track operating expenses and see which customer balances still need attention.
+            Create and share client invoices, record the payments you receive, track operating
+            expenses and see which customer balances still need attention.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button asChild size="lg" className="bg-gradient-hero shadow-glow hover:opacity-95">
@@ -343,9 +348,27 @@ function Hero() {
  */
 function ReportsPreview() {
   const invoices = [
-    { number: "INV-1048", customer: "Northstar Studio", due: "Due Nov 24", amount: "$1,250", status: "Awaiting payment" },
-    { number: "INV-1047", customer: "Brightline Consulting", due: "Due Nov 16", amount: "$840", status: "Overdue" },
-    { number: "INV-1046", customer: "Fieldwork Digital", due: "Paid Nov 12", amount: "$2,100", status: "Paid" },
+    {
+      number: "INV-1048",
+      customer: "Northstar Studio",
+      due: "Due Nov 24",
+      amount: "$1,250",
+      status: "Awaiting payment",
+    },
+    {
+      number: "INV-1047",
+      customer: "Brightline Consulting",
+      due: "Due Nov 16",
+      amount: "$840",
+      status: "Overdue",
+    },
+    {
+      number: "INV-1046",
+      customer: "Fieldwork Digital",
+      due: "Paid Nov 12",
+      amount: "$2,100",
+      status: "Paid",
+    },
   ];
   return (
     <figure className="mx-auto mt-14 max-w-5xl">
@@ -353,9 +376,13 @@ function ReportsPreview() {
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-muted/30 px-5 py-4">
           <div>
             <div className="text-sm font-semibold">Invoice overview</div>
-            <div className="mt-0.5 text-xs text-muted-foreground">Illustrative service-business workspace</div>
+            <div className="mt-0.5 text-xs text-muted-foreground">
+              Illustrative service-business workspace
+            </div>
           </div>
-          <span className="rounded-full bg-secondary/15 px-3 py-1 text-xs font-semibold text-secondary-foreground">Sample workspace</span>
+          <span className="rounded-full bg-secondary/15 px-3 py-1 text-xs font-semibold text-secondary-foreground">
+            Sample workspace
+          </span>
         </div>
         <div className="grid gap-3 p-5 sm:grid-cols-3">
           <div className="rounded-xl border border-border p-4">
@@ -393,13 +420,17 @@ function ReportsPreview() {
                   <td className="py-3 pr-4 text-muted-foreground">{invoice.due}</td>
                   <td className="py-3 pr-4 text-right tabular-nums">{invoice.amount}</td>
                   <td className="py-3 pl-4 text-right">
-                    <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-                      invoice.status === "Paid"
-                        ? "bg-secondary/15 text-secondary-foreground"
-                        : invoice.status === "Overdue"
-                          ? "bg-destructive/10 text-destructive"
-                          : "bg-muted text-muted-foreground"
-                    }`}>{invoice.status}</span>
+                    <span
+                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
+                        invoice.status === "Paid"
+                          ? "bg-secondary/15 text-secondary-foreground"
+                          : invoice.status === "Overdue"
+                            ? "bg-destructive/10 text-destructive"
+                            : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {invoice.status}
+                    </span>
                   </td>
                 </tr>
               ))}
@@ -408,7 +439,8 @@ function ReportsPreview() {
         </div>
       </div>
       <figcaption className="mt-3 text-center text-xs text-muted-foreground">
-        Conceptual preview. All names, counts and amounts are illustrative, not customer records or product performance claims.
+        Conceptual preview. All names, counts and amounts are illustrative, not customer records or
+        product performance claims.
       </figcaption>
     </figure>
   );
@@ -454,7 +486,8 @@ function Features() {
             A clearer view of the money moving through your business
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Follow the money from the invoice you send to the payment you record and the expenses you manage.{" "}
+            Follow the money from the invoice you send to the payment you record and the expenses
+            you manage.{" "}
             <Link to="/features" className="font-medium text-primary underline underline-offset-2">
               See all features
             </Link>

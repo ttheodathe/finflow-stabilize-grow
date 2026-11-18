@@ -128,10 +128,15 @@ export function SiteFooter() {
         <div className="grid gap-8 md:grid-cols-5">
           <div className="md:col-span-2">
             <Link to="/" className="flex items-center gap-3" aria-label="FinFlow Track home">
-              <img src="/logo.png" alt="FinFlow Track — Smart Finance. Clear Growth." className="h-10 w-auto max-w-[190px] object-contain" />
+              <img
+                src="/logo.png"
+                alt="FinFlow Track — Smart Finance. Clear Growth."
+                className="h-10 w-auto max-w-[190px] object-contain"
+              />
             </Link>
             <p className="mt-3 max-w-sm text-sm text-muted-foreground">
-              Invoices, recorded payments, expenses and financial visibility for owner-led service businesses and small teams.
+              Invoices, recorded payments, expenses and financial visibility for owner-led service
+              businesses and small teams.
             </p>
             <NewsletterForm />
           </div>
