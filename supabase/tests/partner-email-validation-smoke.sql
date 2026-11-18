@@ -10,18 +10,12 @@ SELECT public.submit_partner_application(
 ) AS valid_id \gset
 
 RESET ROLE;
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM public.partner_applications
-    WHERE id = :'valid_id'::uuid
-      AND contact_email = 'applicant+ci@example.com'
-      AND status = 'pending'
-  ) THEN
-    RAISE EXCEPTION 'valid email was not normalized and stored';
-  END IF;
-END;
-$$;
+SELECT CASE WHEN EXISTS (
+  SELECT 1 FROM public.partner_applications
+  WHERE id = :'valid_id'::uuid
+    AND contact_email = 'applicant+ci@example.com'
+    AND status = 'pending'
+) THEN 1 ELSE 1/0 END AS valid_email_stored;
 
 SET LOCAL ROLE anon;
 DO $$
