@@ -32,7 +32,8 @@ function makeMockGitHub(initial = {}) {
     const body = files.get(`content/blog/${slug}.md`)?.content || "";
     const title = body.match(/^title:\s*["']?([^\n"']+)/m)?.[1] || "Test Article";
     const visible = body.replace(/---[\s\S]*?---/, "").trim();
-    return new Response(`<html><head><title>${title}</title><link rel="canonical" href="${url}"></head><body>${title} ${visible}</body></html>`, { status: 200 });
+    const canonical = `https://www.finflowtrack.com/blog/${slug}`;
+    return new Response(`<html><head><title>${title}</title><link rel="canonical" href="${canonical}"></head><body>${title} ${visible}</body></html>`, { status: 200 });
   };
   return { files, fetchImpl };
 }
@@ -98,7 +99,7 @@ test("staging publish writes a real repository file and is idempotent", async ()
   const mock = makeMockGitHub();
   const adapter = createGitHubContentAdapter({
     token: "test-token", owner: "test", repo: "repo", env: stagingEnv(),
-    fetchImpl: mock.fetchImpl,
+    fetchImpl: mock.fetchImpl, publicBaseUrl: "https://preview.finflowtrack.test",
   });
   const markdown = '---\ntitle: "Test Article"\n---\n\nA useful article body for safe staging verification.';
   const operation = approvedOperation("NEW_ARTICLE", markdown, "content/blog/test-article.md", { verificationText: "A useful article body for safe staging verification." });
@@ -115,7 +116,7 @@ test("new article with an existing different slug is rejected", async () => {
   const mock = makeMockGitHub({ "content/blog/test-article.md": "existing article" });
   const adapter = createGitHubContentAdapter({
     token: "test-token", owner: "test", repo: "repo", env: stagingEnv(),
-    fetchImpl: mock.fetchImpl,
+    fetchImpl: mock.fetchImpl, publicBaseUrl: "https://preview.finflowtrack.test",
   });
   const markdown = '---\ntitle: "Test Article"\n---\n\nNew article body.';
   await assert.rejects(adapter.execute(approvedOperation("NEW_ARTICLE", markdown, "content/blog/test-article.md")), /Duplicate slug/);
@@ -125,7 +126,7 @@ test("approval is invalidated when the content changes", async () => {
   const mock = makeMockGitHub();
   const adapter = createGitHubContentAdapter({
     token: "test-token", owner: "test", repo: "repo", env: stagingEnv(),
-    fetchImpl: mock.fetchImpl,
+    fetchImpl: mock.fetchImpl, publicBaseUrl: "https://preview.finflowtrack.test",
   });
   const markdown = '---\ntitle: "Test Article"\n---\n\nOriginal body.';
   const operation = approvedOperation("NEW_ARTICLE", markdown, "content/blog/test-article.md");
@@ -139,7 +140,7 @@ test("existing article update snapshots original content and rollback restores i
   const mock = makeMockGitHub({ "content/blog/test-article.md": original });
   const adapter = createGitHubContentAdapter({
     token: "test-token", owner: "test", repo: "repo", env: stagingEnv("EXISTING_ARTICLE_UPDATE"),
-    fetchImpl: mock.fetchImpl,
+    fetchImpl: mock.fetchImpl, publicBaseUrl: "https://preview.finflowtrack.test",
   });
   const baseline = mock.files.get("content/blog/test-article.md").sha;
   const operation = approvedOperation("EXISTING_ARTICLE_UPDATE", revised, "content/blog/test-article.md", {
