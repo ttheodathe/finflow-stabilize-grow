@@ -49,7 +49,7 @@ jobs:
         run: npm ci
 
       - name: Test SEO pipeline and content-operation safeguards
-        run: node --test seo-engine/*.test.mjs seo-engine/content-ops/*.test.mjs seo-engine/persistence/*.test.mjs
+        run: node --test seo-engine/*.test.mjs seo-engine/content-ops/*.test.mjs seo-engine/persistence/*.test.mjs seo-engine/research/*.test.mjs seo-engine/schedulers/*.test.mjs
 
       - name: Verify dependency ReDoS mitigation
         run: npm run test:security
@@ -95,7 +95,7 @@ jobs:
             supabase/migrations/20261119123210_seo_ops_rpc_ingest.sql \
             supabase/migrations/20261119123551_seo_ops_activation_snapshot_rpc.sql \
             supabase/migrations/20261119124259_seo_ops_content_operation_rpc.sql \
-            supabase/migrations/20261119124347_seo_ops_content_operation_key_guard.sql; do
+            supabase/migrations/20261119124347_seo_ops_content_operation_key_guard.sql \\\n            supabase/migrations/20261119160000_seo_ops_read_persisted_opportunities.sql; do
             name="$(basename "$migration")"
             docker cp "$migration" "$container_id:/tmp/$name"
             docker exec "$container_id" psql -U postgres -d finflow_seo_ops_test -v ON_ERROR_STOP=1 -f "/tmp/$name"
