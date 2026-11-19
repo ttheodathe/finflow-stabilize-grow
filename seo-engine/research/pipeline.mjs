@@ -248,7 +248,7 @@ export function analyzeCannibalization(query, inventory, targetUrl = null) {
   const target = exactTarget || inferredTarget;
   const conflict = Boolean(target);
   const targetQueryMatch = !target ? "NO_STRONG_MATCH"
-    : exactTarget && target.score < 0.12 ? "EXACT_LANDING_PAGE_LOW_TEXT_OVERLAP_REVIEW_REQUIRED"
+    : exactTarget && target.score < 0.30 ? "EXACT_LANDING_PAGE_LOW_TEXT_OVERLAP_REVIEW_REQUIRED"
     : exactTarget ? "EXACT_LANDING_PAGE_TEXT_OVERLAP_MATCH" : "INFERRED_EXISTING_INTENT_MATCH";
   return {
     status: conflict ? "EXISTING_INTENT_MATCH" : "NO_STRONG_MATCH",
@@ -342,6 +342,7 @@ export async function runResearchPipeline({
     const base = { candidate, intent, freshness, cannibalization, draft: null, quality: null, rejectionReasons: [], editorialReviewQuestions: [] };
     if (cannibalization.targetQueryMatch === "EXACT_LANDING_PAGE_LOW_TEXT_OVERLAP_REVIEW_REQUIRED") {
       base.editorialReviewQuestions.push("The exact GSC landing page is an existing article, but title/tag token overlap with this query is low; confirm the page serves the intended query before approving the update.");
+      base.rejectionReasons.push("EXACT_TARGET_INTENT_MISMATCH_REQUIRES_HUMAN_REVIEW");
     }
     if (!candidate.targetQuery) base.rejectionReasons.push("MISSING_TARGET_QUERY");
     if (freshness.status === "STALE" || freshness.status === "FUTURE" || freshness.status === "INVALID") base.rejectionReasons.push(`GSC_EVIDENCE_${freshness.status}`);
@@ -417,12 +418,16 @@ export async function runResearchPipeline({
       if (store) {
         const scheduledFor = now.toISOString().slice(0,10);
         const operationKey = `research:${candidate.id || draft.slug}:${freshness.reportingPeriodEnd}:${hash.slice(0,16)}`;
-        await store.recordContentOperation({
+        if (!candidate.persistedOpportunityId || !/^[0-9a-f-]{36}$/i.test(candidate.persistedOpportunityId)) {
+          throw new Error("Durable research persistence requires the UUID of the persisted Scheduler 1 opportunity.");
+        }
+        const operationResult = await store.recordContentOperation({
           operationKey, operationType,
           targetPath:`content/blog/${draft.slug}.md`, slug:draft.slug, status:"DRAFTED",
           proposedContentHash:hash,
           payload:{
             pipelineVersion:"b7.1", evidenceMode:candidate.evidenceMode,
+            sourceCollectionRunId:candidate.sourceCollectionRunId,
             candidate, intent, freshness, cannibalization, existingContentComparison:existingComparisons,
             sources:sourceRecords, claims:draft.claims, productEvidence:draft.productEvidence,
             quality:base.quality, draftMarkdown:draft.content,
@@ -430,6 +435,36 @@ export async function runResearchPipeline({
             createdAt:now.toISOString(), scheduledFor,
           },
         });
+        const operationId = Array.isArray(operationResult) ? operationResult[0] : operationResult;
+        if (typeof store.recordResearchRecord === "function") {
+          const records = [...sourceRecords];
+          if (productEvidence) records.push({
+            url: "https://www.finflowtrack.com/pricing",
+            sourceTitle: "FinFlow Track pricing page and feature catalog",
+            publisher: "FinFlow Track", publishedAt: null, retrievedAt: now.toISOString(),
+            status: "FIRST_PARTY_REPOSITORY_VERIFIED",
+          });
+          for (const source of records) {
+            const mappedClaims = draft.claims.filter(claim => claim.sourceUrls.includes(source.url));
+            await store.recordResearchRecord({
+              opportunityId: candidate.persistedOpportunityId, sourceUrl: source.url,
+              sourceTitle: source.sourceTitle || source.publisher || source.url,
+              sourcePublishedAt: source.publishedAt || null,
+              retrievedAt: source.retrievedAt || now.toISOString(),
+              supportedClaims: mappedClaims.filter(claim => claim.verificationStatus !== "UNVERIFIED"),
+              unresolvedClaims: mappedClaims.filter(claim => claim.verificationStatus === "UNVERIFIED"),
+            });
+          }
+        }
+        if (typeof store.recordContentRevision === "function") {
+          if (typeof operationId !== "string" || !/^[0-9a-f-]{36}$/i.test(operationId)) {
+            throw new Error("Content operation persistence did not return a valid operation UUID for revision storage.");
+          }
+          await store.recordContentRevision({
+            operationId, revisionNumber: 1, contentHash: hash,
+            markdown: draft.content, revisionState: "PROPOSED",
+          });
+        }
         base.persistence = "PERSISTED";
       } else base.persistence = "LOCAL_DRY_RUN_ONLY";
     }
