@@ -333,7 +333,10 @@ export async function runResearchPipeline({
     const freshness = freshnessFor(candidate, now);
     const intent = classifySearchIntent(candidate.targetQuery);
     const cannibalization = analyzeCannibalization(candidate.targetQuery, inventory, candidate.targetUrl);
-    const base = { candidate, intent, freshness, cannibalization, draft: null, quality: null, rejectionReasons: [] };
+    const base = { candidate, intent, freshness, cannibalization, draft: null, quality: null, rejectionReasons: [], editorialReviewQuestions: [] };
+    if (cannibalization.targetQueryMatch === "EXACT_LANDING_PAGE_LOW_TEXT_OVERLAP_REVIEW_REQUIRED") {
+      base.editorialReviewQuestions.push("The exact GSC landing page is an existing article, but title/tag token overlap with this query is low; confirm the page serves the intended query before approving the update.");
+    }
     if (!candidate.targetQuery) base.rejectionReasons.push("MISSING_TARGET_QUERY");
     if (freshness.status === "STALE" || freshness.status === "FUTURE" || freshness.status === "INVALID") base.rejectionReasons.push(`GSC_EVIDENCE_${freshness.status}`);
     if (freshness.status === "UNKNOWN" && !allowFixture) base.rejectionReasons.push("GSC_FRESHNESS_UNKNOWN");
@@ -394,7 +397,7 @@ export async function runResearchPipeline({
       ...quality, frontmatterValid, bodyWords, duplicateSlug,
       sourceCount: sourceRecords.length,
       verifiedSourceCount: sourceRecords.filter(source=>source.status==="RETRIEVED_RELEVANT").length,
-      originality, unsupportedNumericClaims: !unsupportedNumericClaims, numericClaimMatches: unsupportedNumericClaimMatches, productCapabilities: productEvidence ? "VERIFIED_FROM_REPOSITORY" : "NOT_VERIFIED",
+      originality, numericClaimsVerified: !unsupportedNumericClaims, numericClaimMatches: unsupportedNumericClaimMatches, productCapabilities: productEvidence ? "VERIFIED_FROM_REPOSITORY" : "NOT_VERIFIED",
     };
     base.status = base.rejectionReasons.length ? "REJECTED" : "DRAFT_READY_FOR_HUMAN_REVIEW";
     if (base.status === "DRAFT_READY_FOR_HUMAN_REVIEW") {

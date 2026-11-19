@@ -9,7 +9,7 @@ const now=new Date("2026-11-19T10:00:00.000Z");
 const fixtures=[
  {id:"fixture-recordkeeping",targetUrl:"https://www.finflowtrack.com/blog/small-business-bookkeeping-checklist",targetQuery:"small business bookkeeping records checklist",metrics:{impressions:120,clicks:4,ctr:4/120,averagePosition:14.2},reportingPeriodEnd:"2026-11-16",dataSource:"TEST_FIXTURE",evidenceMode:"FIXTURE"},
  {id:"fixture-cashflow",targetUrl:"https://www.finflowtrack.com/blog/13-week-cash-flow-forecast-template",targetQuery:"13-week cash flow forecast template",metrics:{impressions:95,clicks:3,ctr:3/95,averagePosition:11.8},reportingPeriodEnd:"2026-11-16",dataSource:"TEST_FIXTURE",evidenceMode:"FIXTURE"},
- {id:"fixture-receivables",targetUrl:"https://www.finflowtrack.com/blog/break-even-analysis-small-business",targetQuery:"small business break-even analysis formula",metrics:{impressions:80,clicks:2,ctr:2/80,averagePosition:17.1},reportingPeriodEnd:"2026-11-16",dataSource:"TEST_FIXTURE",evidenceMode:"FIXTURE"},
+ {id:"fixture-break-even",targetUrl:"https://www.finflowtrack.com/blog/break-even-analysis-small-business",targetQuery:"small business break-even analysis formula",metrics:{impressions:80,clicks:2,ctr:2/80,averagePosition:17.1},reportingPeriodEnd:"2026-11-16",dataSource:"TEST_FIXTURE",evidenceMode:"FIXTURE"},
 ];
 function mockFetch(url){
  const content=String(url).includes("irs.gov/") ? "<html><head><title>Recordkeeping for small business</title></head><body>Good records help identify income sources, track expenses and prepare financial statements. A recordkeeping system should clearly show business income and expenses. Keep supporting documents including invoices, receipts and bank statements. Financial statements and books of accounts should be accurate.</body></html>"
@@ -123,4 +123,16 @@ test("unsupported numerical claims are blocked unless explicitly labelled illust
  assert.equal(detectUnsupportedNumericClaims("The product serves 100 customers."),true);
  assert.equal(detectUnsupportedNumericClaims("Example (illustrative figures only): fixed costs are $2,000 and the break-even point is 100 units."),false);
  assert.deepEqual(findUnsupportedNumericClaims("1. Record invoices.\n2. Review expenses."),[]);
+});
+
+test("an exact GSC landing page remains an update candidate despite low token overlap",()=>{
+ const inventory=[{slug:"break-even-analysis-small-business",title:"Break-Even Analysis for Small Business: How to Calculate Your Break-Even Point",description:"Break-even point formula and calculation",tags:["break even","small business"]}];
+ const result=analyzeCannibalization(
+  "small business break-even analysis formula",
+  inventory,
+  "https://www.finflowtrack.com/blog/break-even-analysis-small-business",
+ );
+ assert.equal(result.decision,"UPDATE_EXISTING_ARTICLE");
+ assert.equal(result.targetQueryMatch,"EXACT_LANDING_PAGE_LOW_TEXT_OVERLAP_REVIEW_REQUIRED");
+ assert.equal(result.target.slug,"break-even-analysis-small-business");
 });

@@ -153,6 +153,7 @@ export async function runContentOperations({
       quality: result.quality,
       status: result.status,
       rejectionReasons: result.rejectionReasons,
+      editorialReviewQuestions: result.editorialReviewQuestions || [],
       persistence: result.persistence || null,
     })),
     researchReportPath: pipelineResult.reportPath,
