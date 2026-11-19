@@ -666,14 +666,15 @@ export async function runResearchPipeline({
       contentText.data.title === draft.title && contentText.data.description === draft.description && contentText.data.slug === draft.slug;
     const bodyWords = contentText.content.trim().split(/\s+/).length;
     let numericReviewText = contentText.content;
-    if (operationType === "EXISTING_ARTICLE_UPDATE" && pack.updateSectionHeading) {
+    if (operationType === "EXISTING_ARTICLE_UPDATE") {
+      const updateHeading = pack.updateSectionHeading || "## Updated plan details";
       const updatedBody = matter(draft.content).content || "";
-      const sectionStart = updatedBody.indexOf(pack.updateSectionHeading);
+      const sectionStart = updatedBody.indexOf(updateHeading);
       if (sectionStart >= 0) {
-        const nextSection = updatedBody.indexOf("\n## ", sectionStart + pack.updateSectionHeading.length);
+        const nextSection = updatedBody.indexOf("\n## ", sectionStart + updateHeading.length);
         numericReviewText = updatedBody.slice(sectionStart, nextSection >= 0 ? nextSection : updatedBody.length);
       }
-      base.editorialReviewQuestions.push("The existing article content outside the replaced comparison section is preserved; verify its inherited numerical claims and citations before approval.");
+      base.editorialReviewQuestions.push("The existing article content outside the updated section is preserved; verify its inherited numerical claims and citations before approval.");
     }
     const numericClaimAssessment = assessNumericClaims(numericReviewText, draft.claims, sourceRecords);
     const unsupportedNumericClaimMatches = numericClaimAssessment.unsupported;

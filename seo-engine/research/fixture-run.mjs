@@ -24,7 +24,7 @@ const result=await runResearchPipeline({
   now:new Date("2026-11-19T12:00:00.000Z"),
 });
 if(result.draftGeneratedCount!==2 || result.rejectedCount!==1 || result.readyDraftCount!==0) {
-  throw new Error(`Expected two compatible fixture drafts and one exact-target review rejection; got ${result.draftGeneratedCount} generated, ${result.readyDraftCount} ready and ${result.rejectedCount} rejected.`);
+  throw new Error(`Expected two compatible fixture drafts and one exact-target review rejection; got ${result.draftGeneratedCount} generated, ${result.readyDraftCount} ready and ${result.rejectedCount} rejected. Results: ${JSON.stringify(result.results.map(item=>({id:item.candidate.id,reasons:item.rejectionReasons,quality:item.quality?.decision}))) }`);
 }
 const persistedDraftCount=0;
 const persistenceStatus="LOCAL_DRY_RUN_ONLY";
