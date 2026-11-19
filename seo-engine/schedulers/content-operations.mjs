@@ -6,10 +6,14 @@ import { runResearchPipeline } from "../research/pipeline.mjs";
 const OUTPUT = process.env.SEO_OUTPUT_DIR || "seo-output";
 const CONTENT_DIR = "content/blog";
 const RESEARCH_DIR = process.env.SEO_RESEARCH_OUTPUT_DIR || "content/operations/research";
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function expandPersistedOpportunities(opportunities, schedulerRunId) {
   const candidates = [];
   for (const opportunity of opportunities) {
+    if (typeof opportunity.persistedOpportunityId !== "string" || !UUID_PATTERN.test(opportunity.persistedOpportunityId)) {
+      throw new Error("Scheduler 2 rejected a persisted opportunity with a missing or invalid UUID.");
+    }
     if (opportunity.decision !== "REVIEW_REQUIRED") continue;
     const rows = (opportunity.evidence?.sampleQueries || [])
       .filter(row => typeof row.query === "string" && row.query.trim())
@@ -64,8 +68,8 @@ export async function runContentOperations({
   if (input.scheduler !== "SEARCH_INTELLIGENCE" || !Array.isArray(input.opportunities)) {
     throw new Error("Scheduler 2 requires a valid Scheduler 1 opportunity report.");
   }
-  if (input.persistence?.status !== "PERSISTED" || !input.persistence?.schedulerRunId) {
-    throw new Error("Scheduler 2 requires Scheduler 1's successfully persisted run ID; artifact-only evidence is insufficient.");
+  if (input.persistence?.status !== "PERSISTED" || typeof input.persistence?.schedulerRunId !== "string" || !UUID_PATTERN.test(input.persistence.schedulerRunId)) {
+    throw new Error("Scheduler 2 requires Scheduler 1's successfully persisted run ID as a valid UUID; artifact-only evidence is insufficient.");
   }
   if (!store) {
     throw new Error("Scheduler 2 requires the server-side Supabase store to read Scheduler 1's persisted opportunities.");
@@ -76,6 +80,11 @@ export async function runContentOperations({
   });
   if (!Array.isArray(persistedOpportunities)) {
     throw new Error("Persisted Scheduler 1 opportunity RPC returned an invalid response.");
+  }
+  for (const row of persistedOpportunities) {
+    if (typeof row.id !== "string" || !UUID_PATTERN.test(row.id)) {
+      throw new Error("Scheduler 2 rejected a persisted opportunity with a missing or invalid UUID.");
+    }
   }
   const candidates = expandPersistedOpportunities(persistedOpportunities.map(row => ({
     id: row.opportunity_key,
