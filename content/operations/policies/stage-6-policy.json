@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "timezone": "Africa/Kigali",
+  "mode": "dry-run",
+  "publishingEnabled": false,
+  "maxArticlesPerWeek": 5,
+  "principles": [
+    "Qualified opportunities over lead or article volume",
+    "Search impressions are not search-volume estimates",
+    "Use primary and authoritative sources; record URL and verification date",
+    "Never fabricate statistics, quotations, customer experiences, credentials, or product capabilities",
+    "Do not send customer financial data or transaction details to AI systems or analytics",
+    "Preserve existing search intent, URLs, and canonical behavior unless a reviewed change is approved",
+    "A failed quality gate blocks progression and creates a remediation item"
+  ],
+  "productCapabilities": [
+    "Basic accounting",
+    "Invoice creation and PDF export",
+    "Invoice delivery by email or secure link",
+    "Expense tracking",
+    "Customer management",
+    "Profit and loss reports",
+    "Balance sheet reports",
+    "Cash flow reports",
+    "Aging receivables and payables reports",
+    "CSV report export",
+    "Multi-currency transaction recording with the exchange rate locked when recorded",
+    "Multiple companies and team roles subject to plan limits",
+    "AI Bookkeeper on paid plans",
+    "Recurring invoices on paid plans"
+  ],
+  "prohibitedProductClaims": [
+    "Free payroll",
+    "CRM",
+    "HR management",
+    "Tax filing",
+    "Unverified integrations or public API",
+    "Guaranteed tax, legal, financial, ranking, traffic, or revenue outcomes"
+  ],
+  "workflowStates": [
+    "DISCOVERED",
+    "RESEARCHING",
+    "DRAFTED",
+    "VALIDATING",
+    "APPROVED_BY_POLICY",
+    "PUBLISHED",
+    "VERIFIED"
+  ],
+  "requiredEvidenceFields": [
+    "sourceUrl",
+    "sourceType",
+    "verifiedAt",
+    "supports"
+  ],
+  "scoreWeights": {
+    "gscOpportunity": 20,
+    "searchIntent": 15,
+    "productFit": 15,
+    "commercialRelevance": 10,
+    "uniqueness": 10,
+    "topicalAuthority": 10,
+    "cannibalizationSafety": 10,
+    "researchConfidence": 5,
+    "conversionPotential": 5
+  },
+  "scoreScale": {
+    "minimum": 0,
+    "maximum": 5
+  },
+  "hardStops": [
+    "Missing verified source evidence",
+    "Unsupported product capability claim",
+    "Known material cannibalization with an existing URL",
+    "Unclear search intent",
+    "Missing editorial owner or review status"
+  ],
+  "productionActivationRequiresSeparateApproval": true
+}
