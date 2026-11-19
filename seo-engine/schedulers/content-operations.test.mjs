@@ -48,15 +48,21 @@ function makeStore(rows,calls){
   recordResearchRecord:async args=>{
    const key=args.opportunityId+":"+args.sourceUrl;
    if(!researchBySource.has(key)) researchBySource.set(key,{id:"00000000-0000-4000-8000-"+String(researchBySource.size+100).padStart(12,"0"),source_url:args.sourceUrl,opportunity_id:args.opportunityId});
+   const record=researchBySource.get(key);
+   record.supported_claims=args.supportedClaims;
+   record.unresolved_claims=args.unresolvedClaims;
    calls.research=[...researchBySource.values()];
-   return researchBySource.get(key).id;
+   return record.id;
   },
   recordContentRevision:async args=>{
    if(!revisionsByHash.has(args.contentHash)) revisionsByHash.set(args.contentHash,{id:"00000000-0000-4000-8000-000000000777",content_hash:args.contentHash,markdown:args.markdown,revision_state:args.revisionState,operation_id:args.operationId});
    calls.revisions=[...revisionsByHash.values()];
    return revisionsByHash.get(args.contentHash).id;
   },
-  getContentOperation:async ({operationId})=>({id:operationId,operation_key:[...operationsByKey.keys()][0],status:"PROPOSED",payload:calls.operationPayload}),
+  getContentOperation:async ({operationId})=>{
+   const operation=[...calls.operations].reverse().find(item=>operationsByKey.get(item.operationKey)===operationId);
+   return operation?{id:operationId,operation_key:operation.operationKey,target_path:operation.targetPath,proposed_content_hash:operation.proposedContentHash,status:"PROPOSED",payload:calls.operationPayload}:null;
+  },
   listResearchRecords:async ({opportunityId})=>(calls.research||[]).filter(row=>row.opportunity_id===opportunityId),
   listContentRevisions:async ({operationId})=>(calls.revisions||[]).filter(row=>row.operation_id===operationId),
  };

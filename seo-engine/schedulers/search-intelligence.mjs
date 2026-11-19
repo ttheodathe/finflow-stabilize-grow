@@ -206,7 +206,14 @@ export async function runSearchIntelligence({ dateRange = resolveDateRange(), co
       await store.recordRun({
         schedulerKey: "SEARCH_INTELLIGENCE", scheduledFor, attempt,
         status: "SUCCEEDED",
-        output: { opportunityCount: opportunities.length, technicalIssueCount: technical.confirmedIssueCount, dateRange, source: "Google Search Console", sourceCollectionAt: snapshot.fetchedAt || null },
+        output: {
+          opportunityCount: opportunities.length, technicalIssueCount: technical.confirmedIssueCount,
+          dateRange, source: "Google Search Console", sourceCollectionAt: snapshot.fetchedAt || null,
+          supplementaryAnalytics: {
+            status: snapshot.sourceStatus?.ga4 || "UNKNOWN",
+            error: snapshot.sourceErrors?.ga4 || null,
+          },
+        },
       });
       persistence = { status: "PERSISTED", schedulerRunId, opportunityRecords: opportunities.length };
     } catch (error) {
@@ -228,6 +235,11 @@ export async function runSearchIntelligence({ dateRange = resolveDateRange(), co
     generatedAt: new Date().toISOString(), dateRange,
     sourceFile: result.file, opportunityCount: opportunities.length,
     technical,
+    supplementaryAnalytics: {
+      status: snapshot.sourceStatus?.ga4 || "UNKNOWN",
+      error: snapshot.sourceErrors?.ga4 || null,
+      role: "Supplementary only; GA4 failure does not invalidate GSC opportunities.",
+    },
     gscDimensions: {
       countries: snapshot.gsc.pagesByCountry?.length ?? 0,
       devices: snapshot.gsc.pagesByDevice?.length ?? 0,

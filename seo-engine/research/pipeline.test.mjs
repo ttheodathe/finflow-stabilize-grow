@@ -100,7 +100,7 @@ test("unresolved cannibalization is not silently converted into a new article",(
 
 test("draft queue persistence is idempotent and requires independent operation, research and revision readback",async()=>{
  const env=await setup(), calls={operations:[],research:[],revisions:[]};
- const operationIds=new Map(),researchIds=new Map(),revisionIds=new Map(),operationPayloads=new Map();
+ const operationIds=new Map(),researchIds=new Map(),revisionIds=new Map(),operationPayloads=new Map(),researchClaims=new Map();
  const store={
   recordContentOperation:async input=>{
    calls.operations.push(input);
@@ -111,7 +111,12 @@ test("draft queue persistence is idempotent and requires independent operation, 
   recordResearchRecord:async input=>{
    const key=input.opportunityId+":"+input.sourceUrl;
    if(!researchIds.has(key)) researchIds.set(key,"00000000-0000-4000-8000-"+String(100+researchIds.size).padStart(12,"0"));
-   calls.research=[...researchIds].map(([k,id])=>({id,source_url:k.split(":").slice(1).join(":"),opportunity_id:k.split(":")[0]}));
+   researchClaims.set(key,{supportedClaims:input.supportedClaims,unresolvedClaims:input.unresolvedClaims});
+   calls.research=[...researchIds].map(([k,id])=>({
+    id,source_url:k.split(":").slice(1).join(":"),opportunity_id:k.split(":")[0],
+    supported_claims:researchClaims.get(k)?.supportedClaims || [],
+    unresolved_claims:researchClaims.get(k)?.unresolvedClaims || [],
+   }));
    return researchIds.get(key);
   },
   recordContentRevision:async input=>{
@@ -128,7 +133,9 @@ test("draft queue persistence is idempotent and requires independent operation, 
   getContentOperation:async({operationId})=>{
    const entry=[...operationIds.entries()].find(([,id])=>id===operationId);
    if(!entry) return null;
-   return {id:operationId,operation_key:entry[0],status:"PROPOSED",payload:operationPayloads.get(entry[0])};
+   const payload=operationPayloads.get(entry[0]);
+   const operationInput=calls.operations.filter(item=>item.operationKey===entry[0]).at(-1);
+   return {id:operationId,operation_key:entry[0],target_path:operationInput.targetPath,proposed_content_hash:operationInput.proposedContentHash,status:"PROPOSED",payload};
   },
   listResearchRecords:async({opportunityId})=>calls.research.filter(row=>row.opportunity_id===opportunityId),
   listContentRevisions:async({operationId})=>calls.revisions.filter(row=>row.operation_id===operationId),

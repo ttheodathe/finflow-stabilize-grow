@@ -624,17 +624,22 @@ export async function runResearchPipeline({
             status: "FIRST_PARTY_REPOSITORY_VERIFIED",
           });
           const researchRecordIds = [];
+          const researchRecordExpectations = [];
           for (const source of records) {
             const mappedClaims = draft.claims.filter(claim => claim.sourceUrls.includes(source.url));
+            const supportedClaims = mappedClaims.filter(claim => claim.verificationStatus !== "UNVERIFIED");
+            const unresolvedClaims = mappedClaims.filter(claim => claim.verificationStatus === "UNVERIFIED");
             const researchRecordId = requireUuid(await store.recordResearchRecord({
               opportunityId: candidate.persistedOpportunityId, sourceUrl: source.url,
               sourceTitle: source.sourceTitle || source.publisher || source.url,
               sourcePublishedAt: source.publishedAt || null,
               retrievedAt: source.retrievedAt || now.toISOString(),
-              supportedClaims: mappedClaims.filter(claim => claim.verificationStatus !== "UNVERIFIED"),
-              unresolvedClaims: mappedClaims.filter(claim => claim.verificationStatus === "UNVERIFIED"),
+              supportedClaims, unresolvedClaims,
             }), "Research record persistence");
             researchRecordIds.push(researchRecordId);
+            researchRecordExpectations.push({
+              id:researchRecordId, sourceUrl:source.url, supportedClaims, unresolvedClaims,
+            });
           }
           const revisionId = requireUuid(await store.recordContentRevision({
             operationId, revisionNumber:1, contentHash:hash,
@@ -657,13 +662,22 @@ export async function runResearchPipeline({
             store.listContentRevisions({operationId}),
           ]);
           if (!operationReadback || operationReadback.id !== operationId
+            || operationReadback.operation_key !== operationKey
+            || operationReadback.target_path !== operationInput.targetPath
+            || operationReadback.proposed_content_hash !== hash
             || operationReadback.status !== "PROPOSED"
-            || operationReadback.payload?.workflowState !== "PERSISTED_PENDING_READBACK") {
-            throw new Error("Independent content-operation readback did not confirm the persisted proposal state.");
+            || operationReadback.payload?.workflowState !== "PERSISTED_PENDING_READBACK"
+            || operationReadback.payload?.draftMarkdown !== draft.content
+            || operationReadback.payload?.persistedOpportunityId !== candidate.persistedOpportunityId) {
+            throw new Error("Independent content-operation readback did not confirm the exact persisted proposal and evidence.");
           }
-          const readResearchIds = new Set(researchReadback.map(record => record.id));
-          if (researchRecordIds.some(id => !readResearchIds.has(id))) {
-            throw new Error("Independent research readback did not confirm every persisted source record.");
+          for (const expected of researchRecordExpectations) {
+            const actual = researchReadback.find(record => record.id === expected.id && record.source_url === expected.sourceUrl);
+            if (!actual
+              || JSON.stringify(actual.supported_claims || []) !== JSON.stringify(expected.supportedClaims)
+              || JSON.stringify(actual.unresolved_claims || []) !== JSON.stringify(expected.unresolvedClaims)) {
+              throw new Error("Independent research readback did not confirm a source record and its claim-source mappings.");
+            }
           }
           const revision = revisionReadback.find(item => item.id === revisionId);
           if (!revision || revision.content_hash !== hash || revision.markdown !== draft.content
@@ -685,6 +699,9 @@ export async function runResearchPipeline({
           if (readyOperationId !== operationId) throw new Error("Human-review state update returned a different operation UUID.");
           const finalReadback = await store.getContentOperation({operationId});
           if (!finalReadback || finalReadback.id !== operationId
+            || finalReadback.operation_key !== operationKey
+            || finalReadback.target_path !== operationInput.targetPath
+            || finalReadback.proposed_content_hash !== hash
             || finalReadback.payload?.workflowState !== "READY_FOR_HUMAN_REVIEW"
             || finalReadback.payload?.independentReadback?.verified !== true) {
             throw new Error("Final independent readback did not confirm human-review eligibility.");
