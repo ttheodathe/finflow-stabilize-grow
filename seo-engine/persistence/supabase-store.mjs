@@ -61,7 +61,7 @@ export function createSupabaseSeoStore({ url, serviceRoleKey, fetchImpl = fetch 
       }), "Opportunity persistence");
     },
     async recordPerformanceSnapshot({ snapshotKey, schedulerRunId, periodStart, periodEnd, source, metrics }) {
-      if (schedulerRunId !== null) requireUuid(schedulerRunId, "Performance snapshot scheduler run ID");
+      if (schedulerRunId != null) requireUuid(schedulerRunId, "Performance snapshot scheduler run ID");
       return requireUuid(await rpc("seo_ops_record_performance_snapshot", {
         p_snapshot_key: snapshotKey, p_scheduler_run_id: schedulerRunId,
         p_period_start: periodStart, p_period_end: periodEnd, p_source: source, p_metrics: metrics,
