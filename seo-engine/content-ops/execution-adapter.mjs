@@ -36,11 +36,21 @@ function validateApproval(operation, targetPath, content) {
 
 export function createGitHubContentAdapter({
   token, owner, repo, fetchImpl = fetch, env = process.env,
-  publicBaseUrl = "https://www.finflowtrack.com",
+  publicBaseUrl, canonicalBaseUrl = "https://www.finflowtrack.com",
 }) {
   if (!token || !owner || !repo) throw new Error("GitHub content adapter requires token, owner, and repository.");
   const policy = readExecutionPolicy(env);
   const branch = policy.targetBranch;
+  const canonicalOrigin = new URL(canonicalBaseUrl).origin;
+  const publicOrigin = publicBaseUrl ? new URL(publicBaseUrl).origin : null;
+  if (policy.targetEnvironment === "staging") {
+    if (!publicOrigin || publicOrigin === canonicalOrigin) {
+      throw new Error("Staging execution requires an explicit non-production preview URL.");
+    }
+  } else if (publicOrigin && publicOrigin !== canonicalOrigin) {
+    throw new Error("Production verification must use the canonical production origin.");
+  }
+  const effectivePublicBaseUrl = publicOrigin || canonicalOrigin;
 
   async function request(path, options = {}) {
     const response = await fetchImpl(`${API}/repos/${owner}/${repo}/contents/${path}`, {
@@ -75,7 +85,7 @@ export function createGitHubContentAdapter({
     });
   }
 
-  async function verifyPublic(url, expectedTitle, expectedText, { fetchPublic = fetchImpl, attempts = 5 } = {}) {
+  async function verifyPublic(url, expectedTitle, expectedText, expectedCanonicalUrl = url, { fetchPublic = fetchImpl, attempts = 5 } = {}) {
     for (let attempt = 0; attempt < attempts; attempt += 1) {
       const response = await fetchPublic(url, { redirect: "follow" });
       if (response.ok) {
@@ -86,7 +96,7 @@ export function createGitHubContentAdapter({
         const titleMatches = expectedTitle ? html.includes(expectedTitle) : true;
         const contentMatches = expectedText ? html.includes(expectedText.slice(0, 80)) : true;
         return {
-          verified: Boolean(titleMatches && contentMatches && canonical === url),
+          verified: Boolean(titleMatches && contentMatches && canonical === expectedCanonicalUrl),
           status: response.status, canonical, titleMatches, contentMatches,
           checkedAt: new Date().toISOString(),
         };
@@ -154,10 +164,11 @@ export function createGitHubContentAdapter({
     }
     if (!written?.content?.sha) throw new Error("GitHub did not confirm the article content write.");
 
-    const url = `${publicBaseUrl}/blog/${slug}`;
-    const verification = await verifyPublic(url, operation.metadata?.title, operation.verificationText || "");
+    const url = `${effectivePublicBaseUrl}/blog/${slug}`;
+    const canonicalUrl = `${canonicalOrigin}/blog/${slug}`;
+    const verification = await verifyPublic(url, operation.metadata?.title, operation.verificationText || "", canonicalUrl);
     const record = {
-      operationId: operation.id, type: operation.type, targetPath, url, approvalHash,
+      operationId: operation.id, type: operation.type, targetPath, url, canonicalUrl, approvalHash,
       contentBlobSha: written.content.sha, commitSha: written.commit?.sha || null,
       status: verification.verified ? "LIVE_VERIFIED" : "WRITE_SUCCEEDED_VERIFICATION_PENDING",
       verification, executedAt: new Date().toISOString(),
@@ -184,18 +195,21 @@ export function createGitHubContentAdapter({
     }
 
     const slug = snapshot.targetPath.split("/").pop().replace(/\.md$/, "");
-    const url = `${publicBaseUrl}/blog/${slug}`;
+    const url = `${effectivePublicBaseUrl}/blog/${slug}`;
+    const canonicalUrl = `${canonicalOrigin}/blog/${slug}`;
     const originalBody = snapshot.originalContent.replace(/^---[\\s\\S]*?---\\s*/, "").trim();
     const verification = await verifyPublic(
       url,
       snapshot.originalMetadata?.title || null,
       originalBody,
+      canonicalUrl,
     );
     const rollbackRecord = {
       operationId,
       targetPath: snapshot.targetPath,
       restoredBlobSha: restored.sha,
       originalBlobSha: snapshot.originalSha,
+      canonicalUrl,
       status: verification.verified ? "ROLLED_BACK" : "ROLLBACK_WRITE_SUCCEEDED_VERIFICATION_PENDING",
       verification,
       rolledBackAt: new Date().toISOString(),
