@@ -443,14 +443,13 @@ export function analyzeCannibalization(query, inventory, targetUrl = null) {
     method: "Full article text, title, description, slug, tags and query intent are compared; exact GSC landing-page URLs take precedence. Similarity is screening only and does not establish semantic originality.",
   };
 }
-function buildDraft(candidate, pack, sourceRecords, productEvidence, internalLinks, target, now) {
-  const sourceLines = sourceRecords.filter(s => s.status === "RETRIEVED_RELEVANT").map(s => `- [${s.publisher}: ${s.sourceTitle}](${s.url})`).join("\n");
-  const sections = pack.sections.map(([heading, body]) => `## ${heading}\n\n${body}`).join("\n\n");
+function buildDraft(candidate, pack, sourceRecords, productEvidence, internalLinks, target, now, existingArticle = null) {
+  const sourceLines = sourceRecords.filter(s => s.status === "RETRIEVED_RELEVANT")
+    .map(s => `- [${s.publisher}: ${s.sourceTitle}](${s.url})`).join("\n");
   const productLine = productEvidence
-    ? "\n\nFor a business that wants to keep these workflows together, FinFlow Track's Free plan includes invoice creation, expense tracking, customer management and basic reports. Check the current [plan details](/pricing) and confirm that the available limits fit your workflow.\n"
+    ? "\n\nFinFlow Track's Free plan includes invoice creation, expense tracking, customer management and basic reports. Check the current [plan details](/pricing) and confirm that the available limits fit your workflow.\n"
     : "";
   const links = internalLinks.map(item => `- [${item.title}](/blog/${item.slug})`).join("\n");
-  const markdown = `---\ntitle: "${pack.title.replace(/"/g, '\\"')}"\ndescription: "${pack.description.replace(/"/g, '\\"')}"\nslug: "${target.slug}"\nstatus: "draft"\npublicationStatus: "draft"\ncategory: "small-business-finance"\ntags:\n  - small business\n  - ${pack.id}\n---\n\n# ${pack.title}\n\nA reliable process is easier to maintain when each step has a clear purpose and an owner. This guide focuses on practical routines rather than promises or one-size-fits-all rules.\n\n${sections}\n${productLine}\n## Related FinFlow Track guides\n\n${links}\n\n## Sources and scope\n\n${sourceLines}\n\nRequirements differ by country, contract and business structure. Government sources cited here are provided for the jurisdiction they cover; they are not a substitute for local professional advice.\n`;
   const claims = pack.claimSpecs.map(spec => {
     const mappedSources = spec.sourceIndexes.map(index => sourceRecords[index]).filter(Boolean);
     const termsVerified = spec.terms.every(term => mappedSources.some(source => source.termMatches?.some(match => match.toLowerCase() === term.toLowerCase())));
@@ -470,8 +469,8 @@ function buildDraft(candidate, pack, sourceRecords, productEvidence, internalLin
   });
   const evidence = sourceRecords.filter(s => s.status.startsWith("RETRIEVED")).map(s => ({
     sourceUrl: s.url, finalUrl: s.finalUrl, redirectDestination: s.redirectDestination,
-    sourceType: "official_government", sourceTitle: s.sourceTitle,
-    publisher: s.publisher, publishedAt: s.publishedAt, retrievedAt: s.retrievedAt,
+    sourceType: s.reliability === "OFFICIAL_GOVERNMENT" ? "official_government" : "official_vendor",
+    sourceTitle: s.sourceTitle, publisher: s.publisher, publishedAt: s.publishedAt, retrievedAt: s.retrievedAt,
     httpStatus: s.httpStatus, responseStatus: s.responseStatus, contentType: s.contentType,
     verificationStatus: s.verificationStatus, relevanceAssessment: s.relevanceAssessment,
     verifiedAt: s.retrievedAt.slice(0,10), supports: s.supportedClaims.join("; "),
@@ -485,6 +484,51 @@ function buildDraft(candidate, pack, sourceRecords, productEvidence, internalLin
     excerpt: null, reliability: "FIRST_PARTY_REPOSITORY_VERIFIED",
     limitations: ["Verified against repository source, not a live authenticated account."],
   });
+
+  let markdown;
+  if (candidate.operationType === "EXISTING_ARTICLE_UPDATE" && existingArticle?.markdown) {
+    const parsed = matter(existingArticle.markdown);
+    const existingBody = parsed.content || "";
+    const heading = pack.updateSectionHeading || "## Updated plan details";
+    const updatedSection = [
+      heading,
+      "",
+      ...pack.sections.map(([sectionHeading, body]) => `### ${sectionHeading}\n\n${body}`),
+      productLine,
+      "### Official plan references",
+      sourceLines,
+      "",
+      "Plan features, payment fees and eligibility can change. Recheck the provider's official page and the terms for your country before choosing.",
+    ].join("\n\n");
+    const headingIndex = existingBody.indexOf(heading);
+    let updatedBody;
+    if (headingIndex >= 0) {
+      const nextHeadingIndex = existingBody.indexOf("\n## ", headingIndex + heading.length);
+      const sectionEnd = nextHeadingIndex >= 0 ? nextHeadingIndex : existingBody.length;
+      updatedBody = existingBody.slice(0, headingIndex) + updatedSection + existingBody.slice(sectionEnd);
+    } else {
+      const firstSectionIndex = existingBody.indexOf("\n## ");
+      const insertAt = firstSectionIndex >= 0 ? firstSectionIndex : existingBody.length;
+      updatedBody = existingBody.slice(0, insertAt) + "\n\n" + updatedSection + existingBody.slice(insertAt);
+    }
+    const original = parsed.data || {};
+    const tags = [...new Set([...(Array.isArray(original.tags) ? original.tags : []), "software selection", "free accounting software"])];
+    const frontmatter = {
+      ...original,
+      title: pack.title,
+      description: pack.description,
+      slug: target.slug,
+      tags,
+      updatedAt: now.toISOString().slice(0,10),
+      draft: true,
+      status: "draft",
+      publicationStatus: "draft",
+    };
+    markdown = matter.stringify(updatedBody, frontmatter);
+  } else {
+    const sections = pack.sections.map(([heading, body]) => `## ${heading}\n\n${body}`).join("\n\n");
+    markdown = `---\ntitle: "${pack.title.replace(/"/g, '\\\"')}"\ndescription: "${pack.description.replace(/"/g, '\\\"')}"\nslug: "${target.slug}"\nstatus: "draft"\npublicationStatus: "draft"\ncategory: "small-business-finance"\ntags:\n  - small business\n  - ${pack.id}\n---\n\n# ${pack.title}\n\nA reliable process is easier to maintain when each step has a clear purpose and an owner. This guide focuses on practical routines rather than promises or one-size-fits-all rules.\n\n${sections}\n${productLine}\n## Related FinFlow Track guides\n\n${links}\n\n## Sources and scope\n\n${sourceLines}\n\nRequirements differ by country, contract and business structure. Government sources cited here are provided for the jurisdiction they cover; they are not a substitute for local professional advice.\n`;
+  }
   return {
     title: pack.title, description: pack.description, slug: target.slug,
     publicationStatus: "draft", status: "draft", author: null, authorStatus: "NOT_ASSIGNED",
@@ -581,7 +625,8 @@ export async function runResearchPipeline({
       .every(name => VERIFIED_PRODUCT.verifiedCapabilities.some(item => item.name === name && item.articleClaimAllowed));
     const related = pack.related.map(slug => inventory.find(item => item.slug === slug))
       .filter(item => item && item.slug !== target.slug).map(item => ({slug:item.slug,title:item.title}));
-    const draft = buildDraft(candidate,pack,sourceRecords,productEvidence,related,target,now);
+    const existingArticle = operationType === "EXISTING_ARTICLE_UPDATE" ? inventory.find(item => item.slug === target.slug) || null : null;
+    const draft = buildDraft(candidate,pack,sourceRecords,productEvidence,related,target,now,existingArticle);
     const duplicateSlug = operationType === "NEW_ARTICLE" && inventory.some(item => item.slug === draft.slug);
     const contentText = matter(draft.content);
     const frontmatterValid = contentText.data.status === "draft" && contentText.data.publicationStatus === "draft" &&
@@ -590,7 +635,7 @@ export async function runResearchPipeline({
     const unsupportedNumericClaimMatches = findUnsupportedNumericClaims(contentText.content);
     const unsupportedNumericClaims = unsupportedNumericClaimMatches.length > 0;
     if (unsupportedNumericClaims) base.rejectionReasons.push("UNSUPPORTED_NUMERIC_CLAIM");
-    const existingComparisons = inventory.map(item => ({
+    const existingComparisons = inventory.filter(item => !(operationType === "EXISTING_ARTICLE_UPDATE" && item.slug === target.slug)).map(item => ({
       slug:item.slug,
       title:item.title,
       titleDescriptionScore:Number(similarity(draft.title + " " + draft.description, [item.title,item.description,item.slug,...(item.tags || [])].join(" ")).toFixed(3)),
@@ -606,7 +651,10 @@ export async function runResearchPipeline({
       highestSimilarity: existingComparisons[0] || null,
       status: existingComparisons[0]?.score >= 0.42 ? "POSSIBLE_REPETITION_REVIEW_REQUIRED" : "NO_HIGH_OVERLAP_DETECTED",
     };
-    if (originality.status === "POSSIBLE_REPETITION_REVIEW_REQUIRED") base.rejectionReasons.push("SUBSTANTIAL_REPETITION_WITH_EXISTING_ARTICLE");
+    if (originality.status === "POSSIBLE_REPETITION_REVIEW_REQUIRED") {
+      if (operationType === "NEW_ARTICLE") base.rejectionReasons.push("SUBSTANTIAL_REPETITION_WITH_EXISTING_ARTICLE");
+      else base.editorialReviewQuestions.push("The proposed update overlaps with another existing article; compare both pages and confirm whether the information belongs on this target page or should be consolidated.");
+    }
     const quality = validateDraft(draft, {
       existingSlugs: inventory.map(item=>item.slug), operationType, targetSlug: target.slug,
     });
