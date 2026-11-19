@@ -3,9 +3,13 @@ import assert from "node:assert/strict";
 import { normalizePageUrl, isoDateDaysAgo, resolveDateRange } from "./normalize.mjs";
 import { parseServiceAccount } from "./google-auth.mjs";
 
-test("normalizes host, scheme, query and trailing slash", () => {
+test("normalizes casing, query and trailing slash without merging host or scheme variants", () => {
   assert.equal(
     normalizePageUrl("http://www.FinFlowTrack.com/blog/example/?utm_source=test#section"),
+    "http://www.finflowtrack.com/blog/example",
+  );
+  assert.equal(
+    normalizePageUrl("https://finflowtrack.com/blog/example/"),
     "https://finflowtrack.com/blog/example",
   );
 });
