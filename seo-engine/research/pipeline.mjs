@@ -16,8 +16,8 @@ const SOURCE_PACKS = [
     match: /record|bookkeep|accounting|expense|receipt|financial records/i,
     intent: "Informational",
     sources: [
-      { url: "https://www.irs.gov/businesses/small-businesses-self-employed/recordkeeping", expectedPublisher: "Internal Revenue Service", supports: ["A recordkeeping system should clearly show income and expenses", "Good records support financial statements and business decisions"], terms: ["recordkeeping", "income", "expenses", "financial statements"] },
-      { url: "https://www.irs.gov/businesses/small-businesses-self-employed/what-kind-of-records-should-i-keep", expectedPublisher: "Internal Revenue Service", supports: ["Supporting documents include invoices, receipts, bills and bank records"], terms: ["supporting documents", "invoices", "receipts", "bank"] },
+      { url: "https://www.irs.gov/businesses/small-businesses-self-employed/why-should-i-keep-records", expectedPublisher: "Internal Revenue Service", supports: ["Good records help identify income sources, track expenses and prepare financial statements"], terms: ["records", "income", "expenses", "financial statements"] },
+      { url: "https://www.irs.gov/businesses/small-businesses-self-employed/what-kind-of-records-should-i-keep", expectedPublisher: "Internal Revenue Service", supports: ["A suitable recordkeeping system should clearly show income and expenses; supporting documents include invoices, receipts and bank records"], terms: ["recordkeeping", "income", "expenses", "invoices", "receipts", "bank"] },
     ],
     title: "A Practical Small-Business Recordkeeping Checklist",
     description: "Build a repeatable small-business recordkeeping routine for income, expenses, invoices, receipts, reconciliations and financial reviews.",
@@ -29,8 +29,9 @@ const SOURCE_PACKS = [
       ["When software can help", "A spreadsheet can be enough for a very small operation with few transactions, provided it is kept consistently. As invoice volume, expenses or reporting needs grow, accounting software may make it easier to keep transaction records and review financial reports. Compare the specific features, export options, access controls and limits before choosing a tool."],
     ],
     claimSpecs: [
-      { id: "records-purpose", text: "A suitable recordkeeping system should clearly show business income and expenses and support financial review.", terms: ["recordkeeping", "income", "expenses"], sourceIndexes: [0] },
-      { id: "supporting-documents", text: "Invoices, receipts, paid bills and bank records can support entries in business books.", terms: ["invoices", "receipts", "bank"], sourceIndexes: [1] },
+      { id: "records-purpose", text: "Good records help identify income sources, track expenses and prepare financial statements.", terms: ["records", "income", "expenses", "financial statements"], sourceIndexes: [0] },
+      { id: "recordkeeping-system", text: "A suitable recordkeeping system should clearly show business income and expenses.", terms: ["recordkeeping", "income", "expenses"], sourceIndexes: [1] },
+      { id: "supporting-documents", text: "Invoices, receipts and bank records can support entries in business books.", terms: ["invoices", "receipts", "bank"], sourceIndexes: [1] },
     ],
     productMention: "recordkeeping",
     related: ["complete-guide-to-small-business-accounting", "how-to-keep-track-of-business-expenses", "small-business-bookkeeping-checklist"],
