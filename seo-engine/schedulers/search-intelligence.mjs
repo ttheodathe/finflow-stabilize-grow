@@ -144,10 +144,11 @@ export async function runSearchIntelligence({ dateRange = resolveDateRange(), co
   }
   if (store) {
     let schedulerRunId = null;
+    const scheduledFor = new Date().toISOString().slice(0, 10);
+    const attempt = Math.max(1, Number.parseInt(process.env.GITHUB_RUN_ATTEMPT || "1", 10) || 1);
     try {
-      const scheduledFor = new Date().toISOString().slice(0, 10);
       schedulerRunId = await store.recordRun({
-        schedulerKey: "SEARCH_INTELLIGENCE", scheduledFor, attempt: 1,
+        schedulerKey: "SEARCH_INTELLIGENCE", scheduledFor, attempt,
         status: "RUNNING", output: { dateRange },
       });
       for (const opportunity of opportunities) {
@@ -162,7 +163,7 @@ export async function runSearchIntelligence({ dateRange = resolveDateRange(), co
         });
       }
       await store.recordRun({
-        schedulerKey: "SEARCH_INTELLIGENCE", scheduledFor, attempt: 1,
+        schedulerKey: "SEARCH_INTELLIGENCE", scheduledFor, attempt,
         status: "SUCCEEDED",
         output: { opportunityCount: opportunities.length, technicalIssueCount: technical.confirmedIssueCount, dateRange },
       });
@@ -173,8 +174,8 @@ export async function runSearchIntelligence({ dateRange = resolveDateRange(), co
       if (schedulerRunId) {
         try {
           await store.recordRun({
-            schedulerKey: "SEARCH_INTELLIGENCE", scheduledFor: new Date().toISOString().slice(0, 10),
-            attempt: 1, status: "FAILED", output: { dateRange }, errorSummary: String(error.message || error),
+            schedulerKey: "SEARCH_INTELLIGENCE", scheduledFor,
+            attempt, status: "FAILED", output: { dateRange }, errorSummary: String(error.message || error),
           });
         } catch { /* Preserve the original persistence error. */ }
       }
