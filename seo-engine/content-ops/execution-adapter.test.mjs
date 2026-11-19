@@ -21,6 +21,11 @@ function makeMockGitHub(initial = {}) {
         return Response.json({ type: "file", sha: item.sha, content: Buffer.from(item.content).toString("base64") });
       }
       const body = JSON.parse(options.body);
+      if (options.method === "DELETE") {
+        if (!files.has(path) || files.get(path).sha !== body.sha) return new Response("sha mismatch", { status: 409 });
+        files.delete(path);
+        return Response.json({ commit: { sha: `delete-${++writes}` } });
+      }
       const existing = files.get(path);
       if (body.sha && (!existing || existing.sha !== body.sha)) return new Response("sha mismatch", { status: 409 });
       if (!body.sha && existing) return new Response("already exists", { status: 422 });
@@ -29,7 +34,9 @@ function makeMockGitHub(initial = {}) {
       return Response.json({ content: { sha: item.sha }, commit: { sha: `commit-${writes}` } });
     }
     const slug = new URL(url).pathname.split("/").pop();
-    const body = files.get(`content/blog/${slug}.md`)?.content || "";
+    const article = files.get(`content/blog/${slug}.md`);
+    if (!article) return new Response("", { status: 404 });
+    const body = article.content;
     const title = body.match(/^title:\s*["']?([^\n"']+)/m)?.[1] || "Test Article";
     const visible = body.replace(/---[\s\S]*?---/, "").trim();
     const canonical = `https://www.finflowtrack.com/blog/${slug}`;
@@ -154,4 +161,43 @@ test("existing article update snapshots original content and rollback restores i
   assert.equal(rollback.status, "ROLLED_BACK");
   assert.equal(mock.files.get("content/blog/test-article.md").content, original);
   assert.ok(mock.files.has(".seo-operations/rollbacks/operation-001.json"));
+});
+
+
+test("new article rollback deletes only the unchanged operation file", async () => {
+  const mock = makeMockGitHub();
+  const adapter = createGitHubContentAdapter({
+    token: "test-token", owner: "test", repo: "repo", env: stagingEnv(),
+    fetchImpl: mock.fetchImpl, approvalVerifier: async () => ({ verified: true }),
+    publicBaseUrl: "https://preview.finflowtrack.test",
+  });
+  const markdown = '---\ntitle: "Test Article"\n---\n\nA useful article body for safe staging verification.';
+  const operation = approvedOperation("NEW_ARTICLE", markdown, "content/blog/test-article.md", {
+    verificationText: "A useful article body for safe staging verification.",
+  });
+  await adapter.execute(operation);
+  const rollback = await adapter.rollback("operation-001", { reason: "Test removal" });
+  assert.equal(rollback.status, "ROLLED_BACK");
+  assert.equal(mock.files.has("content/blog/test-article.md"), false);
+  const replay = await adapter.rollback("operation-001");
+  assert.equal(replay.idempotentReplay, true);
+});
+
+test("update rollback refuses to overwrite a later concurrent edit", async () => {
+  const original = '---\ntitle: "Test Article"\n---\n\nOriginal body.';
+  const revised = '---\ntitle: "Test Article"\n---\n\nRevised body.';
+  const mock = makeMockGitHub({ "content/blog/test-article.md": original });
+  const adapter = createGitHubContentAdapter({
+    token: "test-token", owner: "test", repo: "repo", env: stagingEnv("EXISTING_ARTICLE_UPDATE"),
+    fetchImpl: mock.fetchImpl, approvalVerifier: async () => ({ verified: true }),
+    publicBaseUrl: "https://preview.finflowtrack.test",
+  });
+  const baseline = mock.files.get("content/blog/test-article.md").sha;
+  const operation = approvedOperation("EXISTING_ARTICLE_UPDATE", revised, "content/blog/test-article.md", {
+    expectedBlobSha: baseline, verificationText: "Revised body.",
+  });
+  await adapter.execute(operation);
+  mock.files.set("content/blog/test-article.md", { content: "Subsequent unrelated edit.", sha: "external-change" });
+  await assert.rejects(adapter.rollback("operation-001"), /Concurrent modification detected/);
+  assert.equal(mock.files.get("content/blog/test-article.md").content, "Subsequent unrelated edit.");
 });
