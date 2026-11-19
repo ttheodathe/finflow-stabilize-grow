@@ -127,7 +127,7 @@ assert.ok(accepted.draft?.path, "The complete editorial draft file path is missi
 
 const operation = await store.getContentOperation({ operationId: accepted.persistence.operationId });
 assert.equal(operation?.payload?.workflowState, "READY_FOR_HUMAN_REVIEW");
-assert.equal(operation?.target_path, `content/blog/${TARGET_SLUG}`);
+assert.equal(operation?.target_path, `content/blog/${TARGET_SLUG}.md`);
 assert.equal(operation?.payload?.persistedOpportunityId, opportunity.id);
 const research = await store.listResearchRecords({ opportunityId: opportunity.id });
 assert.ok(accepted.persistence.researchRecordIds.every(id => research.some(record => record.id === id)));
