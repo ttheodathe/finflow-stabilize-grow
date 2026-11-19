@@ -2,12 +2,13 @@ do $$
 declare
   v_run uuid; v_run2 uuid; v_opp uuid; v_opp2 uuid; v_snap uuid; v_snap2 uuid;
   v_activation uuid; v_content uuid; v_content2 uuid; v_counts record; v_count integer;
+  v_attempt integer := extract(epoch from clock_timestamp())::integer;
 begin
-  v_run := public.seo_ops_record_run('SEARCH_INTELLIGENCE',date '2026-11-20',1,'RUNNING','{"fixture":true}'::jsonb);
-  v_run2 := public.seo_ops_record_run('SEARCH_INTELLIGENCE',date '2026-11-20',1,'SUCCEEDED','{"fixture":true,"done":true}'::jsonb);
+  v_run := public.seo_ops_record_run('SEARCH_INTELLIGENCE',date '2026-11-20',v_attempt,'RUNNING','{"fixture":true}'::jsonb);
+  v_run2 := public.seo_ops_record_run('SEARCH_INTELLIGENCE',date '2026-11-20',v_attempt,'SUCCEEDED','{"fixture":true,"done":true}'::jsonb);
   if v_run <> v_run2 then raise exception 'scheduler run idempotency failed'; end if;
   begin
-    perform public.seo_ops_record_run('SEARCH_INTELLIGENCE',date '2026-11-20',1,'RUNNING','{}'::jsonb);
+    perform public.seo_ops_record_run('SEARCH_INTELLIGENCE',date '2026-11-20',v_attempt,'RUNNING','{}'::jsonb);
     raise exception 'terminal scheduler run transition was not blocked';
   exception when raise_exception then
     if sqlerrm = 'terminal scheduler run transition was not blocked' then raise; end if;
