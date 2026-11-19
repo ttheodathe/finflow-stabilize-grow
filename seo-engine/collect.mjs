@@ -214,7 +214,7 @@ export async function collectPartial({ dateRange, token, outputDir = OUTPUT_DIR,
   };
   await mkdir(outputDir, { recursive: true });
   const file = `${outputDir}/seo-data-partial-${dateRange.startDate}-to-${dateRange.endDate}.json`;
-  await writeFile(file, `${JSON.stringify(snapshot, null, 2)}\\n`, { flag: "w" });
+  await writeFile(file, `${JSON.stringify(snapshot, null, 2)}\n`, { flag: "w" });
   return { file, counts: snapshot.counts, dateRange, sourceStatus: snapshot.sourceStatus, sourceErrors: snapshot.sourceErrors };
 }
 
