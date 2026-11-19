@@ -76,6 +76,23 @@ export function createSupabaseSeoStore({ url, serviceRoleKey, fetchImpl = fetch 
 export function createSupabaseSeoStoreFromEnv(env = process.env, options = {}) {
   const url = env.SUPABASE_URL;
   const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
+  const persistenceRequired = env.SEO_PERSISTENCE_REQUIRED === "true";
+  const allowedProjectRef = env.SEO_OPS_ALLOWED_PROJECT_REF;
+
+  if (persistenceRequired && (!url || !serviceRoleKey)) {
+    throw new Error("Required SEO persistence needs SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.");
+  }
+  if (persistenceRequired && !allowedProjectRef) {
+    throw new Error("Required SEO persistence must declare SEO_OPS_ALLOWED_PROJECT_REF.");
+  }
+  if (allowedProjectRef) {
+    if (!/^[a-z0-9]{20}$/.test(allowedProjectRef)) {
+      throw new Error("SEO_OPS_ALLOWED_PROJECT_REF must be a 20-character Supabase project reference.");
+    }
+    if (url && new URL(url).hostname !== `${allowedProjectRef}.supabase.co`) {
+      throw new Error("Supabase URL does not match the explicitly allowed SEO acceptance project.");
+    }
+  }
   if (!url && !serviceRoleKey) return null;
   return createSupabaseSeoStore({ url, serviceRoleKey, ...options });
 }

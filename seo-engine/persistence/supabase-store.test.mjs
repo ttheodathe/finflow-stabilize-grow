@@ -98,3 +98,31 @@ test("Scheduler 2 reads only persisted opportunities for a validated run ID",asy
  assert.equal(rows[0].opportunity_key,"key-1");
  assert.throws(() => store.listPersistedOpportunities({schedulerRunId:"not-a-uuid"}),/valid persisted Scheduler 1 run ID/);
 });
+
+test("required SEO persistence fails closed outside the explicitly allowed acceptance project",()=>{
+ const projectRef="bufbyfwstdqvwnkhyrea";
+ assert.throws(()=>createSupabaseSeoStoreFromEnv({
+  SEO_PERSISTENCE_REQUIRED:"true",
+  SUPABASE_URL:"https://prod-project-ref.supabase.co",
+  SUPABASE_SERVICE_ROLE_KEY:"test-key",
+ }),/SEO_OPS_ALLOWED_PROJECT_REF/);
+ assert.throws(()=>createSupabaseSeoStoreFromEnv({
+  SEO_PERSISTENCE_REQUIRED:"true",
+  SEO_OPS_ALLOWED_PROJECT_REF:projectRef,
+  SUPABASE_URL:"https://prod-project-ref.supabase.co",
+  SUPABASE_SERVICE_ROLE_KEY:"test-key",
+ }),/does not match the explicitly allowed SEO acceptance project/);
+ const store=createSupabaseSeoStoreFromEnv({
+  SEO_PERSISTENCE_REQUIRED:"true",
+  SEO_OPS_ALLOWED_PROJECT_REF:projectRef,
+  SUPABASE_URL:`https://${projectRef}.supabase.co`,
+  SUPABASE_SERVICE_ROLE_KEY:"acceptance-test-key",
+ });
+ assert.ok(store);
+});
+test("required SEO persistence rejects missing credentials rather than silently disabling persistence",()=>{
+ assert.throws(()=>createSupabaseSeoStoreFromEnv({
+  SEO_PERSISTENCE_REQUIRED:"true",
+  SEO_OPS_ALLOWED_PROJECT_REF:"bufbyfwstdqvwnkhyrea",
+ }),/needs SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY/);
+});

@@ -53,6 +53,7 @@ jobs:
           SEO_RESEARCH_OUTPUT_DIR: content/operations/research
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SEO_OPS_ALLOWED_PROJECT_REF: bufbyfwstdqvwnkhyrea
           SEO_PERSISTENCE_REQUIRED: "true"
         run: node seo-engine/schedulers/content-operations.mjs seo-output/scheduler-1-opportunities.json
       - uses: actions/upload-artifact@v4
