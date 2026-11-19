@@ -15,7 +15,7 @@ test("normalizes casing, query and trailing slash without merging host or scheme
 });
 
 test("preserves root path", () => {
-  assert.equal(normalizePageUrl("https://www.finflowtrack.com/"), "https://finflowtrack.com/");
+  assert.equal(normalizePageUrl("https://www.finflowtrack.com/"), "https://www.finflowtrack.com/");
 });
 
 test("rejects non-web protocols", () => {
