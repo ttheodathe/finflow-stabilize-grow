@@ -133,7 +133,7 @@ test("an exact GSC landing page remains an update candidate despite low token ov
   "https://www.finflowtrack.com/blog/break-even-analysis-small-business",
  );
  assert.equal(result.decision,"UPDATE_EXISTING_ARTICLE");
- assert.equal(result.targetQueryMatch,"EXACT_LANDING_PAGE_LOW_TEXT_OVERLAP_REVIEW_REQUIRED");
+ assert.equal(result.targetQueryMatch,"EXACT_LANDING_PAGE_REVIEW_REQUIRED");
  assert.equal(result.target.slug,"break-even-analysis-small-business");
 });
 

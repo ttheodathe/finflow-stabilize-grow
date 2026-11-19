@@ -539,6 +539,10 @@ export async function runResearchPipeline({
       title:item.title,
       titleDescriptionScore:Number(similarity(draft.title + " " + draft.description, [item.title,item.description,item.slug,...(item.tags || [])].join(" ")).toFixed(3)),
       fullTextScore:Number(similarity(contentText.content,item.content).toFixed(3)),
+      score:Number(Math.max(
+        similarity(draft.title + " " + draft.description, [item.title,item.description,item.slug,...(item.tags || [])].join(" ")),
+        similarity(contentText.content,item.content),
+      ).toFixed(3)),
       existingIntent:classifySearchIntent([item.title,item.description,item.slug].join(" ")),
       proposedIntent:intent,
     })).sort((a,b)=>Math.max(b.titleDescriptionScore,b.fullTextScore)-Math.max(a.titleDescriptionScore,a.fullTextScore));
