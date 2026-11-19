@@ -1,4 +1,5 @@
 import { readFile, readdir, writeFile, mkdir } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import { assertProductionWritesBlocked } from "../content-ops/safety.mjs";
 import { createSupabaseSeoStoreFromEnv } from "../persistence/supabase-store.mjs";
 
@@ -13,18 +14,39 @@ export async function runContentOperations({ inputPath = `${OUTPUT}/scheduler-1-
   }
   const files = await readdir(CONTENT_DIR);
   const inventory = files.filter((file) => file.endsWith(".md")).map((file) => file.replace(/\.md$/, ""));
-  const queue = input.opportunities.filter((item) => item.decision === "REVIEW_REQUIRED").slice(0, 10).map((item) => ({
-    id: `review-${Buffer.from(item.targetUrl).toString("base64url").slice(0, 24)}`,
-    type: "EXISTING_ARTICLE_UPDATE",
-    targetUrl: item.targetUrl,
-    status: "DISCOVERED",
-    sourceEvidence: item.evidence,
-    proposedAction: "RESEARCH_AND_PREPARE_TARGETED_REVISION",
-    validation: { passed: false, status: "RESEARCH_REQUIRED" },
-    approval: { status: "NOT_REQUESTED" },
-    execution: { status: "BLOCKED_BY_DRY_RUN" },
-    note: "No revision was generated: human-verifiable research and exact article-content review are required before drafting.",
-  }));
+  const unmatchedTargets = [];
+  const queueByTarget = new Map();
+  for (const item of input.opportunities.filter((candidate) => candidate.decision === "REVIEW_REQUIRED")) {
+    let slug;
+    try {
+      const pathname = new URL(item.targetUrl).pathname;
+      slug = pathname.split("/").filter(Boolean).pop();
+    } catch {
+      unmatchedTargets.push({ targetUrl: item.targetUrl || null, reason: "INVALID_TARGET_URL" });
+      continue;
+    }
+    if (!slug || !inventory.includes(slug)) {
+      unmatchedTargets.push({ targetUrl: item.targetUrl, reason: "TARGET_NOT_FOUND_IN_BLOG_MARKDOWN_INVENTORY" });
+      continue;
+    }
+    if (queueByTarget.has(item.targetUrl)) continue;
+    const operationId = `review-${createHash("sha256").update(item.targetUrl).digest("hex").slice(0, 24)}`;
+    queueByTarget.set(item.targetUrl, {
+      id: operationId,
+      type: "EXISTING_ARTICLE_UPDATE",
+      slug,
+      targetPath: `content/blog/${slug}.md`,
+      targetUrl: item.targetUrl,
+      status: "DISCOVERED",
+      sourceEvidence: item.evidence,
+      proposedAction: "RESEARCH_AND_PREPARE_TARGETED_REVISION",
+      validation: { passed: false, status: "RESEARCH_REQUIRED" },
+      approval: { status: "NOT_REQUESTED" },
+      execution: { status: "BLOCKED_BY_DRY_RUN" },
+      note: "No revision was generated: human-verifiable research and exact article-content review are required before drafting.",
+    });
+  }
+  const queue = [...queueByTarget.values()];
   const store = createSupabaseSeoStoreFromEnv(process.env);
   let persistence = { status: "NOT_CONFIGURED", schedulerRunId: null };
   let persistenceError = null;
@@ -41,10 +63,20 @@ export async function runContentOperations({ inputPath = `${OUTPUT}/scheduler-1-
         status: "RUNNING", upstreamRunId: input.persistence?.schedulerRunId || null,
         output: { inputOpportunityCount: input.opportunities.length },
       });
+      for (const item of queue) {
+        await store.recordContentOperation({
+          operationKey: item.id,
+          operationType: item.type,
+          targetPath: item.targetPath,
+          slug: item.slug,
+          status: "PROPOSED",
+          payload: item,
+        });
+      }
       await store.recordRun({
         schedulerKey: "CONTENT_OPERATIONS", scheduledFor, attempt,
         status: "SUCCEEDED", upstreamRunId: input.persistence?.schedulerRunId || null,
-        output: { queueCount: queue.length, mode: "DRY_RUN" },
+        output: { queueCount: queue.length, unmatchedTargetCount: unmatchedTargets.length, mode: "DRY_RUN" },
       });
       persistence = { status: "PERSISTED", schedulerRunId };
     } catch (error) {
@@ -67,6 +99,7 @@ export async function runContentOperations({ inputPath = `${OUTPUT}/scheduler-1-
     generatedAt: new Date().toISOString(), mode: "DRY_RUN",
     contentInventory: { markdownArticleCount: inventory.length, slugs: inventory },
     queue, queueCount: queue.length,
+    unmatchedTargets, unmatchedTargetCount: unmatchedTargets.length,
     productionMutation: "BLOCKED",
     persistence,
   };
