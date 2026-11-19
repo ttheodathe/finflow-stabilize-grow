@@ -100,7 +100,7 @@ test("draft queue persistence is idempotent and requires independent operation, 
  const store={
   recordContentOperation:async input=>{
    calls.operations.push(input);
-   if(!operationIds.has(input.operationKey)) operationIds.set(input.operationKey,"00000000-0000-4000-8000-000000000456");
+   if(!operationIds.has(input.operationKey)) operationIds.set(input.operationKey,"00000000-0000-4000-8000-"+String(450+operationIds.size).padStart(12,"0"));
    operationPayloads.set(input.operationKey,input.payload);
    return operationIds.get(input.operationKey);
   },
@@ -111,13 +111,20 @@ test("draft queue persistence is idempotent and requires independent operation, 
    return researchIds.get(key);
   },
   recordContentRevision:async input=>{
-   if(!revisionIds.has(input.contentHash)) revisionIds.set(input.contentHash,"00000000-0000-4000-8000-000000000777");
-   calls.revisions=[...revisionIds].map(([hash,id])=>({id,content_hash:hash,markdown:input.markdown,revision_state:"PROPOSED",operation_id:input.operationId}));
-   return revisionIds.get(input.contentHash);
+   if(!revisionIds.has(input.contentHash)){
+    const id="00000000-0000-4000-8000-"+String(700+revisionIds.size).padStart(12,"0");
+    revisionIds.set(input.contentHash,id);
+   }
+   const id=revisionIds.get(input.contentHash);
+   calls.revisionsById ||= new Map();
+   calls.revisionsById.set(id,{id,content_hash:input.contentHash,markdown:input.markdown,revision_state:"PROPOSED",operation_id:input.operationId});
+   calls.revisions=[...calls.revisionsById.values()];
+   return id;
   },
   getContentOperation:async({operationId})=>{
-   const entry=[...operationPayloads.entries()].find(([,payload])=>payload.workflowState==="PERSISTED_PENDING_READBACK"||payload.workflowState==="READY_FOR_HUMAN_REVIEW");
-   return entry?{id:operationId,operation_key:entry[0],status:"PROPOSED",payload:entry[1]}:null;
+   const entry=[...operationIds.entries()].find(([,id])=>id===operationId);
+   if(!entry) return null;
+   return {id:operationId,operation_key:entry[0],status:"PROPOSED",payload:operationPayloads.get(entry[0])};
   },
   listResearchRecords:async({opportunityId})=>calls.research.filter(row=>row.opportunity_id===opportunityId),
   listContentRevisions:async({operationId})=>calls.revisions.filter(row=>row.operation_id===operationId),

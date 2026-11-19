@@ -1,6 +1,5 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { runResearchPipeline } from "./pipeline.mjs";
-import { createSupabaseSeoStoreFromEnv } from "../persistence/supabase-store.mjs";
 
 const opportunities = [
   { id:"fixture-recordkeeping", targetUrl:"https://www.finflowtrack.com/blog/small-business-bookkeeping-checklist", targetQuery:"small business bookkeeping records checklist", metrics:{impressions:120,clicks:4,ctr:4/120,averagePosition:14.2}, reportingPeriodEnd:"2026-11-16", dataSource:"TEST_FIXTURE", evidenceMode:"FIXTURE" },
@@ -20,14 +19,25 @@ const mockFetch = async url => {
 };
 const outputDir="seo-output/b7.1-fixture";
 await mkdir(outputDir,{recursive:true});
-let store=null;
-let persistenceConfigurationError=null;
-try { store=createSupabaseSeoStoreFromEnv(process.env); }
-catch(error) { persistenceConfigurationError=String(error.message || error); }
-const result=await runResearchPipeline({opportunities,outputDir,fetchImpl:mockFetch,store,allowFixture:true,now:new Date("2026-11-19T12:00:00.000Z")});
-if(result.readyDraftCount!==opportunities.length || result.rejectedCount!==0) throw new Error(`Expected ${opportunities.length} fixture drafts with no rejections; got ${result.readyDraftCount} ready and ${result.rejectedCount} rejected.`);
-const persistedDraftCount=result.results.filter(item=>item.persistence==="PERSISTED").length;
-const persistenceStatus=store ? (persistedDraftCount===result.readyDraftCount ? "PERSISTED" : "PARTIAL") : persistenceConfigurationError ? "BLOCKED" : "NOT_CONFIGURED";
-const summary={mode:"FIXTURE_TEST_ONLY",gscEvidence:"SYNTHETIC_NOT_LIVE_GSC",candidateCount:result.results.length,readyDraftCount:result.readyDraftCount,rejectedCount:result.rejectedCount,persistenceStatus,persistedDraftCount,persistenceConfigurationError,results:result.results.map(item=>({id:item.candidate.id,query:item.candidate.targetQuery,decision:item.cannibalization?.decision,status:item.status,slug:item.draft?.slug,sourceCount:item.quality?.sourceCount,reasons:item.rejectionReasons,reviewQuestions:item.editorialReviewQuestions}))};
+const result=await runResearchPipeline({
+  opportunities,outputDir,fetchImpl:mockFetch,store:null,allowFixture:true,
+  now:new Date("2026-11-19T12:00:00.000Z"),
+});
+if(result.draftGeneratedCount!==opportunities.length || result.rejectedCount!==0 || result.readyDraftCount!==0) {
+  throw new Error(`Expected ${opportunities.length} generated fixture drafts, none eligible for human review; got ${result.draftGeneratedCount} generated, ${result.readyDraftCount} ready and ${result.rejectedCount} rejected.`);
+}
+const persistedDraftCount=0;
+const persistenceStatus="LOCAL_DRY_RUN_ONLY";
+const summary={
+  mode:"FIXTURE_TEST_ONLY",gscEvidence:"SYNTHETIC_NOT_LIVE_GSC",
+  candidateCount:result.results.length,draftGeneratedCount:result.draftGeneratedCount,
+  readyDraftCount:result.readyDraftCount,rejectedCount:result.rejectedCount,
+  persistenceStatus,persistedDraftCount,
+  results:result.results.map(item=>({
+    id:item.candidate.id,query:item.candidate.targetQuery,decision:item.cannibalization?.decision,
+    status:item.status,slug:item.draft?.slug,sourceCount:item.quality?.sourceCount,
+    reasons:item.rejectionReasons,reviewQuestions:item.editorialReviewQuestions,
+  })),
+};
 await writeFile("seo-output/b7.1-fixture/fixture-summary.json",JSON.stringify(summary,null,2)+"\n");
 console.log(JSON.stringify(summary,null,2));
