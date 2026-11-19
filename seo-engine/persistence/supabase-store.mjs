@@ -36,6 +36,12 @@ export function createSupabaseSeoStore({ url, serviceRoleKey, fetchImpl = fetch 
         p_error_summary: errorSummary,
       });
     },
+    listPersistedOpportunities({ schedulerRunId }) {
+      if (typeof schedulerRunId !== "string" || !/^[0-9a-f-]{36}$/i.test(schedulerRunId)) {
+        throw new Error("A valid persisted Scheduler 1 run ID is required.");
+      }
+      return rpc("seo_ops_get_opportunities", { p_scheduler_run_id: schedulerRunId });
+    },
     recordOpportunity({ opportunityKey, schedulerRunId, targetUrl, queryText = null, opportunityType, score, evidence }) {
       return rpc("seo_ops_record_opportunity", {
         p_opportunity_key: opportunityKey, p_scheduler_run_id: schedulerRunId,
