@@ -5,8 +5,11 @@ import { createSupabaseSeoStoreFromEnv } from "../persistence/supabase-store.mjs
 
 const OUTPUT = process.env.SEO_OUTPUT_DIR || "seo-output";
 
-export async function runPerformanceLearning({ dateRange = resolveDateRange(), collectFn = collect } = {}) {
-  await mkdir(OUTPUT, { recursive: true });
+export async function runPerformanceLearning({
+  dateRange = resolveDateRange(), collectFn = collectPartial,
+  outputDir = OUTPUT, env = process.env,
+} = {}) {
+  await mkdir(outputDir, { recursive: true });
   let snapshot = null;
   let collectionError = null;
   let sourceFile = null;
@@ -18,14 +21,16 @@ export async function runPerformanceLearning({ dateRange = resolveDateRange(), c
     collectionError = String(error.message || error);
   }
 
-  const search = snapshot ? {
+  const gscAvailable = Boolean(snapshot?.gsc && snapshot.sourceStatus?.gsc !== "UNAVAILABLE");
+  const ga4Available = Boolean(snapshot?.ga4 && snapshot.sourceStatus?.ga4 !== "UNAVAILABLE");
+  const search = gscAvailable ? {
     status: "AVAILABLE",
     clicks: snapshot.gsc.pages.reduce((sum, row) => sum + row.clicks, 0),
     impressions: snapshot.gsc.pages.reduce((sum, row) => sum + row.impressions, 0),
   } : { status: "UNAVAILABLE", clicks: null, impressions: null };
   if (search.impressions !== null) search.ctr = search.impressions ? search.clicks / search.impressions : null;
 
-  const analytics = snapshot ? {
+  const analytics = ga4Available ? {
     status: "AVAILABLE",
     organicSessions: snapshot.ga4.reduce((sum, row) => sum + row.sessions, 0),
     engagedSessions: snapshot.ga4.reduce((sum, row) => sum + row.engagedSessions, 0),
@@ -52,7 +57,9 @@ export async function runPerformanceLearning({ dateRange = resolveDateRange(), c
     },
     contentAttribution: { status: "NOT_AVAILABLE", reason: "No operation-to-landing-page baseline and post-change comparison is configured yet." },
     dataQuality: {
-      collectionStatus: snapshot ? "COMPLETE" : "FAILED",
+      collectionStatus: gscAvailable && ga4Available ? "COMPLETE" : (gscAvailable || ga4Available ? "PARTIAL" : "FAILED"),
+      sourceStatus: snapshot?.sourceStatus || { gsc: "UNAVAILABLE", ga4: "UNAVAILABLE" },
+      sourceErrors: snapshot?.sourceErrors || null,
       error: collectionError,
       interpretation: "Unavailable values are null; a successfully retrieved zero is reported as zero.",
     },
@@ -67,19 +74,21 @@ export async function runPerformanceLearning({ dateRange = resolveDateRange(), c
   let persistence = { status: "NOT_CONFIGURED", schedulerRunId: null };
   if (store) {
     const scheduledFor = new Date().toISOString().slice(0, 10);
-    const attempt = Math.max(1, Number.parseInt(process.env.GITHUB_RUN_ATTEMPT || "1", 10) || 1);
+    const attempt = Math.max(1, Number.parseInt(env.GITHUB_RUN_ATTEMPT || "1", 10) || 1);
     let schedulerRunId = null;
     try {
       schedulerRunId = await store.recordRun({
         schedulerKey: "PERFORMANCE_AND_LEARNING", scheduledFor, attempt,
         status: "RUNNING", output: { dateRange },
       });
-      if (snapshot) {
+      if (gscAvailable) {
         await store.recordPerformanceSnapshot({
           snapshotKey: `scheduler-3:${scheduledFor}:${attempt}:GSC:${dateRange.startDate}-${dateRange.endDate}`,
           schedulerRunId, periodStart: dateRange.startDate, periodEnd: dateRange.endDate,
           source: "GSC", metrics: search,
         });
+      }
+      if (ga4Available) {
         await store.recordPerformanceSnapshot({
           snapshotKey: `scheduler-3:${scheduledFor}:${attempt}:GA4:${dateRange.startDate}-${dateRange.endDate}`,
           schedulerRunId, periodStart: dateRange.startDate, periodEnd: dateRange.endDate,
@@ -90,7 +99,7 @@ export async function runPerformanceLearning({ dateRange = resolveDateRange(), c
         schedulerKey: "PERFORMANCE_AND_LEARNING", scheduledFor, attempt,
         status: gscAvailable && ga4Available ? "SUCCEEDED" : "PARTIAL",
         output: { search, analytics, productAcquisition: report.productAcquisition, dataQuality: report.dataQuality },
-        errorSummary: collectionError,
+        errorSummary: collectionError || Object.values(snapshot?.sourceErrors || {}).filter(Boolean).join("; ") || null,
       });
       persistence = { status: "PERSISTED", schedulerRunId };
     } catch (error) {
@@ -108,7 +117,12 @@ export async function runPerformanceLearning({ dateRange = resolveDateRange(), c
   report.persistence = persistence;
   const path = `${outputDir}/scheduler-3-performance-report.json`;
   await writeFile(path, JSON.stringify(report, null, 2) + "\n", { flag: "w" });
-  return { path, searchStatus: search.status, analyticsStatus: analytics.status, productAcquisition: report.productAcquisition.status, persistenceStatus: persistence.status };
+  return {
+    path, searchStatus: search.status, analyticsStatus: analytics.status,
+    collectionStatus: report.dataQuality.collectionStatus,
+    productAcquisition: report.productAcquisition.status,
+    persistenceStatus: persistence.status,
+  };
 }
 
 if (import.meta.url === new URL(process.argv[1], "file:").href) {
