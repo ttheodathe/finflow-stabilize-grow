@@ -16,7 +16,8 @@ const TARGET_SLUG = "free-accounting-software-for-small-business";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function assertAcceptanceEnvironment() {
-  const projectUrl = new URL(process.env.SUPABASE_URL || "");
+  assert.ok(process.env.SUPABASE_URL, "SUPABASE_URL must be configured for the acceptance project.");
+  const projectUrl = new URL(process.env.SUPABASE_URL);
   assert.equal(projectUrl.hostname.split(".")[0], ACCEPTANCE_PROJECT_REF, "Refusing to write outside the isolated acceptance Supabase project.");
   assert.equal(process.env.SEO_OPS_ALLOWED_PROJECT_REF, ACCEPTANCE_PROJECT_REF);
   assert.equal(process.env.DRY_RUN, "true");
@@ -122,7 +123,7 @@ assert.match(accepted.draft?.slug || "", new RegExp("^" + TARGET_SLUG + "$"));
 assert.ok(accepted.persistence?.operationId && UUID.test(accepted.persistence.operationId));
 assert.ok(accepted.persistence?.revisionId && UUID.test(accepted.persistence.revisionId));
 assert.ok(Array.isArray(accepted.persistence?.researchRecordIds) && accepted.persistence.researchRecordIds.length >= 4);
-assert.ok(accepted.draftPath, "The complete editorial draft file path is missing.");
+assert.ok(accepted.draft?.path, "The complete editorial draft file path is missing.");
 
 const operation = await store.getContentOperation({ operationId: accepted.persistence.operationId });
 assert.equal(operation?.payload?.workflowState, "READY_FOR_HUMAN_REVIEW");
@@ -136,10 +137,10 @@ const revision = revisions.find(item => item.id === accepted.persistence.revisio
 assert.ok(revision, "Independent revision readback failed.");
 assert.ok(revision.markdown.includes("Free Accounting Software Options: A Practical Comparison"));
 assert.ok(revision.markdown.includes("What Does \"Free Accounting Software\" Actually Mean?"));
-const draftMarkdown = await readFile(accepted.draftPath, "utf8");
+const draftMarkdown = await readFile(accepted.draft.path, "utf8");
 assert.ok(draftMarkdown.includes("publicationStatus: draft"));
 assert.ok(draftMarkdown.includes("ZipBooks Starter"));
-assert.ok(draftMarkdown.includes("This existing article"));
+assert.ok(draftMarkdown.includes("What Does \"Free Accounting Software\" Actually Mean?"));
 
 let freshCollection = { status: "NOT_ATTEMPTED" };
 try {
@@ -177,7 +178,7 @@ const summary = {
     contentOperationId: accepted.persistence.operationId,
     researchRecordIds: accepted.persistence.researchRecordIds,
     revisionId: accepted.persistence.revisionId,
-    draftPath: accepted.draftPath,
+    draftPath: accepted.draft.path,
     independentReadback: accepted.persistence.independentReadback,
     workflowState: operation.payload.workflowState,
   },
