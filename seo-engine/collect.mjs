@@ -22,9 +22,8 @@ async function requestJson(url, options, { fetchImpl = fetch, retries = 3 } = {}
   throw new Error("Google API request exhausted its retry budget.");
 }
 
-async function collectGsc(accessToken, dateRange, fetchImpl = fetch) {
+async function collectGscDimension(accessToken, dateRange, dimensions, fetchImpl = fetch) {
   const endpoint = `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(GSC_SITE_URL)}/searchAnalytics/query`;
-  const dimensions = ["date", "page", "query"];
   const rows = [];
   for (let startRow = 0; ; startRow += PAGE_SIZE) {
     const page = await requestJson(endpoint, {
@@ -44,19 +43,32 @@ async function collectGsc(accessToken, dateRange, fetchImpl = fetch) {
       }),
     }, { fetchImpl });
     const batch = Array.isArray(page.rows) ? page.rows : [];
-    rows.push(...batch.map((row) => ({
-      date: row.keys?.[0] ?? null,
-      page: row.keys?.[1] ? normalizePageUrl(row.keys[1]) : null,
-      query: row.keys?.[2] ?? null,
-      clicks: Number(row.clicks ?? 0),
-      impressions: Number(row.impressions ?? 0),
-      ctr: Number(row.ctr ?? 0),
-      position: Number(row.position ?? 0),
-    })));
+    rows.push(...batch.map((row) => {
+      const record = {
+        clicks: Number(row.clicks ?? 0),
+        impressions: Number(row.impressions ?? 0),
+        ctr: Number(row.ctr ?? 0),
+        position: Number(row.position ?? 0),
+      };
+      dimensions.forEach((dimension, index) => {
+        const value = row.keys?.[index] ?? null;
+        record[dimension] = dimension === "page" && value ? normalizePageUrl(value) : value;
+      });
+      return record;
+    }));
     if (batch.length < PAGE_SIZE) break;
     if (startRow >= 250_000) throw new Error("GSC pagination safety limit reached (250,000 rows). Narrow the date range.");
   }
   return rows;
+}
+
+async function collectGsc(accessToken, dateRange, fetchImpl = fetch) {
+  // Keep total-page metrics separate from query rows: anonymized queries are
+  // omitted from query-dimension reports and must not understate page totals.
+  const pages = await collectGscDimension(accessToken, dateRange, ["date", "page"], fetchImpl);
+  const queries = await collectGscDimension(accessToken, dateRange, ["date", "query"], fetchImpl);
+  const pageQueries = await collectGscDimension(accessToken, dateRange, ["date", "page", "query"], fetchImpl);
+  return { pages, queries, pageQueries };
 }
 
 async function collectGa4(accessToken, dateRange, fetchImpl = fetch) {
@@ -129,7 +141,12 @@ export async function collect({ dateRange, token, outputDir = OUTPUT_DIR, fetchI
     property: { gsc: GSC_SITE_URL, ga4: GA4_PROPERTY_ID },
     dateRange,
     fetchedAt: new Date().toISOString(),
-    counts: { gscRows: gscRows.length, ga4Rows: ga4Rows.length },
+    counts: {
+      gscPageRows: gscRows.pages.length,
+      gscQueryRows: gscRows.queries.length,
+      gscPageQueryRows: gscRows.pageQueries.length,
+      ga4Rows: ga4Rows.length,
+    },
     gsc: gscRows,
     ga4: ga4Rows,
   };
