@@ -116,7 +116,7 @@ test("new article with an existing different slug is rejected", async () => {
   const mock = makeMockGitHub({ "content/blog/test-article.md": "existing article" });
   const adapter = createGitHubContentAdapter({
     token: "test-token", owner: "test", repo: "repo", env: stagingEnv(),
-    fetchImpl: mock.fetchImpl, publicBaseUrl: "https://preview.finflowtrack.test",
+    fetchImpl: mock.fetchImpl, approvalVerifier: async () => ({ verified: true }), publicBaseUrl: "https://preview.finflowtrack.test",
   });
   const markdown = '---\ntitle: "Test Article"\n---\n\nNew article body.';
   await assert.rejects(adapter.execute(approvedOperation("NEW_ARTICLE", markdown, "content/blog/test-article.md")), /Duplicate slug/);
@@ -126,7 +126,7 @@ test("approval is invalidated when the content changes", async () => {
   const mock = makeMockGitHub();
   const adapter = createGitHubContentAdapter({
     token: "test-token", owner: "test", repo: "repo", env: stagingEnv(),
-    fetchImpl: mock.fetchImpl, publicBaseUrl: "https://preview.finflowtrack.test",
+    fetchImpl: mock.fetchImpl, approvalVerifier: async () => ({ verified: true }), publicBaseUrl: "https://preview.finflowtrack.test",
   });
   const markdown = '---\ntitle: "Test Article"\n---\n\nOriginal body.';
   const operation = approvedOperation("NEW_ARTICLE", markdown, "content/blog/test-article.md");
@@ -140,7 +140,7 @@ test("existing article update snapshots original content and rollback restores i
   const mock = makeMockGitHub({ "content/blog/test-article.md": original });
   const adapter = createGitHubContentAdapter({
     token: "test-token", owner: "test", repo: "repo", env: stagingEnv("EXISTING_ARTICLE_UPDATE"),
-    fetchImpl: mock.fetchImpl, publicBaseUrl: "https://preview.finflowtrack.test",
+    fetchImpl: mock.fetchImpl, approvalVerifier: async () => ({ verified: true }), publicBaseUrl: "https://preview.finflowtrack.test",
   });
   const baseline = mock.files.get("content/blog/test-article.md").sha;
   const operation = approvedOperation("EXISTING_ARTICLE_UPDATE", revised, "content/blog/test-article.md", {
