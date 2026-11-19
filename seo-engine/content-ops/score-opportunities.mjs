@@ -13,7 +13,7 @@ const WEIGHTS = Object.freeze({
 });
 
 const REQUIRED_EVIDENCE = ["sourceUrl", "sourceType", "verifiedAt", "supports"];
-const ALLOWED_STATES = [
+export const WORKFLOW_STATES = [
   "DISCOVERED",
   "RESEARCHING",
   "DRAFTED",
