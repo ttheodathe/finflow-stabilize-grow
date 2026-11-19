@@ -1,9 +1,37 @@
+import { createHash } from "node:crypto";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { collect } from "../collect.mjs";
 import { resolveDateRange } from "../normalize.mjs";
 import { createSupabaseSeoStoreFromEnv } from "../persistence/supabase-store.mjs";
 
 const OUTPUT = process.env.SEO_OUTPUT_DIR || "seo-output";
+
+export function canonicalizePageUrl(value) {
+  if (typeof value !== "string" || !value.trim()) {
+    throw new TypeError("A page identity must be a non-empty absolute HTTP or HTTPS URL.");
+  }
+  let url;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new TypeError("A page identity must be a valid absolute HTTP or HTTPS URL.");
+  }
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    throw new TypeError("A page identity must use HTTP or HTTPS.");
+  }
+  const rawValue = value.trim();
+  const rawAuthority = rawValue.match(/^https?:\/\/([^/?#]*)/i)?.[1] || rawValue.match(/^https?:([^/?#]*)/i)?.[1] || "";
+  if (url.username || url.password || rawAuthority.includes("@")) {
+    throw new TypeError("Page identity URLs must not contain username or password credentials.");
+  }
+  url.hash = "";
+  return url.href;
+}
+
+export function buildPageOpportunityId(pageUrl) {
+  const canonicalPageUrl = canonicalizePageUrl(pageUrl);
+  return "gsc-" + createHash("sha256").update(canonicalPageUrl, "utf8").digest("hex");
+}
 
 function clamp(value) { return Math.max(0, Math.min(5, value)); }
 
@@ -16,8 +44,9 @@ export function aggregatePageQueries(rows = []) {
   const grouped = new Map();
   for (const row of rows) {
     if (typeof row.page !== "string" || typeof row.query !== "string" || !row.query.trim()) continue;
-    const key = `${row.page}\\u0000${row.query}`;
-    const current = grouped.get(key) || { page: row.page, query: row.query, rows: [] };
+    const canonicalPage = canonicalizePageUrl(row.page);
+    const key = canonicalPage + "\u0000" + row.query;
+    const current = grouped.get(key) || { page: canonicalPage, query: row.query, rows: [] };
     current.rows.push(row);
     grouped.set(key, current);
   }
@@ -35,15 +64,15 @@ export function aggregatePageQueries(rows = []) {
       ctr: clicks === null || impressions === null ? null : impressions > 0 ? clicks / impressions : 0,
       position: positionWeight === null || !positionImpressions ? null : positionWeight / positionImpressions,
     };
-  }).sort((a,b) => (b.impressions ?? -1) - (a.impressions ?? -1));
+  }).sort((a, b) => (b.impressions ?? -1) - (a.impressions ?? -1));
 }
-
 export function scorePage(page, queries) {
+  const canonicalPage = canonicalizePageUrl(page.page);
   const metricsComplete = [page.clicks, page.impressions, page.ctr, page.position].every(Number.isFinite) && page.impressions > 0;
   const impressionsForScore = Number.isFinite(page.impressions) ? page.impressions : 0;
   const ctrForScore = Number.isFinite(page.ctr) ? page.ctr : 0;
   const positionForScore = Number.isFinite(page.position) ? page.position : 0;
-  const queryRows = queries.filter(row => row.page === page.page);
+  const queryRows = queries.filter(row => canonicalizePageUrl(row.page) === canonicalPage);
   const relevant = queryRows.filter(row => /account|invoice|expense|bookkeep|cash flow|receivable|payable|freelanc|small business/i.test(row.query || ""));
   const intentFit = relevant.length > 0 ? 4 : 1;
   const gscOpportunity = clamp(Math.log10(impressionsForScore + 1) * 1.5);
@@ -54,8 +83,8 @@ export function scorePage(page, queries) {
   const confidence = !metricsComplete ? 0 : impressionsForScore >= 50 ? 4 : impressionsForScore >= 10 ? 3 : 1;
   const score = Math.round(((gscOpportunity + ctrOpportunity + positionOpportunity + intentFit + productFit + effort + confidence) / 35) * 100);
   return {
-    id: `gsc-${Buffer.from(page.page).toString("base64url").slice(0, 24)}`,
-    targetUrl: page.page, action: "REVIEW_EXISTING_PAGE", score, confidence: confidence / 5,
+    id: buildPageOpportunityId(canonicalPage),
+    targetUrl: canonicalPage, action: "REVIEW_EXISTING_PAGE", score, confidence: confidence / 5,
     evidence: {
       source: "Google Search Console", dateRange: page.dateRange || null,
       sourceCollectionAt: page.sourceCollectionAt || null,
@@ -151,9 +180,10 @@ export async function runSearchIntelligence({ dateRange = resolveDateRange(), co
   const evidenceMode = snapshot.evidenceMode || "FRESH_GSC_COLLECTION";
   const pages = new Map();
   for (const row of snapshot.gsc.pages) {
-    const current = pages.get(row.page) || { page: row.page, rows: [] };
+    const canonicalPage = canonicalizePageUrl(row.page);
+    const current = pages.get(canonicalPage) || { page: canonicalPage, rows: [] };
     current.rows.push(row);
-    pages.set(row.page, current);
+    pages.set(canonicalPage, current);
   }
   const queries = aggregatePageQueries(snapshot.gsc.pageQueries);
   const pageValues = [...pages.values()].map(group => {
