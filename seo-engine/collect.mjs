@@ -22,7 +22,7 @@ async function requestJson(url, options, { fetchImpl = fetch, retries = 3 } = {}
   throw new Error("Google API request exhausted its retry budget.");
 }
 
-async function collectGsc(accessToken, dateRange) {
+async function collectGsc(accessToken, dateRange, fetchImpl = fetch) {
   const endpoint = `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(GSC_SITE_URL)}/searchAnalytics/query`;
   const dimensions = ["date", "page", "query"];
   const rows = [];
@@ -42,7 +42,7 @@ async function collectGsc(accessToken, dateRange) {
         rowLimit: PAGE_SIZE,
         startRow,
       }),
-    });
+    }, { fetchImpl });
     const batch = Array.isArray(page.rows) ? page.rows : [];
     rows.push(...batch.map((row) => ({
       date: row.keys?.[0] ?? null,
@@ -59,7 +59,7 @@ async function collectGsc(accessToken, dateRange) {
   return rows;
 }
 
-async function collectGa4(accessToken, dateRange) {
+async function collectGa4(accessToken, dateRange, fetchImpl = fetch) {
   const endpoint = `https://analyticsdata.googleapis.com/v1beta/properties/${encodeURIComponent(GA4_PROPERTY_ID)}:runReport`;
   const rows = [];
   for (let offset = 0; ; offset += GA4_PAGE_SIZE) {
@@ -91,7 +91,7 @@ async function collectGa4(accessToken, dateRange) {
         limit: GA4_PAGE_SIZE,
         offset,
       }),
-    });
+    }, { fetchImpl });
     const batch = Array.isArray(page.rows) ? page.rows : [];
     rows.push(...batch.map((row) => {
       const dimension = row.dimensionValues || [];
