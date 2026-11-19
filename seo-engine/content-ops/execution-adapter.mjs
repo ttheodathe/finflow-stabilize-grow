@@ -231,7 +231,7 @@ export function createGitHubContentAdapter({
       throw new Error("Rollback requires a previously URL_VERIFIED content operation.");
     }
     const current = await readFile(ledger.targetPath);
-    const slug = ledger.targetPath.split("/").pop().replace(/\\.md$/, "");
+    const slug = ledger.targetPath.split("/").pop().replace(/\.md$/, "");
     const url = `${effectivePublicBaseUrl}/blog/${slug}`;
     const canonicalUrl = `${canonicalOrigin}/blog/${slug}`;
     let restoredBlobSha = null;
