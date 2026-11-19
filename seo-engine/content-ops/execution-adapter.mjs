@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { assertExecutionAllowed, readExecutionPolicy } from "./safety.mjs";
+import { verifyGitHubApproval } from "./github-approval.mjs";
 
 const API = "https://api.github.com";
 const b64 = (value) => Buffer.from(value, "utf8").toString("base64");
@@ -25,10 +26,10 @@ function validateApproval(operation, targetPath, content) {
   const expected = contentApprovalHash({
     operationType: operation.type, targetPath, content, metadata: operation.metadata || {},
   });
-  if (!approval || approval.status !== "APPROVED" || !approval.approvedBy || !approval.approvedAt) {
-    throw new Error("An explicit human approval record is required.");
+  if (!approval || !approval.pullRequestNumber || !approval.reviewId || !approval.reviewerLogin || !approval.reviewedCommitSha) {
+    throw new Error("An authenticated GitHub pull-request review reference is required.");
   }
-  if (approval.contentHash !== expected || approval.targetPath !== targetPath) {
+  if (approval.contentHash !== expected || approval.targetPath !== targetPath || approval.operationType !== operation.type) {
     throw new Error("Approval is invalid because the content or target changed after approval.");
   }
   return expected;
@@ -37,6 +38,7 @@ function validateApproval(operation, targetPath, content) {
 export function createGitHubContentAdapter({
   token, owner, repo, fetchImpl = fetch, env = process.env,
   publicBaseUrl, canonicalBaseUrl = "https://www.finflowtrack.com",
+  approvalVerifier = verifyGitHubApproval,
 }) {
   if (!token || !owner || !repo) throw new Error("GitHub content adapter requires token, owner, and repository.");
   const policy = readExecutionPolicy(env);
@@ -118,6 +120,11 @@ export function createGitHubContentAdapter({
     if (typeof content !== "string" || !content.trim()) throw new Error("Approved Markdown content is required.");
     assertExecutionAllowed(operation.type, policy);
     const approvalHash = validateApproval(operation, targetPath, content);
+    const approvalEvidence = await approvalVerifier({
+      token, owner, repo, approval: operation.approval, operation, targetPath,
+      targetBranch: branch, expectedContentHash: approvalHash, fetchImpl,
+    });
+    if (!approvalEvidence?.verified) throw new Error("Authenticated GitHub approval could not be verified.");
 
     const ledgerPath = operationPath(operation.id);
     const prior = await readFile(ledgerPath);
@@ -126,7 +133,7 @@ export function createGitHubContentAdapter({
       if (record.approvalHash !== approvalHash || record.targetPath !== targetPath) {
         throw new Error("Idempotency conflict: operation ID was previously used for different content.");
       }
-      if (record.status === "LIVE_VERIFIED") return { ...record, idempotentReplay: true };
+      if (record.status === "URL_VERIFIED") return { ...record, idempotentReplay: true };
     }
 
     const current = await readFile(targetPath);
@@ -170,7 +177,8 @@ export function createGitHubContentAdapter({
     const record = {
       operationId: operation.id, type: operation.type, targetPath, url, canonicalUrl, approvalHash,
       contentBlobSha: written.content.sha, commitSha: written.commit?.sha || null,
-      status: verification.verified ? "LIVE_VERIFIED" : "WRITE_SUCCEEDED_VERIFICATION_PENDING",
+      approvalEvidence,
+      status: verification.verified ? "URL_VERIFIED" : "WRITE_SUCCEEDED_VERIFICATION_PENDING",
       verification, executedAt: new Date().toISOString(),
     };
     const existingLedger = await readFile(ledgerPath);
