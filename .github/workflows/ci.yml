@@ -106,7 +106,7 @@ jobs:
             supabase/migrations/20261119123210_seo_ops_rpc_ingest.sql \
             supabase/migrations/20261119123551_seo_ops_activation_snapshot_rpc.sql \
             supabase/migrations/20261119124259_seo_ops_content_operation_rpc.sql \
-            supabase/migrations/20261119124347_seo_ops_content_operation_key_guard.sql \\
+            supabase/migrations/20261119124347_seo_ops_content_operation_key_guard.sql \
             supabase/migrations/20261119160000_seo_ops_read_persisted_opportunities.sql; do
             name="$(basename "$migration")"
             docker cp "$migration" "$container_id:/tmp/$name"
