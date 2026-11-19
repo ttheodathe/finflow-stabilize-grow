@@ -55,8 +55,8 @@ function approvedOperation(type, markdown, targetPath, extra = {}) {
     id: extra.id || "operation-001", type, slug: "test-article",
     targetPath, markdown, metadata, ...extra,
     approval: {
-      status: "APPROVED", approvedBy: "editor@example.test",
-      approvedAt: "2026-11-19T00:00:00.000Z", targetPath,
+      pullRequestNumber: 12, reviewId: 321, reviewerLogin: "trusted-editor",
+      reviewedCommitSha: "head-1", targetPath, operationType: type,
       contentHash: contentApprovalHash({ operationType: type, targetPath, content: markdown, metadata }),
     },
   };
@@ -99,16 +99,16 @@ test("staging publish writes a real repository file and is idempotent", async ()
   const mock = makeMockGitHub();
   const adapter = createGitHubContentAdapter({
     token: "test-token", owner: "test", repo: "repo", env: stagingEnv(),
-    fetchImpl: mock.fetchImpl, publicBaseUrl: "https://preview.finflowtrack.test",
+    fetchImpl: mock.fetchImpl, approvalVerifier: async () => ({ verified: true }), publicBaseUrl: "https://preview.finflowtrack.test",
   });
   const markdown = '---\ntitle: "Test Article"\n---\n\nA useful article body for safe staging verification.';
   const operation = approvedOperation("NEW_ARTICLE", markdown, "content/blog/test-article.md", { verificationText: "A useful article body for safe staging verification." });
   const first = await adapter.execute(operation);
-  assert.equal(first.status, "LIVE_VERIFIED");
+  assert.equal(first.status, "URL_VERIFIED");
   assert.equal(mock.files.get("content/blog/test-article.md").content, markdown);
   const second = await adapter.execute(operation);
   assert.equal(second.idempotentReplay, true);
-  assert.equal(second.status, "LIVE_VERIFIED");
+  assert.equal(second.status, "URL_VERIFIED");
   assert.equal(mock.files.size, 2);
 });
 
@@ -147,7 +147,7 @@ test("existing article update snapshots original content and rollback restores i
     expectedBlobSha: baseline, verificationText: "Revised body for staging verification.",
   });
   const updated = await adapter.execute(operation);
-  assert.equal(updated.status, "LIVE_VERIFIED");
+  assert.equal(updated.status, "URL_VERIFIED");
   assert.equal(mock.files.get("content/blog/test-article.md").content, revised);
   assert.ok(mock.files.has(".seo-operations/snapshots/operation-001.json"));
   const rollback = await adapter.rollback("operation-001");
