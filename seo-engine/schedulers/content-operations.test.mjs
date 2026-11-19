@@ -20,7 +20,7 @@ const opportunity={
 const mockFetch=async url=>{
  const u=String(url);
  const body=u.includes("irs.gov/")
-  ? "<html><head><title>Recordkeeping for small business</title></head><body>A recordkeeping system should clearly show business income and expenses. Keep supporting documents including invoices, receipts and bank statements. Financial statements and books of accounts should be accurate.</body></html>"
+  ? "<html><head><title>Recordkeeping for small business</title></head><body>Good records help identify income sources, track expenses and prepare financial statements. A recordkeeping system should clearly show business income and expenses. Keep supporting documents including invoices, receipts and bank statements. Financial statements and books of accounts should be accurate.</body></html>"
   : "<html><head><title>What kind of records should I keep</title></head><body>Supporting documents include invoices, receipts, paid bills and bank records. Keep these documents to support entries in business books and records.</body></html>";
  return new Response(body,{status:200,headers:{"content-type":"text/html"}});
 };

@@ -180,13 +180,17 @@ export function freshnessFor(opportunity, now = new Date()) {
   const ageDays = Math.floor((now.getTime() - time) / 86400000);
   return { status: ageDays < 0 ? "FUTURE" : ageDays > STALE_AFTER_DAYS ? "STALE" : "FRESH", ageDays, reportingPeriodEnd: end };
 }
-export function detectUnsupportedNumericClaims(markdown) {
+export function findUnsupportedNumericClaims(markdown) {
   const withoutIllustrativeExamples = String(markdown || "").replace(
     /Example \(illustrative figures only\):[\s\S]*?(?=\n## |\n### |$)/i,
     " ",
   );
-  return /(?:[$€£]\s?\d[\d,]*(?:\.\d+)?|\b\d[\d,]*(?:\.\d+)?\s?(?:%|percent|customers?|users?|businesses?|days?|weeks?|months?|years?|units?)\b)/i
-    .test(withoutIllustrativeExamples);
+  const normalized = withoutIllustrativeExamples.replace(/^\s*\d+\.\s+/gm," ");
+  const pattern = /(?:[$€£]\s?\d[\d,]*(?:\.\d+)?|\b\d[\d,]*(?:\.\d+)?\s?(?:%|percent|customers?|users?|businesses?|days?|weeks?|months?|years?|units?)\b)/gi;
+  return [...normalized.matchAll(pattern)].map(match => match[0]);
+}
+export function detectUnsupportedNumericClaims(markdown) {
+  return findUnsupportedNumericClaims(markdown).length > 0;
 }
 
 export async function retrieveSource(source, { fetchImpl = fetch, now = new Date() } = {}) {
@@ -365,7 +369,8 @@ export async function runResearchPipeline({
     const frontmatterValid = contentText.data.status === "draft" && contentText.data.publicationStatus === "draft" &&
       contentText.data.title === draft.title && contentText.data.description === draft.description && contentText.data.slug === draft.slug;
     const bodyWords = contentText.content.trim().split(/\s+/).length;
-    const unsupportedNumericClaims = detectUnsupportedNumericClaims(contentText.content);
+    const unsupportedNumericClaimMatches = findUnsupportedNumericClaims(contentText.content);
+    const unsupportedNumericClaims = unsupportedNumericClaimMatches.length > 0;
     if (unsupportedNumericClaims) base.rejectionReasons.push("UNSUPPORTED_NUMERIC_CLAIM");
     const existingComparisons = inventory.map(item => ({
       slug:item.slug, score:Number(similarity(contentText.content,item.content).toFixed(3)),
@@ -389,7 +394,7 @@ export async function runResearchPipeline({
       ...quality, frontmatterValid, bodyWords, duplicateSlug,
       sourceCount: sourceRecords.length,
       verifiedSourceCount: sourceRecords.filter(source=>source.status==="RETRIEVED_RELEVANT").length,
-      originality, unsupportedNumericClaims: !unsupportedNumericClaims, productCapabilities: productEvidence ? "VERIFIED_FROM_REPOSITORY" : "NOT_VERIFIED",
+      originality, unsupportedNumericClaims: !unsupportedNumericClaims, numericClaimMatches: unsupportedNumericClaimMatches, productCapabilities: productEvidence ? "VERIFIED_FROM_REPOSITORY" : "NOT_VERIFIED",
     };
     base.status = base.rejectionReasons.length ? "REJECTED" : "DRAFT_READY_FOR_HUMAN_REVIEW";
     if (base.status === "DRAFT_READY_FOR_HUMAN_REVIEW") {
