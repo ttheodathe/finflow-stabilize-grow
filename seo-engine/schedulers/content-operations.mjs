@@ -6,10 +6,14 @@ import { runResearchPipeline } from "../research/pipeline.mjs";
 const OUTPUT = process.env.SEO_OUTPUT_DIR || "seo-output";
 const CONTENT_DIR = "content/blog";
 const RESEARCH_DIR = process.env.SEO_RESEARCH_OUTPUT_DIR || "content/operations/research";
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function expandPersistedOpportunities(opportunities, schedulerRunId) {
   const candidates = [];
   for (const opportunity of opportunities) {
+    if (typeof opportunity.persistedOpportunityId !== "string" || !UUID_PATTERN.test(opportunity.persistedOpportunityId)) {
+      throw new Error("Scheduler 2 rejected a persisted opportunity with a missing or invalid UUID.");
+    }
     if (opportunity.decision !== "REVIEW_REQUIRED") continue;
     const rows = (opportunity.evidence?.sampleQueries || [])
       .filter(row => typeof row.query === "string" && row.query.trim())
@@ -35,7 +39,7 @@ function expandPersistedOpportunities(opportunities, schedulerRunId) {
         evidenceMode: source === "Google Search Console" && opportunity.sourceRunFixture !== true
           && opportunity.evidence?.evidenceMode !== "FIXTURE"
           && !/\.test$|example\.test|localhost/i.test(new URL(opportunity.targetUrl || "https://invalid.example").hostname)
-          ? "LIVE_OR_PERSISTED" : "FIXTURE",
+          ? (opportunity.evidence?.evidenceMode || "LIVE_OR_PERSISTED") : "FIXTURE",
         evidence: {
           source,
           dateRange: opportunity.evidence?.dateRange || null,
@@ -57,15 +61,15 @@ export async function runContentOperations({
   inputPath = `${OUTPUT}/scheduler-1-opportunities.json`,
   outputDir = OUTPUT, researchDir = RESEARCH_DIR, contentDir = CONTENT_DIR,
   env = process.env, store = createSupabaseSeoStoreFromEnv(env),
-  fetchImpl = fetch, now = new Date(), allowFixture = false,
+  fetchImpl = fetch, now = new Date(), allowFixture = false, runAttempt = null,
 } = {}) {
   assertProductionWritesBlocked(env);
   const input = JSON.parse(await readFile(inputPath, "utf8"));
   if (input.scheduler !== "SEARCH_INTELLIGENCE" || !Array.isArray(input.opportunities)) {
     throw new Error("Scheduler 2 requires a valid Scheduler 1 opportunity report.");
   }
-  if (input.persistence?.status !== "PERSISTED" || !input.persistence?.schedulerRunId) {
-    throw new Error("Scheduler 2 requires Scheduler 1's successfully persisted run ID; artifact-only evidence is insufficient.");
+  if (input.persistence?.status !== "PERSISTED" || typeof input.persistence?.schedulerRunId !== "string" || !UUID_PATTERN.test(input.persistence.schedulerRunId)) {
+    throw new Error("Scheduler 2 requires Scheduler 1's successfully persisted run ID as a valid UUID; artifact-only evidence is insufficient.");
   }
   if (!store) {
     throw new Error("Scheduler 2 requires the server-side Supabase store to read Scheduler 1's persisted opportunities.");
@@ -76,6 +80,11 @@ export async function runContentOperations({
   });
   if (!Array.isArray(persistedOpportunities)) {
     throw new Error("Persisted Scheduler 1 opportunity RPC returned an invalid response.");
+  }
+  for (const row of persistedOpportunities) {
+    if (typeof row.id !== "string" || !UUID_PATTERN.test(row.id)) {
+      throw new Error("Scheduler 2 rejected a persisted opportunity with a missing or invalid UUID.");
+    }
   }
   const candidates = expandPersistedOpportunities(persistedOpportunities.map(row => ({
     id: row.opportunity_key,
@@ -91,7 +100,9 @@ export async function runContentOperations({
   })), input.persistence.schedulerRunId);
 
   const scheduledFor = now.toISOString().slice(0,10);
-  const attempt = Math.max(1, Number.parseInt(env.GITHUB_RUN_ATTEMPT || "1",10) || 1);
+  const attempt = Number.isInteger(runAttempt) && runAttempt >= 1
+    ? runAttempt
+    : Math.max(1, Number.parseInt(env.GITHUB_RUN_ATTEMPT || "1",10) || 1);
   const schedulerRunId = await store.recordRun({
     schedulerKey: "CONTENT_OPERATIONS", scheduledFor, attempt,
     status: "RUNNING", upstreamRunId: input.persistence.schedulerRunId,
@@ -148,6 +159,9 @@ export async function runContentOperations({
       intent: result.intent,
       freshness: result.freshness,
       cannibalization: result.cannibalization,
+      editorialDecision: result.editorialDecision || null,
+      sourcePackCompatibility: result.sourcePackCompatibility || null,
+      sourcePackContext: result.sourcePackContext || null,
       existingContentComparison: result.existingContentComparison || [],
       sourceRecords: result.draft?.sourceRecords || [],
       claimMap: result.draft?.claims || [],
@@ -159,6 +173,7 @@ export async function runContentOperations({
         path: result.draftPath || null, markdown: result.draft.content,
       } : null,
       quality: result.quality,
+      numericClaims: result.quality?.numericClaims || null,
       status: result.status,
       rejectionReasons: result.rejectionReasons,
       editorialReviewQuestions: result.editorialReviewQuestions || [],

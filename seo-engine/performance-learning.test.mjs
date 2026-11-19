@@ -3,7 +3,7 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { collectPartial } from "./collect.mjs";
+import { collect, collectPartial } from "./collect.mjs";
 import { runPerformanceLearning } from "./schedulers/performance-learning.mjs";
 
 const dateRange = { startDate: "2026-11-17", endDate: "2026-11-18" };
@@ -121,4 +121,22 @@ test("Scheduler 3 emits partial metrics report when acceptance-project guard blo
   assert.equal(report.persistence.status,"BLOCKED");
   assert.match(report.persistence.error,/does not match the explicitly allowed SEO acceptance project/);
  }finally{await rm(outputDir,{recursive:true,force:true});}
+});
+
+test("Scheduler 1 retains genuine GSC collection when supplementary GA4 fails", async () => {
+  const outputDir = await mkdtemp(path.join(os.tmpdir(), "seo-scheduler-1-"));
+  try {
+    const result = await collect({
+      dateRange, token: "test-token", outputDir,
+      fetchImpl: async (url) => String(url).includes("analyticsdata.googleapis.com") ? denied() : ok({ rows: [] }),
+    });
+    const snapshot = JSON.parse(await readFile(result.file, "utf8"));
+    assert.deepEqual(snapshot.sourceStatus, { gsc: "AVAILABLE", ga4: "UNAVAILABLE" });
+    assert.equal(snapshot.gsc.pages.length, 0);
+    assert.equal(snapshot.ga4, null);
+    assert.match(snapshot.sourceErrors.ga4, /HTTP 403/);
+    assert.equal(snapshot.counts.ga4Rows, null);
+  } finally {
+    await rm(outputDir, { recursive: true, force: true });
+  }
 });

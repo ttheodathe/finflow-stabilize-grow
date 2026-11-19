@@ -54,6 +54,23 @@ begin
    where id=v_revision and operation_id=v_content
      and content_hash=repeat('a',64) and revision_state='PROPOSED';
   if v_count <> 1 then raise exception 'draft revision was not durably persisted'; end if;
+
+  select count(*) into v_count
+  from public.seo_ops_get_content_operation(v_content)
+  where id = v_content and status = 'PROPOSED'
+    and payload->>'validation' = 'RESEARCH_REQUIRED';
+  if v_count <> 1 then raise exception 'content operation independent readback failed'; end if;
+
+  select count(*) into v_count
+  from public.seo_ops_get_research_records(v_opp)
+  where id = v_research and source_url = 'https://example.test/fixture-source';
+  if v_count <> 1 then raise exception 'research record independent readback failed'; end if;
+
+  select count(*) into v_count
+  from public.seo_ops_get_content_revisions(v_content)
+  where id = v_revision and content_hash = repeat('a',64)
+    and markdown = '# Fixture-only draft' and revision_state = 'PROPOSED';
+  if v_count <> 1 then raise exception 'content revision independent readback failed'; end if;
   begin
     perform public.seo_ops_record_content_operation(
       'ci-fixture-content-operation','EXISTING_ARTICLE_UPDATE','content/blog/other.md',
@@ -110,7 +127,16 @@ begin
      or not has_function_privilege('service_role','public.seo_ops_record_research_record(uuid,text,text,date,timestamptz,jsonb,jsonb)','EXECUTE')
      or has_function_privilege('anon','public.seo_ops_record_content_revision(uuid,integer,text,text,text)','EXECUTE')
      or has_function_privilege('authenticated','public.seo_ops_record_content_revision(uuid,integer,text,text,text)','EXECUTE')
-     or not has_function_privilege('service_role','public.seo_ops_record_content_revision(uuid,integer,text,text,text)','EXECUTE') then
+     or not has_function_privilege('service_role','public.seo_ops_record_content_revision(uuid,integer,text,text,text)','EXECUTE')
+     or has_function_privilege('anon','public.seo_ops_get_content_operation(uuid)','EXECUTE')
+     or has_function_privilege('authenticated','public.seo_ops_get_content_operation(uuid)','EXECUTE')
+     or not has_function_privilege('service_role','public.seo_ops_get_content_operation(uuid)','EXECUTE')
+     or has_function_privilege('anon','public.seo_ops_get_research_records(uuid)','EXECUTE')
+     or has_function_privilege('authenticated','public.seo_ops_get_research_records(uuid)','EXECUTE')
+     or not has_function_privilege('service_role','public.seo_ops_get_research_records(uuid)','EXECUTE')
+     or has_function_privilege('anon','public.seo_ops_get_content_revisions(uuid)','EXECUTE')
+     or has_function_privilege('authenticated','public.seo_ops_get_content_revisions(uuid)','EXECUTE')
+     or not has_function_privilege('service_role','public.seo_ops_get_content_revisions(uuid)','EXECUTE') then
     raise exception 'SEO RPC execution grants are incorrect';
   end if;
 end $$;

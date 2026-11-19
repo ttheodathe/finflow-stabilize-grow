@@ -10,9 +10,54 @@ const CONTENT_DIR = "content/blog";
 const RESEARCH_DIR = "content/operations/research";
 const MAX_EXCERPT_WORDS = 25;
 const STALE_AFTER_DAYS = 30;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+function requireUuid(value, label) {
+  if (typeof value !== "string" || !UUID_PATTERN.test(value)) {
+    throw new Error(`${label} did not return a valid persisted UUID.`);
+  }
+  return value;
+}
 const SOURCE_PACKS = [
   {
+    id: "software-selection",
+    supportedIntents: ["Software selection", "Feature evaluation", "Pricing and alternatives"],
+    subjectCoverage: ["accounting software", "free accounting software", "bookkeeping platforms", "accounting apps", "invoice tracking", "reporting features"],
+    audience: "Small-business owners, freelancers and microbusinesses comparing financial software",
+    jurisdiction: "Provider-specific plan and regional terms; Zoho source is the United States edition only",
+    approvedSourceTypes: ["OFFICIAL_VENDOR", "OFFICIAL_GOVERNMENT"],
+    match: /free.{0,45}(accounting|bookkeeping).{0,45}(software|apps?|platforms?|programs?|tools?)|(?:accounting|bookkeeping).{0,45}(software|apps?|platforms?|programs?).{0,45}(compare|free|best|recommend|worth)/i,
+    intent: "Commercial investigation",
+    updateSectionHeading: "## Free Accounting Software Options: A Practical Comparison",
+    sources: [
+      { url: "https://www.waveapps.com/pricing", expectedPublisher: "Wave", supports: ["Wave Starter is listed at $0 and includes unlimited estimates, invoices, bills and bookkeeping records; payment processing fees may apply."], terms: ["STARTER", "$0", "invoices", "bookkeeping records", "credit card transaction"] },
+      { url: "https://www.zoho.com/us/books/pricing/", expectedPublisher: "Zoho", supports: ["The United States edition of Zoho Books lists a Free plan with invoicing, expenses, reports and plan-specific user, revenue and annual transaction limits."], terms: ["FREE", "invoices", "expenses", "reports", "1 User", "1,000 invoices", "1,000 expenses", "$50,000"] },
+      { url: "https://zipbooks.com/pricing", expectedPublisher: "ZipBooks", supports: ["ZipBooks Starter is listed as free and includes unlimited invoices, vendors and customers, basic reports and one connected bank account."], terms: ["Starter", "Free", "invoices", "customers", "Basic Reports", "1 bank account"] },
+      { url: "https://www.irs.gov/businesses/small-businesses-self-employed/what-kind-of-records-should-i-keep", expectedPublisher: "Internal Revenue Service", supports: ["Business records should clearly show income and expenses and retain supporting documents."], terms: ["records", "income", "expenses", "invoices", "receipts"] },
+    ],
+    claimSpecs: [
+      { id: "wave-starter", text: "Wave Starter is listed at $0 and includes unlimited estimates, invoices, bills and bookkeeping records; payment processing can involve separate transaction fees.", terms: ["STARTER", "$0", "invoices", "bookkeeping records", "credit card transaction"], sourceIndexes: [0] },
+      { id: "zoho-us-free", text: "Zoho Books' United States Free plan lists invoicing, expenses and reports, with 1 user plus 1 accountant, 1,000 invoices and 1,000 expenses annually, and a US$50,000 revenue eligibility threshold.", terms: ["FREE", "invoices", "expenses", "reports", "1 User", "1,000 invoices", "1,000 expenses", "$50,000"], sourceIndexes: [1] },
+      { id: "zipbooks-starter", text: "ZipBooks Starter is listed as free and includes unlimited invoices, customers and vendors, basic reports and one connected bank account.", terms: ["Starter", "Free", "invoices", "customers", "Basic Reports", "1 bank account"], sourceIndexes: [2] },
+      { id: "recordkeeping", text: "A suitable recordkeeping process should clearly show business income and expenses and retain supporting documents.", terms: ["records", "income", "expenses", "invoices", "receipts"], sourceIndexes: [3] },
+    ],
+    productMention: "free accounting software",
+    title: "Free Accounting Software for Small Business",
+    description: "Compare free accounting software plans for small businesses, including invoicing, expenses, reports, user limits, regional eligibility and payment costs.",
+    sections: [
+      ["Wave Starter: invoicing and bookkeeping records", "Wave lists Starter at $0 and describes unlimited estimates, invoices, bills and bookkeeping records. Its pricing page also lists transaction fees when online card payments are used. The Pro plan adds automated bank transaction imports, transaction merging and categorization, receipt capture and other paid features. A business should therefore compare the $0 subscription with the cost of payment processing and any paid workflow it expects to need. Do not assume that bank automation or receipt capture is part of the Starter plan; check the current feature comparison and the availability of payment services in the business's country."],
+      ["Zoho Books US Free: features with eligibility limits", "The United States edition of Zoho Books lists a Free plan with invoices, expenses, reports and other accounting workflows. Its published plan details also describe one user plus one accountant, annual invoice and expense limits, and a revenue threshold. These conditions matter as much as the $0 headline. The United States plan should not be treated as a global offer: a business operating in another country should open the provider's local edition and check the terms that apply there before relying on the feature list."],
+      ["ZipBooks Starter: basic invoicing and reporting", "ZipBooks lists Starter as a free plan with unlimited invoices, vendors and customers, basic reports and one connected bank account. The next tiers add workflows such as recurring invoices, reminders, additional bank connections, time tracking and larger team access. A business that only needs straightforward invoicing and basic reporting may find the Starter plan worth assessing, while a business that depends on recurring billing, reconciliation or multiple bank accounts should check the paid-tier requirements."],
+      ["Compare the workflow and the total cost", "Before choosing a plan, list the tasks the business must complete each month: creating invoices, recording expenses, maintaining customer records, reviewing reports, reconciling transactions and exporting records. Then check which tasks are included in the free tier, which are limited by user or transaction counts, and which require a paid plan or a separate transaction fee. A free subscription does not automatically mean every payment, add-on or financial workflow is free. Confirm data export, support, regional availability and the terms that apply to the business's location."],
+    ],
+    related: ["how-to-create-an-invoice", "how-to-keep-track-of-business-expenses", "complete-guide-to-small-business-accounting"],
+  },
+  {
     id: "recordkeeping",
+    supportedIntents: ["Bookkeeping guidance", "How-to/tutorial", "Accounting education"],
+    subjectCoverage: ["bookkeeping", "business records", "income", "expenses", "receipts", "invoices"],
+    audience: "Small-business owners and operators",
+    jurisdiction: "United States; jurisdiction-specific limitations must remain explicit",
+    approvedSourceTypes: ["OFFICIAL_GOVERNMENT"],
     match: /record|bookkeep|accounting|expense|receipt|financial records/i,
     intent: "Informational",
     sources: [
@@ -38,6 +83,11 @@ const SOURCE_PACKS = [
   },
   {
     id: "cashflow",
+    supportedIntents: ["How-to/tutorial", "Accounting education", "Bookkeeping guidance"],
+    subjectCoverage: ["cash flow", "cash flow forecast", "working capital", "cash flow projection"],
+    audience: "Small-business owners and operators",
+    jurisdiction: "United States and Australia; claims must identify the applicable jurisdiction",
+    approvedSourceTypes: ["OFFICIAL_GOVERNMENT"],
     match: /cash.?flow|cash flow forecast|cash flow projection|working capital/i,
     intent: "Informational",
     sources: [
@@ -62,6 +112,11 @@ const SOURCE_PACKS = [
   },
   {
     id: "receivables",
+    supportedIntents: ["How-to/tutorial", "Bookkeeping guidance"],
+    subjectCoverage: ["unpaid invoice", "invoice payment", "accounts receivable", "payment terms"],
+    audience: "Small-business owners and operators",
+    jurisdiction: "United Kingdom for legal payment obligations; general process guidance otherwise",
+    approvedSourceTypes: ["OFFICIAL_GOVERNMENT"],
     match: /late payment|unpaid invoice|invoice payment|accounts receivable|collect invoice/i,
     intent: "Informational",
     sources: [
@@ -86,6 +141,11 @@ const SOURCE_PACKS = [
   },
   {
     id: "break-even",
+    supportedIntents: ["Accounting education", "How-to/tutorial"],
+    subjectCoverage: ["break-even", "fixed costs", "variable costs", "contribution margin"],
+    audience: "Small-business owners and operators",
+    jurisdiction: "United States; general arithmetic concepts only",
+    approvedSourceTypes: ["OFFICIAL_GOVERNMENT"],
     match: /break[- ]even|fixed costs.*variable costs/i,
     intent: "Informational",
     sources: [
@@ -142,11 +202,23 @@ function htmlMeta(html, pattern) {
 function sourcePublisher(url) {
   const host = new URL(url).hostname.replace(/^www\./, "");
   if (host.endsWith("sba.gov")) return "U.S. Small Business Administration";
-  return ({ "irs.gov": "Internal Revenue Service", "business.gov.au": "Australian Government business.gov.au", "gov.uk": "GOV.UK", "smallbusinesscommissioner.gov.uk": "Office of the Small Business Commissioner (UK)" })[host] || host;
+  const publishers = {
+    "irs.gov":"Internal Revenue Service",
+    "business.gov.au":"Australian Government business.gov.au",
+    "gov.uk":"GOV.UK",
+    "smallbusinesscommissioner.gov.uk":"Office of the Small Business Commissioner (UK)",
+    "waveapps.com":"Wave",
+    "zoho.com":"Zoho",
+    "zipbooks.com":"ZipBooks",
+    "finflowtrack.com":"FinFlow Track",
+  };
+  return publishers[host] || host;
 }
 function sourceReliability(url) {
-  const host = new URL(url).hostname;
-  return /(^|\.)((irs|sba)\.gov|business\.gov\.au|gov\.uk|smallbusinesscommissioner\.gov\.uk)$/.test(host) ? "OFFICIAL_GOVERNMENT" : "UNVERIFIED_PUBLISHER";
+  const host = new URL(url).hostname.replace(/^www\./, "");
+  if (/(^|\.)((irs|sba)\.gov|business\.gov\.au|gov\.uk|smallbusinesscommissioner\.gov\.uk)$/.test(host)) return "OFFICIAL_GOVERNMENT";
+  if (["waveapps.com","zoho.com","zipbooks.com","finflowtrack.com"].some(domain => host === domain || host.endsWith(`.${domain}`))) return "OFFICIAL_VENDOR";
+  return "UNVERIFIED_PUBLISHER";
 }
 function dateFromHtml(html) {
   const raw = htmlMeta(html, /property=["']article:published_time["']/i)
@@ -167,10 +239,34 @@ function excerptFor(text, terms) {
   return snippet.split(/\s+/).slice(0, MAX_EXCERPT_WORDS).join(" ");
 }
 export function classifySearchIntent(query) {
-  if (/buy|pricing|best software|software comparison|tool/i.test(query)) return "Commercial investigation";
-  if (/login|sign in|website|support contact/i.test(query)) return "Navigational";
-  if (/create account|download|sign up|start free/i.test(query)) return "Transactional";
-  return "Informational";
+  const value = String(query || "").trim().toLowerCase();
+  if (!value) return "REVIEW_REQUIRED";
+  if (/login|sign in|website|support contact|customer service/.test(value)) return "Navigational";
+  if (/create account|download|sign up|start free|register/.test(value)) return "Transactional";
+  if (/pricing|price|cost|alternatives?|cheaper|free alternative/.test(value)) return "Pricing and alternatives";
+  if (/(free|best|top|which|recommend|compare|worth considering).{0,55}(accounting|bookkeeping).{0,45}(software|app|platform|program|tool)/.test(value)
+    || /(accounting|bookkeeping).{0,45}(software|apps?|platforms?|programs?|tools?).{0,45}(best|free|compare|review|recommend|worth)/.test(value)
+    || /software selection|accounting software comparison/.test(value)) return "Software selection";
+  if (/reporting features?|track invoices?|track sales|expense tracking|invoice tracking|features? of/.test(value)) return "Feature evaluation";
+  if (/how to|step[- ]by[- ]step|tutorial|template|checklist|guide|create|build|set up|track|manage/.test(value)) return "How-to/tutorial";
+  if (/bookkeep|recordkeeping|financial records|receipts?|ledger|transaction records/.test(value)) return "Bookkeeping guidance";
+  if (/what is|meaning of|definition|accounting basics|formula|calculate|principles of|accounting education/.test(value)) return "Accounting education";
+  return "REVIEW_REQUIRED";
+}
+
+export function selectCompatibleSourcePack(query, intent) {
+  const matchedPacks = SOURCE_PACKS.filter(pack => pack.match.test(String(query || "")) || pack.subjectCoverage?.some(term => String(query || "").toLowerCase().includes(term.toLowerCase())));
+  const matchedPack = matchedPacks.find(pack => pack.supportedIntents?.includes(intent)) || matchedPacks[0] || null;
+  if (intent === "REVIEW_REQUIRED") {
+    return { pack: null, matchedPackId: matchedPack?.id || null, compatible: false, reason: "AMBIGUOUS_INTENT_REQUIRES_HUMAN_REVIEW" };
+  }
+  if (!matchedPack) {
+    return { pack: null, matchedPackId: null, compatible: false, reason: "NO_APPROVED_SOURCE_PACK_FOR_INTENT" };
+  }
+  if (!matchedPack.supportedIntents?.includes(intent)) {
+    return { pack: null, matchedPackId: matchedPack.id, compatible: false, reason: "SOURCE_PACK_INTENT_INCOMPATIBLE" };
+  }
+  return { pack: matchedPack, matchedPackId: matchedPack.id, compatible: true, reason: null };
 }
 export function freshnessFor(opportunity, now = new Date()) {
   const end = opportunity.reportingPeriodEnd || opportunity.dateRange?.endDate || opportunity.evidence?.dateRange?.endDate || null;
@@ -192,28 +288,115 @@ export function findUnsupportedNumericClaims(markdown) {
 export function detectUnsupportedNumericClaims(markdown) {
   return findUnsupportedNumericClaims(markdown).length > 0;
 }
+function normalizeNumericToken(value) {
+  return String(value || "").replace(/[^0-9.]/g, "").replace(/,/g, "");
+}
+export function assessNumericClaims(markdown, claims = [], sourceRecords = []) {
+  const tokens = findUnsupportedNumericClaims(markdown);
+  const verified = [];
+  const unsupported = [];
+  for (const token of tokens) {
+    const normalized = normalizeNumericToken(token);
+    const supported = claims.some(claim => {
+      const claimHasNumber = findUnsupportedNumericClaims(claim.text).some(value => normalizeNumericToken(value) === normalized);
+      if (!claimHasNumber) return false;
+      return (claim.sourceUrls || []).some(url => {
+        const source = sourceRecords.find(item => item.url === url);
+        return (source?.numericTokens || []).some(value => normalizeNumericToken(value) === normalized);
+      });
+    });
+    (supported ? verified : unsupported).push(token);
+  }
+  return { verified, unsupported };
+}
 
 export async function retrieveSource(source, { fetchImpl = fetch, now = new Date() } = {}) {
   const retrievedAt = now.toISOString();
+  const baseRecord = {
+    url: source.url,
+    expectedPublisher: source.expectedPublisher || sourcePublisher(source.url),
+    retrievedAt,
+    publishedAt: null,
+    sourceTitle: null,
+    excerpt: null,
+    supportedClaims: [],
+    termMatches: [],
+    httpStatus: null,
+    responseStatus: null,
+    contentType: null,
+    finalUrl: source.url,
+    redirectDestination: null,
+    relevanceAssessment: null,
+    verificationStatus: "RESEARCH_REQUIRED",
+    reliability: sourceReliability(source.url),
+  };
   try {
-    const response = await fetchImpl(source.url, { redirect: "follow", headers: { "user-agent": "FinFlowTrack-EditorialResearch/1.0 (+https://www.finflowtrack.com)" } });
-    if (!response.ok) return { ...source, sourceTitle: null, publisher: source.expectedPublisher || sourcePublisher(source.url), publishedAt: null, retrievedAt, reliability: sourceReliability(source.url), status: "UNAVAILABLE", httpStatus: response.status, excerpt: null, error: `HTTP_${response.status}`, supportedClaims: [] };
+    const response = await fetchImpl(source.url, {
+      redirect: "follow",
+      headers: { "user-agent": "FinFlowTrack-EditorialResearch/1.0 (+https://www.finflowtrack.com)" },
+    });
+    const finalUrl = response.url || source.url;
+    const contentType = (response.headers?.get?.("content-type") || "").split(";")[0].trim().toLowerCase() || null;
+    const publisher = sourcePublisher(finalUrl);
+    const basePublisher = sourcePublisher(source.url);
+    const common = {
+      ...baseRecord,
+      publisher,
+      httpStatus: response.status,
+      responseStatus: response.status,
+      contentType,
+      finalUrl,
+      redirectDestination: finalUrl !== source.url ? finalUrl : null,
+    };
+    if (!response.ok) {
+      return { ...common, status: "UNAVAILABLE", verificationStatus: "REJECTED", error: `HTTP_${response.status}` };
+    }
+    if (!/^https:\/\//i.test(finalUrl) || publisher !== basePublisher) {
+      return {
+        ...common, status: "UNAVAILABLE", verificationStatus: "REJECTED",
+        error: "UNEXPECTED_REDIRECT_OR_PUBLISHER_MISMATCH",
+      };
+    }
+    if (!contentType || !["text/html", "application/xhtml+xml"].includes(contentType)) {
+      return { ...common, status: "UNAVAILABLE", verificationStatus: "REJECTED", error: "UNSUPPORTED_CONTENT_TYPE" };
+    }
     const html = await response.text();
     const text = cleanText(html);
-    const title = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.replace(/\s+/g, " ").trim() || source.expectedPublisher || source.url;
+    const title = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.replace(/\s+/g, " ").trim() || null;
     const excerpt = excerptFor(text, source.terms || []);
     const termMatches = (source.terms || []).filter(term => text.toLowerCase().includes(term.toLowerCase()));
-    const supported = termMatches.length >= Math.min(2, (source.terms || []).length) && Boolean(excerpt);
+    const numericTokens = findUnsupportedNumericClaims(text);
+    const requiredTermCount = Math.min(2, (source.terms || []).length);
+    const keywordMatchPass = requiredTermCount > 0 && termMatches.length >= requiredTermCount && Boolean(excerpt);
     return {
-      url: source.url, sourceTitle: title, publisher: sourcePublisher(source.url),
-      publishedAt: dateFromHtml(html), retrievedAt, reliability: sourceReliability(source.url),
-      status: supported ? "RETRIEVED_RELEVANT" : "RETRIEVED_RELEVANCE_UNCONFIRMED",
-      httpStatus: response.status, excerpt, termMatches,
-      supportedClaims: supported ? (source.supports || []) : [],
-      limitations: ["Automated relevance uses keyword matching, not semantic fact-checking.", "Publication date is null when the source page does not expose a parseable date."],
+      ...common,
+      sourceTitle: title || source.expectedPublisher || source.url,
+      publishedAt: dateFromHtml(html),
+      excerpt,
+      termMatches,
+      numericTokens,
+      status: keywordMatchPass ? "RETRIEVED_RELEVANT" : "RETRIEVED_RELEVANCE_UNCONFIRMED",
+      verificationStatus: keywordMatchPass ? "KEYWORD_RELEVANCE_PASS_HUMAN_REVIEW_REQUIRED" : "RESEARCH_REQUIRED",
+      relevanceAssessment: {
+        method: "KEYWORD_SCREENING_ONLY",
+        matchedTerms: termMatches,
+        requiredTermCount,
+        keywordMatchPass,
+        note: "Keyword occurrence does not establish factual support or semantic entailment; material claims require human review.",
+      },
+      supportedClaims: keywordMatchPass ? (source.supports || []) : [],
+      limitations: [
+        "Automated relevance uses keyword matching, not semantic fact-checking.",
+        "Publication date is null when the source page does not expose a parseable date.",
+        "A passing keyword screen is not SOURCE_VERIFIED.",
+      ],
     };
   } catch (error) {
-    return { url: source.url, sourceTitle: null, publisher: source.expectedPublisher || sourcePublisher(source.url), publishedAt: null, retrievedAt, reliability: sourceReliability(source.url), status: "UNAVAILABLE", excerpt: null, error: String(error.message || error), supportedClaims: [] };
+    return {
+      ...baseRecord, publisher: baseRecord.expectedPublisher,
+      status: "UNAVAILABLE", verificationStatus: "REJECTED",
+      error: String(error.message || error),
+    };
   }
 }
 function tokenize(value) {
@@ -237,10 +420,27 @@ export async function loadInventory({ contentDir = CONTENT_DIR } = {}) {
   return items;
 }
 export function analyzeCannibalization(query, inventory, targetUrl = null) {
-  const targetSlug = targetUrl ? new URL(targetUrl).pathname.split("/").filter(Boolean).pop() : null;
+  let targetSlug = null;
+  try { targetSlug = targetUrl ? new URL(targetUrl).pathname.split("/").filter(Boolean).pop() : null; }
+  catch { targetSlug = null; }
+  const queryIntent = classifySearchIntent(query);
   const scored = inventory.map(item => {
-    const text = [item.title, item.description, item.slug, ...item.tags].join(" ");
-    return { slug: item.slug, title: item.title, score: Number(similarity(query, text).toFixed(3)), url: `https://www.finflowtrack.com/blog/${item.slug}`, exactTarget: item.slug === targetSlug };
+    const metadataText = [item.title, item.description, item.slug, ...(item.tags || [])].join(" ");
+    const fullText = String(item.content || "");
+    const metadataScore = similarity(query, metadataText);
+    const fullTextScore = similarity(query, fullText);
+    const score = Math.max(metadataScore, fullTextScore);
+    const existingIntent = classifySearchIntent([item.title, item.description, item.slug].join(" "));
+    return {
+      slug: item.slug, title: item.title,
+      score: Number(score.toFixed(3)),
+      metadataScore: Number(metadataScore.toFixed(3)),
+      fullTextScore: Number(fullTextScore.toFixed(3)),
+      existingIntent,
+      intentMatch: existingIntent === queryIntent && existingIntent !== "REVIEW_REQUIRED",
+      url: `https://www.finflowtrack.com/blog/${item.slug}`,
+      exactTarget: item.slug === targetSlug,
+    };
   }).sort((a,b) => b.score-a.score);
   const exactTarget = scored.find(item => item.exactTarget) || null;
   const strongest = scored[0] || null;
@@ -248,26 +448,39 @@ export function analyzeCannibalization(query, inventory, targetUrl = null) {
   const target = exactTarget || inferredTarget;
   const conflict = Boolean(target);
   const targetQueryMatch = !target ? "NO_STRONG_MATCH"
-    : exactTarget && target.score < 0.30 ? "EXACT_LANDING_PAGE_LOW_TEXT_OVERLAP_REVIEW_REQUIRED"
-    : exactTarget ? "EXACT_LANDING_PAGE_TEXT_OVERLAP_MATCH" : "INFERRED_EXISTING_INTENT_MATCH";
+    : exactTarget && (target.score < 0.30 || !target.intentMatch) ? "EXACT_LANDING_PAGE_REVIEW_REQUIRED"
+    : exactTarget ? "EXACT_LANDING_PAGE_INTENT_MATCH"
+    : "INFERRED_EXISTING_INTENT_MATCH";
+  const decision = conflict ? "UPDATE_EXISTING_ARTICLE" : "NEW_ARTICLE_CANDIDATE";
   return {
     status: conflict ? "EXISTING_INTENT_MATCH" : "NO_STRONG_MATCH",
-    decision: conflict ? "UPDATE_EXISTING_ARTICLE" : "NEW_ARTICLE_CANDIDATE",
+    decision,
+    editorialDecision: targetQueryMatch === "EXACT_LANDING_PAGE_REVIEW_REQUIRED" || Boolean(inferredTarget)
+      ? "HUMAN_REVIEW_REQUIRED" : decision,
+    requiresHumanReview: targetQueryMatch === "EXACT_LANDING_PAGE_REVIEW_REQUIRED" || Boolean(inferredTarget),
+    queryIntent,
     target,
     targetQueryMatch,
     related: scored.slice(0,5),
     unresolved: !exactTarget && Boolean(inferredTarget),
-    method: "Token-overlap screening across title, description, slug and tags; exact GSC landing-page URLs take precedence, with low-overlap cases flagged for human review.",
+    method: "Full article text, title, description, slug, tags and query intent are compared; exact GSC landing-page URLs take precedence. Similarity is screening only and does not establish semantic originality.",
   };
 }
-function buildDraft(candidate, pack, sourceRecords, productEvidence, internalLinks, target, now) {
-  const sourceLines = sourceRecords.filter(s => s.status === "RETRIEVED_RELEVANT").map(s => `- [${s.publisher}: ${s.sourceTitle}](${s.url})`).join("\n");
-  const sections = pack.sections.map(([heading, body]) => `## ${heading}\n\n${body}`).join("\n\n");
+function buildDraft(candidate, pack, sourceRecords, productEvidence, internalLinks, target, now, existingArticle = null) {
+  const sourceLines = sourceRecords.filter(s => s.status === "RETRIEVED_RELEVANT")
+    .map(s => `- [${s.publisher}: ${s.sourceTitle}](${s.url})`).join("\n");
   const productLine = productEvidence
-    ? "\n\nFor a business that wants to keep these workflows together, FinFlow Track's Free plan includes invoice creation, expense tracking, customer management and basic reports. Check the current [plan details](/pricing) and confirm that the available limits fit your workflow.\n"
+    ? "\n\nFinFlow Track's Free plan includes invoice creation, expense tracking, customer management and basic reports. Check the current [plan details](/pricing) and confirm that the available limits fit your workflow.\n"
     : "";
   const links = internalLinks.map(item => `- [${item.title}](/blog/${item.slug})`).join("\n");
-  const markdown = `---\ntitle: "${pack.title.replace(/"/g, '\\"')}"\ndescription: "${pack.description.replace(/"/g, '\\"')}"\nslug: "${target.slug}"\nstatus: "draft"\npublicationStatus: "draft"\ncategory: "small-business-finance"\ntags:\n  - small business\n  - ${pack.id}\n---\n\n# ${pack.title}\n\nA reliable process is easier to maintain when each step has a clear purpose and an owner. This guide focuses on practical routines rather than promises or one-size-fits-all rules.\n\n${sections}\n${productLine}\n## Related FinFlow Track guides\n\n${links}\n\n## Sources and scope\n\n${sourceLines}\n\nRequirements differ by country, contract and business structure. Government sources cited here are provided for the jurisdiction they cover; they are not a substitute for local professional advice.\n`;
+  const comparisonTable = pack.id === "software-selection" ? [
+    "| Product | What the free plan lists | Limits or costs to verify |",
+    "| --- | --- | --- |",
+    "| FinFlow Track | Invoice creation, expense tracking, customer management and basic reports | Confirm the current plan limits and whether the required workflow is included |",
+    "| Wave Starter | Unlimited estimates, invoices, bills and bookkeeping records | Payment processing fees may apply; automated bank imports and receipt capture are paid features |",
+    "| Zoho Books US Free | Invoices, expenses, P&L, Balance Sheet and 50+ reports | 1 user plus 1 accountant; 1,000 invoices and 1,000 expenses annually; US$50,000 revenue threshold; US edition only |",
+    "| ZipBooks Starter | Unlimited invoices, vendors and customers, basic reports and one bank account | Recurring invoices, multiple bank accounts and team features require checking higher tiers |",
+  ].join("\n") : "";
   const claims = pack.claimSpecs.map(spec => {
     const mappedSources = spec.sourceIndexes.map(index => sourceRecords[index]).filter(Boolean);
     const termsVerified = spec.terms.every(term => mappedSources.some(source => source.termMatches?.some(match => match.toLowerCase() === term.toLowerCase())));
@@ -286,8 +499,12 @@ function buildDraft(candidate, pack, sourceRecords, productEvidence, internalLin
     verificationStatus: "VERIFIED_IN_CURRENT_REPOSITORY_SOURCE",
   });
   const evidence = sourceRecords.filter(s => s.status.startsWith("RETRIEVED")).map(s => ({
-    sourceUrl: s.url, sourceType: "official_government", sourceTitle: s.sourceTitle,
-    publisher: s.publisher, publishedAt: s.publishedAt, retrievedAt: s.retrievedAt,
+    sourceUrl: s.url, finalUrl: s.finalUrl, redirectDestination: s.redirectDestination,
+    sourceType: s.reliability === "OFFICIAL_GOVERNMENT" ? "official_government" : "official_vendor",
+    sourceTitle: s.sourceTitle, publisher: s.publisher, publishedAt: s.publishedAt, retrievedAt: s.retrievedAt,
+    httpStatus: s.httpStatus, responseStatus: s.responseStatus, contentType: s.contentType,
+    verificationStatus: s.verificationStatus, relevanceAssessment: s.relevanceAssessment,
+    numericTokens: s.numericTokens || [],
     verifiedAt: s.retrievedAt.slice(0,10), supports: s.supportedClaims.join("; "),
     excerpt: s.excerpt, reliability: s.reliability, limitations: s.limitations,
   }));
@@ -299,6 +516,52 @@ function buildDraft(candidate, pack, sourceRecords, productEvidence, internalLin
     excerpt: null, reliability: "FIRST_PARTY_REPOSITORY_VERIFIED",
     limitations: ["Verified against repository source, not a live authenticated account."],
   });
+
+  let markdown;
+  if (candidate.operationType === "EXISTING_ARTICLE_UPDATE" && existingArticle?.markdown) {
+    const parsed = matter(existingArticle.markdown);
+    const existingBody = parsed.content || "";
+    const heading = pack.updateSectionHeading || "## Updated plan details";
+    const updatedSection = [
+      heading,
+      "",
+      comparisonTable,
+      ...pack.sections.map(([sectionHeading, body]) => `### ${sectionHeading}\n\n${body}`),
+      productLine,
+      "### Official plan references",
+      sourceLines,
+      "",
+      "Plan features, payment fees and eligibility can change. Recheck the provider's official page and the terms for your country before choosing.",
+    ].join("\n\n");
+    const headingIndex = existingBody.indexOf(heading);
+    let updatedBody;
+    if (headingIndex >= 0) {
+      const nextHeadingIndex = existingBody.indexOf("\n## ", headingIndex + heading.length);
+      const sectionEnd = nextHeadingIndex >= 0 ? nextHeadingIndex : existingBody.length;
+      updatedBody = existingBody.slice(0, headingIndex) + updatedSection + existingBody.slice(sectionEnd);
+    } else {
+      const firstSectionIndex = existingBody.indexOf("\n## ");
+      const insertAt = firstSectionIndex >= 0 ? firstSectionIndex : existingBody.length;
+      updatedBody = existingBody.slice(0, insertAt) + "\n\n" + updatedSection + existingBody.slice(insertAt);
+    }
+    const original = parsed.data || {};
+    const tags = [...new Set([...(Array.isArray(original.tags) ? original.tags : []), "software selection", "free accounting software"])];
+    const frontmatter = {
+      ...original,
+      title: pack.title,
+      description: pack.description,
+      slug: target.slug,
+      tags,
+      updatedAt: now.toISOString().slice(0,10),
+      draft: true,
+      status: "draft",
+      publicationStatus: "draft",
+    };
+    markdown = matter.stringify(updatedBody, frontmatter);
+  } else {
+    const sections = pack.sections.map(([heading, body]) => `## ${heading}\n\n${body}`).join("\n\n");
+    markdown = `---\ntitle: "${pack.title.replace(/"/g, '\\\"')}"\ndescription: "${pack.description.replace(/"/g, '\\\"')}"\nslug: "${target.slug}"\nstatus: "draft"\npublicationStatus: "draft"\ncategory: "small-business-finance"\ntags:\n  - small business\n  - ${pack.id}\n---\n\n# ${pack.title}\n\nA reliable process is easier to maintain when each step has a clear purpose and an owner. This guide focuses on practical routines rather than promises or one-size-fits-all rules.\n\n${sections}\n${productLine}\n## Related FinFlow Track guides\n\n${links}\n\n## Sources and scope\n\n${sourceLines}\n\nRequirements differ by country, contract and business structure. Government sources cited here are provided for the jurisdiction they cover; they are not a substitute for local professional advice.\n`;
+  }
   return {
     title: pack.title, description: pack.description, slug: target.slug,
     publicationStatus: "draft", status: "draft", author: null, authorStatus: "NOT_ASSIGNED",
@@ -344,9 +607,10 @@ export async function runResearchPipeline({
     const intent = classifySearchIntent(candidate.targetQuery);
     const cannibalization = analyzeCannibalization(candidate.targetQuery, inventory, candidate.targetUrl);
     const base = { candidate, intent, freshness, cannibalization, draft: null, quality: null, rejectionReasons: [], editorialReviewQuestions: [] };
-    if (cannibalization.targetQueryMatch === "EXACT_LANDING_PAGE_LOW_TEXT_OVERLAP_REVIEW_REQUIRED") {
-      base.editorialReviewQuestions.push("The exact GSC landing page is an existing article, but title/tag token overlap with this query is low; confirm the page serves the intended query before approving the update.");
-      base.rejectionReasons.push("EXACT_TARGET_INTENT_MISMATCH_REQUIRES_HUMAN_REVIEW");
+    base.editorialDecision = cannibalization.editorialDecision;
+    base.humanReviewRequired = cannibalization.requiresHumanReview;
+    if (cannibalization.targetQueryMatch === "EXACT_LANDING_PAGE_REVIEW_REQUIRED") {
+      base.editorialReviewQuestions.push("The exact GSC landing page is an existing article, but text or intent alignment is uncertain; assess an update to that page before considering any new article.");
     }
     if (!candidate.targetQuery) base.rejectionReasons.push("MISSING_TARGET_QUERY");
     if (freshness.status === "STALE" || freshness.status === "FUTURE" || freshness.status === "INVALID") base.rejectionReasons.push(`GSC_EVIDENCE_${freshness.status}`);
@@ -355,8 +619,25 @@ export async function runResearchPipeline({
     if (candidate.metrics.impressions === null || candidate.metrics.clicks === null || candidate.metrics.ctr === null || candidate.metrics.averagePosition === null) base.rejectionReasons.push("INCOMPLETE_GSC_METRICS");
     if (base.rejectionReasons.length) { base.status = "REJECTED"; results.push(base); continue; }
 
-    const pack = SOURCE_PACKS.find(item => item.match.test(candidate.targetQuery));
-    if (!pack) { base.rejectionReasons.push("NO_APPROVED_SOURCE_PACK_FOR_TOPIC"); base.status = "REJECTED"; results.push(base); continue; }
+    const packSelection = selectCompatibleSourcePack(candidate.targetQuery, intent);
+    base.sourcePackCompatibility = {
+      compatible: packSelection.compatible,
+      matchedPackId: packSelection.matchedPackId,
+      reason: packSelection.reason,
+    };
+    if (!packSelection.pack) {
+      base.rejectionReasons.push(packSelection.reason || "NO_APPROVED_SOURCE_PACK_FOR_INTENT");
+      base.status = "REJECTED";
+      results.push(base);
+      continue;
+    }
+    const pack = packSelection.pack;
+    if (cannibalization.targetQueryMatch === "EXACT_LANDING_PAGE_REVIEW_REQUIRED") {
+      base.rejectionReasons.push("EXACT_TARGET_INTENT_MISMATCH_REQUIRES_HUMAN_REVIEW");
+      base.status = "REJECTED";
+      results.push(base);
+      continue;
+    }
     if (cannibalization.unresolved) { base.rejectionReasons.push("UNRESOLVED_CANNIBALIZATION"); base.status = "REJECTED"; results.push(base); continue; }
     const operationType = cannibalization.decision === "UPDATE_EXISTING_ARTICLE" ? "EXISTING_ARTICLE_UPDATE" : "NEW_ARTICLE";
     const target = cannibalization.target || {
@@ -377,23 +658,48 @@ export async function runResearchPipeline({
       .every(name => VERIFIED_PRODUCT.verifiedCapabilities.some(item => item.name === name && item.articleClaimAllowed));
     const related = pack.related.map(slug => inventory.find(item => item.slug === slug))
       .filter(item => item && item.slug !== target.slug).map(item => ({slug:item.slug,title:item.title}));
-    const draft = buildDraft(candidate,pack,sourceRecords,productEvidence,related,target,now);
+    const existingArticle = operationType === "EXISTING_ARTICLE_UPDATE" ? inventory.find(item => item.slug === target.slug) || null : null;
+    const draft = buildDraft(candidate,pack,sourceRecords,productEvidence,related,target,now,existingArticle);
     const duplicateSlug = operationType === "NEW_ARTICLE" && inventory.some(item => item.slug === draft.slug);
     const contentText = matter(draft.content);
     const frontmatterValid = contentText.data.status === "draft" && contentText.data.publicationStatus === "draft" &&
       contentText.data.title === draft.title && contentText.data.description === draft.description && contentText.data.slug === draft.slug;
     const bodyWords = contentText.content.trim().split(/\s+/).length;
-    const unsupportedNumericClaimMatches = findUnsupportedNumericClaims(contentText.content);
+    let numericReviewText = contentText.content;
+    if (operationType === "EXISTING_ARTICLE_UPDATE") {
+      const updateHeading = pack.updateSectionHeading || "## Updated plan details";
+      const updatedBody = matter(draft.content).content || "";
+      const sectionStart = updatedBody.indexOf(updateHeading);
+      if (sectionStart >= 0) {
+        const nextSection = updatedBody.indexOf("\n## ", sectionStart + updateHeading.length);
+        numericReviewText = updatedBody.slice(sectionStart, nextSection >= 0 ? nextSection : updatedBody.length);
+      }
+      base.editorialReviewQuestions.push("The existing article content outside the updated section is preserved; verify its inherited numerical claims and citations before approval.");
+    }
+    const numericClaimAssessment = assessNumericClaims(numericReviewText, draft.claims, sourceRecords);
+    const unsupportedNumericClaimMatches = numericClaimAssessment.unsupported;
     const unsupportedNumericClaims = unsupportedNumericClaimMatches.length > 0;
     if (unsupportedNumericClaims) base.rejectionReasons.push("UNSUPPORTED_NUMERIC_CLAIM");
-    const existingComparisons = inventory.map(item => ({
-      slug:item.slug, score:Number(similarity(contentText.content,item.content).toFixed(3)),
-    })).sort((a,b)=>b.score-a.score);
+    const existingComparisons = inventory.filter(item => !(operationType === "EXISTING_ARTICLE_UPDATE" && item.slug === target.slug)).map(item => ({
+      slug:item.slug,
+      title:item.title,
+      titleDescriptionScore:Number(similarity(draft.title + " " + draft.description, [item.title,item.description,item.slug,...(item.tags || [])].join(" ")).toFixed(3)),
+      fullTextScore:Number(similarity(contentText.content,item.content).toFixed(3)),
+      score:Number(Math.max(
+        similarity(draft.title + " " + draft.description, [item.title,item.description,item.slug,...(item.tags || [])].join(" ")),
+        similarity(contentText.content,item.content),
+      ).toFixed(3)),
+      existingIntent:classifySearchIntent([item.title,item.description,item.slug].join(" ")),
+      proposedIntent:intent,
+    })).sort((a,b)=>Math.max(b.titleDescriptionScore,b.fullTextScore)-Math.max(a.titleDescriptionScore,a.fullTextScore));
     const originality = {
       highestSimilarity: existingComparisons[0] || null,
       status: existingComparisons[0]?.score >= 0.42 ? "POSSIBLE_REPETITION_REVIEW_REQUIRED" : "NO_HIGH_OVERLAP_DETECTED",
     };
-    if (originality.status === "POSSIBLE_REPETITION_REVIEW_REQUIRED") base.rejectionReasons.push("SUBSTANTIAL_REPETITION_WITH_EXISTING_ARTICLE");
+    if (originality.status === "POSSIBLE_REPETITION_REVIEW_REQUIRED") {
+      if (operationType === "NEW_ARTICLE") base.rejectionReasons.push("SUBSTANTIAL_REPETITION_WITH_EXISTING_ARTICLE");
+      else base.editorialReviewQuestions.push("The proposed update overlaps with another existing article; compare both pages and confirm whether the information belongs on this target page or should be consolidated.");
+    }
     const quality = validateDraft(draft, {
       existingSlugs: inventory.map(item=>item.slug), operationType, targetSlug: target.slug,
     });
@@ -406,6 +712,7 @@ export async function runResearchPipeline({
     base.existingContentComparison = existingComparisons.slice(0,5);
     base.quality = {
       ...quality, frontmatterValid, bodyWords, duplicateSlug,
+      numericClaims: numericClaimAssessment,
       sourceCount: sourceRecords.length,
       verifiedSourceCount: sourceRecords.filter(source=>source.status==="RETRIEVED_RELEVANT").length,
       originality, numericClaimsVerified: !unsupportedNumericClaims, numericClaimMatches: unsupportedNumericClaimMatches, productCapabilities: productEvidence ? "VERIFIED_FROM_REPOSITORY" : "NOT_VERIFIED",
@@ -420,27 +727,39 @@ export async function runResearchPipeline({
       base.draftPath = draftPath;
       base.contentHash = hash;
       if (store) {
+        requireUuid(candidate.persistedOpportunityId, "Persisted Scheduler 1 opportunity");
+        for (const method of ["recordContentOperation","recordResearchRecord","recordContentRevision","getContentOperation","listResearchRecords","listContentRevisions"]) {
+          if (typeof store[method] !== "function") {
+            throw new Error(`Durable draft persistence requires store.${method} for independent readback.`);
+          }
+        }
         const scheduledFor = now.toISOString().slice(0,10);
         const operationKey = `research:${candidate.id || draft.slug}:${freshness.reportingPeriodEnd}:${hash.slice(0,16)}`;
-        if (!candidate.persistedOpportunityId || !/^[0-9a-f-]{36}$/i.test(candidate.persistedOpportunityId)) {
-          throw new Error("Durable research persistence requires the UUID of the persisted Scheduler 1 opportunity.");
-        }
-        const operationResult = await store.recordContentOperation({
+        const operationInput = {
           operationKey, operationType,
-          targetPath:`content/blog/${draft.slug}.md`, slug:draft.slug, status:"DRAFTED",
+          targetPath:`content/blog/${draft.slug}.md`, slug:draft.slug, status:"PROPOSED",
           proposedContentHash:hash,
-          payload:{
-            pipelineVersion:"b7.1", evidenceMode:candidate.evidenceMode,
-            sourceCollectionRunId:candidate.sourceCollectionRunId,
-            candidate, intent, freshness, cannibalization, existingContentComparison:existingComparisons,
-            sources:sourceRecords, claims:draft.claims, productEvidence:draft.productEvidence,
-            quality:base.quality, draftMarkdown:draft.content,
-            publicationStatus:"draft", execution:"DRY_RUN_ONLY",
-            createdAt:now.toISOString(), scheduledFor,
-          },
-        });
-        const operationId = Array.isArray(operationResult) ? operationResult[0] : operationResult;
-        if (typeof store.recordResearchRecord === "function") {
+        };
+        const operationPayload = {
+          pipelineVersion:"b7.2", workflowState:"RESEARCHING",
+          evidenceMode:candidate.evidenceMode,
+          sourceCollectionRunId:candidate.sourceCollectionRunId,
+          persistedOpportunityId:candidate.persistedOpportunityId,
+          candidate, intent, freshness, cannibalization, existingContentComparison:existingComparisons,
+          editorialDecision:base.editorialDecision,
+          editorialReviewQuestions:base.editorialReviewQuestions,
+          sourcePackCompatibility:base.sourcePackCompatibility,
+          sourcePackContext:base.sourcePackContext,
+          sources:sourceRecords, claims:draft.claims, productEvidence:draft.productEvidence,
+          quality:base.quality, draftMarkdown:draft.content,
+          publicationStatus:"draft", execution:"DRY_RUN_ONLY",
+          createdAt:now.toISOString(), scheduledFor,
+        };
+        let operationId = null;
+        try {
+          operationId = requireUuid(await store.recordContentOperation({
+            ...operationInput, payload:operationPayload,
+          }), "Content operation persistence");
           const records = [...sourceRecords];
           if (productEvidence) records.push({
             url: "https://www.finflowtrack.com/pricing",
@@ -448,29 +767,111 @@ export async function runResearchPipeline({
             publisher: "FinFlow Track", publishedAt: null, retrievedAt: now.toISOString(),
             status: "FIRST_PARTY_REPOSITORY_VERIFIED",
           });
+          const researchRecordIds = [];
+          const researchRecordExpectations = [];
           for (const source of records) {
             const mappedClaims = draft.claims.filter(claim => claim.sourceUrls.includes(source.url));
-            await store.recordResearchRecord({
+            const supportedClaims = mappedClaims.filter(claim => claim.verificationStatus !== "UNVERIFIED");
+            const unresolvedClaims = mappedClaims.filter(claim => claim.verificationStatus === "UNVERIFIED");
+            const researchRecordId = requireUuid(await store.recordResearchRecord({
               opportunityId: candidate.persistedOpportunityId, sourceUrl: source.url,
               sourceTitle: source.sourceTitle || source.publisher || source.url,
               sourcePublishedAt: source.publishedAt || null,
               retrievedAt: source.retrievedAt || now.toISOString(),
-              supportedClaims: mappedClaims.filter(claim => claim.verificationStatus !== "UNVERIFIED"),
-              unresolvedClaims: mappedClaims.filter(claim => claim.verificationStatus === "UNVERIFIED"),
+              supportedClaims, unresolvedClaims,
+            }), "Research record persistence");
+            researchRecordIds.push(researchRecordId);
+            researchRecordExpectations.push({
+              id:researchRecordId, sourceUrl:source.url, supportedClaims, unresolvedClaims,
             });
           }
-        }
-        if (typeof store.recordContentRevision === "function") {
-          if (typeof operationId !== "string" || !/^[0-9a-f-]{36}$/i.test(operationId)) {
-            throw new Error("Content operation persistence did not return a valid operation UUID for revision storage.");
+          const revisionId = requireUuid(await store.recordContentRevision({
+            operationId, revisionNumber:1, contentHash:hash,
+            markdown:draft.content, revisionState:"PROPOSED",
+          }), "Content revision persistence");
+
+          const pendingReadbackPayload = {
+            ...operationPayload,
+            workflowState:"PERSISTED_PENDING_READBACK",
+            researchRecordIds, revisionId,
+          };
+          const pendingOperationId = requireUuid(await store.recordContentOperation({
+            ...operationInput, payload:pendingReadbackPayload,
+          }), "Content operation state persistence");
+          if (pendingOperationId !== operationId) throw new Error("Content operation idempotency changed the operation UUID.");
+
+          const [operationReadback,researchReadback,revisionReadback] = await Promise.all([
+            store.getContentOperation({operationId}),
+            store.listResearchRecords({opportunityId:candidate.persistedOpportunityId}),
+            store.listContentRevisions({operationId}),
+          ]);
+          if (!operationReadback || operationReadback.id !== operationId
+            || operationReadback.operation_key !== operationKey
+            || operationReadback.target_path !== operationInput.targetPath
+            || operationReadback.proposed_content_hash !== hash
+            || operationReadback.status !== "PROPOSED"
+            || operationReadback.payload?.workflowState !== "PERSISTED_PENDING_READBACK"
+            || operationReadback.payload?.draftMarkdown !== draft.content
+            || operationReadback.payload?.persistedOpportunityId !== candidate.persistedOpportunityId) {
+            throw new Error("Independent content-operation readback did not confirm the exact persisted proposal and evidence.");
           }
-          await store.recordContentRevision({
-            operationId, revisionNumber: 1, contentHash: hash,
-            markdown: draft.content, revisionState: "PROPOSED",
-          });
+          for (const expected of researchRecordExpectations) {
+            const actual = researchReadback.find(record => record.id === expected.id && record.source_url === expected.sourceUrl);
+            if (!actual
+              || JSON.stringify(actual.supported_claims || []) !== JSON.stringify(expected.supportedClaims)
+              || JSON.stringify(actual.unresolved_claims || []) !== JSON.stringify(expected.unresolvedClaims)) {
+              throw new Error("Independent research readback did not confirm a source record and its claim-source mappings.");
+            }
+          }
+          const revision = revisionReadback.find(item => item.id === revisionId);
+          if (!revision || revision.content_hash !== hash || revision.markdown !== draft.content
+            || revision.revision_state !== "PROPOSED") {
+            throw new Error("Independent revision readback did not confirm the complete immutable draft.");
+          }
+
+          const readyPayload = {
+            ...pendingReadbackPayload,
+            workflowState:"READY_FOR_HUMAN_REVIEW",
+            independentReadback:{
+              verified:true, verifiedAt:now.toISOString(),
+              operation:true, researchRecords:true, revision:true,
+            },
+          };
+          const readyOperationId = requireUuid(await store.recordContentOperation({
+            ...operationInput, payload:readyPayload,
+          }), "Human-review eligibility persistence");
+          if (readyOperationId !== operationId) throw new Error("Human-review state update returned a different operation UUID.");
+          const finalReadback = await store.getContentOperation({operationId});
+          if (!finalReadback || finalReadback.id !== operationId
+            || finalReadback.operation_key !== operationKey
+            || finalReadback.target_path !== operationInput.targetPath
+            || finalReadback.proposed_content_hash !== hash
+            || finalReadback.payload?.workflowState !== "READY_FOR_HUMAN_REVIEW"
+            || finalReadback.payload?.independentReadback?.verified !== true) {
+            throw new Error("Final independent readback did not confirm human-review eligibility.");
+          }
+          base.persistence = {
+            status:"PERSISTED", operationId, researchRecordIds, revisionId,
+            independentReadback:readyPayload.independentReadback,
+          };
+          base.status = "DRAFT_READY_FOR_HUMAN_REVIEW";
+        } catch (error) {
+          if (operationId) {
+            await store.recordContentOperation({
+              ...operationInput,
+              payload:{
+                ...operationPayload, workflowState:"FAILED",
+                failureSummary:String(error.message || error),
+                failedAt:now.toISOString(),
+              },
+            }).catch(() => {});
+          }
+          throw error;
         }
-        base.persistence = "PERSISTED";
-      } else base.persistence = "LOCAL_DRY_RUN_ONLY";
+      } else {
+        base.persistence = "LOCAL_DRY_RUN_ONLY";
+        base.status = "DRAFT_GENERATED_NOT_ELIGIBLE";
+      }
     }
     results.push(base);
   }
@@ -480,12 +881,14 @@ export async function runResearchPipeline({
     evidencePolicy:"GSC evidence is never fabricated. Fixture evidence is clearly marked and cannot enter scheduled runs.",
     productCapabilities:VERIFIED_PRODUCT,
     candidateCount:results.length,
+    draftGeneratedCount:results.filter(item=>item.draft !== null).length,
     readyDraftCount:results.filter(item=>item.status==="DRAFT_READY_FOR_HUMAN_REVIEW").length,
+    pendingReadbackCount:results.filter(item=>item.status==="PERSISTED_PENDING_READBACK").length,
     rejectedCount:results.filter(item=>item.status==="REJECTED").length,
     results,
   };
   const reportPath=path.join(outputDir,"research-pipeline-report.json");
   await writeFile(reportPath,JSON.stringify(report,null,2)+"\n");
-  return {reportPath,results,readyDraftCount:report.readyDraftCount,rejectedCount:report.rejectedCount};
+  return {reportPath,results,draftGeneratedCount:report.draftGeneratedCount,readyDraftCount:report.readyDraftCount,pendingReadbackCount:report.pendingReadbackCount,rejectedCount:report.rejectedCount};
 }
 export { SOURCE_PACKS, VERIFIED_PRODUCT };
