@@ -3,8 +3,8 @@ export function normalizePageUrl(input) {
   if (url.protocol !== "https:" && url.protocol !== "http:") {
     throw new Error("Only HTTP(S) page URLs can be normalized.");
   }
-  url.protocol = "https:";
-  url.hostname = url.hostname.toLowerCase().replace(/^www\\./, "");
+  // Preserve scheme and host variants until redirect/canonical behavior is verified.
+  url.hostname = url.hostname.toLowerCase();
   url.search = "";
   url.hash = "";
   if (url.pathname.length > 1) {
