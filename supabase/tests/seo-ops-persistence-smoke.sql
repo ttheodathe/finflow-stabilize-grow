@@ -1,7 +1,7 @@
 do $$
 declare
   v_run uuid; v_run2 uuid; v_opp uuid; v_opp2 uuid; v_snap uuid; v_snap2 uuid;
-  v_activation uuid; v_counts record; v_count integer;
+  v_activation uuid; v_content uuid; v_content2 uuid; v_counts record; v_count integer;
 begin
   v_run := public.seo_ops_record_run('SEARCH_INTELLIGENCE',date '2026-11-20',1,'RUNNING','{"fixture":true}'::jsonb);
   v_run2 := public.seo_ops_record_run('SEARCH_INTELLIGENCE',date '2026-11-20',1,'SUCCEEDED','{"fixture":true,"done":true}'::jsonb);
@@ -22,6 +22,25 @@ begin
   v_snap := public.seo_ops_record_performance_snapshot('ci-fixture-performance',v_run,date '2026-11-01',date '2026-11-07','GSC','{"clicks":3}'::jsonb);
   v_snap2 := public.seo_ops_record_performance_snapshot('ci-fixture-performance',v_run,date '2026-11-01',date '2026-11-07','GSC','{"clicks":4}'::jsonb);
   if v_snap <> v_snap2 then raise exception 'performance snapshot idempotency failed'; end if;
+
+  v_content := public.seo_ops_record_content_operation(
+    'ci-fixture-content-operation','EXISTING_ARTICLE_UPDATE','content/blog/cash-flow.md',
+    'cash-flow','PROPOSED','{"validation":"RESEARCH_REQUIRED"}'::jsonb
+  );
+  v_content2 := public.seo_ops_record_content_operation(
+    'ci-fixture-content-operation','EXISTING_ARTICLE_UPDATE','content/blog/cash-flow.md',
+    'cash-flow','PROPOSED','{"validation":"RESEARCH_REQUIRED"}'::jsonb
+  );
+  if v_content <> v_content2 then raise exception 'content operation idempotency failed'; end if;
+  begin
+    perform public.seo_ops_record_content_operation(
+      'ci-fixture-content-operation','EXISTING_ARTICLE_UPDATE','content/blog/other.md',
+      'other','PROPOSED','{}'::jsonb
+    );
+    raise exception 'content operation key target rebinding was not blocked';
+  exception when raise_exception then
+    if sqlerrm = 'content operation key target rebinding was not blocked' then raise; end if;
+  end;
 
   select * into v_counts from seo_ops_test.compute_activation_counts('2026-11-20T00:00:00Z');
   if v_counts.registered_users <> 6 or v_counts.onboarding_completions <> 5
@@ -57,7 +76,10 @@ begin
   end if;
   if has_function_privilege('anon','public.seo_ops_record_run(text,date,integer,text,jsonb,uuid,text)','EXECUTE')
      or has_function_privilege('authenticated','public.seo_ops_record_run(text,date,integer,text,jsonb,uuid,text)','EXECUTE')
-     or not has_function_privilege('service_role','public.seo_ops_record_run(text,date,integer,text,jsonb,uuid,text)','EXECUTE') then
+     or not has_function_privilege('service_role','public.seo_ops_record_run(text,date,integer,text,jsonb,uuid,text)','EXECUTE')
+     or has_function_privilege('anon','public.seo_ops_record_content_operation(text,text,text,text,text,jsonb,text,text)','EXECUTE')
+     or has_function_privilege('authenticated','public.seo_ops_record_content_operation(text,text,text,text,text,jsonb,text,text)','EXECUTE')
+     or not has_function_privilege('service_role','public.seo_ops_record_content_operation(text,text,text,text,text,jsonb,text,text)','EXECUTE') then
     raise exception 'SEO RPC execution grants are incorrect';
   end if;
 end $$;
