@@ -49,6 +49,14 @@ export function createSupabaseSeoStore({ url, serviceRoleKey, fetchImpl = fetch 
         p_period_start: periodStart, p_period_end: periodEnd, p_source: source, p_metrics: metrics,
       });
     },
+    recordActivationSnapshot({ snapshotDate, registeredUsers, onboardingCompletions, activatedUsers, returningActivatedUsers, definitionVersion, sourceWatermark, limitations = [] }) {
+      return rpc("seo_ops_record_activation_snapshot", {
+        p_snapshot_date: snapshotDate, p_registered_users: registeredUsers,
+        p_onboarding_completions: onboardingCompletions, p_activated_users: activatedUsers,
+        p_returning_activated_users: returningActivatedUsers, p_definition_version: definitionVersion,
+        p_source_watermark: sourceWatermark, p_limitations: limitations,
+      });
+    },
   });
 }
 
