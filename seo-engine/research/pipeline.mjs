@@ -220,16 +220,20 @@ function buildDraft(candidate, pack, sourceRecords, productEvidence, internalLin
   const sourceLines = sourceRecords.filter(s => s.status === "RETRIEVED_RELEVANT").map(s => `- [${s.publisher}: ${s.sourceTitle}](${s.url})`).join("\n");
   const sections = pack.sections.map(([heading, body]) => `## ${heading}\n\n${body}`).join("\n\n");
   const productLine = productEvidence
-    ? `\n\nFor a business that wants to keep these workflows together, FinFlow Track's Free plan includes invoice creation, expense tracking, customer management and basic reports. Check the current [plan details](/pricing) and confirm that the available limits fit your workflow.\n`
+    ? "\n\nFor a business that wants to keep these workflows together, FinFlow Track's Free plan includes invoice creation, expense tracking, customer management and basic reports. Check the current [plan details](/pricing) and confirm that the available limits fit your workflow.\n"
     : "";
   const links = internalLinks.map(item => `- [${item.title}](/blog/${item.slug})`).join("\n");
-  const markdown = `---\ntitle: "${pack.title.replace(/"/g, '\\"')}"\ndescription: "${pack.description.replace(/"/g, '\\"')}"\nslug: "${target.slug}"\nstatus: "draft"\npublicationStatus: "draft"\ncategory: "small-business-finance"\ntags:\n  - small business\n  - ${pack.id}\n  - ${candidate.targetQuery.toLowerCase().replace(/[^a-z0-9 ]/g," ").trim().split(/\\s+/).slice(0,5).join(" ")}\n---\n\n# ${pack.title}\n\nA reliable process is easier to maintain when each step has a clear purpose and an owner. This guide focuses on practical routines rather than promises or one-size-fits-all rules.\n\n${sections}\n${productLine}\n## Related FinFlow Track guides\n\n${links}\n\n## Sources and scope\n\n${sourceLines}\n\nRequirements differ by country, contract and business structure. Government sources cited here are provided for the jurisdiction they cover; they are not a substitute for local professional advice.\n`;
-  const claims = pack.claimSpecs.map(spec => ({
-    id: spec.id, text: spec.text,
-    sourceUrls: spec.sourceIndexes.map(index => sourceRecords[index]?.url).filter(Boolean),
-    verificationStatus: spec.sourceIndexes.every(index => sourceRecords[index]?.status === "RETRIEVED_RELEVANT") ? "KEYWORD_RELEVANCE_PASS_HUMAN_REVIEW_REQUIRED" : "UNVERIFIED",
-    jurisdiction: spec.jurisdiction || null,
-  }));
+  const markdown = `---\ntitle: "${pack.title.replace(/"/g, '\\"')}"\ndescription: "${pack.description.replace(/"/g, '\\"')}"\nslug: "${target.slug}"\nstatus: "draft"\npublicationStatus: "draft"\ncategory: "small-business-finance"\ntags:\n  - small business\n  - ${pack.id}\n---\n\n# ${pack.title}\n\nA reliable process is easier to maintain when each step has a clear purpose and an owner. This guide focuses on practical routines rather than promises or one-size-fits-all rules.\n\n${sections}\n${productLine}\n## Related FinFlow Track guides\n\n${links}\n\n## Sources and scope\n\n${sourceLines}\n\nRequirements differ by country, contract and business structure. Government sources cited here are provided for the jurisdiction they cover; they are not a substitute for local professional advice.\n`;
+  const claims = pack.claimSpecs.map(spec => {
+    const mappedSources = spec.sourceIndexes.map(index => sourceRecords[index]).filter(Boolean);
+    const termsVerified = spec.terms.every(term => mappedSources.some(source => source.termMatches?.some(match => match.toLowerCase() === term.toLowerCase())));
+    const sourcesVerified = mappedSources.length > 0 && mappedSources.every(source => source.status === "RETRIEVED_RELEVANT");
+    return {
+      id: spec.id, text: spec.text, sourceUrls: mappedSources.map(source => source.url),
+      verificationStatus: termsVerified && sourcesVerified ? "KEYWORD_RELEVANCE_PASS_HUMAN_REVIEW_REQUIRED" : "UNVERIFIED",
+      jurisdiction: spec.jurisdiction || null,
+    };
+  });
   if (productEvidence) claims.push({
     id: "finflow-free-plan-capabilities",
     text: "FinFlow Track's Free plan includes invoice creation, expense tracking, customer management and basic reports.",
@@ -271,16 +275,18 @@ export async function runResearchPipeline({
   await mkdir(outputDir, { recursive: true });
   const results = [];
   for (const raw of opportunities) {
+    const queryRows = raw.evidence?.sampleQueries || [];
+    const queryRow = queryRows.find(row => row.query === raw.queryText) || queryRows[0] || null;
     const candidate = {
       id: raw.id || raw.opportunityKey || null,
       targetUrl: raw.targetUrl || null,
-      targetQuery: raw.targetQuery || raw.queryText || raw.evidence?.sampleQueries?.[0]?.query || "",
-      relatedQueries: raw.relatedQueries || raw.evidence?.sampleQueries?.map(row => row.query).filter(Boolean).slice(1,6) || [],
+      targetQuery: raw.targetQuery || raw.queryText || queryRow?.query || "",
+      relatedQueries: raw.relatedQueries || queryRows.map(row => row.query).filter(Boolean).slice(1,6),
       metrics: {
-        impressions: raw.metrics?.impressions ?? raw.evidence?.impressions ?? null,
-        clicks: raw.metrics?.clicks ?? raw.evidence?.clicks ?? null,
-        ctr: raw.metrics?.ctr ?? raw.evidence?.ctr ?? null,
-        averagePosition: raw.metrics?.averagePosition ?? raw.evidence?.averagePosition ?? null,
+        impressions: raw.metrics?.impressions ?? queryRow?.impressions ?? raw.evidence?.impressions ?? null,
+        clicks: raw.metrics?.clicks ?? queryRow?.clicks ?? raw.evidence?.clicks ?? null,
+        ctr: raw.metrics?.ctr ?? queryRow?.ctr ?? raw.evidence?.ctr ?? null,
+        averagePosition: raw.metrics?.averagePosition ?? queryRow?.position ?? raw.evidence?.averagePosition ?? null,
       },
       reportingPeriodEnd: raw.reportingPeriodEnd || raw.evidence?.dateRange?.endDate || raw.dateRange?.endDate || null,
       dataSource: raw.dataSource || raw.evidence?.source || "UNKNOWN",
@@ -298,44 +304,57 @@ export async function runResearchPipeline({
     if (base.rejectionReasons.length) { base.status = "REJECTED"; results.push(base); continue; }
 
     const pack = SOURCE_PACKS.find(item => item.match.test(candidate.targetQuery));
-    if (!pack) { base.rejectionReasons.push("NO_APPROVED_SOURCE_PACK_FOR_TOPIC"); base.status="REJECTED"; results.push(base); continue; }
-    if (cannibalization.unresolved) { base.rejectionReasons.push("UNRESOLVED_CANNIBALIZATION"); base.status="REJECTED"; results.push(base); continue; }
-    const target = cannibalization.target;
-    if (!target) { base.rejectionReasons.push("NO_EXISTING_TARGET_OR_CLEAR_NEW_ARTICLE_DISTINCTION"); base.status="REJECTED"; results.push(base); continue; }
+    if (!pack) { base.rejectionReasons.push("NO_APPROVED_SOURCE_PACK_FOR_TOPIC"); base.status = "REJECTED"; results.push(base); continue; }
+    if (cannibalization.unresolved) { base.rejectionReasons.push("UNRESOLVED_CANNIBALIZATION"); base.status = "REJECTED"; results.push(base); continue; }
+    const operationType = cannibalization.decision === "UPDATE_EXISTING_ARTICLE" ? "EXISTING_ARTICLE_UPDATE" : "NEW_ARTICLE";
+    const target = cannibalization.target || {
+      slug: candidate.targetQuery.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""),
+      title: pack.title,
+    };
+    candidate.operationType = operationType;
+    candidate.opportunityRationale = `GSC reports ${candidate.metrics.impressions} impressions, ${candidate.metrics.clicks} clicks, CTR ${candidate.metrics.ctr}, and average position ${candidate.metrics.averagePosition} for the reporting period ending ${freshness.reportingPeriodEnd}. These are observed GSC values, not search-volume estimates.`;
     const sourceRecords = await Promise.all(pack.sources.map(source => retrieveSource(source,{fetchImpl,now})));
-    const sourceFailures = sourceRecords.filter(s => s.status !== "RETRIEVED_RELEVANT");
-    const claims = pack.claimSpecs.map(spec => ({
-      ...spec, sourceRecords: spec.sourceIndexes.map(index => sourceRecords[index]),
-    }));
-    const unsupported = claims.filter(claim =>
-      claim.sourceRecords.length === 0 ||
-      claim.sourceRecords.some(source => source.status !== "RETRIEVED_RELEVANT") ||
-      !claim.terms.every(term => claim.sourceRecords.some(source => source.termMatches?.some(match => match.toLowerCase() === term.toLowerCase())))
-    );
+    const sourceFailures = sourceRecords.filter(source => source.status !== "RETRIEVED_RELEVANT");
+    const unsupported = pack.claimSpecs.filter(spec => {
+      const mapped = spec.sourceIndexes.map(index => sourceRecords[index]).filter(Boolean);
+      return !mapped.length || mapped.some(source => source.status !== "RETRIEVED_RELEVANT") ||
+        !spec.terms.every(term => mapped.some(source => source.termMatches?.some(match => match.toLowerCase() === term.toLowerCase())));
+    });
     if (sourceFailures.length || unsupported.length) base.rejectionReasons.push("SOURCE_VERIFICATION_INCOMPLETE");
-    const productEvidence = VERIFIED_PRODUCT.verifiedCapabilities.some(item => item.name === "Invoice creation") &&
-      VERIFIED_PRODUCT.verifiedCapabilities.some(item => item.name === "Expense tracking") &&
-      VERIFIED_PRODUCT.verifiedCapabilities.some(item => item.name === "Customer management") &&
-      VERIFIED_PRODUCT.verifiedCapabilities.some(item => item.name === "Basic reports");
-    const related = pack.related.map(slug => inventory.find(item => item.slug === slug)).filter(item => item && item.slug !== target.slug).map(item => ({slug:item.slug,title:item.title}));
+    const productEvidence = ["Invoice creation","Expense tracking","Customer management","Basic reports"]
+      .every(name => VERIFIED_PRODUCT.verifiedCapabilities.some(item => item.name === name));
+    const related = pack.related.map(slug => inventory.find(item => item.slug === slug))
+      .filter(item => item && item.slug !== target.slug).map(item => ({slug:item.slug,title:item.title}));
     const draft = buildDraft(candidate,pack,sourceRecords,productEvidence,related,target);
     const duplicateSlug = operationType === "NEW_ARTICLE" && inventory.some(item => item.slug === draft.slug);
     const contentText = matter(draft.content);
     const frontmatterValid = contentText.data.status === "draft" && contentText.data.publicationStatus === "draft" &&
       contentText.data.title === draft.title && contentText.data.description === draft.description && contentText.data.slug === draft.slug;
     const bodyWords = contentText.content.trim().split(/\s+/).length;
-    const quality = validateDraft({
-      ...draft, publishedAt: undefined, author: undefined, existingSlugs: inventory.map(item=>item.slug),
-      operationType: "EXISTING_ARTICLE_UPDATE", targetSlug: target.slug,
-      evidence: draft.evidence.map(item=>({...item, sourceType:item.sourceType, verifiedAt:item.verifiedAt, supports:item.supports})),
-    }, { existingSlugs: inventory.map(item=>item.slug), operationType:"EXISTING_ARTICLE_UPDATE", targetSlug:target.slug });
+    const existingComparisons = inventory.map(item => ({
+      slug:item.slug, score:Number(similarity(contentText.content,item.content).toFixed(3)),
+    })).sort((a,b)=>b.score-a.score);
+    const originality = {
+      highestSimilarity: existingComparisons[0] || null,
+      status: existingComparisons[0]?.score >= 0.42 ? "POSSIBLE_REPETITION_REVIEW_REQUIRED" : "NO_HIGH_OVERLAP_DETECTED",
+    };
+    if (originality.status === "POSSIBLE_REPETITION_REVIEW_REQUIRED") base.rejectionReasons.push("SUBSTANTIAL_REPETITION_WITH_EXISTING_ARTICLE");
+    const quality = validateDraft(draft, {
+      existingSlugs: inventory.map(item=>item.slug), operationType, targetSlug: target.slug,
+    });
     if (!frontmatterValid) base.rejectionReasons.push("INVALID_DRAFT_FRONTMATTER");
     if (duplicateSlug) base.rejectionReasons.push("DUPLICATE_SLUG");
     if (bodyWords < 250) base.rejectionReasons.push("DRAFT_TOO_THIN");
     if (quality.decision === "BLOCKED") base.rejectionReasons.push(...quality.errors);
     if (sourceFailures.length) base.rejectionReasons.push("UNVERIFIED_SOURCE");
     base.draft = draft;
-    base.quality = { ...quality, frontmatterValid, bodyWords, duplicateSlug, sourceCount: sourceRecords.length, verifiedSourceCount: sourceRecords.filter(s=>s.status==="RETRIEVED_RELEVANT").length, originality, productCapabilities: productEvidence ? "VERIFIED_FROM_REPOSITORY" : "NOT_VERIFIED" };
+    base.existingContentComparison = existingComparisons.slice(0,5);
+    base.quality = {
+      ...quality, frontmatterValid, bodyWords, duplicateSlug,
+      sourceCount: sourceRecords.length,
+      verifiedSourceCount: sourceRecords.filter(source=>source.status==="RETRIEVED_RELEVANT").length,
+      originality, productCapabilities: productEvidence ? "VERIFIED_FROM_REPOSITORY" : "NOT_VERIFIED",
+    };
     base.status = base.rejectionReasons.length ? "REJECTED" : "DRAFT_READY_FOR_HUMAN_REVIEW";
     if (base.status === "DRAFT_READY_FOR_HUMAN_REVIEW") {
       const hash = createHash("sha256").update(draft.content).digest("hex");
@@ -347,15 +366,15 @@ export async function runResearchPipeline({
       base.contentHash = hash;
       if (store) {
         const scheduledFor = now.toISOString().slice(0,10);
-        const operationKey = `research:${candidate.id || draft.slug}:${freshness.reportingPeriodEnd}:${hash.slice(0,16)}`;
+        const operationKey = `research:${candidate.id || draft.slug}:${freshness.reportingPeriodEnd}`;
         await store.recordContentOperation({
-          operationKey, operationType:"EXISTING_ARTICLE_UPDATE",
+          operationKey, operationType,
           targetPath:`content/blog/${draft.slug}.md`, slug:draft.slug, status:"DRAFTED",
           proposedContentHash:hash,
           payload:{
             pipelineVersion:"b7.1", evidenceMode:candidate.evidenceMode,
-            candidate, intent, freshness, cannibalization, existingContentComparison:existingComparisons, sources:sourceRecords,
-            claims:draft.claims, productEvidence:draft.productEvidence,
+            candidate, intent, freshness, cannibalization, existingContentComparison:existingComparisons,
+            sources:sourceRecords, claims:draft.claims, productEvidence:draft.productEvidence,
             quality:base.quality, draftMarkdown:draft.content,
             publicationStatus:"draft", execution:"DRY_RUN_ONLY",
             createdAt:now.toISOString(), scheduledFor,
