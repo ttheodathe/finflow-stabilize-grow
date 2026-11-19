@@ -5,6 +5,7 @@ import { resolveDateRange } from "../normalize.mjs";
 const OUTPUT = process.env.SEO_OUTPUT_DIR || "seo-output";
 
 function clamp(value) { return Math.max(0, Math.min(5, value)); }
+
 function scorePage(page, queries) {
   const impressions = page.impressions || 0;
   const ctr = page.ctr || 0;
@@ -42,22 +43,20 @@ function scorePage(page, queries) {
 }
 
 function extractMeta(html, name) {
-  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\export async function runSearchIntelligence({ dateRange = resolveDateRange(), collectFn = collect } = {}) {");
-  return html.match(new RegExp(`<meta[^>]+name=["']${escaped}["'][^>]+content=["']([^"']*)["']`, "i"))?.[1]
-    || html.match(new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]+name=["']${escaped}["']`, "i"))?.[1]
-    || null;
+  const tags = html.match(/<meta\b[^>]*>/gi) || [];
+  const tag = tags.find((item) => new RegExp(`\\bname=["']${name}["']`, "i").test(item));
+  return tag?.match(/\bcontent=["']([^"']*)["']/i)?.[1] || null;
 }
 
 export async function checkTechnicalUrls(urls, { fetchImpl = fetch, maxPages = 40 } = {}) {
   const base = "https://www.finflowtrack.com";
-  const sitemapUrl = `${base}/sitemap.xml`;
   let sitemapText = null;
   let sitemapStatus = null;
   try {
-    const sitemap = await fetchImpl(sitemapUrl, { redirect: "follow" });
+    const sitemap = await fetchImpl(`${base}/sitemap.xml`, { redirect: "follow" });
     sitemapStatus = sitemap.status;
     if (sitemap.ok) sitemapText = await sitemap.text();
-  } catch { /* A failed external check is reported separately, not as a confirmed defect. */ }
+  } catch { /* Failed external checks are not classified as confirmed defects. */ }
 
   const checks = [];
   for (const rawUrl of urls.slice(0, maxPages)) {
@@ -114,21 +113,27 @@ export async function runSearchIntelligence({ dateRange = resolveDateRange(), co
   const snapshot = JSON.parse(await readFile(result.file, "utf8"));
   const pages = new Map();
   for (const row of snapshot.gsc.pages) {
-    const current = pages.get(row.page) || { page: row.page, clicks: 0, impressions: 0, ctr: 0, positionWeighted: 0, positionImpressions: 0, rows: 0 };
+    const current = pages.get(row.page) || {
+      page: row.page, clicks: 0, impressions: 0, ctr: 0,
+      positionWeighted: 0, positionImpressions: 0,
+    };
     current.clicks += row.clicks;
     current.impressions += row.impressions;
     current.positionWeighted += row.position * row.impressions;
     current.positionImpressions += row.impressions;
-    current.rows += 1;
     pages.set(row.page, current);
   }
   const queries = snapshot.gsc.pageQueries;
-  const opportunities = [...pages.values()].map((page) => {
+  const pageValues = [...pages.values()];
+  const opportunities = pageValues.map((page) => {
     page.ctr = page.impressions ? page.clicks / page.impressions : 0;
     page.position = page.positionImpressions ? page.positionWeighted / page.positionImpressions : 0;
     return scorePage({ ...page, dateRange }, queries);
   }).sort((a, b) => b.score - a.score);
-  const technical = await checkTechnicalUrls([...pages.values()].sort((a, b) => b.impressions - a.impressions).map((page) => page.page), { fetchImpl });
+  const technical = await checkTechnicalUrls(
+    [...pageValues].sort((a, b) => b.impressions - a.impressions).map((page) => page.page),
+    { fetchImpl },
+  );
   const report = {
     schemaVersion: 1, scheduler: "SEARCH_INTELLIGENCE",
     generatedAt: new Date().toISOString(), dateRange,
@@ -139,7 +144,12 @@ export async function runSearchIntelligence({ dateRange = resolveDateRange(), co
       devices: snapshot.gsc.pagesByDevice?.length ?? 0,
       searchAppearances: snapshot.gsc.searchAppearance?.length ?? 0,
     },
-    limitations: ["GSC average position is an aggregate, not a fixed rank.", "Search volume and competitor difficulty are not inferred.", "Opportunities are recommendations, not publishing authorization."],
+    limitations: [
+      "GSC average position is an impression-weighted aggregate, not a fixed rank.",
+      "Search volume and competitor difficulty are not inferred.",
+      "Technical checks are limited to selected landing pages and accessible public responses.",
+      "Opportunities are recommendations, not publishing authorization.",
+    ],
     opportunities,
   };
   const path = `${OUTPUT}/scheduler-1-opportunities.json`;
