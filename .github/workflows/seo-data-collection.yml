@@ -1,0 +1,66 @@
+name: SEO Read-only Data Collection
+
+on:
+  workflow_dispatch:
+    inputs:
+      start_date:
+        description: "Inclusive start date (YYYY-MM-DD); leave blank for default window"
+        required: false
+        type: string
+      end_date:
+        description: "Inclusive end date (YYYY-MM-DD); leave blank for default window"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seo-data-collection
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verify required credential is configured
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -z "$GOOGLE_SERVICE_ACCOUNT_JSON" ]; then
+            echo "::error::Missing GOOGLE_SERVICE_ACCOUNT_JSON. Add the service-account JSON as a repository Actions secret; never paste it into source code."
+            exit 1
+          fi
+
+      - name: Run normalization and credential validation tests
+        run: node --test seo-engine/normalize.test.mjs
+
+      - name: Collect read-only GSC and GA4 data
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          GSC_SITE_URL: ${{ vars.GSC_SITE_URL }}
+          GA4_PROPERTY_ID: ${{ vars.GA4_PROPERTY_ID }}
+          START_DATE: ${{ inputs.start_date }}
+          END_DATE: ${{ inputs.end_date }}
+        run: |
+          args=()
+          if [ -n "$START_DATE" ]; then args+=(--start-date "$START_DATE"); fi
+          if [ -n "$END_DATE" ]; then args+=(--end-date "$END_DATE"); fi
+          node seo-engine/collect.mjs "${args[@]}"
+
+      - name: Upload private workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: finflow-seo-readonly-data
+          path: seo-output/*.json
+          if-no-files-found: error
+          retention-days: 30
