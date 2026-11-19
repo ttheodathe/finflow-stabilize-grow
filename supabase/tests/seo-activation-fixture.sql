@@ -67,7 +67,7 @@ as $$
     from actions a
     join onboarded o on o.user_id=a.user_id
   ),
-  returning as (
+  repeat_users as (
     select a.user_id
     from actions a
     join onboarded o on o.user_id=a.user_id
@@ -78,7 +78,7 @@ as $$
     (select count(*) from registered),
     (select count(*) from onboarded),
     (select count(*) from activated),
-    (select count(*) from returning);
+    (select count(*) from repeat_users);
 $$;
 
 revoke all on function seo_ops_test.compute_activation_counts(timestamptz) from public, anon, authenticated;
