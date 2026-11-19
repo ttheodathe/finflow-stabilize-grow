@@ -4,11 +4,62 @@ import { contentApprovalHash, createGitHubContentAdapter } from "./execution-ada
 import { assertProductionWritesBlocked, readExecutionPolicy } from "./safety.mjs";
 
 const safeEnv = {
-  DRY_RUN: "true",
-  PUBLISH_ENABLED: "false",
-  CONTENT_UPDATE_ENABLED: "false",
-  PRODUCTION_CONTENT_WRITE_ALLOWED: "false",
+  DRY_RUN: "true", PUBLISH_ENABLED: "false",
+  CONTENT_UPDATE_ENABLED: "false", PRODUCTION_CONTENT_WRITE_ALLOWED: "false",
 };
+
+function makeMockGitHub(initial = {}) {
+  const files = new Map(Object.entries(initial).map(([path, content], i) => [path, { content, sha: `sha-${i + 1}` }]));
+  let writes = 0;
+  const fetchImpl = async (input, options = {}) => {
+    const url = String(input);
+    if (url.startsWith("https://api.github.com/")) {
+      const path = decodeURIComponent(url.split("/contents/")[1].split("?")[0]);
+      if ((options.method || "GET") === "GET") {
+        const item = files.get(path);
+        if (!item) return new Response("", { status: 404 });
+        return Response.json({ type: "file", sha: item.sha, content: Buffer.from(item.content).toString("base64") });
+      }
+      const body = JSON.parse(options.body);
+      const existing = files.get(path);
+      if (body.sha && (!existing || existing.sha !== body.sha)) return new Response("sha mismatch", { status: 409 });
+      if (!body.sha && existing) return new Response("already exists", { status: 422 });
+      const item = { content: Buffer.from(body.content, "base64").toString("utf8"), sha: `write-${++writes}` };
+      files.set(path, item);
+      return Response.json({ content: { sha: item.sha }, commit: { sha: `commit-${writes}` } });
+    }
+    const slug = new URL(url).pathname.split("/").pop();
+    const body = files.get(`content/blog/${slug}.md`)?.content || "";
+    const title = body.match(/^title:\s*["']?([^\n"']+)/m)?.[1] || "Test Article";
+    const visible = body.replace(/---[\s\S]*?---/, "").trim();
+    return new Response(`<html><head><title>${title}</title><link rel="canonical" href="${url}"></head><body>${title} ${visible}</body></html>`, { status: 200 });
+  };
+  return { files, fetchImpl };
+}
+
+function stagingEnv(type = "NEW_ARTICLE") {
+  return {
+    DRY_RUN: "false",
+    PUBLISH_ENABLED: type === "NEW_ARTICLE" ? "true" : "false",
+    CONTENT_UPDATE_ENABLED: type === "EXISTING_ARTICLE_UPDATE" ? "true" : "false",
+    PRODUCTION_CONTENT_WRITE_ALLOWED: "false",
+    CONTENT_TARGET_ENV: "staging",
+    CONTENT_TARGET_BRANCH: "seo-staging",
+  };
+}
+
+function approvedOperation(type, markdown, targetPath, extra = {}) {
+  const metadata = { title: "Test Article" };
+  return {
+    id: extra.id || "operation-001", type, slug: "test-article",
+    targetPath, markdown, metadata, ...extra,
+    approval: {
+      status: "APPROVED", approvedBy: "editor@example.test",
+      approvedAt: "2026-11-19T00:00:00.000Z", targetPath,
+      contentHash: contentApprovalHash({ operationType: type, targetPath, content: markdown, metadata }),
+    },
+  };
+}
 
 test("defaults fail closed and production writes remain blocked", () => {
   const policy = readExecutionPolicy({});
@@ -32,8 +83,7 @@ test("approval hash binds operation type, exact target, content and metadata", (
 test("production mutation is blocked before any GitHub request", async () => {
   let requests = 0;
   const adapter = createGitHubContentAdapter({
-    token: "test-token", owner: "test", repo: "repo",
-    env: safeEnv,
+    token: "test-token", owner: "test", repo: "repo", env: safeEnv,
     fetchImpl: async () => { requests += 1; throw new Error("must not be called"); },
   });
   await assert.rejects(adapter.execute({
@@ -44,10 +94,63 @@ test("production mutation is blocked before any GitHub request", async () => {
   assert.equal(requests, 0);
 });
 
-test("staging execution requires a non-main branch and explicit operation enablement", () => {
-  const policy = readExecutionPolicy({
-    DRY_RUN: "false", PUBLISH_ENABLED: "true", CONTENT_UPDATE_ENABLED: "false",
-    PRODUCTION_CONTENT_WRITE_ALLOWED: "false", CONTENT_TARGET_ENV: "staging", CONTENT_TARGET_BRANCH: "seo-staging",
+test("staging publish writes a real repository file and is idempotent", async () => {
+  const mock = makeMockGitHub();
+  const adapter = createGitHubContentAdapter({
+    token: "test-token", owner: "test", repo: "repo", env: stagingEnv(),
+    fetchImpl: mock.fetchImpl,
   });
-  assert.equal(policy.targetBranch, "seo-staging");
+  const markdown = '---\ntitle: "Test Article"\n---\n\nA useful article body for safe staging verification.';
+  const operation = approvedOperation("NEW_ARTICLE", markdown, "content/blog/test-article.md", { verificationText: "A useful article body for safe staging verification." });
+  const first = await adapter.execute(operation);
+  assert.equal(first.status, "LIVE_VERIFIED");
+  assert.equal(mock.files.get("content/blog/test-article.md").content, markdown);
+  const second = await adapter.execute(operation);
+  assert.equal(second.idempotentReplay, true);
+  assert.equal(second.status, "LIVE_VERIFIED");
+  assert.equal(mock.files.size, 2);
+});
+
+test("new article with an existing different slug is rejected", async () => {
+  const mock = makeMockGitHub({ "content/blog/test-article.md": "existing article" });
+  const adapter = createGitHubContentAdapter({
+    token: "test-token", owner: "test", repo: "repo", env: stagingEnv(),
+    fetchImpl: mock.fetchImpl,
+  });
+  const markdown = '---\ntitle: "Test Article"\n---\n\nNew article body.';
+  await assert.rejects(adapter.execute(approvedOperation("NEW_ARTICLE", markdown, "content/blog/test-article.md")), /Duplicate slug/);
+});
+
+test("approval is invalidated when the content changes", async () => {
+  const mock = makeMockGitHub();
+  const adapter = createGitHubContentAdapter({
+    token: "test-token", owner: "test", repo: "repo", env: stagingEnv(),
+    fetchImpl: mock.fetchImpl,
+  });
+  const markdown = '---\ntitle: "Test Article"\n---\n\nOriginal body.';
+  const operation = approvedOperation("NEW_ARTICLE", markdown, "content/blog/test-article.md");
+  operation.markdown = markdown + "\nChanged after approval.";
+  await assert.rejects(adapter.execute(operation), /Approval is invalid/);
+});
+
+test("existing article update snapshots original content and rollback restores it", async () => {
+  const original = '---\ntitle: "Test Article"\n---\n\nOriginal body for rollback verification.';
+  const revised = '---\ntitle: "Test Article"\n---\n\nRevised body for staging verification.';
+  const mock = makeMockGitHub({ "content/blog/test-article.md": original });
+  const adapter = createGitHubContentAdapter({
+    token: "test-token", owner: "test", repo: "repo", env: stagingEnv("EXISTING_ARTICLE_UPDATE"),
+    fetchImpl: mock.fetchImpl,
+  });
+  const baseline = mock.files.get("content/blog/test-article.md").sha;
+  const operation = approvedOperation("EXISTING_ARTICLE_UPDATE", revised, "content/blog/test-article.md", {
+    expectedBlobSha: baseline, verificationText: "Revised body for staging verification.",
+  });
+  const updated = await adapter.execute(operation);
+  assert.equal(updated.status, "LIVE_VERIFIED");
+  assert.equal(mock.files.get("content/blog/test-article.md").content, revised);
+  assert.ok(mock.files.has(".seo-operations/snapshots/operation-001.json"));
+  const rollback = await adapter.rollback("operation-001");
+  assert.equal(rollback.status, "ROLLED_BACK");
+  assert.equal(mock.files.get("content/blog/test-article.md").content, original);
+  assert.ok(mock.files.has(".seo-operations/rollbacks/operation-001.json"));
 });
