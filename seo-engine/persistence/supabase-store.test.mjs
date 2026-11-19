@@ -65,3 +65,22 @@ test("activation snapshots are sent as aggregate-only fields", async () => {
   assert.equal(payload.p_returning_activated_users, 1);
   assert.equal(Object.keys(payload).some((key) => /user_id|email|invoice_id/i.test(key)), false);
 });
+
+
+test("content operation proposals use a stable, target-bound RPC", async () => {
+  let request;
+  const store = createSupabaseSeoStore({
+    url: "https://project.supabase.co", serviceRoleKey: "server-only-test-key",
+    fetchImpl: async (url, options) => { request = { url, options }; return Response.json("00000000-0000-4000-8000-000000000003"); },
+  });
+  await store.recordContentOperation({
+    operationKey: "review-123", operationType: "EXISTING_ARTICLE_UPDATE",
+    targetPath: "content/blog/cash-flow.md", slug: "cash-flow",
+    status: "PROPOSED", payload: { status: "RESEARCH_REQUIRED" },
+  });
+  assert.equal(request.url, "https://project.supabase.co/rest/v1/rpc/seo_ops_record_content_operation");
+  const payload = JSON.parse(request.options.body);
+  assert.equal(payload.p_operation_key, "review-123");
+  assert.equal(payload.p_target_path, "content/blog/cash-flow.md");
+  assert.equal(payload.p_status, "PROPOSED");
+});
