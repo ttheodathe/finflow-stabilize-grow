@@ -49,6 +49,9 @@ jobs:
           CONTENT_UPDATE_ENABLED: "false"
           PRODUCTION_CONTENT_WRITE_ALLOWED: "false"
           SEO_OUTPUT_DIR: seo-output
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SEO_PERSISTENCE_REQUIRED: "true"
         run: node seo-engine/schedulers/content-operations.mjs seo-output/scheduler-1-opportunities.json
       - uses: actions/upload-artifact@v4
         with:
