@@ -75,7 +75,7 @@ export async function runContentOperations({
     schedulerRunId = await store.recordRun({
       schedulerKey: "CONTENT_OPERATIONS", scheduledFor, attempt,
       status: "RUNNING", upstreamRunId: input.persistence.schedulerRunId,
-      output: { inputOpportunityCount: input.opportunities.length, candidateQueryCount: candidates.length },
+      output: { persistedOpportunityCount: persistedOpportunities.length, candidateQueryCount: candidates.length },
     });
   }
   try {
@@ -123,7 +123,7 @@ export async function runContentOperations({
       status: input.persistence.status,
       dateRange: input.dateRange || null,
     },
-    candidateCount: candidates.length,
+    persistedOpportunityCount: persistedOpportunities.length,\n    candidateCount: candidates.length,
     readyDraftCount: pipelineResult.readyDraftCount,
     rejectedCount: pipelineResult.rejectedCount,
     results: pipelineResult.results.map(result => ({
@@ -150,7 +150,7 @@ export async function runContentOperations({
     productionMutation: "BLOCKED",
     persistence,
     limitations: [
-      "Only persisted Scheduler 1 output is accepted; fixture evidence is blocked in scheduled mode.",
+      "Scheduler 2 reads opportunity rows directly from Supabase using the upstream Scheduler 1 run ID; fixture evidence is blocked in scheduled mode.",
       "Source relevance and originality checks are deterministic screening, not semantic fact-checking.",
       "Every generated draft requires human review and authenticated approval before any staging adapter can be invoked.",
       "No article Markdown under content/blog is created or updated by this scheduler.",
