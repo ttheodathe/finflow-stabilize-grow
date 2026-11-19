@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { mkdtemp, mkdir, writeFile, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { runResearchPipeline, freshnessFor, analyzeCannibalization, retrieveSource } from "./pipeline.mjs";
+import { runResearchPipeline, freshnessFor, analyzeCannibalization, retrieveSource, detectUnsupportedNumericClaims } from "./pipeline.mjs";
 
 const now=new Date("2026-11-19T10:00:00.000Z");
 const fixtures=[
@@ -13,7 +13,7 @@ const fixtures=[
 ];
 function mockFetch(url){
  const content=String(url).includes("irs.gov/") ? "<html><head><title>Recordkeeping for small business</title></head><body>A recordkeeping system should clearly show business income and expenses. Keep supporting documents including invoices, receipts and bank statements. Financial statements and books of accounts should be accurate.</body></html>"
- : String(url).includes("break-even-point-calculator") || String(url).includes("legacy.sba.gov") ? "<html><head><title>Break-even point</title></head><body>The break-even point is where total cost equals total revenue. Fixed costs divided by price less variable costs gives the break-even point in units. Contribution margin is the difference between price and variable costs.</body></html>"
+ : String(url).includes("sba.gov/counseling/plan-your-business") || String(url).includes("legacy.sba.gov") ? "<html><head><title>Break-even point</title></head><body>The break-even point is where total cost equals total revenue. Fixed costs divided by price less variable costs gives the break-even point in units. Contribution margin is the difference between price and variable costs. Semi-variable costs combine fixed and variable parts. This calculation is an estimate and is not intended to determine accounting or financing outcomes exactly.</body></html>"
  : String(url).includes("sba.gov/counseling/manage-your-business") ? "<html><head><title>Manage your business</title></head><body>A balance sheet helps track your capital and provide a cash flow projection. Use financial records to review cash flow and operating costs.</body></html>"
  : String(url).includes("business.gov.au") ? "<html><head><title>Guide to managing cash flow</title></head><body>Keep records of all sales and costs. Invoice promptly and follow up unpaid invoices. Choose payment terms to help manage cash flow.</body></html>"
  : String(url).includes("smallbusinesscommissioner") ? "<html><head><title>Building good payment practice</title></head><body>Agree payment terms in writing. Invoice promptly and monitor payments. Keep a record of all invoices and payment status to support cash flow.</body></html>"
@@ -116,4 +116,10 @@ test("unavailable or irrelevant official sources block draft generation",async()
   assert.equal(result.readyDraftCount,0);
   assert.ok(result.results[0].rejectionReasons.includes("SOURCE_VERIFICATION_INCOMPLETE"));
  }finally{await rm(env.root,{recursive:true,force:true});}
+});
+
+test("unsupported numerical claims are blocked unless explicitly labelled illustrative",()=>{
+ assert.equal(detectUnsupportedNumericClaims("The software saves $500 per month."),true);
+ assert.equal(detectUnsupportedNumericClaims("The product serves 100 customers."),true);
+ assert.equal(detectUnsupportedNumericClaims("Example (illustrative figures only): fixed costs are $2,000 and the break-even point is 100 units."),false);
 });

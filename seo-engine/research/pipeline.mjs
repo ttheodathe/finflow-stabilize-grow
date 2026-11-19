@@ -88,8 +88,8 @@ const SOURCE_PACKS = [
     match: /break[- ]even|fixed costs.*variable costs/i,
     intent: "Informational",
     sources: [
-      { url: "https://www.sba.gov/counseling/plan-your-business/break-even-point-calculator/", expectedPublisher: "U.S. Small Business Administration", supports: ["Break-even units use fixed costs, selling price and variable costs per unit"], terms: ["break-even point", "fixed costs", "variable costs", "price"] },
-      { url: "https://legacy.sba.gov/business-guide/plan-your-business/calculate-your-startup-costs/break-even-point", expectedPublisher: "U.S. Small Business Administration", supports: ["The break-even point is where total cost equals total revenue, with no loss or gain"], terms: ["break-even point", "total cost", "total revenue", "contribution margin"] },
+      { url: "https://www.sba.gov/counseling/plan-your-business/", expectedPublisher: "U.S. Small Business Administration", supports: ["Break-even units use fixed costs, selling price and variable costs per unit"], terms: ["break-even point", "fixed costs", "variable costs", "price"] },
+      { url: "https://legacy.sba.gov/business-guide/plan-your-business/calculate-your-startup-costs/break-even-point", expectedPublisher: "U.S. Small Business Administration", supports: ["The break-even point is where total cost equals total revenue, with no loss or gain"], terms: ["break-even point", "total cost", "total revenue", "contribution margin", "price", "variable costs", "semi-variable costs", "fixed costs", "estimate", "not intended"] },
     ],
     title: "Break-Even Analysis for a Small Business: Formula and Example",
     description: "Learn how to calculate a small-business break-even point using fixed costs, selling price and variable costs, then interpret the result for planning.",
@@ -104,7 +104,9 @@ const SOURCE_PACKS = [
     claimSpecs: [
       { id: "break-even-definition", text: "The break-even point is where total costs and total revenue are equal, resulting in no loss or gain.", terms: ["break-even point", "total cost", "total revenue"], sourceIndexes: [1] },
       { id: "break-even-formula", text: "For one product or service, break-even units use fixed costs divided by selling price less variable cost per unit.", terms: ["fixed costs", "price", "variable costs"], sourceIndexes: [0] },
-      { id: "break-even-contribution", text: "Contribution margin is the difference between selling price and variable cost, expressed per unit or as a ratio.", terms: ["contribution margin", "price", "variable costs"], sourceIndexes: [1] },
+      { id: "break-even-contribution", text: "Contribution margin is based on the difference between selling price and variable cost.", terms: ["contribution margin", "price", "variable costs"], sourceIndexes: [1] },
+      { id: "semi-variable-costs", text: "Semi-variable costs combine fixed and variable components, which should be separated when possible.", terms: ["semi-variable costs", "fixed costs", "variable costs"], sourceIndexes: [1] },
+      { id: "break-even-estimate", text: "A break-even calculation is an estimate and is not an exact accounting or financing outcome.", terms: ["estimate", "not intended"], sourceIndexes: [1] },
     ],
     related: ["how-to-create-a-business-budget", "profit-and-loss-statement-small-business", "financial-ratios-for-small-business"],
   },
@@ -177,6 +179,15 @@ export function freshnessFor(opportunity, now = new Date()) {
   const ageDays = Math.floor((now.getTime() - time) / 86400000);
   return { status: ageDays < 0 ? "FUTURE" : ageDays > STALE_AFTER_DAYS ? "STALE" : "FRESH", ageDays, reportingPeriodEnd: end };
 }
+export function detectUnsupportedNumericClaims(markdown) {
+  const withoutIllustrativeExamples = String(markdown || "").replace(
+    /Example \(illustrative figures only\):[\s\S]*?(?=\n## |\n### |$)/i,
+    " ",
+  );
+  return /(?:[$€£]\s?\d[\d,]*(?:\.\d+)?|\b\d[\d,]*(?:\.\d+)?\s?(?:%|percent|customers?|users?|businesses?|days?|weeks?|months?|years?|units?)\b)/i
+    .test(withoutIllustrativeExamples);
+}
+
 export async function retrieveSource(source, { fetchImpl = fetch, now = new Date() } = {}) {
   const retrievedAt = now.toISOString();
   try {
@@ -353,6 +364,8 @@ export async function runResearchPipeline({
     const frontmatterValid = contentText.data.status === "draft" && contentText.data.publicationStatus === "draft" &&
       contentText.data.title === draft.title && contentText.data.description === draft.description && contentText.data.slug === draft.slug;
     const bodyWords = contentText.content.trim().split(/\s+/).length;
+    const unsupportedNumericClaims = detectUnsupportedNumericClaims(contentText.content);
+    if (unsupportedNumericClaims) base.rejectionReasons.push("UNSUPPORTED_NUMERIC_CLAIM");
     const existingComparisons = inventory.map(item => ({
       slug:item.slug, score:Number(similarity(contentText.content,item.content).toFixed(3)),
     })).sort((a,b)=>b.score-a.score);
@@ -375,7 +388,7 @@ export async function runResearchPipeline({
       ...quality, frontmatterValid, bodyWords, duplicateSlug,
       sourceCount: sourceRecords.length,
       verifiedSourceCount: sourceRecords.filter(source=>source.status==="RETRIEVED_RELEVANT").length,
-      originality, productCapabilities: productEvidence ? "VERIFIED_FROM_REPOSITORY" : "NOT_VERIFIED",
+      originality, unsupportedNumericClaims: !unsupportedNumericClaims, productCapabilities: productEvidence ? "VERIFIED_FROM_REPOSITORY" : "NOT_VERIFIED",
     };
     base.status = base.rejectionReasons.length ? "REJECTED" : "DRAFT_READY_FOR_HUMAN_REVIEW";
     if (base.status === "DRAFT_READY_FOR_HUMAN_REVIEW") {
