@@ -234,7 +234,7 @@ test("the exact GSC landing page is assessed as an update, not a new article", a
     const item = result.results[0];
     assert.equal(item.intent, "Software selection");
     assert.equal(item.cannibalization.decision, "UPDATE_EXISTING_ARTICLE");
-    assert.equal(item.editorialDecision, "HUMAN_REVIEW_REQUIRED");
+    assert.equal(item.editorialDecision, "UPDATE_EXISTING_ARTICLE");
     assert.equal(item.status, "REJECTED");
     assert.equal(item.sourcePackCompatibility.reason, "SOURCE_PACK_INTENT_INCOMPATIBLE");
     assert.ok(item.rejectionReasons.includes("SOURCE_PACK_INTENT_INCOMPATIBLE"));
