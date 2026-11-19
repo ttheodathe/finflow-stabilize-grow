@@ -15,6 +15,7 @@ function expandPersistedOpportunities(opportunities) {
       .filter(row => typeof row.query === "string" && row.query.trim())
       .slice(0,5);
     for (const row of rows) {
+      const source = opportunity.evidence?.source || "UNKNOWN";
       candidates.push({
         id: `${opportunity.id}:${Buffer.from(row.query).toString("base64url").slice(0,18)}`,
         targetUrl: opportunity.targetUrl,
@@ -26,10 +27,11 @@ function expandPersistedOpportunities(opportunities) {
           averagePosition: row.position ?? null,
         },
         reportingPeriodEnd: opportunity.evidence?.dateRange?.endDate || null,
-        dataSource: "Google Search Console",
-        evidenceMode: "LIVE_OR_PERSISTED",
+        dataSource: source,
+        evidenceMode: source === "Google Search Console" && opportunity.evidence?.evidenceMode !== "FIXTURE"
+          ? "LIVE_OR_PERSISTED" : "FIXTURE",
         evidence: {
-          source: opportunity.evidence?.source || "Google Search Console",
+          source,
           dateRange: opportunity.evidence?.dateRange || null,
           pageMetrics: {
             clicks: opportunity.evidence?.clicks ?? null,
@@ -59,58 +61,64 @@ export async function runContentOperations({
   if (input.persistence?.status !== "PERSISTED" || !input.persistence?.schedulerRunId) {
     throw new Error("Scheduler 2 requires Scheduler 1's successfully persisted run ID; artifact-only evidence is insufficient.");
   }
-  if (!store && env.SEO_PERSISTENCE_REQUIRED === "true") {
-    throw new Error("Supabase SEO persistence is required but server-side credentials are not configured.");
+  if (!store) {
+    throw new Error("Scheduler 2 requires the server-side Supabase store to read Scheduler 1's persisted opportunities.");
   }
 
-  const candidates = expandPersistedOpportunities(input.opportunities);
+  const persistedOpportunities = await store.listPersistedOpportunities({
+    schedulerRunId: input.persistence.schedulerRunId,
+  });
+  if (!Array.isArray(persistedOpportunities)) {
+    throw new Error("Persisted Scheduler 1 opportunity RPC returned an invalid response.");
+  }
+  const candidates = expandPersistedOpportunities(persistedOpportunities.map(row => ({
+    id: row.opportunity_key,
+    targetUrl: row.target_url,
+    queryText: row.query_text,
+    opportunityType: row.opportunity_type,
+    score: row.score,
+    evidence: row.evidence,
+    decision: row.evidence?.decision || "LOW_EVIDENCE",
+    createdAt: row.created_at,
+  })));
+
   const scheduledFor = now.toISOString().slice(0,10);
   const attempt = Math.max(1, Number.parseInt(env.GITHUB_RUN_ATTEMPT || "1",10) || 1);
-  let schedulerRunId = null;
-  let persistence = { status: "NOT_CONFIGURED", schedulerRunId: null };
-  let pipelineResult = { results: [], readyDraftCount: 0, rejectedCount: 0, reportPath: null };
-  let runError = null;
+  const schedulerRunId = await store.recordRun({
+    schedulerKey: "CONTENT_OPERATIONS", scheduledFor, attempt,
+    status: "RUNNING", upstreamRunId: input.persistence.schedulerRunId,
+    output: { persistedOpportunityCount: persistedOpportunities.length, candidateQueryCount: candidates.length },
+  });
 
-  if (store) {
-    schedulerRunId = await store.recordRun({
-      schedulerKey: "CONTENT_OPERATIONS", scheduledFor, attempt,
-      status: "RUNNING", upstreamRunId: input.persistence.schedulerRunId,
-      output: { persistedOpportunityCount: persistedOpportunities.length, candidateQueryCount: candidates.length },
-    });
-  }
+  let pipelineResult;
   try {
     pipelineResult = await runResearchPipeline({
       opportunities: candidates, contentDir, outputDir: researchDir,
       fetchImpl, now, store, allowFixture,
     });
-    if (store) {
-      const finalStatus = pipelineResult.readyDraftCount > 0 && pipelineResult.rejectedCount === 0
-        ? "SUCCEEDED" : "PARTIAL";
+    const finalStatus = pipelineResult.readyDraftCount > 0 && pipelineResult.rejectedCount === 0
+      ? "SUCCEEDED" : "PARTIAL";
+    await store.recordRun({
+      schedulerKey: "CONTENT_OPERATIONS", scheduledFor, attempt,
+      status: finalStatus, upstreamRunId: input.persistence.schedulerRunId,
+      output: {
+        persistedOpportunityCount: persistedOpportunities.length,
+        candidateQueryCount: candidates.length,
+        readyDraftCount: pipelineResult.readyDraftCount,
+        rejectedCount: pipelineResult.rejectedCount,
+        mode: "DRY_RUN",
+        researchReport: pipelineResult.reportPath,
+      },
+    });
+  } catch (error) {
+    try {
       await store.recordRun({
         schedulerKey: "CONTENT_OPERATIONS", scheduledFor, attempt,
-        status: finalStatus, upstreamRunId: input.persistence.schedulerRunId,
-        output: {
-          candidateQueryCount: candidates.length,
-          readyDraftCount: pipelineResult.readyDraftCount,
-          rejectedCount: pipelineResult.rejectedCount,
-          mode: "DRY_RUN",
-          researchReport: pipelineResult.reportPath,
-        },
+        status: "FAILED", upstreamRunId: input.persistence.schedulerRunId,
+        output: { candidateQueryCount: candidates.length },
+        errorSummary: String(error.message || error),
       });
-      persistence = { status: "PERSISTED", schedulerRunId };
-    } else persistence = { status: "NOT_CONFIGURED", schedulerRunId: null };
-  } catch (error) {
-    runError = error;
-    if (store && schedulerRunId) {
-      try {
-        await store.recordRun({
-          schedulerKey: "CONTENT_OPERATIONS", scheduledFor, attempt,
-          status: "FAILED", upstreamRunId: input.persistence.schedulerRunId,
-          output: { candidateQueryCount: candidates.length },
-          errorSummary: String(error.message || error),
-        });
-      } catch { /* Keep the original error visible. */ }
-    }
+    } catch { /* Keep the original pipeline error visible. */ }
     throw error;
   }
 
@@ -123,7 +131,8 @@ export async function runContentOperations({
       status: input.persistence.status,
       dateRange: input.dateRange || null,
     },
-    persistedOpportunityCount: persistedOpportunities.length,\n    candidateCount: candidates.length,
+    persistedOpportunityCount: persistedOpportunities.length,
+    candidateCount: candidates.length,
     readyDraftCount: pipelineResult.readyDraftCount,
     rejectedCount: pipelineResult.rejectedCount,
     results: pipelineResult.results.map(result => ({
@@ -148,7 +157,7 @@ export async function runContentOperations({
     })),
     researchReportPath: pipelineResult.reportPath,
     productionMutation: "BLOCKED",
-    persistence,
+    persistence: { status: "PERSISTED", schedulerRunId },
     limitations: [
       "Scheduler 2 reads opportunity rows directly from Supabase using the upstream Scheduler 1 run ID; fixture evidence is blocked in scheduled mode.",
       "Source relevance and originality checks are deterministic screening, not semantic fact-checking.",
@@ -159,13 +168,12 @@ export async function runContentOperations({
   await mkdir(outputDir,{recursive:true});
   const reportPath = `${outputDir}/scheduler-2-content-queue.json`;
   await writeFile(reportPath,JSON.stringify(report,null,2)+"\n",{flag:"w"});
-  if (runError) throw runError;
   return {
     path: reportPath, queueCount: candidates.length,
     readyDraftCount: pipelineResult.readyDraftCount,
     rejectedCount: pipelineResult.rejectedCount,
     researchReportPath: pipelineResult.reportPath,
-    mode: report.mode, persistenceStatus: persistence.status,
+    mode: report.mode, persistenceStatus: report.persistence.status,
   };
 }
 
