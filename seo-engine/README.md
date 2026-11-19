@@ -30,7 +30,7 @@ node --test seo-engine/normalize.test.mjs
 node seo-engine/collect.mjs --start-date 2026-10-20 --end-date 2026-11-16
 ```
 
-The collector defaults to a conservative completed reporting window ending three days before the current UTC date. Explicit date ranges are recommended for repeatable comparisons.
+The collector defaults to a conservative completed reporting window ending three days before the current UTC date. Explicit date ranges are recommended for repeatable comparisons. URL normalization removes query strings and fragments but deliberately preserves scheme and host variants (including www/non-www) until redirect and canonical behavior is verified.
 
 Output is written to `seo-output/` and must be retained as a private workflow artifact, not committed to the public repository.
 
