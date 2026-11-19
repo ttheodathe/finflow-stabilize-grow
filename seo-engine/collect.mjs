@@ -68,7 +68,10 @@ async function collectGsc(accessToken, dateRange, fetchImpl = fetch) {
   const pages = await collectGscDimension(accessToken, dateRange, ["date", "page"], fetchImpl);
   const queries = await collectGscDimension(accessToken, dateRange, ["date", "query"], fetchImpl);
   const pageQueries = await collectGscDimension(accessToken, dateRange, ["date", "page", "query"], fetchImpl);
-  return { pages, queries, pageQueries };
+  const pagesByCountry = await collectGscDimension(accessToken, dateRange, ["date", "page", "country"], fetchImpl);
+  const pagesByDevice = await collectGscDimension(accessToken, dateRange, ["date", "page", "device"], fetchImpl);
+  const searchAppearance = await collectGscDimension(accessToken, dateRange, ["date", "searchAppearance"], fetchImpl);
+  return { pages, queries, pageQueries, pagesByCountry, pagesByDevice, searchAppearance };
 }
 
 async function collectGa4(accessToken, dateRange, fetchImpl = fetch) {
@@ -145,6 +148,9 @@ export async function collect({ dateRange, token, outputDir = OUTPUT_DIR, fetchI
       gscPageRows: gscRows.pages.length,
       gscQueryRows: gscRows.queries.length,
       gscPageQueryRows: gscRows.pageQueries.length,
+      gscPageCountryRows: gscRows.pagesByCountry.length,
+      gscPageDeviceRows: gscRows.pagesByDevice.length,
+      gscSearchAppearanceRows: gscRows.searchAppearance.length,
       ga4Rows: ga4Rows.length,
     },
     gsc: gscRows,
