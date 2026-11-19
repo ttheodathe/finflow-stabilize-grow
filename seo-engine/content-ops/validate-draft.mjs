@@ -19,7 +19,8 @@ const CAPABILITIES = new Set([
 function validDate(value) {
   return typeof value === "string" &&
     /^\d{4}-\d{2}-\d{2}$/.test(value) &&
-    !Number.isNaN(new Date(`${value}T00:00:00Z`).getTime()) &&\n    new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) === value;
+    !Number.isNaN(new Date(`${value}T00:00:00Z`).getTime()) &&
+    new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) === value;
 }
 
 export function validateDraft(draft) {
