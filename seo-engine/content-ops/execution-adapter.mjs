@@ -227,6 +227,9 @@ export function createGitHubContentAdapter({
     const ledgerFile = await readFile(operationPath(operationId));
     if (!ledgerFile) throw new Error("Cannot rollback: operation ledger record is missing.");
     const ledger = JSON.parse(ledgerFile.content);
+    if (ledger.status !== "URL_VERIFIED") {
+      throw new Error("Rollback requires a previously URL_VERIFIED content operation.");
+    }
     const current = await readFile(ledger.targetPath);
     const slug = ledger.targetPath.split("/").pop().replace(/\\.md$/, "");
     const url = `${effectivePublicBaseUrl}/blog/${slug}`;
@@ -266,7 +269,7 @@ export function createGitHubContentAdapter({
       } else {
         restoredBlobSha = current.sha;
       }
-      const originalBody = snapshot.originalContent.replace(/^---[\\s\\S]*?---\\s*/, "").trim();
+      const originalBody = snapshot.originalContent.replace(/^---[\s\S]*?---\s*/, "").trim();
       verification = await verifyPublic(
         url, snapshot.originalMetadata?.title || null, originalBody, canonicalUrl,
       );
