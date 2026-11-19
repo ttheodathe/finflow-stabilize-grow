@@ -18,7 +18,7 @@ const marker = `<!-- finflow-seo-approval operationId="${operation.id}" operatio
 
 function fixture({ permission = "write", reviewState = "APPROVED", headSha = "head-1", reviewedSha = headSha, body = marker, fileContent = markdown, latestState = reviewState } = {}) {
   const review = { id: 321, user: { login: "trusted-editor" }, state: reviewState, commit_id: reviewedSha, submitted_at: new Date().toISOString() };
-  const latest = { ...review, state: latestState };
+  const latest = { ...review, id: 322, state: latestState };
   const fetchImpl = async (url) => {
     const parsed = new URL(url);
     if (parsed.pathname.endsWith("/pulls/12")) return Response.json({
