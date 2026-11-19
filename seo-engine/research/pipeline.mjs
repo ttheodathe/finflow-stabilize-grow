@@ -63,7 +63,7 @@ const SOURCE_PACKS = [
     match: /late payment|unpaid invoice|invoice payment|accounts receivable|collect invoice/i,
     intent: "Informational",
     sources: [
-      { url: "https://www.smallbusinesscommissioner.gov.uk/help-and-guidance/all-advice/building-good-payment-practice-in-your-new-business/", expectedPublisher: "Office of the Small Business Commissioner (UK)", supports: ["Agree payment terms in writing, invoice promptly and monitor invoice status"], terms: ["payment terms", "invoice", "monitoring payments", "cash flow"] },
+      { url: "https://www.smallbusinesscommissioner.gov.uk/help-and-guidance/all-advice/building-good-payment-practice-in-your-new-business/", expectedPublisher: "Office of the Small Business Commissioner (UK)", supports: ["Agree payment terms in writing, invoice promptly and monitor invoice status"], terms: ["payment terms", "invoice", "monitor payments", "cash flow"] },
       { url: "https://www.gov.uk/invoicing-and-taking-payment-from-customers/payment-obligations", expectedPublisher: "GOV.UK", supports: ["UK payment obligations depend on agreed payment dates and specific legal conditions"], terms: ["payment date", "30 days", "late payment", "interest"] },
     ],
     title: "A Practical System for Following Up Unpaid Business Invoices",
