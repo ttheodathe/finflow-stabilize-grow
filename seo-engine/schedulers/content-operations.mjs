@@ -7,7 +7,7 @@ const OUTPUT = process.env.SEO_OUTPUT_DIR || "seo-output";
 const CONTENT_DIR = "content/blog";
 const RESEARCH_DIR = process.env.SEO_RESEARCH_OUTPUT_DIR || "content/operations/research";
 
-function expandPersistedOpportunities(opportunities) {
+function expandPersistedOpportunities(opportunities, schedulerRunId) {
   const candidates = [];
   for (const opportunity of opportunities) {
     if (opportunity.decision !== "REVIEW_REQUIRED") continue;
@@ -18,6 +18,10 @@ function expandPersistedOpportunities(opportunities) {
       const source = opportunity.evidence?.source || "UNKNOWN";
       candidates.push({
         id: `${opportunity.id}:${Buffer.from(row.query).toString("base64url").slice(0,18)}`,
+        persistedOpportunityId: opportunity.persistedOpportunityId,
+        sourceCollectionRunId: schedulerRunId,
+        sourceCollectionAt: opportunity.evidence?.sourceCollectionAt || null,
+        reportingPeriod: opportunity.evidence?.dateRange || null,
         targetUrl: opportunity.targetUrl,
         targetQuery: row.query,
         metrics: {
@@ -28,7 +32,9 @@ function expandPersistedOpportunities(opportunities) {
         },
         reportingPeriodEnd: opportunity.evidence?.dateRange?.endDate || null,
         dataSource: source,
-        evidenceMode: source === "Google Search Console" && opportunity.evidence?.evidenceMode !== "FIXTURE"
+        evidenceMode: source === "Google Search Console" && opportunity.sourceRunFixture !== true
+          && opportunity.evidence?.evidenceMode !== "FIXTURE"
+          && !/\.test$|example\.test|localhost/i.test(new URL(opportunity.targetUrl || "https://invalid.example").hostname)
           ? "LIVE_OR_PERSISTED" : "FIXTURE",
         evidence: {
           source,
@@ -73,6 +79,8 @@ export async function runContentOperations({
   }
   const candidates = expandPersistedOpportunities(persistedOpportunities.map(row => ({
     id: row.opportunity_key,
+    persistedOpportunityId: row.id,
+    sourceRunFixture: row.source_run_output?.fixture === true,
     targetUrl: row.target_url,
     queryText: row.query_text,
     opportunityType: row.opportunity_type,
@@ -80,7 +88,7 @@ export async function runContentOperations({
     evidence: row.evidence,
     decision: row.evidence?.decision || "LOW_EVIDENCE",
     createdAt: row.created_at,
-  })));
+  })), input.persistence.schedulerRunId);
 
   const scheduledFor = now.toISOString().slice(0,10);
   const attempt = Math.max(1, Number.parseInt(env.GITHUB_RUN_ATTEMPT || "1",10) || 1);
