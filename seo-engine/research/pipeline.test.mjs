@@ -243,7 +243,7 @@ test("the exact GSC landing page is assessed as an update, not a new article", a
   const env = await setup();
   try {
     await writeFile(path.join(env.contentDir, "free-accounting-software-for-small-business.md"),
-      '---\ntitle: "Free Accounting Software for Small Business"\ndescription: "A guide to free accounting software and small-business bookkeeping apps"\nslug: "free-accounting-software-for-small-business"\ntags: [accounting software, small business]\n---\n\nCompare accounting software selection criteria, invoice features, reporting and sales tracking for small businesses.\n');
+      '---\ntitle: "Free Accounting Software for Small Business"\ndescription: "A guide to free accounting software and small-business bookkeeping apps"\nslug: "free-accounting-software-for-small-business"\ntags: [accounting software, small business]\n---\n\nCompare accounting software selection criteria, invoice features, reporting and sales tracking for small businesses.\n\n## Free Accounting Software Options: A Practical Comparison\n\nOld provider comparison that must be replaced by the current source-backed comparison.\n\n## What Does "Free Accounting Software" Actually Mean?\n\nThis original explanatory section must remain unchanged.\n');
     const result = await runResearchPipeline({
       opportunities: [{
         id: "gsc-software-selection",
@@ -269,6 +269,7 @@ test("the exact GSC landing page is assessed as an update, not a new article", a
     assert.equal(result.readyDraftCount, 0);
     assert.equal(item.quality.productCapabilities, "VERIFIED_FROM_REPOSITORY");
     assert.match(item.draft.content, /What Does "Free Accounting Software" Actually Mean\?/);
+    assert.match(item.draft.content, /This original explanatory section must remain unchanged\./);
     assert.match(item.draft.content, /ZipBooks Starter/);
     assert.match(item.draft.content, /\| Product \| What the free plan lists \| Limits or costs to verify \|/);
     assert.match(item.draft.content, /Zoho Books US Free/);
