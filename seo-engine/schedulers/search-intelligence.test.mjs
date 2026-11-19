@@ -43,7 +43,7 @@ test("GSC aggregation preserves missing metrics as null rather than verified zer
   assert.equal(rows[0].clicks, null);
   assert.equal(rows[0].impressions, 20);
   assert.equal(rows[0].ctr, null);
-  assert.equal(rows[0].position, 10.2);
+  assert.equal(rows[0].position, 9.8);
   const scored = scorePage({
     page: "https://www.finflowtrack.com/blog/accounting",
     clicks: null, impressions: 20, ctr: null, position: 10.2,

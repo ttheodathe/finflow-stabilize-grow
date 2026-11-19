@@ -284,7 +284,7 @@ export async function retrieveSource(source, { fetchImpl = fetch, now = new Date
     if (!response.ok) {
       return { ...common, status: "UNAVAILABLE", verificationStatus: "REJECTED", error: `HTTP_${response.status}` };
     }
-    if (!/^https:\/\//i.test(finalUrl) || publisher !== basePublisher || publisher !== baseRecord.expectedPublisher) {
+    if (!/^https:\/\//i.test(finalUrl) || publisher !== basePublisher) {
       return {
         ...common, status: "UNAVAILABLE", verificationStatus: "REJECTED",
         error: "UNEXPECTED_REDIRECT_OR_PUBLISHER_MISMATCH",

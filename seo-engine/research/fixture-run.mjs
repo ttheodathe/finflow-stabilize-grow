@@ -23,8 +23,8 @@ const result=await runResearchPipeline({
   opportunities,outputDir,fetchImpl:mockFetch,store:null,allowFixture:true,
   now:new Date("2026-11-19T12:00:00.000Z"),
 });
-if(result.draftGeneratedCount!==opportunities.length || result.rejectedCount!==0 || result.readyDraftCount!==0) {
-  throw new Error(`Expected ${opportunities.length} generated fixture drafts, none eligible for human review; got ${result.draftGeneratedCount} generated, ${result.readyDraftCount} ready and ${result.rejectedCount} rejected.`);
+if(result.draftGeneratedCount!==2 || result.rejectedCount!==1 || result.readyDraftCount!==0) {
+  throw new Error(`Expected two compatible fixture drafts and one exact-target review rejection; got ${result.draftGeneratedCount} generated, ${result.readyDraftCount} ready and ${result.rejectedCount} rejected.`);
 }
 const persistedDraftCount=0;
 const persistenceStatus="LOCAL_DRY_RUN_ONLY";

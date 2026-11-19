@@ -51,13 +51,17 @@ test("inventory analysis detects existing intent and recommends an update",async
   assert.equal(report.results[0].cannibalization.decision,"UPDATE_EXISTING_ARTICLE");
  }finally{await rm(env.root,{recursive:true,force:true});}
 });
-test("three fixture opportunities generate unpublished source-mapped drafts",async()=>{
+test("compatible fixture opportunities generate unpublished drafts while an exact-target mismatch stays blocked",async()=>{
  const env=await setup();
  try{
   const report=await runResearchPipeline({opportunities:fixtures,contentDir:env.contentDir,outputDir:env.outputDir,fetchImpl:mockFetch,now,store:null,allowFixture:true});
-  assert.equal(report.draftGeneratedCount,3,JSON.stringify(report.results.map(r=>({status:r.status,reasons:r.rejectionReasons,quality:r.quality}))));
+  assert.equal(report.draftGeneratedCount,2,JSON.stringify(report.results.map(r=>({status:r.status,reasons:r.rejectionReasons,quality:r.quality}))));
   assert.equal(report.readyDraftCount,0);
-  for(const result of report.results){
+  assert.equal(report.rejectedCount,1);
+  const blocked=report.results.find(result=>result.status==="REJECTED");
+  assert.equal(blocked.editorialDecision,"HUMAN_REVIEW_REQUIRED");
+  assert.ok(blocked.rejectionReasons.includes("EXACT_TARGET_INTENT_MISMATCH_REQUIRES_HUMAN_REVIEW"));
+  for(const result of report.results.filter(item=>item.draft)){
    const markdown=await readFile(result.draftPath,"utf8");
    assert.match(markdown,/publicationStatus: "draft"/);
    assert.ok(result.draft.claims.every(claim=>claim.sourceUrls.length>0));
@@ -137,19 +141,24 @@ test("draft queue persistence is idempotent and requires independent operation, 
  try{
   const first=await runResearchPipeline({opportunities:persistedFixtures,contentDir:env.contentDir,outputDir:env.outputDir,fetchImpl:mockFetch,now,store,allowFixture:true});
   const second=await runResearchPipeline({opportunities:persistedFixtures,contentDir:env.contentDir,outputDir:env.outputDir,fetchImpl:mockFetch,now,store,allowFixture:true});
-  assert.equal(first.readyDraftCount,3);
-  assert.equal(second.readyDraftCount,3);
-  assert.equal(calls.operations.length,18);
+  assert.equal(first.readyDraftCount,2);
+  assert.equal(second.readyDraftCount,2);
+  assert.equal(calls.operations.length,12);
   for(const result of second.results){
-   assert.equal(result.persistence.status,"PERSISTED");
-   assert.equal(result.persistence.independentReadback.verified,true);
-   assert.ok(result.persistence.researchRecordIds.length>=2);
-   assert.ok(result.persistence.revisionId);
-   assert.equal(result.status,"DRAFT_READY_FOR_HUMAN_REVIEW");
+   if(result.draft){
+    assert.equal(result.persistence.status,"PERSISTED");
+    assert.equal(result.persistence.independentReadback.verified,true);
+    assert.ok(result.persistence.researchRecordIds.length>=2);
+    assert.ok(result.persistence.revisionId);
+    assert.equal(result.status,"DRAFT_READY_FOR_HUMAN_REVIEW");
+   }else{
+    assert.equal(result.status,"REJECTED");
+    assert.ok(result.rejectionReasons.includes("EXACT_TARGET_INTENT_MISMATCH_REQUIRES_HUMAN_REVIEW"));
+   }
   }
-  for(let i=0;i<3;i++){
+  for(let i=0;i<2;i++){
    const firstOperation=calls.operations[i*3];
-   const repeatedOperation=calls.operations[9+i*3];
+   const repeatedOperation=calls.operations[6+i*3];
    assert.equal(firstOperation.operationKey,repeatedOperation.operationKey);
    assert.equal(firstOperation.status,"PROPOSED");
    assert.equal(firstOperation.payload.publicationStatus,"draft");
