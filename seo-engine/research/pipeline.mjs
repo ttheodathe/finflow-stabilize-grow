@@ -40,7 +40,7 @@ const SOURCE_PACKS = [
     intent: "Informational",
     sources: [
       { url: "https://www.sba.gov/counseling/manage-your-business/", expectedPublisher: "U.S. Small Business Administration", supports: ["A balance sheet helps track capital and supports cash-flow projections"], terms: ["balance sheet", "cash flow", "projection", "capital"] },
-      { url: "https://business.gov.au/guide/guide-to-managing-cash-flow", expectedPublisher: "Australian Government business.gov.au", supports: ["Record sales and costs, invoice promptly, follow up unpaid invoices and choose payment terms"], terms: ["cash flow", "sales", "costs", "invoice", "payment terms"] },
+      { url: "https://business.gov.au/guide/guide-to-managing-cash-flow", expectedPublisher: "Australian Government business.gov.au", supports: ["Record sales and costs, invoice promptly, follow up unpaid invoices and choose payment terms"], terms: ["cash flow", "sales", "costs", "invoice", "payment terms", "unpaid"] },
     ],
     title: "How to Build a Practical Small-Business Cash Flow Forecast",
     description: "Learn how to forecast cash coming in and going out, review timing gaps and update a small-business cash flow plan.",
@@ -53,7 +53,7 @@ const SOURCE_PACKS = [
     ],
     claimSpecs: [
       { id: "balance-sheet-forecast", text: "A balance sheet can help a business track capital and support cash-flow projections.", terms: ["balance sheet", "capital", "cash flow", "projection"], sourceIndexes: [0] },
-      { id: "cashflow-practices", text: "Keeping records of sales and costs, invoicing promptly and following up unpaid invoices are practical cash-flow management steps.", terms: ["sales", "costs", "invoice", "unpaid", "cash flow"], sourceIndexes: [1] },
+      { id: "cashflow-practices", text: "Keeping records of sales and costs, invoicing promptly and following up unpaid invoices are practical cash-flow management steps.", terms: ["sales", "costs", "invoice", "cash flow"], sourceIndexes: [1] },
     ],
     productMention: "cashflow",
     related: ["13-week-cash-flow-forecast-template", "cash-flow-forecasting-small-business", "small-business-cash-flow-management"],
@@ -63,7 +63,7 @@ const SOURCE_PACKS = [
     match: /late payment|unpaid invoice|invoice payment|accounts receivable|collect invoice/i,
     intent: "Informational",
     sources: [
-      { url: "https://www.smallbusinesscommissioner.gov.uk/help-and-guidance/all-advice/building-good-payment-practice-in-your-new-business/", expectedPublisher: "Office of the Small Business Commissioner (UK)", supports: ["Agree payment terms in writing, invoice promptly and monitor invoice status"], terms: ["payment terms", "invoice", "monitor payments", "cash flow"] },
+      { url: "https://www.smallbusinesscommissioner.gov.uk/help-and-guidance/all-advice/building-good-payment-practice-in-your-new-business/", expectedPublisher: "Office of the Small Business Commissioner (UK)", supports: ["Agree payment terms in writing, invoice promptly and monitor invoice status"], terms: ["payment terms", "invoice", "payment status", "cash flow"] },
       { url: "https://www.gov.uk/invoicing-and-taking-payment-from-customers/payment-obligations", expectedPublisher: "GOV.UK", supports: ["UK payment obligations depend on agreed payment dates and specific legal conditions"], terms: ["payment date", "30 days", "late payment", "interest"] },
     ],
     title: "A Practical System for Following Up Unpaid Business Invoices",
@@ -76,7 +76,7 @@ const SOURCE_PACKS = [
       ["Understand local payment rules", "The UK government publishes payment-obligation guidance for UK business transactions. It describes how agreed payment dates and statutory rules interact. That guidance is specific to the UK and should not be treated as legal advice or applied automatically in another country. Check the rules that apply to the business and contract."],
     ],
     claimSpecs: [
-      { id: "invoice-process", text: "Agree payment terms in writing, send invoices promptly and monitor invoice status to support payment processes.", terms: ["payment terms", "invoice", "monitoring payments"], sourceIndexes: [0] },
+      { id: "invoice-process", text: "Agree payment terms in writing, send invoices promptly and monitor invoice status to support payment processes.", terms: ["payment terms", "invoice", "payment status"], sourceIndexes: [0] },
       { id: "uk-payment-rules", text: "UK payment obligations depend on agreed payment dates and the applicable statutory rules.", terms: ["payment date", "late payment", "30 days"], sourceIndexes: [1], jurisdiction: "United Kingdom" },
     ],
     productMention: "receivables",
@@ -283,10 +283,10 @@ export async function runResearchPipeline({
       targetQuery: raw.targetQuery || raw.queryText || queryRow?.query || "",
       relatedQueries: raw.relatedQueries || queryRows.map(row => row.query).filter(Boolean).slice(1,6),
       metrics: {
-        impressions: raw.metrics?.impressions ?? queryRow?.impressions ?? raw.evidence?.impressions ?? null,
-        clicks: raw.metrics?.clicks ?? queryRow?.clicks ?? raw.evidence?.clicks ?? null,
-        ctr: raw.metrics?.ctr ?? queryRow?.ctr ?? raw.evidence?.ctr ?? null,
-        averagePosition: raw.metrics?.averagePosition ?? queryRow?.position ?? raw.evidence?.averagePosition ?? null,
+        impressions: raw.metrics && Object.hasOwn(raw.metrics,"impressions") ? raw.metrics.impressions : queryRow && Object.hasOwn(queryRow,"impressions") ? queryRow.impressions : raw.evidence?.impressions ?? null,
+        clicks: raw.metrics && Object.hasOwn(raw.metrics,"clicks") ? raw.metrics.clicks : queryRow && Object.hasOwn(queryRow,"clicks") ? queryRow.clicks : raw.evidence?.clicks ?? null,
+        ctr: raw.metrics && Object.hasOwn(raw.metrics,"ctr") ? raw.metrics.ctr : queryRow && Object.hasOwn(queryRow,"ctr") ? queryRow.ctr : raw.evidence?.ctr ?? null,
+        averagePosition: raw.metrics && Object.hasOwn(raw.metrics,"averagePosition") ? raw.metrics.averagePosition : queryRow && Object.hasOwn(queryRow,"position") ? queryRow.position : raw.evidence?.averagePosition ?? null,
       },
       reportingPeriodEnd: raw.reportingPeriodEnd || raw.evidence?.dateRange?.endDate || raw.dateRange?.endDate || null,
       dataSource: raw.dataSource || raw.evidence?.source || "UNKNOWN",
