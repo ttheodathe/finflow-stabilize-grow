@@ -16,7 +16,7 @@ This directory contains a read-only data collector for Google Search Console and
 4. Store the complete service-account JSON as a GitHub Actions secret named `GOOGLE_SERVICE_ACCOUNT_JSON`. Never commit it, paste it into an issue, or place it in a repository file.
 5. The workflow also accepts optional repository variables `GSC_SITE_URL` and `GA4_PROPERTY_ID`; defaults target the audited FinFlow Track properties.
 
-The collector requests only the `webmasters.readonly` and `analytics.readonly` OAuth scopes.
+The collector requests only the `webmasters.readonly` and `analytics.readonly` OAuth scopes. GSC page totals, query totals, and page-query combinations are collected separately because query reports can omit anonymized searches; page totals must not be inferred by summing query rows.
 
 ## Local tests
 
