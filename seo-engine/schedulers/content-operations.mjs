@@ -39,7 +39,7 @@ function expandPersistedOpportunities(opportunities, schedulerRunId) {
         evidenceMode: source === "Google Search Console" && opportunity.sourceRunFixture !== true
           && opportunity.evidence?.evidenceMode !== "FIXTURE"
           && !/\.test$|example\.test|localhost/i.test(new URL(opportunity.targetUrl || "https://invalid.example").hostname)
-          ? "LIVE_OR_PERSISTED" : "FIXTURE",
+          ? (opportunity.evidence?.evidenceMode || "LIVE_OR_PERSISTED") : "FIXTURE",
         evidence: {
           source,
           dateRange: opportunity.evidence?.dateRange || null,

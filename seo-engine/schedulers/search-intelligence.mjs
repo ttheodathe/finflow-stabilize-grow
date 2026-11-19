@@ -143,10 +143,11 @@ export function buildOpportunityKey(schedulerRunId, opportunityId, reportingPeri
   return `${schedulerRunId}:${opportunityId}:${reportingPeriodEnd}`;
 }
 
-export async function runSearchIntelligence({ dateRange = resolveDateRange(), collectFn = collect, fetchImpl = fetch } = {}) {
-  await mkdir(OUTPUT, { recursive: true });
-  const result = await collectFn({ dateRange, outputDir: OUTPUT });
+export async function runSearchIntelligence({ dateRange = resolveDateRange(), collectFn = collect, fetchImpl = fetch, outputDir = OUTPUT } = {}) {
+  await mkdir(outputDir, { recursive: true });
+  const result = await collectFn({ dateRange, outputDir });
   const snapshot = JSON.parse(await readFile(result.file, "utf8"));
+  const evidenceMode = snapshot.evidenceMode || "FRESH_GSC_COLLECTION";
   const pages = new Map();
   for (const row of snapshot.gsc.pages) {
     const current = pages.get(row.page) || { page: row.page, rows: [] };
@@ -190,7 +191,7 @@ export async function runSearchIntelligence({ dateRange = resolveDateRange(), co
     try {
       schedulerRunId = await store.recordRun({
         schedulerKey: "SEARCH_INTELLIGENCE", scheduledFor, attempt,
-        status: "RUNNING", output: { dateRange, source: "Google Search Console", sourceCollectionAt: snapshot.fetchedAt || null },
+        status: "RUNNING", output: { dateRange, source: "Google Search Console", sourceCollectionAt: snapshot.fetchedAt || null, evidenceMode },
       });
       for (const opportunity of opportunities) {
         await store.recordOpportunity({
@@ -200,7 +201,7 @@ export async function runSearchIntelligence({ dateRange = resolveDateRange(), co
           queryText: opportunity.evidence?.sampleQueries?.[0]?.query || null,
           opportunityType: opportunity.action,
           score: opportunity.score,
-          evidence: { ...opportunity.evidence, scoring: opportunity.scoring, decision: opportunity.decision },
+          evidence: { ...opportunity.evidence, scoring: opportunity.scoring, decision: opportunity.decision, evidenceMode },
         });
       }
       await store.recordRun({
@@ -208,7 +209,7 @@ export async function runSearchIntelligence({ dateRange = resolveDateRange(), co
         status: "SUCCEEDED",
         output: {
           opportunityCount: opportunities.length, technicalIssueCount: technical.confirmedIssueCount,
-          dateRange, source: "Google Search Console", sourceCollectionAt: snapshot.fetchedAt || null,
+          dateRange, source: "Google Search Console", sourceCollectionAt: snapshot.fetchedAt || null, evidenceMode,
           supplementaryAnalytics: {
             status: snapshot.sourceStatus?.ga4 || "UNKNOWN",
             error: snapshot.sourceErrors?.ga4 || null,
@@ -223,7 +224,7 @@ export async function runSearchIntelligence({ dateRange = resolveDateRange(), co
         try {
           await store.recordRun({
             schedulerKey: "SEARCH_INTELLIGENCE", scheduledFor,
-            attempt, status: "FAILED", output: { dateRange, source: "Google Search Console", sourceCollectionAt: snapshot.fetchedAt || null }, errorSummary: String(error.message || error),
+            attempt, status: "FAILED", output: { dateRange, source: "Google Search Console", sourceCollectionAt: snapshot.fetchedAt || null, evidenceMode }, errorSummary: String(error.message || error),
           });
         } catch { /* Preserve the original persistence error. */ }
       }
@@ -232,7 +233,7 @@ export async function runSearchIntelligence({ dateRange = resolveDateRange(), co
 
   const report = {
     schemaVersion: 1, scheduler: "SEARCH_INTELLIGENCE",
-    generatedAt: new Date().toISOString(), dateRange,
+    generatedAt: new Date().toISOString(), dateRange, evidenceMode,
     sourceFile: result.file, opportunityCount: opportunities.length,
     technical,
     supplementaryAnalytics: {
@@ -254,10 +255,10 @@ export async function runSearchIntelligence({ dateRange = resolveDateRange(), co
     opportunities,
     persistence,
   };
-  const path = `${OUTPUT}/scheduler-1-opportunities.json`;
+  const path = `${outputDir}/scheduler-1-opportunities.json`;
   await writeFile(path, JSON.stringify(report, null, 2) + "\n", { flag: "w" });
   if (persistenceError) throw persistenceError;
-  return { path, opportunityCount: opportunities.length, dateRange, persistenceStatus: persistence.status };
+  return { path, opportunityCount: opportunities.length, dateRange, persistenceStatus: persistence.status, evidenceMode };
 }
 
 if (import.meta.url === new URL(process.argv[1], "file:").href) {

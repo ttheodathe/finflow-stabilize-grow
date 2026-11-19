@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -303,3 +304,52 @@ jobs:
 
       - name: Enforce high-severity dependency audit
         run: node scripts/check-npm-audit.mjs
+
+  genuine-acceptance:
+    name: Genuine GSC to persisted editorial draft acceptance
+    needs: validate
+    if: github.event_name == 'pull_request' && github.event.pull_request.number == 119 && needs.validate.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      actions: read
+    env:
+      DRY_RUN: "true"
+      PUBLISH_ENABLED: "false"
+      CONTENT_UPDATE_ENABLED: "false"
+      PRODUCTION_CONTENT_WRITE_ALLOWED: "false"
+      SEO_OPS_ALLOWED_PROJECT_REF: "bufbyfwstdqvwnkhyrea"
+      SEO_PERSISTENCE_REQUIRED: "true"
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+      GSC_SITE_URL: ${{ secrets.GSC_SITE_URL }}
+      GA4_PROPERTY_ID: ${{ secrets.GA4_PROPERTY_ID }}
+    steps:
+      - name: Checkout recovery branch
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Download original historical GSC artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: finflow-seo-readonly-data
+          path: historical-gsc
+          repository: ${{ github.repository }}
+          run-id: 44448533423
+          github-token: ${{ github.token }}
+      - name: Run genuine GSC to editorial draft acceptance
+        run: node seo-engine/research/acceptance-run.mjs historical-gsc/seo-data-2026-10-19-to-2026-11-15.json
+      - name: Upload genuine acceptance evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: seo-recovery-genuine-acceptance-${{ github.sha }}
+          path: seo-output/acceptance/
+          if-no-files-found: error
+          retention-days: 14
