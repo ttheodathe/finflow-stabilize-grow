@@ -43,3 +43,25 @@ test("non-HTTPS remote Supabase endpoints are rejected", () => {
     url: "http://project.supabase.co", serviceRoleKey: "test",
   }), /HTTPS/);
 });
+
+
+test("activation snapshots are sent as aggregate-only fields", async () => {
+  let request;
+  const store = createSupabaseSeoStore({
+    url: "https://project.supabase.co", serviceRoleKey: "server-only-test-key",
+    fetchImpl: async (url, options) => {
+      request = { url, options };
+      return Response.json("00000000-0000-4000-8000-000000000002");
+    },
+  });
+  await store.recordActivationSnapshot({
+    snapshotDate: "2026-11-20", registeredUsers: 6, onboardingCompletions: 5,
+    activatedUsers: 2, returningActivatedUsers: 1, definitionVersion: "activation-fixture-v1",
+    sourceWatermark: "2026-11-20T00:00:00Z", limitations: ["Synthetic fixture"],
+  });
+  assert.equal(request.url, "https://project.supabase.co/rest/v1/rpc/seo_ops_record_activation_snapshot");
+  const payload = JSON.parse(request.options.body);
+  assert.equal(payload.p_activated_users, 2);
+  assert.equal(payload.p_returning_activated_users, 1);
+  assert.equal(Object.keys(payload).some((key) => /user_id|email|invoice_id/i.test(key)), false);
+});
