@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { mkdtemp, mkdir, writeFile, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { runResearchPipeline, freshnessFor, analyzeCannibalization, retrieveSource, detectUnsupportedNumericClaims, findUnsupportedNumericClaims } from "./pipeline.mjs";
+import { runResearchPipeline, freshnessFor, analyzeCannibalization, retrieveSource, detectUnsupportedNumericClaims, findUnsupportedNumericClaims, classifySearchIntent, selectCompatibleSourcePack } from "./pipeline.mjs";
 
 const now=new Date("2026-11-19T10:00:00.000Z");
 const fixtures=[
@@ -135,4 +135,82 @@ test("an exact GSC landing page remains an update candidate despite low token ov
  assert.equal(result.decision,"UPDATE_EXISTING_ARTICLE");
  assert.equal(result.targetQueryMatch,"EXACT_LANDING_PAGE_LOW_TEXT_OVERLAP_REVIEW_REQUIRED");
  assert.equal(result.target.slug,"break-even-analysis-small-business");
+});
+
+test("classifies software-selection queries without treating them as generic recordkeeping", () => {
+  const queries = [
+    "free bookkeeping platforms with reporting features",
+    "free business accounting apps worth considering",
+    "which free accounting programs can track invoices",
+    "recommend free accounting software for tracking sales",
+  ];
+  for (const query of queries) {
+    const intent = classifySearchIntent(query);
+    assert.equal(intent, "Software selection");
+    const selection = selectCompatibleSourcePack(query, intent);
+    assert.equal(selection.compatible, false);
+    assert.equal(selection.matchedPackId, "recordkeeping");
+    assert.equal(selection.reason, "SOURCE_PACK_INTENT_INCOMPATIBLE");
+  }
+  assert.equal(classifySearchIntent("unclear business finance question"), "REVIEW_REQUIRED");
+});
+
+test("the exact GSC landing page is assessed as an update, not a new article", async () => {
+  const env = await setup();
+  try {
+    await writeFile(path.join(env.contentDir, "free-accounting-software-for-small-business.md"),
+      '---\ntitle: "Free Accounting Software for Small Business"\ndescription: "A guide to free accounting software and small-business bookkeeping apps"\nslug: "free-accounting-software-for-small-business"\ntags: [accounting software, small business]\n---\n\nCompare accounting software selection criteria, invoice features, reporting and sales tracking for small businesses.\n');
+    const result = await runResearchPipeline({
+      opportunities: [{
+        id: "gsc-software-selection",
+        targetUrl: "https://www.finflowtrack.com/blog/free-accounting-software-for-small-business",
+        targetQuery: "free business accounting apps worth considering",
+        metrics: { impressions: 31, clicks: 0, ctr: 0, averagePosition: 9.77 },
+        reportingPeriodEnd: "2026-11-15",
+        dataSource: "Google Search Console",
+        evidenceMode: "LIVE_OR_PERSISTED",
+      }],
+      contentDir: env.contentDir, outputDir: env.outputDir, fetchImpl: mockFetch, now, store: null,
+    });
+    const item = result.results[0];
+    assert.equal(item.intent, "Software selection");
+    assert.equal(item.cannibalization.decision, "UPDATE_EXISTING_ARTICLE");
+    assert.equal(item.editorialDecision, "HUMAN_REVIEW_REQUIRED");
+    assert.equal(item.status, "REJECTED");
+    assert.equal(item.sourcePackCompatibility.reason, "SOURCE_PACK_INTENT_INCOMPATIBLE");
+    assert.ok(item.rejectionReasons.includes("SOURCE_PACK_INTENT_INCOMPATIBLE"));
+  } finally {
+    await rm(env.root, { recursive: true, force: true });
+  }
+});
+
+test("source retrieval records redirect, HTTP and content-type evidence and rejects unsafe redirects", async () => {
+  const good = await retrieveSource({
+    url: "https://www.irs.gov/businesses/small-businesses-self-employed/recordkeeping",
+    expectedPublisher: "Internal Revenue Service",
+    terms: ["recordkeeping", "income", "expenses"],
+  }, {
+    fetchImpl: async () => new Response("<html><head><title>Records</title></head><body>Recordkeeping helps track income and expenses.</body></html>", {
+      status: 200, headers: { "content-type": "text/html; charset=utf-8" },
+    }),
+    now,
+  });
+  assert.equal(good.httpStatus, 200);
+  assert.equal(good.contentType, "text/html");
+  assert.equal(good.finalUrl, good.url);
+  assert.equal(good.verificationStatus, "KEYWORD_RELEVANCE_PASS_HUMAN_REVIEW_REQUIRED");
+
+  const redirected = await retrieveSource({
+    url: "https://www.irs.gov/businesses/small-businesses-self-employed/recordkeeping",
+    expectedPublisher: "Internal Revenue Service",
+    terms: ["recordkeeping", "income", "expenses"],
+  }, {
+    fetchImpl: async () => Object.assign(new Response("<html></html>", { status: 200, headers: { "content-type": "text/html" } }), {
+      url: "https://unrelated.example/source",
+    }),
+    now,
+  });
+  assert.equal(redirected.status, "UNAVAILABLE");
+  assert.equal(redirected.verificationStatus, "REJECTED");
+  assert.equal(redirected.error, "UNEXPECTED_REDIRECT_OR_PUBLISHER_MISMATCH");
 });

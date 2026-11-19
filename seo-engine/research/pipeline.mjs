@@ -13,6 +13,11 @@ const STALE_AFTER_DAYS = 30;
 const SOURCE_PACKS = [
   {
     id: "recordkeeping",
+    supportedIntents: ["Bookkeeping guidance", "How-to/tutorial", "Accounting education"],
+    subjectCoverage: ["bookkeeping", "business records", "income", "expenses", "receipts", "invoices"],
+    audience: "Small-business owners and operators",
+    jurisdiction: "United States; jurisdiction-specific limitations must remain explicit",
+    approvedSourceTypes: ["OFFICIAL_GOVERNMENT"],
     match: /record|bookkeep|accounting|expense|receipt|financial records/i,
     intent: "Informational",
     sources: [
@@ -38,6 +43,11 @@ const SOURCE_PACKS = [
   },
   {
     id: "cashflow",
+    supportedIntents: ["How-to/tutorial", "Accounting education", "Bookkeeping guidance"],
+    subjectCoverage: ["cash flow", "cash flow forecast", "working capital", "cash flow projection"],
+    audience: "Small-business owners and operators",
+    jurisdiction: "United States and Australia; claims must identify the applicable jurisdiction",
+    approvedSourceTypes: ["OFFICIAL_GOVERNMENT"],
     match: /cash.?flow|cash flow forecast|cash flow projection|working capital/i,
     intent: "Informational",
     sources: [
@@ -62,6 +72,11 @@ const SOURCE_PACKS = [
   },
   {
     id: "receivables",
+    supportedIntents: ["How-to/tutorial", "Bookkeeping guidance"],
+    subjectCoverage: ["unpaid invoice", "invoice payment", "accounts receivable", "payment terms"],
+    audience: "Small-business owners and operators",
+    jurisdiction: "United Kingdom for legal payment obligations; general process guidance otherwise",
+    approvedSourceTypes: ["OFFICIAL_GOVERNMENT"],
     match: /late payment|unpaid invoice|invoice payment|accounts receivable|collect invoice/i,
     intent: "Informational",
     sources: [
@@ -86,6 +101,11 @@ const SOURCE_PACKS = [
   },
   {
     id: "break-even",
+    supportedIntents: ["Accounting education", "How-to/tutorial"],
+    subjectCoverage: ["break-even", "fixed costs", "variable costs", "contribution margin"],
+    audience: "Small-business owners and operators",
+    jurisdiction: "United States; general arithmetic concepts only",
+    approvedSourceTypes: ["OFFICIAL_GOVERNMENT"],
     match: /break[- ]even|fixed costs.*variable costs/i,
     intent: "Informational",
     sources: [
@@ -167,10 +187,33 @@ function excerptFor(text, terms) {
   return snippet.split(/\s+/).slice(0, MAX_EXCERPT_WORDS).join(" ");
 }
 export function classifySearchIntent(query) {
-  if (/buy|pricing|best software|software comparison|tool/i.test(query)) return "Commercial investigation";
-  if (/login|sign in|website|support contact/i.test(query)) return "Navigational";
-  if (/create account|download|sign up|start free/i.test(query)) return "Transactional";
-  return "Informational";
+  const value = String(query || "").trim().toLowerCase();
+  if (!value) return "REVIEW_REQUIRED";
+  if (/login|sign in|website|support contact|customer service/.test(value)) return "Navigational";
+  if (/create account|download|sign up|start free|register/.test(value)) return "Transactional";
+  if (/pricing|price|cost|alternatives?|cheaper|free alternative/.test(value)) return "Pricing and alternatives";
+  if (/(free|best|top|which|recommend|compare|worth considering).{0,55}(accounting|bookkeeping).{0,45}(software|app|platform|program|tool)/.test(value)
+    || /(accounting|bookkeeping).{0,45}(software|apps?|platforms?|programs?|tools?).{0,45}(best|free|compare|review|recommend|worth)/.test(value)
+    || /software selection|accounting software comparison/.test(value)) return "Software selection";
+  if (/reporting features?|track invoices?|track sales|expense tracking|invoice tracking|features? of/.test(value)) return "Feature evaluation";
+  if (/how to|step[- ]by[- ]step|tutorial|template|checklist|guide|create|build|set up|track|manage/.test(value)) return "How-to/tutorial";
+  if (/bookkeep|recordkeeping|financial records|receipts?|ledger|transaction records/.test(value)) return "Bookkeeping guidance";
+  if (/what is|meaning of|definition|accounting basics|formula|calculate|principles of|accounting education/.test(value)) return "Accounting education";
+  return "REVIEW_REQUIRED";
+}
+
+export function selectCompatibleSourcePack(query, intent) {
+  const matchedPack = SOURCE_PACKS.find(pack => pack.match.test(String(query || "")) || pack.subjectCoverage?.some(term => String(query || "").toLowerCase().includes(term.toLowerCase()))) || null;
+  if (intent === "REVIEW_REQUIRED") {
+    return { pack: null, matchedPackId: matchedPack?.id || null, compatible: false, reason: "AMBIGUOUS_INTENT_REQUIRES_HUMAN_REVIEW" };
+  }
+  if (!matchedPack) {
+    return { pack: null, matchedPackId: null, compatible: false, reason: "NO_APPROVED_SOURCE_PACK_FOR_INTENT" };
+  }
+  if (!matchedPack.supportedIntents?.includes(intent)) {
+    return { pack: null, matchedPackId: matchedPack.id, compatible: false, reason: "SOURCE_PACK_INTENT_INCOMPATIBLE" };
+  }
+  return { pack: matchedPack, matchedPackId: matchedPack.id, compatible: true, reason: null };
 }
 export function freshnessFor(opportunity, now = new Date()) {
   const end = opportunity.reportingPeriodEnd || opportunity.dateRange?.endDate || opportunity.evidence?.dateRange?.endDate || null;
@@ -195,25 +238,89 @@ export function detectUnsupportedNumericClaims(markdown) {
 
 export async function retrieveSource(source, { fetchImpl = fetch, now = new Date() } = {}) {
   const retrievedAt = now.toISOString();
+  const baseRecord = {
+    url: source.url,
+    expectedPublisher: source.expectedPublisher || sourcePublisher(source.url),
+    retrievedAt,
+    publishedAt: null,
+    sourceTitle: null,
+    excerpt: null,
+    supportedClaims: [],
+    termMatches: [],
+    httpStatus: null,
+    responseStatus: null,
+    contentType: null,
+    finalUrl: source.url,
+    redirectDestination: null,
+    relevanceAssessment: null,
+    verificationStatus: "RESEARCH_REQUIRED",
+    reliability: sourceReliability(source.url),
+  };
   try {
-    const response = await fetchImpl(source.url, { redirect: "follow", headers: { "user-agent": "FinFlowTrack-EditorialResearch/1.0 (+https://www.finflowtrack.com)" } });
-    if (!response.ok) return { ...source, sourceTitle: null, publisher: source.expectedPublisher || sourcePublisher(source.url), publishedAt: null, retrievedAt, reliability: sourceReliability(source.url), status: "UNAVAILABLE", httpStatus: response.status, excerpt: null, error: `HTTP_${response.status}`, supportedClaims: [] };
+    const response = await fetchImpl(source.url, {
+      redirect: "follow",
+      headers: { "user-agent": "FinFlowTrack-EditorialResearch/1.0 (+https://www.finflowtrack.com)" },
+    });
+    const finalUrl = response.url || source.url;
+    const contentType = (response.headers?.get?.("content-type") || "").split(";")[0].trim().toLowerCase() || null;
+    const publisher = sourcePublisher(finalUrl);
+    const basePublisher = sourcePublisher(source.url);
+    const common = {
+      ...baseRecord,
+      publisher,
+      httpStatus: response.status,
+      responseStatus: response.status,
+      contentType,
+      finalUrl,
+      redirectDestination: finalUrl !== source.url ? finalUrl : null,
+    };
+    if (!response.ok) {
+      return { ...common, status: "UNAVAILABLE", verificationStatus: "REJECTED", error: `HTTP_${response.status}` };
+    }
+    if (!/^https:\/\//i.test(finalUrl) || publisher !== basePublisher || publisher !== baseRecord.expectedPublisher) {
+      return {
+        ...common, status: "UNAVAILABLE", verificationStatus: "REJECTED",
+        error: "UNEXPECTED_REDIRECT_OR_PUBLISHER_MISMATCH",
+      };
+    }
+    if (!contentType || !["text/html", "application/xhtml+xml"].includes(contentType)) {
+      return { ...common, status: "UNAVAILABLE", verificationStatus: "REJECTED", error: "UNSUPPORTED_CONTENT_TYPE" };
+    }
     const html = await response.text();
     const text = cleanText(html);
-    const title = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.replace(/\s+/g, " ").trim() || source.expectedPublisher || source.url;
+    const title = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.replace(/\s+/g, " ").trim() || null;
     const excerpt = excerptFor(text, source.terms || []);
     const termMatches = (source.terms || []).filter(term => text.toLowerCase().includes(term.toLowerCase()));
-    const supported = termMatches.length >= Math.min(2, (source.terms || []).length) && Boolean(excerpt);
+    const requiredTermCount = Math.min(2, (source.terms || []).length);
+    const keywordMatchPass = requiredTermCount > 0 && termMatches.length >= requiredTermCount && Boolean(excerpt);
     return {
-      url: source.url, sourceTitle: title, publisher: sourcePublisher(source.url),
-      publishedAt: dateFromHtml(html), retrievedAt, reliability: sourceReliability(source.url),
-      status: supported ? "RETRIEVED_RELEVANT" : "RETRIEVED_RELEVANCE_UNCONFIRMED",
-      httpStatus: response.status, excerpt, termMatches,
-      supportedClaims: supported ? (source.supports || []) : [],
-      limitations: ["Automated relevance uses keyword matching, not semantic fact-checking.", "Publication date is null when the source page does not expose a parseable date."],
+      ...common,
+      sourceTitle: title || source.expectedPublisher || source.url,
+      publishedAt: dateFromHtml(html),
+      excerpt,
+      termMatches,
+      status: keywordMatchPass ? "RETRIEVED_RELEVANT" : "RETRIEVED_RELEVANCE_UNCONFIRMED",
+      verificationStatus: keywordMatchPass ? "KEYWORD_RELEVANCE_PASS_HUMAN_REVIEW_REQUIRED" : "RESEARCH_REQUIRED",
+      relevanceAssessment: {
+        method: "KEYWORD_SCREENING_ONLY",
+        matchedTerms: termMatches,
+        requiredTermCount,
+        keywordMatchPass,
+        note: "Keyword occurrence does not establish factual support or semantic entailment; material claims require human review.",
+      },
+      supportedClaims: keywordMatchPass ? (source.supports || []) : [],
+      limitations: [
+        "Automated relevance uses keyword matching, not semantic fact-checking.",
+        "Publication date is null when the source page does not expose a parseable date.",
+        "A passing keyword screen is not SOURCE_VERIFIED.",
+      ],
     };
   } catch (error) {
-    return { url: source.url, sourceTitle: null, publisher: source.expectedPublisher || sourcePublisher(source.url), publishedAt: null, retrievedAt, reliability: sourceReliability(source.url), status: "UNAVAILABLE", excerpt: null, error: String(error.message || error), supportedClaims: [] };
+    return {
+      ...baseRecord, publisher: baseRecord.expectedPublisher,
+      status: "UNAVAILABLE", verificationStatus: "REJECTED",
+      error: String(error.message || error),
+    };
   }
 }
 function tokenize(value) {
@@ -237,10 +344,27 @@ export async function loadInventory({ contentDir = CONTENT_DIR } = {}) {
   return items;
 }
 export function analyzeCannibalization(query, inventory, targetUrl = null) {
-  const targetSlug = targetUrl ? new URL(targetUrl).pathname.split("/").filter(Boolean).pop() : null;
+  let targetSlug = null;
+  try { targetSlug = targetUrl ? new URL(targetUrl).pathname.split("/").filter(Boolean).pop() : null; }
+  catch { targetSlug = null; }
+  const queryIntent = classifySearchIntent(query);
   const scored = inventory.map(item => {
-    const text = [item.title, item.description, item.slug, ...item.tags].join(" ");
-    return { slug: item.slug, title: item.title, score: Number(similarity(query, text).toFixed(3)), url: `https://www.finflowtrack.com/blog/${item.slug}`, exactTarget: item.slug === targetSlug };
+    const metadataText = [item.title, item.description, item.slug, ...(item.tags || [])].join(" ");
+    const fullText = String(item.content || "");
+    const metadataScore = similarity(query, metadataText);
+    const fullTextScore = similarity(query, fullText);
+    const score = Math.max(metadataScore, fullTextScore);
+    const existingIntent = classifySearchIntent([item.title, item.description, item.slug].join(" "));
+    return {
+      slug: item.slug, title: item.title,
+      score: Number(score.toFixed(3)),
+      metadataScore: Number(metadataScore.toFixed(3)),
+      fullTextScore: Number(fullTextScore.toFixed(3)),
+      existingIntent,
+      intentMatch: existingIntent === queryIntent && existingIntent !== "REVIEW_REQUIRED",
+      url: `https://www.finflowtrack.com/blog/${item.slug}`,
+      exactTarget: item.slug === targetSlug,
+    };
   }).sort((a,b) => b.score-a.score);
   const exactTarget = scored.find(item => item.exactTarget) || null;
   const strongest = scored[0] || null;
@@ -248,16 +372,22 @@ export function analyzeCannibalization(query, inventory, targetUrl = null) {
   const target = exactTarget || inferredTarget;
   const conflict = Boolean(target);
   const targetQueryMatch = !target ? "NO_STRONG_MATCH"
-    : exactTarget && target.score < 0.30 ? "EXACT_LANDING_PAGE_LOW_TEXT_OVERLAP_REVIEW_REQUIRED"
-    : exactTarget ? "EXACT_LANDING_PAGE_TEXT_OVERLAP_MATCH" : "INFERRED_EXISTING_INTENT_MATCH";
+    : exactTarget && (target.score < 0.30 || !target.intentMatch) ? "EXACT_LANDING_PAGE_REVIEW_REQUIRED"
+    : exactTarget ? "EXACT_LANDING_PAGE_INTENT_MATCH"
+    : "INFERRED_EXISTING_INTENT_MATCH";
+  const decision = conflict ? "UPDATE_EXISTING_ARTICLE" : "NEW_ARTICLE_CANDIDATE";
   return {
     status: conflict ? "EXISTING_INTENT_MATCH" : "NO_STRONG_MATCH",
-    decision: conflict ? "UPDATE_EXISTING_ARTICLE" : "NEW_ARTICLE_CANDIDATE",
+    decision,
+    editorialDecision: targetQueryMatch === "EXACT_LANDING_PAGE_REVIEW_REQUIRED" || Boolean(inferredTarget)
+      ? "HUMAN_REVIEW_REQUIRED" : decision,
+    requiresHumanReview: targetQueryMatch === "EXACT_LANDING_PAGE_REVIEW_REQUIRED" || Boolean(inferredTarget),
+    queryIntent,
     target,
     targetQueryMatch,
     related: scored.slice(0,5),
     unresolved: !exactTarget && Boolean(inferredTarget),
-    method: "Token-overlap screening across title, description, slug and tags; exact GSC landing-page URLs take precedence, with low-overlap cases flagged for human review.",
+    method: "Full article text, title, description, slug, tags and query intent are compared; exact GSC landing-page URLs take precedence. Similarity is screening only and does not establish semantic originality.",
   };
 }
 function buildDraft(candidate, pack, sourceRecords, productEvidence, internalLinks, target, now) {
@@ -344,9 +474,10 @@ export async function runResearchPipeline({
     const intent = classifySearchIntent(candidate.targetQuery);
     const cannibalization = analyzeCannibalization(candidate.targetQuery, inventory, candidate.targetUrl);
     const base = { candidate, intent, freshness, cannibalization, draft: null, quality: null, rejectionReasons: [], editorialReviewQuestions: [] };
-    if (cannibalization.targetQueryMatch === "EXACT_LANDING_PAGE_LOW_TEXT_OVERLAP_REVIEW_REQUIRED") {
-      base.editorialReviewQuestions.push("The exact GSC landing page is an existing article, but title/tag token overlap with this query is low; confirm the page serves the intended query before approving the update.");
-      base.rejectionReasons.push("EXACT_TARGET_INTENT_MISMATCH_REQUIRES_HUMAN_REVIEW");
+    base.editorialDecision = cannibalization.editorialDecision;
+    base.humanReviewRequired = cannibalization.requiresHumanReview;
+    if (cannibalization.targetQueryMatch === "EXACT_LANDING_PAGE_REVIEW_REQUIRED") {
+      base.editorialReviewQuestions.push("The exact GSC landing page is an existing article, but text or intent alignment is uncertain; assess an update to that page before considering any new article.");
     }
     if (!candidate.targetQuery) base.rejectionReasons.push("MISSING_TARGET_QUERY");
     if (freshness.status === "STALE" || freshness.status === "FUTURE" || freshness.status === "INVALID") base.rejectionReasons.push(`GSC_EVIDENCE_${freshness.status}`);
@@ -355,8 +486,25 @@ export async function runResearchPipeline({
     if (candidate.metrics.impressions === null || candidate.metrics.clicks === null || candidate.metrics.ctr === null || candidate.metrics.averagePosition === null) base.rejectionReasons.push("INCOMPLETE_GSC_METRICS");
     if (base.rejectionReasons.length) { base.status = "REJECTED"; results.push(base); continue; }
 
-    const pack = SOURCE_PACKS.find(item => item.match.test(candidate.targetQuery));
-    if (!pack) { base.rejectionReasons.push("NO_APPROVED_SOURCE_PACK_FOR_TOPIC"); base.status = "REJECTED"; results.push(base); continue; }
+    const packSelection = selectCompatibleSourcePack(candidate.targetQuery, intent);
+    base.sourcePackCompatibility = {
+      compatible: packSelection.compatible,
+      matchedPackId: packSelection.matchedPackId,
+      reason: packSelection.reason,
+    };
+    if (!packSelection.pack) {
+      base.rejectionReasons.push(packSelection.reason || "NO_APPROVED_SOURCE_PACK_FOR_INTENT");
+      base.status = "REJECTED";
+      results.push(base);
+      continue;
+    }
+    const pack = packSelection.pack;
+    if (cannibalization.targetQueryMatch === "EXACT_LANDING_PAGE_REVIEW_REQUIRED") {
+      base.rejectionReasons.push("EXACT_TARGET_INTENT_MISMATCH_REQUIRES_HUMAN_REVIEW");
+      base.status = "REJECTED";
+      results.push(base);
+      continue;
+    }
     if (cannibalization.unresolved) { base.rejectionReasons.push("UNRESOLVED_CANNIBALIZATION"); base.status = "REJECTED"; results.push(base); continue; }
     const operationType = cannibalization.decision === "UPDATE_EXISTING_ARTICLE" ? "EXISTING_ARTICLE_UPDATE" : "NEW_ARTICLE";
     const target = cannibalization.target || {
@@ -387,8 +535,13 @@ export async function runResearchPipeline({
     const unsupportedNumericClaims = unsupportedNumericClaimMatches.length > 0;
     if (unsupportedNumericClaims) base.rejectionReasons.push("UNSUPPORTED_NUMERIC_CLAIM");
     const existingComparisons = inventory.map(item => ({
-      slug:item.slug, score:Number(similarity(contentText.content,item.content).toFixed(3)),
-    })).sort((a,b)=>b.score-a.score);
+      slug:item.slug,
+      title:item.title,
+      titleDescriptionScore:Number(similarity(draft.title + " " + draft.description, [item.title,item.description,item.slug,...(item.tags || [])].join(" ")).toFixed(3)),
+      fullTextScore:Number(similarity(contentText.content,item.content).toFixed(3)),
+      existingIntent:classifySearchIntent([item.title,item.description,item.slug].join(" ")),
+      proposedIntent:intent,
+    })).sort((a,b)=>Math.max(b.titleDescriptionScore,b.fullTextScore)-Math.max(a.titleDescriptionScore,a.fullTextScore));
     const originality = {
       highestSimilarity: existingComparisons[0] || null,
       status: existingComparisons[0]?.score >= 0.42 ? "POSSIBLE_REPETITION_REVIEW_REQUIRED" : "NO_HIGH_OVERLAP_DETECTED",
