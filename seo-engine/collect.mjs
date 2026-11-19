@@ -162,6 +162,62 @@ export async function collect({ dateRange, token, outputDir = OUTPUT_DIR, fetchI
   return { file, counts: snapshot.counts, dateRange };
 }
 
+
+/**
+ * Collect GSC and GA4 independently for Scheduler 3. One provider outage must
+ * not discard the other provider's valid read-only metrics.
+ */
+export async function collectPartial({ dateRange, token, outputDir = OUTPUT_DIR, fetchImpl = fetch } = {}) {
+  let accessToken = token || null;
+  let tokenError = null;
+  if (!accessToken) {
+    try { accessToken = await createAccessToken({ fetchImpl }); }
+    catch (error) { tokenError = String(error.message || error); }
+  }
+
+  const [gscResult, ga4Result] = accessToken
+    ? await Promise.allSettled([
+      collectGsc(accessToken, dateRange, fetchImpl),
+      collectGa4(accessToken, dateRange, fetchImpl),
+    ])
+    : [null, null];
+
+  const gscAvailable = gscResult?.status === "fulfilled";
+  const ga4Available = ga4Result?.status === "fulfilled";
+  const gscError = tokenError || (gscResult?.status === "rejected" ? String(gscResult.reason?.message || gscResult.reason) : null);
+  const ga4Error = tokenError || (ga4Result?.status === "rejected" ? String(ga4Result.reason?.message || ga4Result.reason) : null);
+  const gsc = gscAvailable ? gscResult.value : null;
+  const ga4 = ga4Available ? ga4Result.value : null;
+
+  const snapshot = {
+    schemaVersion: 1,
+    source: "independent read-only Google Search Console and GA4 APIs",
+    property: { gsc: GSC_SITE_URL, ga4: GA4_PROPERTY_ID },
+    dateRange,
+    fetchedAt: new Date().toISOString(),
+    sourceStatus: {
+      gsc: gscAvailable ? "AVAILABLE" : "UNAVAILABLE",
+      ga4: ga4Available ? "AVAILABLE" : "UNAVAILABLE",
+    },
+    sourceErrors: { gsc: gscError, ga4: ga4Error },
+    counts: {
+      gscPageRows: gsc?.pages.length ?? null,
+      gscQueryRows: gsc?.queries.length ?? null,
+      gscPageQueryRows: gsc?.pageQueries.length ?? null,
+      gscPageCountryRows: gsc?.pagesByCountry.length ?? null,
+      gscPageDeviceRows: gsc?.pagesByDevice.length ?? null,
+      gscSearchAppearanceRows: gsc?.searchAppearance.length ?? null,
+      ga4Rows: ga4?.length ?? null,
+    },
+    gsc,
+    ga4,
+  };
+  await mkdir(outputDir, { recursive: true });
+  const file = `${outputDir}/seo-data-partial-${dateRange.startDate}-to-${dateRange.endDate}.json`;
+  await writeFile(file, `${JSON.stringify(snapshot, null, 2)}\\n`, { flag: "w" });
+  return { file, counts: snapshot.counts, dateRange, sourceStatus: snapshot.sourceStatus, sourceErrors: snapshot.sourceErrors };
+}
+
 function parseArgs(args) {
   const values = {};
   for (let index = 0; index < args.length; index += 1) {
