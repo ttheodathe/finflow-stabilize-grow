@@ -1,14 +1,12 @@
 # Three-scheduler SEO operations
 
-All schedule expressions are UTC. Kigali uses UTC+2.
+All schedules use UTC. Africa/Kigali is UTC+2.
 
-| Scheduler | UTC | Kigali | Responsibility |
-|---|---:|---:|---|
-| 1 — Search intelligence | 00:15 | 02:15 | GSC collection, evidence-based page opportunities, selected technical checks, durable opportunity records |
-| 2 — Content operations | 01:45 | 03:45 | Requires today's successful Scheduler 1 run; creates a dry-run editorial queue and records the scheduler run |
-| 3 — Performance and learning | 03:15 | 05:15 | Independently collects GSC/GA4, reports partial data and stores available aggregate snapshots |
+- **Scheduler 1 — Search intelligence:** 00:15 UTC / 02:15 Kigali. Collects GSC evidence, scores page opportunities, runs selected technical checks, and persists run and opportunity records.
+- **Scheduler 2 — Content operations:** 01:45 UTC / 03:45 Kigali. Requires a successful Scheduler 1 run for the same UTC day. It validates targets against the Markdown inventory, creates a dry-run editorial queue, and persists proposal records.
+- **Scheduler 3 — Performance and learning:** 03:15 UTC / 05:15 Kigali. Runs independently, collects available GSC and GA4 aggregates, reports partial data, and persists available performance snapshots.
 
-The three daily workflows are the only daily SEO schedulers. The existing `seo-data-collection.yml` remains manual-dispatch only. The general CI workflow is not a scheduler.
+These are the only three daily SEO scheduler workflows. The existing `seo-data-collection.yml` remains manual-dispatch only. The general CI workflow is not a scheduler.
 
 ## Safety contract
 
@@ -23,28 +21,35 @@ Missing flags resolve to safe values. Invalid values and contradictory combinati
 
 ## Approval and content operations
 
-The GitHub content adapter now delegates approval verification to `github-approval.mjs`. It checks the current open PR, exact base branch, referenced GitHub review, latest reviewer decision, reviewer repository permission, current PR head SHA, exact proposed file contents, operation marker, content hash and a seven-day approval age. A caller-supplied approval object is a locator, not proof of identity.
+The GitHub content adapter delegates approval verification to `github-approval.mjs`. It checks the current open PR, exact base branch, referenced GitHub review, latest reviewer decision, reviewer repository permission, current PR head SHA, exact proposed file contents, operation marker, content hash, and a seven-day approval age. A caller-supplied approval object is a locator, not proof of identity.
 
 The adapter supports repository Markdown create/update operations on an explicitly configured non-production staging branch. It binds approval to the exact path and content hash, stores immutable pre-update snapshots, rejects duplicate slugs and stale baselines, and writes operation records. Rollback supports new articles and updates; it checks the recorded blob SHA and refuses to overwrite a later concurrent change. Rollback is staging-only.
 
-The adapter's public URL verifier currently checks HTTP success, expected title/text and canonical URL. It does **not yet** verify Vercel deployment state/commit identity, noindex, sitemap or RSS membership. A GitHub commit is not reported as publication success unless the configured URL check passes.
+The adapter's public URL verifier currently checks HTTP success, expected title/text, and canonical URL. It does not yet verify Vercel deployment state/commit identity, noindex, sitemap, or RSS membership. A GitHub commit is not reported as publication success unless the configured URL check passes.
+
+Scheduler 2 only queues GSC targets whose slugs match existing files in `content/blog/`. Unmatched targets are reported rather than misclassified as article updates. The queue is research-required and does not generate an article without verifiable sources.
 
 ## Durable persistence
 
 The acceptance project contains the private `seo_ops` schema with 11 RLS-enabled tables. Browser roles have no schema usage or table privileges; only `service_role` is granted access. Public-schema RPC entry points are executable only by `service_role` and write to the private schema.
 
-Scheduler 1 persists its run and opportunity records. Scheduler 2 persists its run record. Scheduler 3 independently persists its run and available GSC/GA4 performance snapshots. The workflows expect repository secrets `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`; Scheduler 1 and Scheduler 2 fail closed if persistence credentials are absent. Scheduler 3 still emits its independent report when persistence is unavailable.
+The acceptance migrations provide RPCs for scheduler runs, opportunities, performance snapshots, activation snapshots, and target-bound content-operation proposals. The store client is server-only and uses `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. Scheduler 1 and Scheduler 2 fail closed if persistence credentials are absent. Scheduler 3 still emits its independent report when persistence is unavailable.
 
-The activation snapshot schema and RPC are present. A synthetic acceptance fixture verifies the proposed user-level rule using registered users, completed onboarding, and persisted invoice/expense actions. It excludes known void/cancelled/reversed invoice states, counts each user once across companies, and defines a returning activated user as having qualifying actions on at least two UTC dates.
+## Activation and attribution
 
-**Production activation is not yet connected.** The live schema inspection confirmed that Auth user creation triggers create both `profiles` and `onboarding_progress`; invoices and expenses carry `user_id` and `company_id`. The live invoice statuses observed were `draft`, `sent`, `overdue` and `paid`. The expense table has no status/reversal column, so a persisted expense row is currently treated as qualifying; that limitation must be retained in reporting. A least-privilege read-only production data credential is not configured, and no production schema or environment changes were made.
+The synthetic acceptance fixture verifies user-level counting across multiple companies and multiple users in one company. Activation requires a registered profile, completed onboarding, and at least one persisted non-void invoice or persisted expense. A returning activated user has qualifying actions on at least two distinct UTC dates. Duplicate actions on the same day do not inflate returning counts. The fixture also covers incomplete onboarding, void invoices, and deleted users.
+
+A read-only production aggregate query is available at `seo-engine/activation/production-aggregate-readonly.sql`. It emits aggregate counts only and does not select user IDs, names, emails, invoice IDs, or financial values. Scheduler 3 does not execute it automatically because a least-privilege production read-only database connection is not configured.
+
+The live schema contains `profiles.created_at`, `onboarding_progress.completed_at`, `invoices.user_id/created_at/status`, and `expenses.user_id/created_at`. The expense table has no status or reversal column. Persisted expense rows are therefore treated as qualifying, while hard-deleted rows are absent; a separately recorded offsetting expense cannot be identified as a reversal from these columns alone.
+
+Attribution remains `UNKNOWN` unless consented first-party evidence is available. GSC query data is never treated as user-level attribution.
 
 ## Current boundaries
 
-- Scheduler 2 deliberately creates review candidates, not articles. It does not generate drafts when verified research is missing.
-- Source-backed research, claim-to-source validation, full article generation and keyword-cannibalization analysis remain incomplete.
-- Content-operation records and research evidence are not yet fully written to Supabase; only scheduler runs and the currently supported opportunity/performance records are persisted.
-- Attribution remains `UNKNOWN` unless first-party consented evidence is available. GSC query data is never treated as user-level attribution.
-- Vercel branch previews are enabled. The latest verified preview deployment at the time of the previous check was READY; protected preview URL verification and article-level deployment verification remain outstanding.
-- The adapter's new approval and rollback tests are included in CI, but end-to-end staging publication has not yet been executed.
-- No live production article is created, updated, deleted or deployed by these workflows.
+- Source-backed research, claim-to-source validation, keyword-cannibalization analysis, and a complete article-drafting pipeline remain incomplete.
+- Content-operation proposals are persisted, but research records, draft revisions, authenticated approvals, deployment verifications, and rollback events are not yet fully integrated with the scheduler database.
+- The acceptance approval verifier and adapter tests do not replace a real end-to-end staging publication/update test.
+- The adapter does not yet verify Vercel deployment READY state, exact deployment commit, noindex, sitemap, or RSS behavior.
+- Production activation aggregation is not automated; the SQL query must be run through a properly authorized read-only connection.
+- No live production article is created, updated, deleted, or deployed by these workflows.
