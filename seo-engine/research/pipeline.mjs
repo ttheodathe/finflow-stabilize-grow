@@ -242,16 +242,22 @@ export function analyzeCannibalization(query, inventory, targetUrl = null) {
     const text = [item.title, item.description, item.slug, ...item.tags].join(" ");
     return { slug: item.slug, title: item.title, score: Number(similarity(query, text).toFixed(3)), url: `https://www.finflowtrack.com/blog/${item.slug}`, exactTarget: item.slug === targetSlug };
   }).sort((a,b) => b.score-a.score);
-  const target = scored.find(item => item.exactTarget) || null;
+  const exactTarget = scored.find(item => item.exactTarget) || null;
   const strongest = scored[0] || null;
-  const conflict = (target && target.score >= 0.12) || (strongest && strongest.score >= 0.42);
+  const inferredTarget = !exactTarget && strongest?.score >= 0.42 ? strongest : null;
+  const target = exactTarget || inferredTarget;
+  const conflict = Boolean(target);
+  const targetQueryMatch = !target ? "NO_STRONG_MATCH"
+    : exactTarget && target.score < 0.12 ? "EXACT_LANDING_PAGE_LOW_TEXT_OVERLAP_REVIEW_REQUIRED"
+    : exactTarget ? "EXACT_LANDING_PAGE_TEXT_OVERLAP_MATCH" : "INFERRED_EXISTING_INTENT_MATCH";
   return {
     status: conflict ? "EXISTING_INTENT_MATCH" : "NO_STRONG_MATCH",
     decision: conflict ? "UPDATE_EXISTING_ARTICLE" : "NEW_ARTICLE_CANDIDATE",
-    target: target || (strongest?.score >= 0.30 ? strongest : null),
+    target,
+    targetQueryMatch,
     related: scored.slice(0,5),
-    unresolved: conflict && !target && strongest?.score >= 0.42,
-    method: "Token-overlap screening across title, description, slug and tags; not a semantic substitute for editorial review.",
+    unresolved: !exactTarget && Boolean(inferredTarget),
+    method: "Token-overlap screening across title, description, slug and tags; exact GSC landing-page URLs take precedence, with low-overlap cases flagged for human review.",
   };
 }
 function buildDraft(candidate, pack, sourceRecords, productEvidence, internalLinks, target, now) {
