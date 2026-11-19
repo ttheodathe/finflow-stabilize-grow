@@ -124,11 +124,11 @@ if (import.meta.url === new URL(process.argv[1], "file:").href) {
     const options = parseArgs(process.argv.slice(2));
     const input = JSON.parse(await readFile(options.input, "utf8"));
     const report = buildDryRunReport(input);
-    const output = `${JSON.stringify(report, null, 2)}\\n`;
+    const output = `${JSON.stringify(report, null, 2)}\n`;
     if (options.output) await writeFile(options.output, output, { flag: "wx" });
     process.stdout.write(output);
   } catch (error) {
-    process.stderr.write(`SEO opportunity dry-run failed: ${error.message}\\n`);
+    process.stderr.write(`SEO opportunity dry-run failed: ${error.message}\n`);
     process.exitCode = 1;
   }
 }
