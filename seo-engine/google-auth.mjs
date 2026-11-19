@@ -39,7 +39,7 @@ export async function createAccessToken({
   const claims = {
     iss: account.client_email,
     scope: TOKEN_SCOPE,
-    aud: account.token_uri || TOKEN_URL,
+    aud: TOKEN_URL,
     iat: nowSeconds,
     exp: nowSeconds + 3600,
   };
@@ -49,7 +49,7 @@ export async function createAccessToken({
   signer.end();
   const assertion = `${unsigned}.${signer.sign(account.private_key).toString("base64url")}`;
 
-  const response = await fetchImpl(account.token_uri || TOKEN_URL, {
+  const response = await fetchImpl(TOKEN_URL, {
     method: "POST",
     headers: { "content-type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
