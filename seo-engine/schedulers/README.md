@@ -4,7 +4,7 @@ All schedules use UTC. Africa/Kigali is UTC+2.
 
 - **Scheduler 1 — Search intelligence:** 00:15 UTC / 02:15 Kigali. Collects GSC evidence, scores page opportunities, runs selected technical checks, and persists run and opportunity records.
 - **Scheduler 2 — Content operations:** 01:45 UTC / 03:45 Kigali. Requires a successful Scheduler 1 run for the same UTC day. It validates targets against the Markdown inventory, creates a dry-run editorial queue, and persists proposal records.
-- **Scheduler 3 — Performance and learning:** 03:15 UTC / 05:15 Kigali. Runs independently, collects available GSC and GA4 aggregates, reports partial data, and persists available performance snapshots.
+- **Scheduler 3 — Performance and learning:** 03:15 UTC / 05:15 Kigali. Runs independently, collects GSC and GA4 aggregates independently, preserves either source when the other fails, reports explicit per-source availability, and persists available performance snapshots.
 
 These are the only three daily SEO scheduler workflows. The existing `seo-data-collection.yml` remains manual-dispatch only. The general CI workflow is not a scheduler.
 
@@ -31,7 +31,7 @@ Scheduler 2 only queues GSC targets whose slugs match existing files in `content
 
 ## Durable persistence
 
-The acceptance project contains the private `seo_ops` schema with 11 RLS-enabled tables. Browser roles have no schema usage or table privileges; only `service_role` is granted access. Public-schema RPC entry points are executable only by `service_role` and write to the private schema.
+Scheduler 3 uses `collectPartial` so a GSC outage does not discard GA4 data and a GA4 outage does not discard GSC data. Unavailable provider metrics remain `null`; successful empty results remain numeric zero. `seo-engine/performance-learning.test.mjs` covers both one-source failure directions and report-level partial status.\n\nThe acceptance project contains the private `seo_ops` schema with 11 RLS-enabled tables. Browser roles have no schema usage or table privileges; only `service_role` is granted access. Public-schema RPC entry points are executable only by `service_role` and write to the private schema.
 
 The acceptance migrations provide RPCs for scheduler runs, opportunities, performance snapshots, activation snapshots, and target-bound content-operation proposals. The store client is server-only and uses `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. Scheduler 1 and Scheduler 2 fail closed if persistence credentials are absent. Scheduler 3 still emits its independent report when persistence is unavailable.
 
