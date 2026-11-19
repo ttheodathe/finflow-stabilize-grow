@@ -422,7 +422,8 @@ export async function runResearchPipeline({
       if (store) {
         const scheduledFor = now.toISOString().slice(0,10);
         const operationKey = `research:${candidate.id || draft.slug}:${freshness.reportingPeriodEnd}:${hash.slice(0,16)}`;
-        if (!candidate.persistedOpportunityId || !/^[0-9a-f-]{36}$/i.test(candidate.persistedOpportunityId)) {
+        if (typeof store.recordResearchRecord === "function"
+          && (!candidate.persistedOpportunityId || !/^[0-9a-f-]{36}$/i.test(candidate.persistedOpportunityId))) {
           throw new Error("Durable research persistence requires the UUID of the persisted Scheduler 1 opportunity.");
         }
         const operationResult = await store.recordContentOperation({
