@@ -1,5 +1,5 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
-import { collect } from "../collect.mjs";
+import { collectPartial } from "../collect.mjs";
 import { resolveDateRange } from "../normalize.mjs";
 import { createSupabaseSeoStoreFromEnv } from "../persistence/supabase-store.mjs";
 
@@ -11,7 +11,7 @@ export async function runPerformanceLearning({ dateRange = resolveDateRange(), c
   let collectionError = null;
   let sourceFile = null;
   try {
-    const result = await collectFn({ dateRange, outputDir: OUTPUT });
+    const result = await collectFn({ dateRange, outputDir });
     sourceFile = result.file;
     snapshot = JSON.parse(await readFile(result.file, "utf8"));
   } catch (error) {
@@ -63,7 +63,7 @@ export async function runPerformanceLearning({ dateRange = resolveDateRange(), c
       "The production expenses table has no status/reversal column; persisted expense rows are treated as qualifying, and hard-deleted rows are absent.",
     ],
   };
-  const store = createSupabaseSeoStoreFromEnv(process.env);
+  const store = createSupabaseSeoStoreFromEnv(env);
   let persistence = { status: "NOT_CONFIGURED", schedulerRunId: null };
   if (store) {
     const scheduledFor = new Date().toISOString().slice(0, 10);
@@ -88,7 +88,7 @@ export async function runPerformanceLearning({ dateRange = resolveDateRange(), c
       }
       await store.recordRun({
         schedulerKey: "PERFORMANCE_AND_LEARNING", scheduledFor, attempt,
-        status: snapshot ? "SUCCEEDED" : "PARTIAL",
+        status: gscAvailable && ga4Available ? "SUCCEEDED" : "PARTIAL",
         output: { search, analytics, productAcquisition: report.productAcquisition, dataQuality: report.dataQuality },
         errorSummary: collectionError,
       });
@@ -106,7 +106,7 @@ export async function runPerformanceLearning({ dateRange = resolveDateRange(), c
     }
   }
   report.persistence = persistence;
-  const path = `${OUTPUT}/scheduler-3-performance-report.json`;
+  const path = `${outputDir}/scheduler-3-performance-report.json`;
   await writeFile(path, JSON.stringify(report, null, 2) + "\n", { flag: "w" });
   return { path, searchStatus: search.status, analyticsStatus: analytics.status, productAcquisition: report.productAcquisition.status, persistenceStatus: persistence.status };
 }
