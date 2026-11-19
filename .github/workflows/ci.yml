@@ -324,8 +324,8 @@ jobs:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
-      GSC_SITE_URL: ${{ secrets.GSC_SITE_URL }}
-      GA4_PROPERTY_ID: ${{ secrets.GA4_PROPERTY_ID }}
+      GSC_SITE_URL: ${{ vars.GSC_SITE_URL }}
+      GA4_PROPERTY_ID: ${{ vars.GA4_PROPERTY_ID }}
     steps:
       - name: Checkout recovery branch
         uses: actions/checkout@v4

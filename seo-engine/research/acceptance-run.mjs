@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { createSupabaseSeoStoreFromEnv } from "../persistence/supabase-store.mjs";
+import { collect } from "../collect.mjs";
 import { runContentOperations } from "../schedulers/content-operations.mjs";
 import { runSearchIntelligence } from "../schedulers/search-intelligence.mjs";
 
@@ -15,23 +16,23 @@ const TARGET_QUERY = "is it free bookkeeping platforms with reporting features?"
 const TARGET_SLUG = "free-accounting-software-for-small-business";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-function assertAcceptanceEnvironment() {
-  assert.ok(process.env.SUPABASE_URL, "SUPABASE_URL must be configured for the acceptance project.");
-  const projectUrl = new URL(process.env.SUPABASE_URL);
-  assert.equal(projectUrl.hostname.split(".")[0], ACCEPTANCE_PROJECT_REF, "Refusing to write outside the isolated acceptance Supabase project.");
+function assertProductionSafeguards() {
   assert.equal(process.env.SEO_OPS_ALLOWED_PROJECT_REF, ACCEPTANCE_PROJECT_REF);
   assert.equal(process.env.DRY_RUN, "true");
   assert.equal(process.env.PUBLISH_ENABLED, "false");
   assert.equal(process.env.CONTENT_UPDATE_ENABLED, "false");
   assert.equal(process.env.PRODUCTION_CONTENT_WRITE_ALLOWED, "false");
+}
+function assertAcceptanceProject() {
+  assert.ok(process.env.SUPABASE_URL, "SUPABASE_URL must be configured for the acceptance project.");
   assert.ok(process.env.SUPABASE_SERVICE_ROLE_KEY, "Acceptance Supabase service-role credential is required.");
+  const projectUrl = new URL(process.env.SUPABASE_URL);
+  assert.equal(projectUrl.hostname.split(".")[0], ACCEPTANCE_PROJECT_REF, "Refusing to write outside the isolated acceptance Supabase project.");
 }
 
 const artifactPath = process.argv[2];
 assert.ok(artifactPath, "Pass the downloaded historical GSC artifact JSON path.");
-assertAcceptanceEnvironment();
-const store = createSupabaseSeoStoreFromEnv(process.env);
-assert.ok(store, "Acceptance Supabase store could not be configured.");
+assertProductionSafeguards();
 
 const original = JSON.parse(await readFile(artifactPath, "utf8"));
 assert.equal(original.fetchedAt, HISTORICAL_FETCHED_AT, "Historical artifact retrieval timestamp changed.");
@@ -43,6 +44,71 @@ const pageRows = original.gsc.pages.filter(row => row.page === TARGET_URL);
 const pageQueryRows = original.gsc.pageQueries.filter(row => row.page === TARGET_URL);
 assert.ok(pageRows.length > 0, "Historical GSC artifact does not contain the target landing page.");
 assert.ok(pageQueryRows.some(row => row.query === TARGET_QUERY), "Historical GSC artifact does not contain the selected software-selection query.");
+
+const dailyQueryRows = pageQueryRows.filter(row => row.query === TARGET_QUERY);
+const historicalClicks = dailyQueryRows.reduce((sum,row)=>sum+(Number.isFinite(row.clicks)?row.clicks:0),0);
+const historicalImpressions = dailyQueryRows.reduce((sum,row)=>sum+(Number.isFinite(row.impressions)?row.impressions:0),0);
+const historicalWeightedPosition = dailyQueryRows.reduce((sum,row)=>sum+(Number.isFinite(row.position)&&Number.isFinite(row.impressions)?row.position*row.impressions:0),0);
+const historicalQueryMetrics = {
+  clicks: historicalClicks,
+  impressions: historicalImpressions,
+  ctr: historicalImpressions > 0 ? historicalClicks / historicalImpressions : 0,
+  position: historicalImpressions > 0 ? historicalWeightedPosition / historicalImpressions : null,
+};
+assert.equal(historicalQueryMetrics.clicks,0);
+assert.equal(historicalQueryMetrics.impressions,35);
+assert.ok(Math.abs(historicalQueryMetrics.position - 8.742857142857142) < 0.01);
+
+const hasAcceptanceSupabase = Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+if (!hasAcceptanceSupabase) {
+  const freshDir = path.resolve("seo-output/acceptance/fresh-readonly");
+  let freshReadOnlyCollection = { status: "UNAVAILABLE_OR_FAILED" };
+  try {
+    const freshResult = await collect({ outputDir: freshDir });
+    const freshSnapshot = JSON.parse(await readFile(freshResult.file,"utf8"));
+    freshReadOnlyCollection = {
+      status: "COLLECTED_READ_ONLY",
+      file: freshResult.file,
+      fetchedAt: freshSnapshot.fetchedAt,
+      dateRange: freshSnapshot.dateRange,
+      gscCounts: {
+        pages: freshSnapshot.gsc?.pages?.length || 0,
+        queries: freshSnapshot.gsc?.queries?.length || 0,
+        pageQueries: freshSnapshot.gsc?.pageQueries?.length || 0,
+      },
+      supplementaryAnalytics: {
+        status: freshSnapshot.sourceStatus?.ga4 || "UNKNOWN",
+        error: freshSnapshot.sourceErrors?.ga4 || null,
+      },
+    };
+  } catch (error) {
+    freshReadOnlyCollection = { status: "UNAVAILABLE_OR_FAILED", error: String(error.message || error) };
+  }
+  const blockedSummary = {
+    status: "BLOCKED_MISSING_ACCEPTANCE_SUPABASE_CREDENTIALS",
+    blocker: "GitHub Actions did not provide SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY. The historical artifact was verified, but no acceptance database write or Scheduler 2 execution was attempted.",
+    historicalArtifact: {
+      workflowRunId: HISTORICAL_RUN_ID, fetchedAt: original.fetchedAt,
+      reportingPeriod: original.dateRange, evidenceMode: "HISTORICAL_GSC_ARTIFACT",
+      targetUrl: TARGET_URL, query: TARGET_QUERY, metrics: historicalQueryMetrics,
+    },
+    freshReadOnlyCollection,
+    productionSafeguards: {
+      DRY_RUN: process.env.DRY_RUN, PUBLISH_ENABLED: process.env.PUBLISH_ENABLED,
+      CONTENT_UPDATE_ENABLED: process.env.CONTENT_UPDATE_ENABLED,
+      PRODUCTION_CONTENT_WRITE_ALLOWED: process.env.PRODUCTION_CONTENT_WRITE_ALLOWED,
+      acceptanceProjectRef: ACCEPTANCE_PROJECT_REF, productionChanged: false,
+    },
+  };
+  await mkdir(path.resolve("seo-output/acceptance"),{recursive:true});
+  await writeFile(path.resolve("seo-output/acceptance/acceptance-summary.json"),JSON.stringify(blockedSummary,null,2)+"\\n");
+  console.log(JSON.stringify(blockedSummary,null,2));
+  process.exit(0);
+}
+
+assertAcceptanceProject();
+const store = createSupabaseSeoStoreFromEnv(process.env);
+assert.ok(store, "Acceptance Supabase store could not be configured.");
 
 const historicalDir = path.resolve("seo-output/acceptance/historical");
 await mkdir(historicalDir, { recursive: true });
