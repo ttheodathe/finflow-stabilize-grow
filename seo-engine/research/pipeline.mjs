@@ -493,6 +493,7 @@ function buildDraft(candidate, pack, sourceRecords, productEvidence, internalLin
     const updatedSection = [
       heading,
       "",
+      comparisonTable,
       ...pack.sections.map(([sectionHeading, body]) => `### ${sectionHeading}\n\n${body}`),
       productLine,
       "### Official plan references",
@@ -700,6 +701,10 @@ export async function runResearchPipeline({
           sourceCollectionRunId:candidate.sourceCollectionRunId,
           persistedOpportunityId:candidate.persistedOpportunityId,
           candidate, intent, freshness, cannibalization, existingContentComparison:existingComparisons,
+          editorialDecision:base.editorialDecision,
+          editorialReviewQuestions:base.editorialReviewQuestions,
+          sourcePackCompatibility:base.sourcePackCompatibility,
+          sourcePackContext:base.sourcePackContext,
           sources:sourceRecords, claims:draft.claims, productEvidence:draft.productEvidence,
           quality:base.quality, draftMarkdown:draft.content,
           publicationStatus:"draft", execution:"DRY_RUN_ONLY",

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { mkdtemp, mkdir, writeFile, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import matter from "gray-matter";
 import { runResearchPipeline, freshnessFor, analyzeCannibalization, retrieveSource, detectUnsupportedNumericClaims, findUnsupportedNumericClaims, classifySearchIntent, selectCompatibleSourcePack } from "./pipeline.mjs";
 
 const now=new Date("2026-11-19T10:00:00.000Z");
@@ -263,6 +264,7 @@ test("the exact GSC landing page is assessed as an update, not a new article", a
     assert.equal(item.quality.productCapabilities, "VERIFIED_FROM_REPOSITORY");
     assert.match(item.draft.content, /What Does "Free Accounting Software" Actually Mean\?/);
     assert.match(item.draft.content, /ZipBooks Starter/);
+    assert.match(item.draft.content, /\| Product \| What the free plan lists \| Limits or costs to verify \|/);
     assert.match(item.draft.content, /Zoho Books US Free/);
     assert.equal(matter(item.draft.content).data.updatedAt, "2026-11-19");
     assert.equal(matter(item.draft.content).data.draft, true);
