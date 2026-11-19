@@ -55,13 +55,15 @@ test("three fixture opportunities generate unpublished source-mapped drafts",asy
  const env=await setup();
  try{
   const report=await runResearchPipeline({opportunities:fixtures,contentDir:env.contentDir,outputDir:env.outputDir,fetchImpl:mockFetch,now,store:null,allowFixture:true});
-  assert.equal(report.readyDraftCount,3,JSON.stringify(report.results.map(r=>({status:r.status,reasons:r.rejectionReasons,quality:r.quality}))));
+  assert.equal(report.draftGeneratedCount,3,JSON.stringify(report.results.map(r=>({status:r.status,reasons:r.rejectionReasons,quality:r.quality}))));
+  assert.equal(report.readyDraftCount,0);
   for(const result of report.results){
    const markdown=await readFile(result.draftPath,"utf8");
    assert.match(markdown,/publicationStatus: "draft"/);
    assert.ok(result.draft.claims.every(claim=>claim.sourceUrls.length>0));
    assert.ok(result.quality.verifiedSourceCount>=2);
    assert.equal(result.persistence,"LOCAL_DRY_RUN_ONLY");
+   assert.equal(result.status,"DRAFT_GENERATED_NOT_ELIGIBLE");
   }
  }finally{await rm(env.root,{recursive:true,force:true});}
 });
@@ -92,20 +94,61 @@ test("unresolved cannibalization is not silently converted into a new article",(
  assert.equal(result.decision,"UPDATE_EXISTING_ARTICLE");
 });
 
-test("draft queue persistence is stable across duplicate runs and stores full evidence",async()=>{
- const env=await setup(), calls=[];
- const store={recordContentOperation:async input=>{calls.push(input);return "fixture-operation-id";}};
+test("draft queue persistence is idempotent and requires independent operation, research and revision readback",async()=>{
+ const env=await setup(), calls={operations:[],research:[],revisions:[]};
+ const operationIds=new Map(),researchIds=new Map(),revisionIds=new Map(),operationPayloads=new Map();
+ const store={
+  recordContentOperation:async input=>{
+   calls.operations.push(input);
+   if(!operationIds.has(input.operationKey)) operationIds.set(input.operationKey,"00000000-0000-4000-8000-000000000456");
+   operationPayloads.set(input.operationKey,input.payload);
+   return operationIds.get(input.operationKey);
+  },
+  recordResearchRecord:async input=>{
+   const key=input.opportunityId+":"+input.sourceUrl;
+   if(!researchIds.has(key)) researchIds.set(key,"00000000-0000-4000-8000-"+String(100+researchIds.size).padStart(12,"0"));
+   calls.research=[...researchIds].map(([k,id])=>({id,source_url:k.split(":").slice(1).join(":"),opportunity_id:k.split(":")[0]}));
+   return researchIds.get(key);
+  },
+  recordContentRevision:async input=>{
+   if(!revisionIds.has(input.contentHash)) revisionIds.set(input.contentHash,"00000000-0000-4000-8000-000000000777");
+   calls.revisions=[...revisionIds].map(([hash,id])=>({id,content_hash:hash,markdown:input.markdown,revision_state:"PROPOSED",operation_id:input.operationId}));
+   return revisionIds.get(input.contentHash);
+  },
+  getContentOperation:async({operationId})=>{
+   const entry=[...operationPayloads.entries()].find(([,payload])=>payload.workflowState==="PERSISTED_PENDING_READBACK"||payload.workflowState==="READY_FOR_HUMAN_REVIEW");
+   return entry?{id:operationId,operation_key:entry[0],status:"PROPOSED",payload:entry[1]}:null;
+  },
+  listResearchRecords:async({opportunityId})=>calls.research.filter(row=>row.opportunity_id===opportunityId),
+  listContentRevisions:async({operationId})=>calls.revisions.filter(row=>row.operation_id===operationId),
+ };
+ const persistedFixtures=fixtures.map((item,index)=>({
+  ...item,
+  id:"00000000-0000-4000-8000-00000000000"+(index+1),
+  persistedOpportunityId:"00000000-0000-4000-8000-00000000001"+(index+1),
+ }));
  try{
-  await runResearchPipeline({opportunities:fixtures,contentDir:env.contentDir,outputDir:env.outputDir,fetchImpl:mockFetch,now,store,allowFixture:true});
-  await runResearchPipeline({opportunities:fixtures,contentDir:env.contentDir,outputDir:env.outputDir,fetchImpl:mockFetch,now,store,allowFixture:true});
-  assert.equal(calls.length,6);
+  const first=await runResearchPipeline({opportunities:persistedFixtures,contentDir:env.contentDir,outputDir:env.outputDir,fetchImpl:mockFetch,now,store,allowFixture:true});
+  const second=await runResearchPipeline({opportunities:persistedFixtures,contentDir:env.contentDir,outputDir:env.outputDir,fetchImpl:mockFetch,now,store,allowFixture:true});
+  assert.equal(first.readyDraftCount,3);
+  assert.equal(second.readyDraftCount,3);
+  assert.equal(calls.operations.length,18);
+  for(const result of second.results){
+   assert.equal(result.persistence.status,"PERSISTED");
+   assert.equal(result.persistence.independentReadback.verified,true);
+   assert.ok(result.persistence.researchRecordIds.length>=2);
+   assert.ok(result.persistence.revisionId);
+   assert.equal(result.status,"DRAFT_READY_FOR_HUMAN_REVIEW");
+  }
   for(let i=0;i<3;i++){
-   assert.equal(calls[i].operationKey,calls[i+3].operationKey);
-   assert.equal(calls[i].status,"DRAFTED");
-   assert.equal(calls[i].payload.publicationStatus,"draft");
-   assert.equal(calls[i].payload.execution,"DRY_RUN_ONLY");
-   assert.ok(calls[i].payload.sources.length>=2);
-   assert.ok(calls[i].payload.draftMarkdown.includes('publicationStatus: "draft"'));
+   const firstOperation=calls.operations[i*3];
+   const repeatedOperation=calls.operations[9+i*3];
+   assert.equal(firstOperation.operationKey,repeatedOperation.operationKey);
+   assert.equal(firstOperation.status,"PROPOSED");
+   assert.equal(firstOperation.payload.publicationStatus,"draft");
+   assert.equal(firstOperation.payload.execution,"DRY_RUN_ONLY");
+   assert.ok(firstOperation.payload.sources.length>=2);
+   assert.ok(firstOperation.payload.draftMarkdown.includes('publicationStatus: "draft"'));
   }
  }finally{await rm(env.root,{recursive:true,force:true});}
 });

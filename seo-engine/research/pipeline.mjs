@@ -10,6 +10,13 @@ const CONTENT_DIR = "content/blog";
 const RESEARCH_DIR = "content/operations/research";
 const MAX_EXCERPT_WORDS = 25;
 const STALE_AFTER_DAYS = 30;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+function requireUuid(value, label) {
+  if (typeof value !== "string" || !UUID_PATTERN.test(value)) {
+    throw new Error(`${label} did not return a valid persisted UUID.`);
+  }
+  return value;
+}
 const SOURCE_PACKS = [
   {
     id: "recordkeeping",
@@ -577,27 +584,35 @@ export async function runResearchPipeline({
       base.draftPath = draftPath;
       base.contentHash = hash;
       if (store) {
+        requireUuid(candidate.persistedOpportunityId, "Persisted Scheduler 1 opportunity");
+        for (const method of ["recordContentOperation","recordResearchRecord","recordContentRevision","getContentOperation","listResearchRecords","listContentRevisions"]) {
+          if (typeof store[method] !== "function") {
+            throw new Error(`Durable draft persistence requires store.${method} for independent readback.`);
+          }
+        }
         const scheduledFor = now.toISOString().slice(0,10);
         const operationKey = `research:${candidate.id || draft.slug}:${freshness.reportingPeriodEnd}:${hash.slice(0,16)}`;
-        if (!candidate.persistedOpportunityId || !/^[0-9a-f-]{36}$/i.test(candidate.persistedOpportunityId)) {
-          throw new Error("Durable research persistence requires the UUID of the persisted Scheduler 1 opportunity.");
-        }
-        const operationResult = await store.recordContentOperation({
+        const operationInput = {
           operationKey, operationType,
-          targetPath:`content/blog/${draft.slug}.md`, slug:draft.slug, status:"DRAFTED",
+          targetPath:`content/blog/${draft.slug}.md`, slug:draft.slug, status:"PROPOSED",
           proposedContentHash:hash,
-          payload:{
-            pipelineVersion:"b7.1", evidenceMode:candidate.evidenceMode,
-            sourceCollectionRunId:candidate.sourceCollectionRunId,
-            candidate, intent, freshness, cannibalization, existingContentComparison:existingComparisons,
-            sources:sourceRecords, claims:draft.claims, productEvidence:draft.productEvidence,
-            quality:base.quality, draftMarkdown:draft.content,
-            publicationStatus:"draft", execution:"DRY_RUN_ONLY",
-            createdAt:now.toISOString(), scheduledFor,
-          },
-        });
-        const operationId = Array.isArray(operationResult) ? operationResult[0] : operationResult;
-        if (typeof store.recordResearchRecord === "function") {
+        };
+        const operationPayload = {
+          pipelineVersion:"b7.2", workflowState:"RESEARCHING",
+          evidenceMode:candidate.evidenceMode,
+          sourceCollectionRunId:candidate.sourceCollectionRunId,
+          persistedOpportunityId:candidate.persistedOpportunityId,
+          candidate, intent, freshness, cannibalization, existingContentComparison:existingComparisons,
+          sources:sourceRecords, claims:draft.claims, productEvidence:draft.productEvidence,
+          quality:base.quality, draftMarkdown:draft.content,
+          publicationStatus:"draft", execution:"DRY_RUN_ONLY",
+          createdAt:now.toISOString(), scheduledFor,
+        };
+        let operationId = null;
+        try {
+          operationId = requireUuid(await store.recordContentOperation({
+            ...operationInput, payload:operationPayload,
+          }), "Content operation persistence");
           const records = [...sourceRecords];
           if (productEvidence) records.push({
             url: "https://www.finflowtrack.com/pricing",
@@ -605,29 +620,94 @@ export async function runResearchPipeline({
             publisher: "FinFlow Track", publishedAt: null, retrievedAt: now.toISOString(),
             status: "FIRST_PARTY_REPOSITORY_VERIFIED",
           });
+          const researchRecordIds = [];
           for (const source of records) {
             const mappedClaims = draft.claims.filter(claim => claim.sourceUrls.includes(source.url));
-            await store.recordResearchRecord({
+            const researchRecordId = requireUuid(await store.recordResearchRecord({
               opportunityId: candidate.persistedOpportunityId, sourceUrl: source.url,
               sourceTitle: source.sourceTitle || source.publisher || source.url,
               sourcePublishedAt: source.publishedAt || null,
               retrievedAt: source.retrievedAt || now.toISOString(),
               supportedClaims: mappedClaims.filter(claim => claim.verificationStatus !== "UNVERIFIED"),
               unresolvedClaims: mappedClaims.filter(claim => claim.verificationStatus === "UNVERIFIED"),
-            });
+            }), "Research record persistence");
+            researchRecordIds.push(researchRecordId);
           }
-        }
-        if (typeof store.recordContentRevision === "function") {
-          if (typeof operationId !== "string" || !/^[0-9a-f-]{36}$/i.test(operationId)) {
-            throw new Error("Content operation persistence did not return a valid operation UUID for revision storage.");
+          const revisionId = requireUuid(await store.recordContentRevision({
+            operationId, revisionNumber:1, contentHash:hash,
+            markdown:draft.content, revisionState:"PROPOSED",
+          }), "Content revision persistence");
+
+          const pendingReadbackPayload = {
+            ...operationPayload,
+            workflowState:"PERSISTED_PENDING_READBACK",
+            researchRecordIds, revisionId,
+          };
+          const pendingOperationId = requireUuid(await store.recordContentOperation({
+            ...operationInput, payload:pendingReadbackPayload,
+          }), "Content operation state persistence");
+          if (pendingOperationId !== operationId) throw new Error("Content operation idempotency changed the operation UUID.");
+
+          const [operationReadback,researchReadback,revisionReadback] = await Promise.all([
+            store.getContentOperation({operationId}),
+            store.listResearchRecords({opportunityId:candidate.persistedOpportunityId}),
+            store.listContentRevisions({operationId}),
+          ]);
+          if (!operationReadback || operationReadback.id !== operationId
+            || operationReadback.status !== "PROPOSED"
+            || operationReadback.payload?.workflowState !== "PERSISTED_PENDING_READBACK") {
+            throw new Error("Independent content-operation readback did not confirm the persisted proposal state.");
           }
-          await store.recordContentRevision({
-            operationId, revisionNumber: 1, contentHash: hash,
-            markdown: draft.content, revisionState: "PROPOSED",
-          });
+          const readResearchIds = new Set(researchReadback.map(record => record.id));
+          if (researchRecordIds.some(id => !readResearchIds.has(id))) {
+            throw new Error("Independent research readback did not confirm every persisted source record.");
+          }
+          const revision = revisionReadback.find(item => item.id === revisionId);
+          if (!revision || revision.content_hash !== hash || revision.markdown !== draft.content
+            || revision.revision_state !== "PROPOSED") {
+            throw new Error("Independent revision readback did not confirm the complete immutable draft.");
+          }
+
+          const readyPayload = {
+            ...pendingReadbackPayload,
+            workflowState:"READY_FOR_HUMAN_REVIEW",
+            independentReadback:{
+              verified:true, verifiedAt:now.toISOString(),
+              operation:true, researchRecords:true, revision:true,
+            },
+          };
+          const readyOperationId = requireUuid(await store.recordContentOperation({
+            ...operationInput, payload:readyPayload,
+          }), "Human-review eligibility persistence");
+          if (readyOperationId !== operationId) throw new Error("Human-review state update returned a different operation UUID.");
+          const finalReadback = await store.getContentOperation({operationId});
+          if (!finalReadback || finalReadback.id !== operationId
+            || finalReadback.payload?.workflowState !== "READY_FOR_HUMAN_REVIEW"
+            || finalReadback.payload?.independentReadback?.verified !== true) {
+            throw new Error("Final independent readback did not confirm human-review eligibility.");
+          }
+          base.persistence = {
+            status:"PERSISTED", operationId, researchRecordIds, revisionId,
+            independentReadback:readyPayload.independentReadback,
+          };
+          base.status = "DRAFT_READY_FOR_HUMAN_REVIEW";
+        } catch (error) {
+          if (operationId) {
+            await store.recordContentOperation({
+              ...operationInput,
+              payload:{
+                ...operationPayload, workflowState:"FAILED",
+                failureSummary:String(error.message || error),
+                failedAt:now.toISOString(),
+              },
+            }).catch(() => {});
+          }
+          throw error;
         }
-        base.persistence = "PERSISTED";
-      } else base.persistence = "LOCAL_DRY_RUN_ONLY";
+      } else {
+        base.persistence = "LOCAL_DRY_RUN_ONLY";
+        base.status = "DRAFT_GENERATED_NOT_ELIGIBLE";
+      }
     }
     results.push(base);
   }
@@ -637,12 +717,14 @@ export async function runResearchPipeline({
     evidencePolicy:"GSC evidence is never fabricated. Fixture evidence is clearly marked and cannot enter scheduled runs.",
     productCapabilities:VERIFIED_PRODUCT,
     candidateCount:results.length,
+    draftGeneratedCount:results.filter(item=>item.draft !== null).length,
     readyDraftCount:results.filter(item=>item.status==="DRAFT_READY_FOR_HUMAN_REVIEW").length,
+    pendingReadbackCount:results.filter(item=>item.status==="PERSISTED_PENDING_READBACK").length,
     rejectedCount:results.filter(item=>item.status==="REJECTED").length,
     results,
   };
   const reportPath=path.join(outputDir,"research-pipeline-report.json");
   await writeFile(reportPath,JSON.stringify(report,null,2)+"\n");
-  return {reportPath,results,readyDraftCount:report.readyDraftCount,rejectedCount:report.rejectedCount};
+  return {reportPath,results,draftGeneratedCount:report.draftGeneratedCount,readyDraftCount:report.readyDraftCount,pendingReadbackCount:report.pendingReadbackCount,rejectedCount:report.rejectedCount};
 }
 export { SOURCE_PACKS, VERIFIED_PRODUCT };
