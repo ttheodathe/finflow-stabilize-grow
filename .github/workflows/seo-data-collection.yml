@@ -49,10 +49,12 @@ jobs:
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
           GSC_SITE_URL: ${{ vars.GSC_SITE_URL }}
           GA4_PROPERTY_ID: ${{ vars.GA4_PROPERTY_ID }}
+          START_DATE: ${{ inputs.start_date }}
+          END_DATE: ${{ inputs.end_date }}
         run: |
           args=()
-          if [ -n "${{ inputs.start_date }}" ]; then args+=(--start-date "${{ inputs.start_date }}"); fi
-          if [ -n "${{ inputs.end_date }}" ]; then args+=(--end-date "${{ inputs.end_date }}"); fi
+          if [ -n "$START_DATE" ]; then args+=(--start-date "$START_DATE"); fi
+          if [ -n "$END_DATE" ]; then args+=(--end-date "$END_DATE"); fi
           node seo-engine/collect.mjs "${args[@]}"
 
       - name: Upload private workflow artifact
