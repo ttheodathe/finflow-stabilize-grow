@@ -7,37 +7,55 @@ const OUTPUT = process.env.SEO_OUTPUT_DIR || "seo-output";
 
 function clamp(value) { return Math.max(0, Math.min(5, value)); }
 
-function scorePage(page, queries) {
-  const impressions = page.impressions || 0;
-  const ctr = page.ctr || 0;
-  const position = page.position || 0;
-  const queryRows = queries.filter((row) => row.page === page.page);
-  const relevant = queryRows.filter((row) => /account|invoice|expense|bookkeep|cash flow|receivable|payable|freelanc|small business/i.test(row.query || ""));
+export function aggregatePageQueries(rows = []) {
+  const grouped = new Map();
+  for (const row of rows) {
+    if (typeof row.page !== "string" || typeof row.query !== "string" || !row.query.trim()) continue;
+    const key = `${row.page}\u0000${row.query}`;
+    const current = grouped.get(key) || { page: row.page, query: row.query, clicks: 0, impressions: 0, positionWeighted: 0, positionImpressions: 0 };
+    current.clicks += Number(row.clicks ?? 0);
+    current.impressions += Number(row.impressions ?? 0);
+    const impressions = Number(row.impressions ?? 0);
+    const position = Number(row.position);
+    if (Number.isFinite(position) && impressions > 0) {
+      current.positionWeighted += position * impressions;
+      current.positionImpressions += impressions;
+    }
+    grouped.set(key, current);
+  }
+  return [...grouped.values()].map(row => ({
+    page: row.page, query: row.query, clicks: row.clicks, impressions: row.impressions,
+    ctr: row.impressions > 0 ? row.clicks / row.impressions : null,
+    position: row.positionImpressions > 0 ? row.positionWeighted / row.positionImpressions : null,
+  })).sort((a,b) => b.impressions - a.impressions);
+}
+
+export function scorePage(page, queries) {
+  const metricsComplete = [page.clicks, page.impressions, page.ctr, page.position].every(Number.isFinite) && page.impressions > 0;
+  const impressions = Number.isFinite(page.impressions) ? page.impressions : 0;
+  const ctr = Number.isFinite(page.ctr) ? page.ctr : 0;
+  const position = Number.isFinite(page.position) ? page.position : 0;
+  const queryRows = queries.filter(row => row.page === page.page);
+  const relevant = queryRows.filter(row => /account|invoice|expense|bookkeep|cash flow|receivable|payable|freelanc|small business/i.test(row.query || ""));
   const intentFit = relevant.length > 0 ? 4 : 1;
   const gscOpportunity = clamp(Math.log10(impressions + 1) * 1.5);
   const ctrOpportunity = clamp(ctr < 0.02 && impressions >= 20 ? 4 : ctr < 0.05 ? 3 : 1);
   const positionOpportunity = clamp(position >= 4 && position <= 20 ? 4 : position > 20 && position <= 40 ? 2 : position > 0 ? 1 : 0);
   const productFit = relevant.length ? 4 : 1;
   const effort = 3;
-  const confidence = impressions === null ? 0 : impressions >= 50 ? 4 : impressions >= 10 ? 3 : 1;
+  const confidence = !metricsComplete ? 0 : impressions >= 50 ? 4 : impressions >= 10 ? 3 : 1;
   const score = Math.round(((gscOpportunity + ctrOpportunity + positionOpportunity + intentFit + productFit + effort + confidence) / 35) * 100);
   return {
     id: `gsc-${Buffer.from(page.page).toString("base64url").slice(0, 24)}`,
-    targetUrl: page.page,
-    action: "REVIEW_EXISTING_PAGE",
-    score,
-    confidence: confidence / 5,
+    targetUrl: page.page, action: "REVIEW_EXISTING_PAGE", score, confidence: confidence / 5,
     evidence: {
-      source: "Google Search Console",
-      dateRange: page.dateRange || null,
-      clicks: page.clicks,
-      impressions,
-      ctr,
-      averagePosition: position,
+      source: "Google Search Console", dateRange: page.dateRange || null,
+      sourceCollectionAt: page.sourceCollectionAt || null,
+      clicks: page.clicks, impressions, ctr, averagePosition: position,
       relevantQueryCount: relevant.length,
-      sampleQueries: relevant.slice(0, 10).map((row) => ({ query: row.query, clicks: row.clicks, impressions: row.impressions, ctr: row.ctr, position: row.position })),
+      sampleQueries: relevant.slice(0,10).map(row => ({query:row.query,clicks:row.clicks,impressions:row.impressions,ctr:row.ctr,position:row.position})),
     },
-    scoring: { gscOpportunity, ctrOpportunity, positionOpportunity, intentFit, productFit, effort, confidence },
+    scoring: {gscOpportunity,ctrOpportunity,positionOpportunity,intentFit,productFit,effort,confidence},
     decision: metricsComplete && impressions >= 10 && relevant.length > 0 ? "REVIEW_REQUIRED" : "LOW_EVIDENCE",
     createdAt: new Date().toISOString(),
   };
@@ -124,12 +142,12 @@ export async function runSearchIntelligence({ dateRange = resolveDateRange(), co
     current.positionImpressions += row.impressions;
     pages.set(row.page, current);
   }
-  const queries = snapshot.gsc.pageQueries;
+  const queries = aggregatePageQueries(snapshot.gsc.pageQueries);
   const pageValues = [...pages.values()];
   const opportunities = pageValues.map((page) => {
     page.ctr = page.impressions ? page.clicks / page.impressions : 0;
     page.position = page.positionImpressions ? page.positionWeighted / page.positionImpressions : 0;
-    return scorePage({ ...page, dateRange }, queries);
+    return scorePage({ ...page, dateRange, sourceCollectionAt: snapshot.fetchedAt || null }, queries);
   }).sort((a, b) => b.score - a.score);
   const technical = await checkTechnicalUrls(
     [...pageValues].sort((a, b) => b.impressions - a.impressions).map((page) => page.page),
@@ -149,7 +167,7 @@ export async function runSearchIntelligence({ dateRange = resolveDateRange(), co
     try {
       schedulerRunId = await store.recordRun({
         schedulerKey: "SEARCH_INTELLIGENCE", scheduledFor, attempt,
-        status: "RUNNING", output: { dateRange },
+        status: "RUNNING", output: { dateRange, source: "Google Search Console", sourceCollectionAt: snapshot.fetchedAt || null },
       });
       for (const opportunity of opportunities) {
         await store.recordOpportunity({
@@ -165,7 +183,7 @@ export async function runSearchIntelligence({ dateRange = resolveDateRange(), co
       await store.recordRun({
         schedulerKey: "SEARCH_INTELLIGENCE", scheduledFor, attempt,
         status: "SUCCEEDED",
-        output: { opportunityCount: opportunities.length, technicalIssueCount: technical.confirmedIssueCount, dateRange },
+        output: { opportunityCount: opportunities.length, technicalIssueCount: technical.confirmedIssueCount, dateRange, source: "Google Search Console", sourceCollectionAt: snapshot.fetchedAt || null },
       });
       persistence = { status: "PERSISTED", schedulerRunId, opportunityRecords: opportunities.length };
     } catch (error) {
@@ -175,7 +193,7 @@ export async function runSearchIntelligence({ dateRange = resolveDateRange(), co
         try {
           await store.recordRun({
             schedulerKey: "SEARCH_INTELLIGENCE", scheduledFor,
-            attempt, status: "FAILED", output: { dateRange }, errorSummary: String(error.message || error),
+            attempt, status: "FAILED", output: { dateRange, source: "Google Search Console", sourceCollectionAt: snapshot.fetchedAt || null }, errorSummary: String(error.message || error),
           });
         } catch { /* Preserve the original persistence error. */ }
       }
