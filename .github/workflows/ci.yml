@@ -46,8 +46,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Test read-only SEO data pipeline utilities
-        run: node --test seo-engine/*.test.mjs
+      - name: Test SEO pipeline and content-operation safeguards
+        run: node --test seo-engine/*.test.mjs seo-engine/content-ops/*.test.mjs
 
       - name: Verify dependency ReDoS mitigation
         run: npm run test:security
