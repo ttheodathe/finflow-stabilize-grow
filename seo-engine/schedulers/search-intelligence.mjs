@@ -19,7 +19,7 @@ function scorePage(page, queries) {
   const positionOpportunity = clamp(position >= 4 && position <= 20 ? 4 : position > 20 && position <= 40 ? 2 : position > 0 ? 1 : 0);
   const productFit = relevant.length ? 4 : 1;
   const effort = 3;
-  const confidence = impressions >= 50 ? 4 : impressions >= 10 ? 3 : 1;
+  const confidence = impressions === null ? 0 : impressions >= 50 ? 4 : impressions >= 10 ? 3 : 1;
   const score = Math.round(((gscOpportunity + ctrOpportunity + positionOpportunity + intentFit + productFit + effort + confidence) / 35) * 100);
   return {
     id: `gsc-${Buffer.from(page.page).toString("base64url").slice(0, 24)}`,
@@ -38,7 +38,7 @@ function scorePage(page, queries) {
       sampleQueries: relevant.slice(0, 10).map((row) => ({ query: row.query, clicks: row.clicks, impressions: row.impressions, ctr: row.ctr, position: row.position })),
     },
     scoring: { gscOpportunity, ctrOpportunity, positionOpportunity, intentFit, productFit, effort, confidence },
-    decision: impressions >= 10 && relevant.length > 0 ? "REVIEW_REQUIRED" : "LOW_EVIDENCE",
+    decision: metricsComplete && impressions >= 10 && relevant.length > 0 ? "REVIEW_REQUIRED" : "LOW_EVIDENCE",
     createdAt: new Date().toISOString(),
   };
 }
