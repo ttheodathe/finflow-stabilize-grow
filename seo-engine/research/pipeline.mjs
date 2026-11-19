@@ -255,7 +255,7 @@ function buildDraft(candidate, pack, sourceRecords, productEvidence, internalLin
     title: pack.title, description: pack.description, slug: target.slug,
     publicationStatus: "draft", status: "draft", author: null, authorStatus: "NOT_ASSIGNED",
     intent: pack.intent, targetQuery: candidate.targetQuery, relatedQueries: candidate.relatedQueries || [],
-    operationType: "EXISTING_ARTICLE_UPDATE", targetSlug: target.slug,
+    operationType: candidate.operationType || "EXISTING_ARTICLE_UPDATE", targetSlug: target.slug,
     canonicalUrl: `https://www.finflowtrack.com/blog/${target.slug}`,
     content: markdown, evidence, claims, productEvidence: productEvidence ? VERIFIED_PRODUCT : null,
     internalLinks, sourceRecords, candidate,
@@ -307,7 +307,11 @@ export async function runResearchPipeline({
     const claims = pack.claimSpecs.map(spec => ({
       ...spec, sourceRecords: spec.sourceIndexes.map(index => sourceRecords[index]),
     }));
-    const unsupported = claims.filter(claim => claim.sourceRecords.length === 0 || claim.sourceRecords.some(source => source.status !== "RETRIEVED_RELEVANT"));
+    const unsupported = claims.filter(claim =>
+      claim.sourceRecords.length === 0 ||
+      claim.sourceRecords.some(source => source.status !== "RETRIEVED_RELEVANT") ||
+      !claim.terms.every(term => claim.sourceRecords.some(source => source.termMatches?.some(match => match.toLowerCase() === term.toLowerCase())))
+    );
     if (sourceFailures.length || unsupported.length) base.rejectionReasons.push("SOURCE_VERIFICATION_INCOMPLETE");
     const productEvidence = VERIFIED_PRODUCT.verifiedCapabilities.some(item => item.name === "Invoice creation") &&
       VERIFIED_PRODUCT.verifiedCapabilities.some(item => item.name === "Expense tracking") &&
@@ -315,7 +319,7 @@ export async function runResearchPipeline({
       VERIFIED_PRODUCT.verifiedCapabilities.some(item => item.name === "Basic reports");
     const related = pack.related.map(slug => inventory.find(item => item.slug === slug)).filter(item => item && item.slug !== target.slug).map(item => ({slug:item.slug,title:item.title}));
     const draft = buildDraft(candidate,pack,sourceRecords,productEvidence,related,target);
-    const duplicateSlug = inventory.some(item => item.slug === draft.slug && item.slug !== target.slug);
+    const duplicateSlug = operationType === "NEW_ARTICLE" && inventory.some(item => item.slug === draft.slug);
     const contentText = matter(draft.content);
     const frontmatterValid = contentText.data.status === "draft" && contentText.data.publicationStatus === "draft" &&
       contentText.data.title === draft.title && contentText.data.description === draft.description && contentText.data.slug === draft.slug;
@@ -331,7 +335,7 @@ export async function runResearchPipeline({
     if (quality.decision === "BLOCKED") base.rejectionReasons.push(...quality.errors);
     if (sourceFailures.length) base.rejectionReasons.push("UNVERIFIED_SOURCE");
     base.draft = draft;
-    base.quality = { ...quality, frontmatterValid, bodyWords, duplicateSlug, sourceCount: sourceRecords.length, verifiedSourceCount: sourceRecords.filter(s=>s.status==="RETRIEVED_RELEVANT").length, originalityStatus: "HUMAN_REVIEW_REQUIRED", productCapabilities: productEvidence ? "VERIFIED_FROM_REPOSITORY" : "NOT_VERIFIED" };
+    base.quality = { ...quality, frontmatterValid, bodyWords, duplicateSlug, sourceCount: sourceRecords.length, verifiedSourceCount: sourceRecords.filter(s=>s.status==="RETRIEVED_RELEVANT").length, originality, productCapabilities: productEvidence ? "VERIFIED_FROM_REPOSITORY" : "NOT_VERIFIED" };
     base.status = base.rejectionReasons.length ? "REJECTED" : "DRAFT_READY_FOR_HUMAN_REVIEW";
     if (base.status === "DRAFT_READY_FOR_HUMAN_REVIEW") {
       const hash = createHash("sha256").update(draft.content).digest("hex");
@@ -350,7 +354,7 @@ export async function runResearchPipeline({
           proposedContentHash:hash,
           payload:{
             pipelineVersion:"b7.1", evidenceMode:candidate.evidenceMode,
-            candidate, intent, freshness, cannibalization, sources:sourceRecords,
+            candidate, intent, freshness, cannibalization, existingContentComparison:existingComparisons, sources:sourceRecords,
             claims:draft.claims, productEvidence:draft.productEvidence,
             quality:base.quality, draftMarkdown:draft.content,
             publicationStatus:"draft", execution:"DRY_RUN_ONLY",
