@@ -423,8 +423,11 @@ function buildDraft(candidate, pack, sourceRecords, productEvidence, internalLin
     verificationStatus: "VERIFIED_IN_CURRENT_REPOSITORY_SOURCE",
   });
   const evidence = sourceRecords.filter(s => s.status.startsWith("RETRIEVED")).map(s => ({
-    sourceUrl: s.url, sourceType: "official_government", sourceTitle: s.sourceTitle,
+    sourceUrl: s.url, finalUrl: s.finalUrl, redirectDestination: s.redirectDestination,
+    sourceType: "official_government", sourceTitle: s.sourceTitle,
     publisher: s.publisher, publishedAt: s.publishedAt, retrievedAt: s.retrievedAt,
+    httpStatus: s.httpStatus, responseStatus: s.responseStatus, contentType: s.contentType,
+    verificationStatus: s.verificationStatus, relevanceAssessment: s.relevanceAssessment,
     verifiedAt: s.retrievedAt.slice(0,10), supports: s.supportedClaims.join("; "),
     excerpt: s.excerpt, reliability: s.reliability, limitations: s.limitations,
   }));

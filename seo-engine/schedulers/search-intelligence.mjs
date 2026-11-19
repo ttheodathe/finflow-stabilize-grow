@@ -59,6 +59,7 @@ export function scorePage(page, queries) {
     evidence: {
       source: "Google Search Console", dateRange: page.dateRange || null,
       sourceCollectionAt: page.sourceCollectionAt || null,
+      metricCompleteness: metricsComplete ? "COMPLETE" : "INCOMPLETE",
       clicks: page.clicks, impressions: page.impressions, ctr: page.ctr, averagePosition: page.position,
       relevantQueryCount: relevant.length,
       sampleQueries: relevant.slice(0,10).map(row => ({query:row.query,clicks:row.clicks,impressions:row.impressions,ctr:row.ctr,position:row.position})),
@@ -134,6 +135,14 @@ export async function checkTechnicalUrls(urls, { fetchImpl = fetch, maxPages = 4
   };
 }
 
+export function buildOpportunityKey(schedulerRunId, opportunityId, reportingPeriodEnd) {
+  if (typeof schedulerRunId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(schedulerRunId)) {
+    throw new Error("Opportunity idempotency requires a valid persisted Scheduler 1 run UUID.");
+  }
+  if (!opportunityId || !reportingPeriodEnd) throw new Error("Opportunity idempotency requires an opportunity key and reporting-period end.");
+  return `${schedulerRunId}:${opportunityId}:${reportingPeriodEnd}`;
+}
+
 export async function runSearchIntelligence({ dateRange = resolveDateRange(), collectFn = collect, fetchImpl = fetch } = {}) {
   await mkdir(OUTPUT, { recursive: true });
   const result = await collectFn({ dateRange, outputDir: OUTPUT });
@@ -185,7 +194,7 @@ export async function runSearchIntelligence({ dateRange = resolveDateRange(), co
       });
       for (const opportunity of opportunities) {
         await store.recordOpportunity({
-          opportunityKey: `${opportunity.id}:${dateRange.endDate}`,
+          opportunityKey: buildOpportunityKey(schedulerRunId, opportunity.id, dateRange.endDate),
           schedulerRunId,
           targetUrl: opportunity.targetUrl,
           queryText: opportunity.evidence?.sampleQueries?.[0]?.query || null,

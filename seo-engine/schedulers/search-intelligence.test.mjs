@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { aggregatePageQueries, scorePage } from "./search-intelligence.mjs";
+import { aggregatePageQueries, scorePage, buildOpportunityKey } from "./search-intelligence.mjs";
 
 test("aggregates daily GSC page-query rows over the reporting period", () => {
   const rows = aggregatePageQueries([
@@ -52,4 +52,26 @@ test("GSC aggregation preserves missing metrics as null rather than verified zer
   assert.equal(scored.evidence.ctr, null);
   assert.equal(scored.confidence, 0);
   assert.equal(scored.decision, "LOW_EVIDENCE");
+});
+
+test("opportunity idempotency keys are stable within a run and isolated across runs", () => {
+  const firstRun = "00000000-0000-4000-8000-000000000001";
+  const retryRun = "00000000-0000-4000-8000-000000000002";
+  assert.equal(
+    buildOpportunityKey(firstRun, "gsc-page-1", "2026-11-15"),
+    buildOpportunityKey(firstRun, "gsc-page-1", "2026-11-15"),
+  );
+  assert.notEqual(
+    buildOpportunityKey(firstRun, "gsc-page-1", "2026-11-15"),
+    buildOpportunityKey(retryRun, "gsc-page-1", "2026-11-15"),
+  );
+});
+
+test("incomplete metrics are explicitly marked in opportunity provenance", () => {
+  const result = scorePage({
+    page:"https://www.finflowtrack.com/blog/metrics",clicks:null,impressions:25,ctr:null,position:9.4,
+  },[]);
+  assert.equal(result.evidence.metricCompleteness,"INCOMPLETE");
+  assert.equal(result.evidence.clicks,null);
+  assert.equal(result.evidence.ctr,null);
 });
