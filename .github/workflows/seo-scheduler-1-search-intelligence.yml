@@ -27,6 +27,10 @@ jobs:
           GSC_SITE_URL: ${{ vars.GSC_SITE_URL }}
           GA4_PROPERTY_ID: ${{ vars.GA4_PROPERTY_ID }}
           SEO_OUTPUT_DIR: seo-output
+          DRY_RUN: "true"
+          PUBLISH_ENABLED: "false"
+          CONTENT_UPDATE_ENABLED: "false"
+          PRODUCTION_CONTENT_WRITE_ALLOWED: "false"
         run: |
           test -n "$GOOGLE_SERVICE_ACCOUNT_JSON"
           node seo-engine/schedulers/search-intelligence.mjs
