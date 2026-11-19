@@ -229,6 +229,12 @@ test("classifies software-selection queries without treating them as generic rec
     assert.equal(selection.compatible, true);
     assert.equal(selection.matchedPackId, "software-selection");
     assert.equal(selection.reason, null);
+    for (const spec of selection.pack.claimSpecs) {
+      const mapped = spec.sourceIndexes.map(index => selection.pack.sources[index]);
+      for (const term of spec.terms) {
+        assert.ok(mapped.some(source => source.terms.includes(term)), `Source pack claim term lacks an approved source term: ${spec.id} / ${term}`);
+      }
+    }
   }
   assert.equal(classifySearchIntent("unclear business finance question"), "REVIEW_REQUIRED");
 });
