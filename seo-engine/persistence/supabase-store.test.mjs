@@ -96,7 +96,7 @@ test("Scheduler 2 reads only persisted opportunities for a validated run ID",asy
  assert.equal(JSON.parse(request.options.body).p_scheduler_run_id,"00000000-0000-4000-8000-000000000001");
  assert.equal(request.options.headers.authorization,"Bearer server-only-test-key");
  assert.equal(rows[0].opportunity_key,"key-1");
- assert.throws(() => store.listPersistedOpportunities({schedulerRunId:"not-a-uuid"}),/Persisted Scheduler 1 run ID.*valid UUID/);
+ await assert.rejects(store.listPersistedOpportunities({schedulerRunId:"not-a-uuid"}),/Persisted Scheduler 1 run ID.*valid UUID/);
 });
 
 test("required SEO persistence fails closed outside the explicitly allowed acceptance project",()=>{
