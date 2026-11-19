@@ -36,6 +36,7 @@ function expandPersistedOpportunities(opportunities, schedulerRunId) {
         },
         reportingPeriodEnd: opportunity.evidence?.dateRange?.endDate || null,
         dataSource: source,
+        historicalProvenance: opportunity.evidence?.historicalProvenance || null,
         evidenceMode: source === "Google Search Console" && opportunity.sourceRunFixture !== true
           && opportunity.evidence?.evidenceMode !== "FIXTURE"
           && !/\.test$|example\.test|localhost/i.test(new URL(opportunity.targetUrl || "https://invalid.example").hostname)
@@ -43,6 +44,7 @@ function expandPersistedOpportunities(opportunities, schedulerRunId) {
         evidence: {
           source,
           dateRange: opportunity.evidence?.dateRange || null,
+          historicalProvenance: opportunity.evidence?.historicalProvenance || null,
           pageMetrics: {
             clicks: opportunity.evidence?.clicks ?? null,
             impressions: opportunity.evidence?.impressions ?? null,

@@ -59,6 +59,7 @@ export function scorePage(page, queries) {
     evidence: {
       source: "Google Search Console", dateRange: page.dateRange || null,
       sourceCollectionAt: page.sourceCollectionAt || null,
+      historicalProvenance: page.historicalProvenance || null,
       metricCompleteness: metricsComplete ? "COMPLETE" : "INCOMPLETE",
       clicks: page.clicks, impressions: page.impressions, ctr: page.ctr, averagePosition: page.position,
       relevantQueryCount: relevant.length,
@@ -171,7 +172,7 @@ export async function runSearchIntelligence({ dateRange = resolveDateRange(), co
     };
   });
   const opportunities = pageValues.map(page =>
-    scorePage({ ...page, dateRange, sourceCollectionAt: snapshot.fetchedAt || null }, queries)
+    scorePage({ ...page, dateRange, sourceCollectionAt: snapshot.fetchedAt || null, historicalProvenance: snapshot.historicalProvenance || null }, queries)
   ).sort((a, b) => b.score - a.score);
   const technical = await checkTechnicalUrls(
     [...pageValues].sort((a, b) => b.impressions - a.impressions).map((page) => page.page),
@@ -193,7 +194,7 @@ export async function runSearchIntelligence({ dateRange = resolveDateRange(), co
     try {
       schedulerRunId = await store.recordRun({
         schedulerKey: "SEARCH_INTELLIGENCE", scheduledFor, attempt,
-        status: "RUNNING", output: { dateRange, source: "Google Search Console", sourceCollectionAt: snapshot.fetchedAt || null, evidenceMode },
+        status: "RUNNING", output: { dateRange, source: "Google Search Console", sourceCollectionAt: snapshot.fetchedAt || null, evidenceMode, historicalProvenance: snapshot.historicalProvenance || null },
       });
       for (const opportunity of opportunities) {
         await store.recordOpportunity({
@@ -211,7 +212,7 @@ export async function runSearchIntelligence({ dateRange = resolveDateRange(), co
         status: "SUCCEEDED",
         output: {
           opportunityCount: opportunities.length, technicalIssueCount: technical.confirmedIssueCount,
-          dateRange, source: "Google Search Console", sourceCollectionAt: snapshot.fetchedAt || null, evidenceMode,
+          dateRange, source: "Google Search Console", sourceCollectionAt: snapshot.fetchedAt || null, evidenceMode, historicalProvenance: snapshot.historicalProvenance || null,
           supplementaryAnalytics: {
             status: snapshot.sourceStatus?.ga4 || "UNKNOWN",
             error: snapshot.sourceErrors?.ga4 || null,
@@ -235,7 +236,7 @@ export async function runSearchIntelligence({ dateRange = resolveDateRange(), co
 
   const report = {
     schemaVersion: 1, scheduler: "SEARCH_INTELLIGENCE",
-    generatedAt: new Date().toISOString(), dateRange, evidenceMode, runAttempt: Number.isInteger(runAttempt) ? runAttempt : null,
+    generatedAt: new Date().toISOString(), dateRange, evidenceMode, historicalProvenance: snapshot.historicalProvenance || null, runAttempt: Number.isInteger(runAttempt) ? runAttempt : null,
     sourceFile: result.file, opportunityCount: opportunities.length,
     technical,
     supplementaryAnalytics: {

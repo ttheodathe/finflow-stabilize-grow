@@ -75,3 +75,9 @@ test("incomplete metrics are explicitly marked in opportunity provenance", () =>
   assert.equal(result.evidence.clicks,null);
   assert.equal(result.evidence.ctr,null);
 });
+
+test("historical artifact provenance is preserved in scored opportunity evidence", () => {
+  const provenance = { artifactId: "14494691265", workflowRunId: "44448533423", sourceCommit: "815f9df90b3581071f9864cf7d984b43f9939cbe", sha256: "b44222f584e963e3de17f450fee8dba68c6b1586cbbbf8f025973c2c0c6eff83", evidenceMode: "HISTORICAL_GSC_ARTIFACT" };
+  const result = scorePage({ page: "https://www.finflowtrack.com/blog/free-accounting-software-for-small-business", clicks: 0, impressions: 702, ctr: 0, position: 10, historicalProvenance: provenance }, [{ page: "https://www.finflowtrack.com/blog/free-accounting-software-for-small-business", query: "free business accounting apps worth considering", clicks: 0, impressions: 31, ctr: 0, position: 9.774193548387096 }]);
+  assert.deepEqual(result.evidence.historicalProvenance, provenance);
+});
