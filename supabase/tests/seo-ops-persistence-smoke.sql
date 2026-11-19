@@ -1,7 +1,7 @@
 do $$
 declare
   v_run uuid; v_run2 uuid; v_opp uuid; v_opp2 uuid; v_snap uuid; v_snap2 uuid;
-  v_activation uuid; v_content uuid; v_content2 uuid; v_counts record; v_count integer; v_read_count integer;
+  v_activation uuid; v_content uuid; v_content2 uuid; v_counts record; v_count integer; v_read_count integer; v_read_count integer;
   v_attempt integer := extract(epoch from clock_timestamp())::integer;
 begin
   v_run := public.seo_ops_record_run('SEARCH_INTELLIGENCE',date '2026-11-20',v_attempt,'RUNNING','{"fixture":true}'::jsonb);
@@ -17,6 +17,8 @@ begin
   v_opp := public.seo_ops_record_opportunity('ci-fixture-opportunity',v_run,'https://example.test/blog/a','fixture query','REVIEW_EXISTING_PAGE',50,'{"impressions":100}'::jsonb);
   v_opp2 := public.seo_ops_record_opportunity('ci-fixture-opportunity',v_run,'https://example.test/blog/a','fixture query','REVIEW_EXISTING_PAGE',55,'{"impressions":120}'::jsonb);
   if v_opp <> v_opp2 then raise exception 'opportunity idempotency failed'; end if;
+  select count(*) into v_read_count from public.seo_ops_get_opportunities(v_run);
+  if v_read_count <> 1 then raise exception 'persisted opportunity read RPC returned %, expected 1',v_read_count; end if;
   select count(*) into v_count from seo_ops.opportunities where opportunity_key='ci-fixture-opportunity';
   if v_count <> 1 then raise exception 'duplicate opportunity record was created'; end if;
 
@@ -80,7 +82,10 @@ begin
      or not has_function_privilege('service_role','public.seo_ops_record_run(text,date,integer,text,jsonb,uuid,text)','EXECUTE')
      or has_function_privilege('anon','public.seo_ops_record_content_operation(text,text,text,text,text,jsonb,text,text)','EXECUTE')
      or has_function_privilege('authenticated','public.seo_ops_record_content_operation(text,text,text,text,text,jsonb,text,text)','EXECUTE')
-     or not has_function_privilege('service_role','public.seo_ops_record_content_operation(text,text,text,text,text,jsonb,text,text)','EXECUTE') then
+     or not has_function_privilege('service_role','public.seo_ops_record_content_operation(text,text,text,text,text,jsonb,text,text)','EXECUTE')
+     or has_function_privilege('anon','public.seo_ops_get_opportunities(uuid)','EXECUTE')
+     or has_function_privilege('authenticated','public.seo_ops_get_opportunities(uuid)','EXECUTE')
+     or not has_function_privilege('service_role','public.seo_ops_get_opportunities(uuid)','EXECUTE') then
     raise exception 'SEO RPC execution grants are incorrect';
   end if;
 end $$;
