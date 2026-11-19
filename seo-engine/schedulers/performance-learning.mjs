@@ -5,6 +5,12 @@ import { createSupabaseSeoStoreFromEnv } from "../persistence/supabase-store.mjs
 
 const OUTPUT = process.env.SEO_OUTPUT_DIR || "seo-output";
 
+function sumKnown(rows, key) {
+  if (rows.length === 0) return 0;
+  const values = rows.map(row => row[key]).filter(Number.isFinite);
+  return values.length ? values.reduce((sum,value)=>sum+value,0) : null;
+}
+
 export async function runPerformanceLearning({
   dateRange = resolveDateRange(), collectFn = collectPartial,
   outputDir = OUTPUT, env = process.env,
@@ -25,19 +31,19 @@ export async function runPerformanceLearning({
   const ga4Available = Boolean(snapshot?.ga4 && snapshot.sourceStatus?.ga4 !== "UNAVAILABLE");
   const search = gscAvailable ? {
     status: "AVAILABLE",
-    clicks: snapshot.gsc.pages.reduce((sum, row) => sum + row.clicks, 0),
-    impressions: snapshot.gsc.pages.reduce((sum, row) => sum + row.impressions, 0),
+    clicks: sumKnown(snapshot.gsc.pages,"clicks"),
+    impressions: sumKnown(snapshot.gsc.pages,"impressions"),
   } : { status: "UNAVAILABLE", clicks: null, impressions: null };
-  if (search.impressions !== null) search.ctr = search.impressions ? search.clicks / search.impressions : null;
+  search.ctr = search.impressions === null || search.clicks === null
+    ? null : search.impressions > 0 ? search.clicks / search.impressions : 0;
 
   const analytics = ga4Available ? {
     status: "AVAILABLE",
-    organicSessions: snapshot.ga4.reduce((sum, row) => sum + row.sessions, 0),
-    engagedSessions: snapshot.ga4.reduce((sum, row) => sum + row.engagedSessions, 0),
+    organicSessions: sumKnown(snapshot.ga4,"sessions"),
+    engagedSessions: sumKnown(snapshot.ga4,"engagedSessions"),
   } : { status: "UNAVAILABLE", organicSessions: null, engagedSessions: null };
-  if (analytics.organicSessions !== null) {
-    analytics.engagementRate = analytics.organicSessions ? analytics.engagedSessions / analytics.organicSessions : null;
-  }
+  analytics.engagementRate = analytics.organicSessions === null || analytics.engagedSessions === null
+    ? null : analytics.organicSessions > 0 ? analytics.engagedSessions / analytics.organicSessions : 0;
 
   const report = {
     schemaVersion: 1, scheduler: "PERFORMANCE_AND_LEARNING",
