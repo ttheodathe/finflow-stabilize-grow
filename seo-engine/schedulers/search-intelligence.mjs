@@ -7,43 +7,51 @@ const OUTPUT = process.env.SEO_OUTPUT_DIR || "seo-output";
 
 function clamp(value) { return Math.max(0, Math.min(5, value)); }
 
+function completeSum(rows, key) {
+  if (!rows.length || rows.some(row => !Number.isFinite(row[key]))) return null;
+  return rows.reduce((sum, row) => sum + row[key], 0);
+}
+
 export function aggregatePageQueries(rows = []) {
   const grouped = new Map();
   for (const row of rows) {
     if (typeof row.page !== "string" || typeof row.query !== "string" || !row.query.trim()) continue;
-    const key = `${row.page}\u0000${row.query}`;
-    const current = grouped.get(key) || { page: row.page, query: row.query, clicks: 0, impressions: 0, positionWeighted: 0, positionImpressions: 0 };
-    current.clicks += Number(row.clicks ?? 0);
-    current.impressions += Number(row.impressions ?? 0);
-    const impressions = Number(row.impressions ?? 0);
-    const position = Number(row.position);
-    if (Number.isFinite(position) && impressions > 0) {
-      current.positionWeighted += position * impressions;
-      current.positionImpressions += impressions;
-    }
+    const key = `${row.page}\\u0000${row.query}`;
+    const current = grouped.get(key) || { page: row.page, query: row.query, rows: [] };
+    current.rows.push(row);
     grouped.set(key, current);
   }
-  return [...grouped.values()].map(row => ({
-    page: row.page, query: row.query, clicks: row.clicks, impressions: row.impressions,
-    ctr: row.impressions > 0 ? row.clicks / row.impressions : null,
-    position: row.positionImpressions > 0 ? row.positionWeighted / row.positionImpressions : null,
-  })).sort((a,b) => b.impressions - a.impressions);
+  return [...grouped.values()].map(group => {
+    const clicks = completeSum(group.rows, "clicks");
+    const impressions = completeSum(group.rows, "impressions");
+    const positionComplete = group.rows.length > 0 && group.rows.every(row =>
+      Number.isFinite(row.impressions) && row.impressions > 0 && Number.isFinite(row.position));
+    const positionWeight = positionComplete
+      ? group.rows.reduce((sum, row) => sum + row.position * row.impressions, 0) : null;
+    const positionImpressions = positionComplete
+      ? group.rows.reduce((sum, row) => sum + row.impressions, 0) : null;
+    return {
+      page: group.page, query: group.query, clicks, impressions,
+      ctr: clicks === null || impressions === null ? null : impressions > 0 ? clicks / impressions : 0,
+      position: positionWeight === null || !positionImpressions ? null : positionWeight / positionImpressions,
+    };
+  }).sort((a,b) => (b.impressions ?? -1) - (a.impressions ?? -1));
 }
 
 export function scorePage(page, queries) {
   const metricsComplete = [page.clicks, page.impressions, page.ctr, page.position].every(Number.isFinite) && page.impressions > 0;
-  const impressions = Number.isFinite(page.impressions) ? page.impressions : 0;
-  const ctr = Number.isFinite(page.ctr) ? page.ctr : 0;
-  const position = Number.isFinite(page.position) ? page.position : 0;
+  const impressionsForScore = Number.isFinite(page.impressions) ? page.impressions : 0;
+  const ctrForScore = Number.isFinite(page.ctr) ? page.ctr : 0;
+  const positionForScore = Number.isFinite(page.position) ? page.position : 0;
   const queryRows = queries.filter(row => row.page === page.page);
   const relevant = queryRows.filter(row => /account|invoice|expense|bookkeep|cash flow|receivable|payable|freelanc|small business/i.test(row.query || ""));
   const intentFit = relevant.length > 0 ? 4 : 1;
-  const gscOpportunity = clamp(Math.log10(impressions + 1) * 1.5);
-  const ctrOpportunity = clamp(ctr < 0.02 && impressions >= 20 ? 4 : ctr < 0.05 ? 3 : 1);
-  const positionOpportunity = clamp(position >= 4 && position <= 20 ? 4 : position > 20 && position <= 40 ? 2 : position > 0 ? 1 : 0);
+  const gscOpportunity = clamp(Math.log10(impressionsForScore + 1) * 1.5);
+  const ctrOpportunity = clamp(ctrForScore < 0.02 && impressionsForScore >= 20 ? 4 : ctrForScore < 0.05 ? 3 : 1);
+  const positionOpportunity = clamp(positionForScore >= 4 && positionForScore <= 20 ? 4 : positionForScore > 20 && positionForScore <= 40 ? 2 : positionForScore > 0 ? 1 : 0);
   const productFit = relevant.length ? 4 : 1;
   const effort = 3;
-  const confidence = !metricsComplete ? 0 : impressions >= 50 ? 4 : impressions >= 10 ? 3 : 1;
+  const confidence = !metricsComplete ? 0 : impressionsForScore >= 50 ? 4 : impressionsForScore >= 10 ? 3 : 1;
   const score = Math.round(((gscOpportunity + ctrOpportunity + positionOpportunity + intentFit + productFit + effort + confidence) / 35) * 100);
   return {
     id: `gsc-${Buffer.from(page.page).toString("base64url").slice(0, 24)}`,
@@ -51,12 +59,12 @@ export function scorePage(page, queries) {
     evidence: {
       source: "Google Search Console", dateRange: page.dateRange || null,
       sourceCollectionAt: page.sourceCollectionAt || null,
-      clicks: page.clicks, impressions, ctr, averagePosition: position,
+      clicks: page.clicks, impressions: page.impressions, ctr: page.ctr, averagePosition: page.position,
       relevantQueryCount: relevant.length,
       sampleQueries: relevant.slice(0,10).map(row => ({query:row.query,clicks:row.clicks,impressions:row.impressions,ctr:row.ctr,position:row.position})),
     },
     scoring: {gscOpportunity,ctrOpportunity,positionOpportunity,intentFit,productFit,effort,confidence},
-    decision: metricsComplete && impressions >= 10 && relevant.length > 0 ? "REVIEW_REQUIRED" : "LOW_EVIDENCE",
+    decision: metricsComplete && impressionsForScore >= 10 && relevant.length > 0 ? "REVIEW_REQUIRED" : "LOW_EVIDENCE",
     createdAt: new Date().toISOString(),
   };
 }
@@ -132,23 +140,29 @@ export async function runSearchIntelligence({ dateRange = resolveDateRange(), co
   const snapshot = JSON.parse(await readFile(result.file, "utf8"));
   const pages = new Map();
   for (const row of snapshot.gsc.pages) {
-    const current = pages.get(row.page) || {
-      page: row.page, clicks: 0, impressions: 0, ctr: 0,
-      positionWeighted: 0, positionImpressions: 0,
-    };
-    current.clicks += row.clicks;
-    current.impressions += row.impressions;
-    current.positionWeighted += row.position * row.impressions;
-    current.positionImpressions += row.impressions;
+    const current = pages.get(row.page) || { page: row.page, rows: [] };
+    current.rows.push(row);
     pages.set(row.page, current);
   }
   const queries = aggregatePageQueries(snapshot.gsc.pageQueries);
-  const pageValues = [...pages.values()];
-  const opportunities = pageValues.map((page) => {
-    page.ctr = page.impressions ? page.clicks / page.impressions : 0;
-    page.position = page.positionImpressions ? page.positionWeighted / page.positionImpressions : 0;
-    return scorePage({ ...page, dateRange, sourceCollectionAt: snapshot.fetchedAt || null }, queries);
-  }).sort((a, b) => b.score - a.score);
+  const pageValues = [...pages.values()].map(group => {
+    const clicks = completeSum(group.rows, "clicks");
+    const impressions = completeSum(group.rows, "impressions");
+    const positionComplete = group.rows.length > 0 && group.rows.every(row =>
+      Number.isFinite(row.impressions) && row.impressions > 0 && Number.isFinite(row.position));
+    const positionWeighted = positionComplete
+      ? group.rows.reduce((sum, row) => sum + row.position * row.impressions, 0) : null;
+    const positionImpressions = positionComplete
+      ? group.rows.reduce((sum, row) => sum + row.impressions, 0) : null;
+    return {
+      page: group.page, clicks, impressions,
+      ctr: clicks === null || impressions === null ? null : impressions > 0 ? clicks / impressions : 0,
+      position: positionWeighted === null || !positionImpressions ? null : positionWeighted / positionImpressions,
+    };
+  });
+  const opportunities = pageValues.map(page =>
+    scorePage({ ...page, dateRange, sourceCollectionAt: snapshot.fetchedAt || null }, queries)
+  ).sort((a, b) => b.score - a.score);
   const technical = await checkTechnicalUrls(
     [...pageValues].sort((a, b) => b.impressions - a.impressions).map((page) => page.page),
     { fetchImpl },

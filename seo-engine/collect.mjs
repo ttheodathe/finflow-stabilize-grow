@@ -44,11 +44,13 @@ async function collectGscDimension(accessToken, dateRange, dimensions, fetchImpl
     }, { fetchImpl });
     const batch = Array.isArray(page.rows) ? page.rows : [];
     rows.push(...batch.map((row) => {
+      const metric = (value) => value === null || value === undefined
+        ? null : Number.isFinite(Number(value)) ? Number(value) : null;
       const record = {
-        clicks: Number(row.clicks ?? 0),
-        impressions: Number(row.impressions ?? 0),
-        ctr: Number(row.ctr ?? 0),
-        position: Number(row.position ?? 0),
+        clicks: metric(row.clicks),
+        impressions: metric(row.impressions),
+        ctr: metric(row.ctr),
+        position: metric(row.position),
       };
       dimensions.forEach((dimension, index) => {
         const value = row.keys?.[index] ?? null;
@@ -136,14 +138,24 @@ async function collectGa4(accessToken, dateRange, fetchImpl = fetch) {
 
 export async function collect({ dateRange, token, outputDir = OUTPUT_DIR, fetchImpl = fetch } = {}) {
   const accessToken = token || await createAccessToken({ fetchImpl });
+  // GSC is Scheduler 1's required evidence source. GA4 is supplementary:
+  // a GA4 outage must never discard a successful GSC collection.
   const gscRows = await collectGsc(accessToken, dateRange, fetchImpl);
-  const ga4Rows = await collectGa4(accessToken, dateRange, fetchImpl);
+  let ga4Rows = null;
+  let ga4Error = null;
+  try {
+    ga4Rows = await collectGa4(accessToken, dateRange, fetchImpl);
+  } catch (error) {
+    ga4Error = String(error.message || error);
+  }
   const snapshot = {
     schemaVersion: 1,
-    source: "read-only Google Search Console and GA4 APIs",
+    source: "independent read-only Google Search Console and GA4 APIs",
     property: { gsc: GSC_SITE_URL, ga4: GA4_PROPERTY_ID },
     dateRange,
     fetchedAt: new Date().toISOString(),
+    sourceStatus: { gsc: "AVAILABLE", ga4: ga4Rows === null ? "UNAVAILABLE" : "AVAILABLE" },
+    sourceErrors: { gsc: null, ga4: ga4Error },
     counts: {
       gscPageRows: gscRows.pages.length,
       gscQueryRows: gscRows.queries.length,
@@ -151,7 +163,7 @@ export async function collect({ dateRange, token, outputDir = OUTPUT_DIR, fetchI
       gscPageCountryRows: gscRows.pagesByCountry.length,
       gscPageDeviceRows: gscRows.pagesByDevice.length,
       gscSearchAppearanceRows: gscRows.searchAppearance.length,
-      ga4Rows: ga4Rows.length,
+      ga4Rows: ga4Rows?.length ?? null,
     },
     gsc: gscRows,
     ga4: ga4Rows,

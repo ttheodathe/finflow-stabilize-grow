@@ -34,3 +34,22 @@ test("incomplete GSC metrics never become a reviewable opportunity", () => {
   assert.equal(result.decision, "LOW_EVIDENCE");
   assert.equal(result.confidence, 0);
 });
+
+test("GSC aggregation preserves missing metrics as null rather than verified zero", () => {
+  const rows = aggregatePageQueries([
+    { page: "https://www.finflowtrack.com/blog/accounting", query: "accounting apps", clicks: null, impressions: 12, ctr: null, position: 9 },
+    { page: "https://www.finflowtrack.com/blog/accounting", query: "accounting apps", clicks: 0, impressions: 8, ctr: 0, position: 11 },
+  ]);
+  assert.equal(rows[0].clicks, null);
+  assert.equal(rows[0].impressions, 20);
+  assert.equal(rows[0].ctr, null);
+  assert.equal(rows[0].position, 10.2);
+  const scored = scorePage({
+    page: "https://www.finflowtrack.com/blog/accounting",
+    clicks: null, impressions: 20, ctr: null, position: 10.2,
+  }, rows);
+  assert.equal(scored.evidence.clicks, null);
+  assert.equal(scored.evidence.ctr, null);
+  assert.equal(scored.confidence, 0);
+  assert.equal(scored.decision, "LOW_EVIDENCE");
+});
