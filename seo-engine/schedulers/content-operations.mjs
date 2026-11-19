@@ -1,116 +1,175 @@
-import { readFile, readdir, writeFile, mkdir } from "node:fs/promises";
-import { createHash } from "node:crypto";
+import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { assertProductionWritesBlocked } from "../content-ops/safety.mjs";
 import { createSupabaseSeoStoreFromEnv } from "../persistence/supabase-store.mjs";
+import { runResearchPipeline } from "../research/pipeline.mjs";
 
 const OUTPUT = process.env.SEO_OUTPUT_DIR || "seo-output";
 const CONTENT_DIR = "content/blog";
+const RESEARCH_DIR = process.env.SEO_RESEARCH_OUTPUT_DIR || "content/operations/research";
 
-export async function runContentOperations({ inputPath = `${OUTPUT}/scheduler-1-opportunities.json` } = {}) {
-  assertProductionWritesBlocked();
+function expandPersistedOpportunities(opportunities) {
+  const candidates = [];
+  for (const opportunity of opportunities) {
+    if (opportunity.decision !== "REVIEW_REQUIRED") continue;
+    const rows = (opportunity.evidence?.sampleQueries || [])
+      .filter(row => typeof row.query === "string" && row.query.trim())
+      .slice(0,5);
+    for (const row of rows) {
+      candidates.push({
+        id: `${opportunity.id}:${Buffer.from(row.query).toString("base64url").slice(0,18)}`,
+        targetUrl: opportunity.targetUrl,
+        targetQuery: row.query,
+        metrics: {
+          impressions: row.impressions ?? null,
+          clicks: row.clicks ?? null,
+          ctr: row.ctr ?? null,
+          averagePosition: row.position ?? null,
+        },
+        reportingPeriodEnd: opportunity.evidence?.dateRange?.endDate || null,
+        dataSource: "Google Search Console",
+        evidenceMode: "LIVE_OR_PERSISTED",
+        evidence: {
+          source: opportunity.evidence?.source || "Google Search Console",
+          dateRange: opportunity.evidence?.dateRange || null,
+          pageMetrics: {
+            clicks: opportunity.evidence?.clicks ?? null,
+            impressions: opportunity.evidence?.impressions ?? null,
+            ctr: opportunity.evidence?.ctr ?? null,
+            averagePosition: opportunity.evidence?.averagePosition ?? null,
+          },
+          sampleQueries: [row],
+        },
+      });
+    }
+  }
+  return candidates;
+}
+
+export async function runContentOperations({
+  inputPath = `${OUTPUT}/scheduler-1-opportunities.json`,
+  outputDir = OUTPUT, researchDir = RESEARCH_DIR, contentDir = CONTENT_DIR,
+  env = process.env, store = createSupabaseSeoStoreFromEnv(env),
+  fetchImpl = fetch, now = new Date(), allowFixture = false,
+} = {}) {
+  assertProductionWritesBlocked(env);
   const input = JSON.parse(await readFile(inputPath, "utf8"));
   if (input.scheduler !== "SEARCH_INTELLIGENCE" || !Array.isArray(input.opportunities)) {
     throw new Error("Scheduler 2 requires a valid Scheduler 1 opportunity report.");
   }
-  const files = await readdir(CONTENT_DIR);
-  const inventory = files.filter((file) => file.endsWith(".md")).map((file) => file.replace(/\.md$/, ""));
-  const unmatchedTargets = [];
-  const queueByTarget = new Map();
-  for (const item of input.opportunities.filter((candidate) => candidate.decision === "REVIEW_REQUIRED")) {
-    let slug;
-    try {
-      const pathname = new URL(item.targetUrl).pathname;
-      slug = pathname.split("/").filter(Boolean).pop();
-    } catch {
-      unmatchedTargets.push({ targetUrl: item.targetUrl || null, reason: "INVALID_TARGET_URL" });
-      continue;
-    }
-    if (!slug || !inventory.includes(slug)) {
-      unmatchedTargets.push({ targetUrl: item.targetUrl, reason: "TARGET_NOT_FOUND_IN_BLOG_MARKDOWN_INVENTORY" });
-      continue;
-    }
-    if (queueByTarget.has(item.targetUrl)) continue;
-    const operationId = `review-${createHash("sha256").update(item.targetUrl).digest("hex").slice(0, 24)}`;
-    queueByTarget.set(item.targetUrl, {
-      id: operationId,
-      type: "EXISTING_ARTICLE_UPDATE",
-      slug,
-      targetPath: `content/blog/${slug}.md`,
-      targetUrl: item.targetUrl,
-      status: "DISCOVERED",
-      sourceEvidence: item.evidence,
-      proposedAction: "RESEARCH_AND_PREPARE_TARGETED_REVISION",
-      validation: { passed: false, status: "RESEARCH_REQUIRED" },
-      approval: { status: "NOT_REQUESTED" },
-      execution: { status: "BLOCKED_BY_DRY_RUN" },
-      note: "No revision was generated: human-verifiable research and exact article-content review are required before drafting.",
+  if (input.persistence?.status !== "PERSISTED" || !input.persistence?.schedulerRunId) {
+    throw new Error("Scheduler 2 requires Scheduler 1's successfully persisted run ID; artifact-only evidence is insufficient.");
+  }
+  if (!store && env.SEO_PERSISTENCE_REQUIRED === "true") {
+    throw new Error("Supabase SEO persistence is required but server-side credentials are not configured.");
+  }
+
+  const candidates = expandPersistedOpportunities(input.opportunities);
+  const scheduledFor = now.toISOString().slice(0,10);
+  const attempt = Math.max(1, Number.parseInt(env.GITHUB_RUN_ATTEMPT || "1",10) || 1);
+  let schedulerRunId = null;
+  let persistence = { status: "NOT_CONFIGURED", schedulerRunId: null };
+  let pipelineResult = { results: [], readyDraftCount: 0, rejectedCount: 0, reportPath: null };
+  let runError = null;
+
+  if (store) {
+    schedulerRunId = await store.recordRun({
+      schedulerKey: "CONTENT_OPERATIONS", scheduledFor, attempt,
+      status: "RUNNING", upstreamRunId: input.persistence.schedulerRunId,
+      output: { inputOpportunityCount: input.opportunities.length, candidateQueryCount: candidates.length },
     });
   }
-  const queue = [...queueByTarget.values()];
-  const store = createSupabaseSeoStoreFromEnv(process.env);
-  let persistence = { status: "NOT_CONFIGURED", schedulerRunId: null };
-  let persistenceError = null;
-  if (!store && process.env.SEO_PERSISTENCE_REQUIRED === "true") {
-    persistenceError = new Error("Supabase SEO persistence is required but its server-side credentials are not configured.");
-    persistence = { status: "FAILED", schedulerRunId: null, error: persistenceError.message };
-  } else if (store) {
-    const scheduledFor = new Date().toISOString().slice(0, 10);
-    const attempt = Math.max(1, Number.parseInt(process.env.GITHUB_RUN_ATTEMPT || "1", 10) || 1);
-    let schedulerRunId = null;
-    try {
-      schedulerRunId = await store.recordRun({
-        schedulerKey: "CONTENT_OPERATIONS", scheduledFor, attempt,
-        status: "RUNNING", upstreamRunId: input.persistence?.schedulerRunId || null,
-        output: { inputOpportunityCount: input.opportunities.length },
-      });
-      for (const item of queue) {
-        await store.recordContentOperation({
-          operationKey: item.id,
-          operationType: item.type,
-          targetPath: item.targetPath,
-          slug: item.slug,
-          status: "PROPOSED",
-          payload: item,
-        });
-      }
+  try {
+    pipelineResult = await runResearchPipeline({
+      opportunities: candidates, contentDir, outputDir: researchDir,
+      fetchImpl, now, store, allowFixture,
+    });
+    if (store) {
+      const finalStatus = pipelineResult.readyDraftCount > 0 && pipelineResult.rejectedCount === 0
+        ? "SUCCEEDED" : "PARTIAL";
       await store.recordRun({
         schedulerKey: "CONTENT_OPERATIONS", scheduledFor, attempt,
-        status: "SUCCEEDED", upstreamRunId: input.persistence?.schedulerRunId || null,
-        output: { queueCount: queue.length, unmatchedTargetCount: unmatchedTargets.length, mode: "DRY_RUN" },
+        status: finalStatus, upstreamRunId: input.persistence.schedulerRunId,
+        output: {
+          candidateQueryCount: candidates.length,
+          readyDraftCount: pipelineResult.readyDraftCount,
+          rejectedCount: pipelineResult.rejectedCount,
+          mode: "DRY_RUN",
+          researchReport: pipelineResult.reportPath,
+        },
       });
       persistence = { status: "PERSISTED", schedulerRunId };
-    } catch (error) {
-      persistenceError = error;
-      persistence = { status: "FAILED", schedulerRunId, error: String(error.message || error) };
-      if (schedulerRunId) {
-        try {
-          await store.recordRun({
-            schedulerKey: "CONTENT_OPERATIONS", scheduledFor, attempt,
-            status: "FAILED", upstreamRunId: input.persistence?.schedulerRunId || null,
-            output: { queueCount: queue.length }, errorSummary: String(error.message || error),
-          });
-        } catch { /* Preserve the original persistence error. */ }
-      }
+    } else persistence = { status: "NOT_CONFIGURED", schedulerRunId: null };
+  } catch (error) {
+    runError = error;
+    if (store && schedulerRunId) {
+      try {
+        await store.recordRun({
+          schedulerKey: "CONTENT_OPERATIONS", scheduledFor, attempt,
+          status: "FAILED", upstreamRunId: input.persistence.schedulerRunId,
+          output: { candidateQueryCount: candidates.length },
+          errorSummary: String(error.message || error),
+        });
+      } catch { /* Keep the original error visible. */ }
     }
+    throw error;
   }
 
   const report = {
-    schemaVersion: 1, scheduler: "CONTENT_OPERATIONS",
-    generatedAt: new Date().toISOString(), mode: "DRY_RUN",
-    contentInventory: { markdownArticleCount: inventory.length, slugs: inventory },
-    queue, queueCount: queue.length,
-    unmatchedTargets, unmatchedTargetCount: unmatchedTargets.length,
+    schemaVersion: 2, scheduler: "CONTENT_OPERATIONS",
+    generatedAt: now.toISOString(), mode: "DRY_RUN",
+    upstream: {
+      scheduler: "SEARCH_INTELLIGENCE",
+      schedulerRunId: input.persistence.schedulerRunId,
+      status: input.persistence.status,
+      dateRange: input.dateRange || null,
+    },
+    candidateCount: candidates.length,
+    readyDraftCount: pipelineResult.readyDraftCount,
+    rejectedCount: pipelineResult.rejectedCount,
+    results: pipelineResult.results.map(result => ({
+      candidate: result.candidate,
+      intent: result.intent,
+      freshness: result.freshness,
+      cannibalization: result.cannibalization,
+      existingContentComparison: result.existingContentComparison || [],
+      sourceRecords: result.draft?.sourceRecords || [],
+      claimMap: result.draft?.claims || [],
+      productCapabilities: result.draft?.productEvidence || null,
+      draft: result.draft ? {
+        title: result.draft.title, description: result.draft.description,
+        slug: result.draft.slug, publicationStatus: result.draft.publicationStatus,
+        authorStatus: result.draft.authorStatus, contentHash: result.contentHash || null,
+        path: result.draftPath || null, markdown: result.draft.content,
+      } : null,
+      quality: result.quality,
+      status: result.status,
+      rejectionReasons: result.rejectionReasons,
+      persistence: result.persistence || null,
+    })),
+    researchReportPath: pipelineResult.reportPath,
     productionMutation: "BLOCKED",
     persistence,
+    limitations: [
+      "Only persisted Scheduler 1 output is accepted; fixture evidence is blocked in scheduled mode.",
+      "Source relevance and originality checks are deterministic screening, not semantic fact-checking.",
+      "Every generated draft requires human review and authenticated approval before any staging adapter can be invoked.",
+      "No article Markdown under content/blog is created or updated by this scheduler.",
+    ],
   };
-  await mkdir(OUTPUT, { recursive: true });
-  const path = `${OUTPUT}/scheduler-2-content-queue.json`;
-  await writeFile(path, JSON.stringify(report, null, 2) + "\n", { flag: "w" });
-  if (persistenceError) throw persistenceError;
-  return { path, queueCount: queue.length, mode: report.mode, persistenceStatus: persistence.status };
+  await mkdir(outputDir,{recursive:true});
+  const reportPath = `${outputDir}/scheduler-2-content-queue.json`;
+  await writeFile(reportPath,JSON.stringify(report,null,2)+"\n",{flag:"w"});
+  if (runError) throw runError;
+  return {
+    path: reportPath, queueCount: candidates.length,
+    readyDraftCount: pipelineResult.readyDraftCount,
+    rejectedCount: pipelineResult.rejectedCount,
+    researchReportPath: pipelineResult.reportPath,
+    mode: report.mode, persistenceStatus: persistence.status,
+  };
 }
 
 if (import.meta.url === new URL(process.argv[1], "file:").href) {
-  try { process.stdout.write(JSON.stringify(await runContentOperations({ inputPath: process.argv[2] }), null, 2) + "\n"); }
-  catch (error) { console.error(`Scheduler 2 failed: ${error.message}`); process.exitCode = 1; }
+  try { process.stdout.write(JSON.stringify(await runContentOperations({ inputPath: process.argv[2] }),null,2)+"\n"); }
+  catch (error) { console.error(`Scheduler 2 failed: ${error.message}`); process.exitCode=1; }
 }
