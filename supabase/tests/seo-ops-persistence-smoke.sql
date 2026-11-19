@@ -127,7 +127,16 @@ begin
      or not has_function_privilege('service_role','public.seo_ops_record_research_record(uuid,text,text,date,timestamptz,jsonb,jsonb)','EXECUTE')
      or has_function_privilege('anon','public.seo_ops_record_content_revision(uuid,integer,text,text,text)','EXECUTE')
      or has_function_privilege('authenticated','public.seo_ops_record_content_revision(uuid,integer,text,text,text)','EXECUTE')
-     or not has_function_privilege('service_role','public.seo_ops_record_content_revision(uuid,integer,text,text,text)','EXECUTE') then
+     or not has_function_privilege('service_role','public.seo_ops_record_content_revision(uuid,integer,text,text,text)','EXECUTE')
+     or has_function_privilege('anon','public.seo_ops_get_content_operation(uuid)','EXECUTE')
+     or has_function_privilege('authenticated','public.seo_ops_get_content_operation(uuid)','EXECUTE')
+     or not has_function_privilege('service_role','public.seo_ops_get_content_operation(uuid)','EXECUTE')
+     or has_function_privilege('anon','public.seo_ops_get_research_records(uuid)','EXECUTE')
+     or has_function_privilege('authenticated','public.seo_ops_get_research_records(uuid)','EXECUTE')
+     or not has_function_privilege('service_role','public.seo_ops_get_research_records(uuid)','EXECUTE')
+     or has_function_privilege('anon','public.seo_ops_get_content_revisions(uuid)','EXECUTE')
+     or has_function_privilege('authenticated','public.seo_ops_get_content_revisions(uuid)','EXECUTE')
+     or not has_function_privilege('service_role','public.seo_ops_get_content_revisions(uuid)','EXECUTE') then
     raise exception 'SEO RPC execution grants are incorrect';
   end if;
 end $$;

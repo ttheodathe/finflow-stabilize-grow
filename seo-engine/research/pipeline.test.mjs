@@ -255,8 +255,10 @@ test("source retrieval records redirect, HTTP and content-type evidence and reje
     expectedPublisher: "Internal Revenue Service",
     terms: ["recordkeeping", "income", "expenses"],
   }, {
-    fetchImpl: async () => Object.assign(new Response("<html></html>", { status: 200, headers: { "content-type": "text/html" } }), {
-      url: "https://unrelated.example/source",
+    fetchImpl: async () => ({
+      ok:true,status:200,url:"https://unrelated.example/source",
+      headers:new Headers({"content-type":"text/html"}),
+      text:async()=>"<html></html>",
     }),
     now,
   });
