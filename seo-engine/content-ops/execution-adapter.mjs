@@ -2,28 +2,19 @@ import { createHash } from "node:crypto";
 import { assertExecutionAllowed, readExecutionPolicy } from "./safety.mjs";
 
 const API = "https://api.github.com";
-const encoder = new TextEncoder();
+const b64 = (value) => Buffer.from(value, "utf8").toString("base64");
+const decode64 = (value) => Buffer.from(value.replace(/\n/g, ""), "base64").toString("utf8");
 
-function b64(value) {
-  return Buffer.from(value, "utf8").toString("base64");
-}
-function decode64(value) {
-  return Buffer.from(value.replace(/\n/g, ""), "base64").toString("utf8");
-}
 function operationPath(id) {
   if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]{2,100}$/.test(id)) throw new Error("Invalid operation ID.");
   return `.seo-operations/operations/${id}.json`;
 }
-function snapshotPath(id) {
-  return `.seo-operations/snapshots/${id}.json`;
-}
+function snapshotPath(id) { return `.seo-operations/snapshots/${id}.json`; }
 function safeSlug(slug) {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) throw new Error("Invalid article slug.");
   return slug;
 }
-function digest(value) {
-  return createHash("sha256").update(value).digest("hex");
-}
+function digest(value) { return createHash("sha256").update(value).digest("hex"); }
 
 export function contentApprovalHash({ operationType, targetPath, content, metadata = {} }) {
   return digest(JSON.stringify({ operationType, targetPath, content, metadata }));
@@ -32,10 +23,7 @@ export function contentApprovalHash({ operationType, targetPath, content, metada
 function validateApproval(operation, targetPath, content) {
   const approval = operation.approval;
   const expected = contentApprovalHash({
-    operationType: operation.type,
-    targetPath,
-    content,
-    metadata: operation.metadata || {},
+    operationType: operation.type, targetPath, content, metadata: operation.metadata || {},
   });
   if (!approval || approval.status !== "APPROVED" || !approval.approvedBy || !approval.approvedAt) {
     throw new Error("An explicit human approval record is required.");
@@ -46,7 +34,10 @@ function validateApproval(operation, targetPath, content) {
   return expected;
 }
 
-export function createGitHubContentAdapter({ token, owner, repo, fetchImpl = fetch, env = process.env, publicBaseUrl = "https://www.finflowtrack.com" }) {
+export function createGitHubContentAdapter({
+  token, owner, repo, fetchImpl = fetch, env = process.env,
+  publicBaseUrl = "https://www.finflowtrack.com",
+}) {
   if (!token || !owner || !repo) throw new Error("GitHub content adapter requires token, owner, and repository.");
   const policy = readExecutionPolicy(env);
   const branch = policy.targetBranch;
@@ -78,8 +69,10 @@ export function createGitHubContentAdapter({ token, owner, repo, fetchImpl = fet
   }
 
   async function writeFile(path, content, message, sha) {
-    const body = { message, content: b64(content), branch, ...(sha ? { sha } : {}) };
-    return request(path, { method: "PUT", body: JSON.stringify(body) });
+    return request(path, {
+      method: "PUT",
+      body: JSON.stringify({ message, content: b64(content), branch, ...(sha ? { sha } : {}) }),
+    });
   }
 
   async function verifyPublic(url, expectedTitle, expectedText, { fetchPublic = fetchImpl, attempts = 5 } = {}) {
@@ -94,10 +87,7 @@ export function createGitHubContentAdapter({ token, owner, repo, fetchImpl = fet
         const contentMatches = expectedText ? html.includes(expectedText.slice(0, 80)) : true;
         return {
           verified: Boolean(titleMatches && contentMatches && canonical === url),
-          status: response.status,
-          canonical,
-          titleMatches,
-          contentMatches,
+          status: response.status, canonical, titleMatches, contentMatches,
           checkedAt: new Date().toISOString(),
         };
       }
@@ -130,42 +120,50 @@ export function createGitHubContentAdapter({ token, owner, repo, fetchImpl = fet
     }
 
     const current = await readFile(targetPath);
-    if (isNew && current) throw new Error("Duplicate slug: article already exists.");
+    if (isNew && current && current.content !== content) throw new Error("Duplicate slug: article already exists with different content.");
     if (!isNew && !current) throw new Error("Update target does not exist.");
-    if (!isNew && operation.expectedBlobSha && current.sha !== operation.expectedBlobSha) {
+    if (!isNew && !operation.expectedBlobSha) throw new Error("Update requires the reviewed baseline blob SHA.");
+    if (!isNew && current.sha !== operation.expectedBlobSha && current.content !== content) {
       throw new Error("Concurrent modification detected: current article SHA differs from the reviewed baseline.");
     }
 
     if (!isNew) {
-      const snapshot = {
-        operationId: operation.id,
-        targetPath,
-        originalSha: current.sha,
-        originalContent: current.content,
-        originalMetadata: operation.originalMetadata || {},
-        capturedAt: new Date().toISOString(),
-      };
-      const saved = await writeFile(snapshotPath(operation.id), JSON.stringify(snapshot, null, 2), `SEO snapshot ${operation.id}`);
-      if (!saved?.content?.sha) throw new Error("Pre-update snapshot could not be persisted.");
+      const snapshotFile = snapshotPath(operation.id);
+      const existingSnapshot = await readFile(snapshotFile);
+      if (!existingSnapshot) {
+        const snapshot = {
+          operationId: operation.id, targetPath, originalSha: current.sha,
+          originalContent: current.content, originalMetadata: operation.originalMetadata || {},
+          capturedAt: new Date().toISOString(),
+        };
+        const saved = await writeFile(snapshotFile, JSON.stringify(snapshot, null, 2), `SEO snapshot ${operation.id}`);
+        if (!saved?.content?.sha) throw new Error("Pre-update snapshot could not be persisted.");
+      } else {
+        const snapshot = JSON.parse(existingSnapshot.content);
+        if (snapshot.targetPath !== targetPath || snapshot.originalSha !== operation.expectedBlobSha) {
+          throw new Error("Existing immutable snapshot does not match the approved update baseline.");
+        }
+      }
     }
 
-    const written = await writeFile(targetPath, content, `SEO ${isNew ? "publish" : "update"}: ${slug}`, current?.sha);
+    let written;
+    if (current?.content === content) {
+      written = { content: { sha: current.sha }, commit: null };
+    } else {
+      written = await writeFile(targetPath, content, `SEO ${isNew ? "publish" : "update"}: ${slug}`, current?.sha);
+    }
     if (!written?.content?.sha) throw new Error("GitHub did not confirm the article content write.");
+
     const url = `${publicBaseUrl}/blog/${slug}`;
     const verification = await verifyPublic(url, operation.metadata?.title, operation.verificationText || "");
     const record = {
-      operationId: operation.id,
-      type: operation.type,
-      targetPath,
-      url,
-      approvalHash,
-      contentBlobSha: written.content.sha,
-      commitSha: written.commit?.sha || null,
+      operationId: operation.id, type: operation.type, targetPath, url, approvalHash,
+      contentBlobSha: written.content.sha, commitSha: written.commit?.sha || null,
       status: verification.verified ? "LIVE_VERIFIED" : "WRITE_SUCCEEDED_VERIFICATION_PENDING",
-      verification,
-      executedAt: new Date().toISOString(),
+      verification, executedAt: new Date().toISOString(),
     };
-    const ledger = await writeFile(ledgerPath, JSON.stringify(record, null, 2), `Record SEO operation ${operation.id}`);
+    const existingLedger = await readFile(ledgerPath);
+    const ledger = await writeFile(ledgerPath, JSON.stringify(record, null, 2), `Record SEO operation ${operation.id}`, existingLedger?.sha);
     if (!ledger?.content?.sha) throw new Error("Operation audit record could not be persisted.");
     return record;
   }
@@ -177,16 +175,21 @@ export function createGitHubContentAdapter({ token, owner, repo, fetchImpl = fet
     const snapshot = JSON.parse(raw.content);
     const current = await readFile(snapshot.targetPath);
     if (!current) throw new Error("Cannot rollback: target article no longer exists.");
+    if (current.content === snapshot.originalContent) {
+      return { operationId, targetPath: snapshot.targetPath, restoredBlobSha: current.sha, status: "ROLLED_BACK", idempotentReplay: true };
+    }
     const restored = await writeFile(snapshot.targetPath, snapshot.originalContent, `Rollback SEO operation ${operationId}`, current.sha);
     if (!restored?.content?.sha) throw new Error("Rollback write was not acknowledged.");
-    return {
-      operationId,
-      targetPath: snapshot.targetPath,
-      restoredBlobSha: restored.content.sha,
-      originalBlobSha: snapshot.originalSha,
-      status: "ROLLBACK_WRITE_SUCCEEDED_VERIFICATION_REQUIRED",
+    const rollbackRecord = {
+      operationId, targetPath: snapshot.targetPath, restoredBlobSha: restored.content.sha,
+      originalBlobSha: snapshot.originalSha, status: "ROLLED_BACK",
       rolledBackAt: new Date().toISOString(),
     };
+    const rollbackPath = `.seo-operations/rollbacks/${operationId}.json`;
+    const priorRollback = await readFile(rollbackPath);
+    const saved = await writeFile(rollbackPath, JSON.stringify(rollbackRecord, null, 2), `Record SEO rollback ${operationId}`, priorRollback?.sha);
+    if (!saved?.content?.sha) throw new Error("Rollback audit record could not be persisted.");
+    return rollbackRecord;
   }
 
   return Object.freeze({ execute, rollback, readFile, verifyPublic });
