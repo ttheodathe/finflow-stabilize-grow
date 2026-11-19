@@ -1,5 +1,13 @@
 const DEFAULT_SCHEMA = "public";
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+function requireUuid(value, label) {
+  if (typeof value !== "string" || !UUID_PATTERN.test(value)) {
+    throw new Error(`${label} did not return a valid UUID.`);
+  }
+  return value;
+}
+
 export function createSupabaseSeoStore({ url, serviceRoleKey, fetchImpl = fetch }) {
   if (!url || !serviceRoleKey) throw new Error("Supabase SEO persistence requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.");
   const base = new URL(url);
@@ -29,59 +37,85 @@ export function createSupabaseSeoStore({ url, serviceRoleKey, fetchImpl = fetch 
   }
 
   return Object.freeze({
-    recordRun({ schedulerKey, scheduledFor, attempt = 1, status, output = {}, upstreamRunId = null, errorSummary = null }) {
-      return rpc("seo_ops_record_run", {
+    async recordRun({ schedulerKey, scheduledFor, attempt = 1, status, output = {}, upstreamRunId = null, errorSummary = null }) {
+      if (upstreamRunId !== null) requireUuid(upstreamRunId, "Upstream scheduler run");
+      return requireUuid(await rpc("seo_ops_record_run", {
         p_scheduler_key: schedulerKey, p_scheduled_for: scheduledFor, p_attempt: attempt,
         p_status: status, p_output: output, p_upstream_run_id: upstreamRunId,
         p_error_summary: errorSummary,
-      });
+      }), "Scheduler run persistence");
     },
-    listPersistedOpportunities({ schedulerRunId }) {
-      if (typeof schedulerRunId !== "string" || !/^[0-9a-f-]{36}$/i.test(schedulerRunId)) {
-        throw new Error("A valid persisted Scheduler 1 run ID is required.");
-      }
-      return rpc("seo_ops_get_opportunities", { p_scheduler_run_id: schedulerRunId });
+    async listPersistedOpportunities({ schedulerRunId }) {
+      requireUuid(schedulerRunId, "Persisted Scheduler 1 run ID");
+      const rows = await rpc("seo_ops_get_opportunities", { p_scheduler_run_id: schedulerRunId });
+      if (!Array.isArray(rows)) throw new Error("Persisted opportunity readback returned an invalid response.");
+      for (const row of rows) requireUuid(row.id, "Persisted opportunity record");
+      return rows;
     },
-    recordOpportunity({ opportunityKey, schedulerRunId, targetUrl, queryText = null, opportunityType, score, evidence }) {
-      return rpc("seo_ops_record_opportunity", {
+    async recordOpportunity({ opportunityKey, schedulerRunId, targetUrl, queryText = null, opportunityType, score, evidence }) {
+      requireUuid(schedulerRunId, "Scheduler 1 run ID");
+      return requireUuid(await rpc("seo_ops_record_opportunity", {
         p_opportunity_key: opportunityKey, p_scheduler_run_id: schedulerRunId,
         p_target_url: targetUrl, p_query_text: queryText, p_opportunity_type: opportunityType,
         p_score: score, p_evidence: evidence,
-      });
+      }), "Opportunity persistence");
     },
-    recordPerformanceSnapshot({ snapshotKey, schedulerRunId, periodStart, periodEnd, source, metrics }) {
-      return rpc("seo_ops_record_performance_snapshot", {
+    async recordPerformanceSnapshot({ snapshotKey, schedulerRunId, periodStart, periodEnd, source, metrics }) {
+      if (schedulerRunId !== null) requireUuid(schedulerRunId, "Performance snapshot scheduler run ID");
+      return requireUuid(await rpc("seo_ops_record_performance_snapshot", {
         p_snapshot_key: snapshotKey, p_scheduler_run_id: schedulerRunId,
         p_period_start: periodStart, p_period_end: periodEnd, p_source: source, p_metrics: metrics,
-      });
+      }), "Performance snapshot persistence");
     },
-    recordActivationSnapshot({ snapshotDate, registeredUsers, onboardingCompletions, activatedUsers, returningActivatedUsers, definitionVersion, sourceWatermark, limitations = [] }) {
-      return rpc("seo_ops_record_activation_snapshot", {
+    async recordActivationSnapshot({ snapshotDate, registeredUsers, onboardingCompletions, activatedUsers, returningActivatedUsers, definitionVersion, sourceWatermark, limitations = [] }) {
+      return requireUuid(await rpc("seo_ops_record_activation_snapshot", {
         p_snapshot_date: snapshotDate, p_registered_users: registeredUsers,
         p_onboarding_completions: onboardingCompletions, p_activated_users: activatedUsers,
         p_returning_activated_users: returningActivatedUsers, p_definition_version: definitionVersion,
         p_source_watermark: sourceWatermark, p_limitations: limitations,
-      });
+      }), "Activation snapshot persistence");
     },
-    recordContentOperation({ operationKey, operationType, targetPath, slug, status = "PROPOSED", payload = {}, proposedContentHash = null, expectedBlobSha = null }) {
-      return rpc("seo_ops_record_content_operation", {
+    async recordContentOperation({ operationKey, operationType, targetPath, slug, status = "PROPOSED", payload = {}, proposedContentHash = null, expectedBlobSha = null }) {
+      return requireUuid(await rpc("seo_ops_record_content_operation", {
         p_operation_key: operationKey, p_operation_type: operationType,
         p_target_path: targetPath, p_slug: slug, p_status: status, p_payload: payload,
         p_proposed_content_hash: proposedContentHash, p_expected_blob_sha: expectedBlobSha,
-      });
+      }), "Content operation persistence");
     },
-    recordResearchRecord({ opportunityId, sourceUrl, sourceTitle, sourcePublishedAt = null, retrievedAt, supportedClaims = [], unresolvedClaims = [] }) {
-      return rpc("seo_ops_record_research_record", {
+    async recordResearchRecord({ opportunityId, sourceUrl, sourceTitle, sourcePublishedAt = null, retrievedAt, supportedClaims = [], unresolvedClaims = [] }) {
+      requireUuid(opportunityId, "Research opportunity ID");
+      return requireUuid(await rpc("seo_ops_record_research_record", {
         p_opportunity_id: opportunityId, p_source_url: sourceUrl, p_source_title: sourceTitle,
         p_source_published_at: sourcePublishedAt, p_retrieved_at: retrievedAt,
         p_supported_claims: supportedClaims, p_unresolved_claims: unresolvedClaims,
-      });
+      }), "Research record persistence");
     },
-    recordContentRevision({ operationId, revisionNumber, contentHash, markdown, revisionState = "PROPOSED" }) {
-      return rpc("seo_ops_record_content_revision", {
+    async recordContentRevision({ operationId, revisionNumber, contentHash, markdown, revisionState = "PROPOSED" }) {
+      requireUuid(operationId, "Content revision operation ID");
+      return requireUuid(await rpc("seo_ops_record_content_revision", {
         p_operation_id: operationId, p_revision_number: revisionNumber,
         p_content_hash: contentHash, p_markdown: markdown, p_revision_state: revisionState,
-      });
+      }), "Content revision persistence");
+    },
+    async getContentOperation({ operationId }) {
+      requireUuid(operationId, "Content operation readback ID");
+      const rows = await rpc("seo_ops_get_content_operation", { p_operation_id: operationId });
+      if (!Array.isArray(rows)) throw new Error("Content operation readback returned an invalid response.");
+      return rows[0] || null;
+    },
+    async listResearchRecords({ opportunityId }) {
+      requireUuid(opportunityId, "Research opportunity readback ID");
+      const rows = await rpc("seo_ops_get_research_records", { p_opportunity_id: opportunityId });
+      if (!Array.isArray(rows)) throw new Error("Research record readback returned an invalid response.");
+      for (const row of rows) requireUuid(row.id, "Research record readback");
+      return rows;
+    },
+    async listContentRevisions({ operationId }) {
+      requireUuid(operationId, "Content revision readback ID");
+      const rows = await rpc("seo_ops_get_content_revisions", { p_operation_id: operationId });
+      if (!Array.isArray(rows)) throw new Error("Content revision readback returned an invalid response.");
+      for (const row of rows) requireUuid(row.id, "Content revision readback");
+      return rows;
     },
   });
 }

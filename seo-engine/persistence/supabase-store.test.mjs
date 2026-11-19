@@ -89,7 +89,7 @@ test("Scheduler 2 reads only persisted opportunities for a validated run ID",asy
  let request;
  const store=createSupabaseSeoStore({
   url:"https://project.supabase.co",serviceRoleKey:"server-only-test-key",
-  fetchImpl:async(url,options)=>{request={url,options};return Response.json([{opportunity_key:"key-1",target_url:"https://www.finflowtrack.com/blog/a"}]);},
+  fetchImpl:async(url,options)=>{request={url,options};return Response.json([{id:"00000000-0000-4000-8000-000000000099",opportunity_key:"key-1",target_url:"https://www.finflowtrack.com/blog/a"}]);},
  });
  const rows=await store.listPersistedOpportunities({schedulerRunId:"00000000-0000-4000-8000-000000000001"});
  assert.equal(request.url,"https://project.supabase.co/rest/v1/rpc/seo_ops_get_opportunities");
@@ -125,4 +125,39 @@ test("required SEO persistence rejects missing credentials rather than silently 
   SEO_PERSISTENCE_REQUIRED:"true",
   SEO_OPS_ALLOWED_PROJECT_REF:"bufbyfwstdqvwnkhyrea",
  }),/needs SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY/);
+});
+
+test("persistence RPCs reject malformed returned IDs", async () => {
+  const store = createSupabaseSeoStore({
+    url: "https://project.supabase.co", serviceRoleKey: "server-only-test-key",
+    fetchImpl: async () => Response.json("not-a-uuid"),
+  });
+  await assert.rejects(store.recordContentOperation({
+    operationKey: "invalid-id", operationType: "NEW_ARTICLE",
+    targetPath: "content/blog/example.md", slug: "example",
+  }), /valid UUID/);
+});
+
+test("independent readback methods use the dedicated restricted RPCs", async () => {
+  const calls = [];
+  const store = createSupabaseSeoStore({
+    url: "https://project.supabase.co", serviceRoleKey: "server-only-test-key",
+    fetchImpl: async (url, options) => {
+      calls.push({ url, options });
+      if (String(url).includes("seo_ops_get_content_operation")) return Response.json([{id:"00000000-0000-4000-8000-000000000003",payload:{workflowState:"READY_FOR_HUMAN_REVIEW"}}]);
+      if (String(url).includes("seo_ops_get_research_records")) return Response.json([{id:"00000000-0000-4000-8000-000000000004",source_url:"https://www.irs.gov/"}]);
+      return Response.json([{id:"00000000-0000-4000-8000-000000000005",content_hash:"abc"}]);
+    },
+  });
+  const operationId = "00000000-0000-4000-8000-000000000003";
+  const opportunityId = "00000000-0000-4000-8000-000000000001";
+  const operation = await store.getContentOperation({operationId});
+  const research = await store.listResearchRecords({opportunityId});
+  const revisions = await store.listContentRevisions({operationId});
+  assert.equal(operation.payload.workflowState,"READY_FOR_HUMAN_REVIEW");
+  assert.equal(research.length,1);
+  assert.equal(revisions.length,1);
+  assert.match(calls[0].url,/seo_ops_get_content_operation/);
+  assert.match(calls[1].url,/seo_ops_get_research_records/);
+  assert.match(calls[2].url,/seo_ops_get_content_revisions/);
 });
