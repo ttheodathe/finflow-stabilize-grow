@@ -1,0 +1,58 @@
+name: SEO Scheduler 2 - Content Operations
+
+on:
+  schedule:
+    - cron: "45 1 * * *"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: seo-scheduler-2-content-operations
+  cancel-in-progress: false
+
+jobs:
+  content-operations:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Require today's successful Scheduler 1 run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          run="$(gh run list --workflow seo-scheduler-1-search-intelligence.yml --branch main --limit 1 --json databaseId,conclusion,createdAt)"
+          echo "$run" | node -e '
+            let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
+              const rows=JSON.parse(s); const latest=rows[0];
+              if(!latest || latest.conclusion!=="success") { console.error("Scheduler 1 has not completed successfully."); process.exit(1); }
+              const day=new Date(latest.createdAt).toISOString().slice(0,10);
+              const today=new Date().toISOString().slice(0,10);
+              if(day!==today) { console.error("Scheduler 1 success is not from today."); process.exit(1); }
+              require("node:fs").writeFileSync(process.env.RUN_ID_FILE||"/tmp/seo-scheduler-1-run-id",String(latest.databaseId));
+            });'
+          run_id="$(cat /tmp/seo-scheduler-1-run-id)"
+          echo "SCHEDULER_1_RUN_ID=$run_id" >> "$GITHUB_ENV"
+      - name: Download Scheduler 1 evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download "$SCHEDULER_1_RUN_ID" --name seo-scheduler-1-opportunities --dir seo-output
+      - name: Process content queue in fail-closed dry-run mode
+        env:
+          DRY_RUN: "true"
+          PUBLISH_ENABLED: "false"
+          CONTENT_UPDATE_ENABLED: "false"
+          PRODUCTION_CONTENT_WRITE_ALLOWED: "false"
+          SEO_OUTPUT_DIR: seo-output
+        run: node seo-engine/schedulers/content-operations.mjs seo-output/scheduler-1-opportunities.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: seo-scheduler-2-content-queue
+          path: seo-output/scheduler-2-content-queue.json
+          if-no-files-found: error
+          retention-days: 30
