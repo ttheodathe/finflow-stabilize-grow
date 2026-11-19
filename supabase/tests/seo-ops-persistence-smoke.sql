@@ -1,7 +1,8 @@
 do $$
 declare
   v_run uuid; v_run2 uuid; v_opp uuid; v_opp2 uuid; v_snap uuid; v_snap2 uuid;
-  v_activation uuid; v_content uuid; v_content2 uuid; v_counts record; v_count integer; v_read_count integer;
+  v_activation uuid; v_content uuid; v_content2 uuid; v_research uuid; v_revision uuid;
+  v_counts record; v_count integer; v_read_count integer;
   v_attempt integer := extract(epoch from clock_timestamp())::integer;
 begin
   v_run := public.seo_ops_record_run('SEARCH_INTELLIGENCE',date '2026-11-20',v_attempt,'RUNNING','{"fixture":true}'::jsonb);
@@ -17,8 +18,19 @@ begin
   v_opp := public.seo_ops_record_opportunity('ci-fixture-opportunity',v_run,'https://example.test/blog/a','fixture query','REVIEW_EXISTING_PAGE',50,'{"impressions":100}'::jsonb);
   v_opp2 := public.seo_ops_record_opportunity('ci-fixture-opportunity',v_run,'https://example.test/blog/a','fixture query','REVIEW_EXISTING_PAGE',55,'{"impressions":120}'::jsonb);
   if v_opp <> v_opp2 then raise exception 'opportunity idempotency failed'; end if;
-  select count(*) into v_read_count from public.seo_ops_get_opportunities(v_run);
-  if v_read_count <> 1 then raise exception 'persisted opportunity read RPC returned %, expected 1',v_read_count; end if;
+  select count(*) into v_read_count from public.seo_ops_get_opportunities(v_run)
+   where id = v_opp and source_run_output->>'fixture' = 'true';
+  if v_read_count <> 1 then raise exception 'persisted opportunity read RPC lost source id/run fixture metadata'; end if;
+
+  v_research := public.seo_ops_record_research_record(
+    v_opp,'https://example.test/fixture-source','Fixture source',null,now(),
+    '[{"id":"fixture-claim","text":"Fixture-only claim","verificationStatus":"TEST_ONLY"}]'::jsonb,
+    '[]'::jsonb
+  );
+  select count(*) into v_count from seo_ops.research_records
+   where id=v_research and opportunity_id=v_opp
+     and supported_claims @> '[{"id":"fixture-claim"}]'::jsonb;
+  if v_count <> 1 then raise exception 'source research record or claim mapping was not persisted'; end if;
   select count(*) into v_count from seo_ops.opportunities where opportunity_key='ci-fixture-opportunity';
   if v_count <> 1 then raise exception 'duplicate opportunity record was created'; end if;
 
@@ -35,6 +47,13 @@ begin
     'cash-flow','PROPOSED','{"validation":"RESEARCH_REQUIRED"}'::jsonb
   );
   if v_content <> v_content2 then raise exception 'content operation idempotency failed'; end if;
+  v_revision := public.seo_ops_record_content_revision(
+    v_content,1,repeat('a',64),'# Fixture-only draft','PROPOSED'
+  );
+  select count(*) into v_count from seo_ops.content_revisions
+   where id=v_revision and operation_id=v_content
+     and content_hash=repeat('a',64) and revision_state='PROPOSED';
+  if v_count <> 1 then raise exception 'draft revision was not durably persisted'; end if;
   begin
     perform public.seo_ops_record_content_operation(
       'ci-fixture-content-operation','EXISTING_ARTICLE_UPDATE','content/blog/other.md',
@@ -85,7 +104,13 @@ begin
      or not has_function_privilege('service_role','public.seo_ops_record_content_operation(text,text,text,text,text,jsonb,text,text)','EXECUTE')
      or has_function_privilege('anon','public.seo_ops_get_opportunities(uuid)','EXECUTE')
      or has_function_privilege('authenticated','public.seo_ops_get_opportunities(uuid)','EXECUTE')
-     or not has_function_privilege('service_role','public.seo_ops_get_opportunities(uuid)','EXECUTE') then
+     or not has_function_privilege('service_role','public.seo_ops_get_opportunities(uuid)','EXECUTE')
+     or has_function_privilege('anon','public.seo_ops_record_research_record(uuid,text,text,date,timestamptz,jsonb,jsonb)','EXECUTE')
+     or has_function_privilege('authenticated','public.seo_ops_record_research_record(uuid,text,text,date,timestamptz,jsonb,jsonb)','EXECUTE')
+     or not has_function_privilege('service_role','public.seo_ops_record_research_record(uuid,text,text,date,timestamptz,jsonb,jsonb)','EXECUTE')
+     or has_function_privilege('anon','public.seo_ops_record_content_revision(uuid,integer,text,text,text)','EXECUTE')
+     or has_function_privilege('authenticated','public.seo_ops_record_content_revision(uuid,integer,text,text,text)','EXECUTE')
+     or not has_function_privilege('service_role','public.seo_ops_record_content_revision(uuid,integer,text,text,text)','EXECUTE') then
     raise exception 'SEO RPC execution grants are incorrect';
   end if;
 end $$;
