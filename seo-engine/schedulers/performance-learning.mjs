@@ -41,7 +41,14 @@ export async function runPerformanceLearning({ dateRange = resolveDateRange(), c
     productAcquisition: {
       status: "NOT_CONNECTED",
       registrations: null, onboardingCompletions: null, activatedUsers: null, returningActivatedUsers: null,
-      explanation: "No authoritative product-database measurement is configured in this read-only collector. Null means unavailable, not zero.",
+      explanation: "A read-only aggregate SQL query exists at seo-engine/activation/production-aggregate-readonly.sql, but Scheduler 3 cannot execute it until a least-privilege production database connection is configured. Null means unavailable, not zero.",
+    },
+    activationMeasurement: {
+      status: "BLOCKED_READ_ONLY_CREDENTIAL",
+      definitionVersion: "user-activation-v1",
+      definition: "Registered profile + completed onboarding + at least one persisted non-void invoice or persisted expense; returning means qualifying actions on at least two distinct UTC dates.",
+      queryFile: "seo-engine/activation/production-aggregate-readonly.sql",
+      explanation: "The query emits aggregate counts only. Production activation is not automatically collected until a read-only production connection is available.",
     },
     contentAttribution: { status: "NOT_AVAILABLE", reason: "No operation-to-landing-page baseline and post-change comparison is configured yet." },
     dataQuality: {
@@ -49,7 +56,12 @@ export async function runPerformanceLearning({ dateRange = resolveDateRange(), c
       error: collectionError,
       interpretation: "Unavailable values are null; a successfully retrieved zero is reported as zero.",
     },
-    limitations: ["GA4 data is aggregate, not user-level.", "GSC clicks and GA4 sessions are different measures.", "No causal attribution is inferred."],
+    limitations: [
+      "GA4 data is aggregate, not user-level.",
+      "GSC clicks and GA4 sessions are different measures.",
+      "No causal attribution is inferred.",
+      "The production expenses table has no status/reversal column; persisted expense rows are treated as qualifying, and hard-deleted rows are absent.",
+    ],
   };
   const store = createSupabaseSeoStoreFromEnv(process.env);
   let persistence = { status: "NOT_CONFIGURED", schedulerRunId: null };
