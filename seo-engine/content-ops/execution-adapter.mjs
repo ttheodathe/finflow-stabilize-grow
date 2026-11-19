@@ -175,19 +175,39 @@ export function createGitHubContentAdapter({
     const snapshot = JSON.parse(raw.content);
     const current = await readFile(snapshot.targetPath);
     if (!current) throw new Error("Cannot rollback: target article no longer exists.");
-    if (current.content === snapshot.originalContent) {
-      return { operationId, targetPath: snapshot.targetPath, restoredBlobSha: current.sha, status: "ROLLED_BACK", idempotentReplay: true };
+
+    let restored = current;
+    if (current.content !== snapshot.originalContent) {
+      const result = await writeFile(snapshot.targetPath, snapshot.originalContent, `Rollback SEO operation ${operationId}`, current.sha);
+      if (!result?.content?.sha) throw new Error("Rollback write was not acknowledged.");
+      restored = { sha: result.content.sha, content: snapshot.originalContent };
     }
-    const restored = await writeFile(snapshot.targetPath, snapshot.originalContent, `Rollback SEO operation ${operationId}`, current.sha);
-    if (!restored?.content?.sha) throw new Error("Rollback write was not acknowledged.");
+
+    const slug = snapshot.targetPath.split("/").pop().replace(/\.md$/, "");
+    const url = `${publicBaseUrl}/blog/${slug}`;
+    const originalBody = snapshot.originalContent.replace(/^---[\\s\\S]*?---\\s*/, "").trim();
+    const verification = await verifyPublic(
+      url,
+      snapshot.originalMetadata?.title || null,
+      originalBody,
+    );
     const rollbackRecord = {
-      operationId, targetPath: snapshot.targetPath, restoredBlobSha: restored.content.sha,
-      originalBlobSha: snapshot.originalSha, status: "ROLLED_BACK",
+      operationId,
+      targetPath: snapshot.targetPath,
+      restoredBlobSha: restored.sha,
+      originalBlobSha: snapshot.originalSha,
+      status: verification.verified ? "ROLLED_BACK" : "ROLLBACK_WRITE_SUCCEEDED_VERIFICATION_PENDING",
+      verification,
       rolledBackAt: new Date().toISOString(),
     };
     const rollbackPath = `.seo-operations/rollbacks/${operationId}.json`;
     const priorRollback = await readFile(rollbackPath);
-    const saved = await writeFile(rollbackPath, JSON.stringify(rollbackRecord, null, 2), `Record SEO rollback ${operationId}`, priorRollback?.sha);
+    const saved = await writeFile(
+      rollbackPath,
+      JSON.stringify(rollbackRecord, null, 2),
+      `Record SEO rollback ${operationId}`,
+      priorRollback?.sha,
+    );
     if (!saved?.content?.sha) throw new Error("Rollback audit record could not be persisted.");
     return rollbackRecord;
   }
