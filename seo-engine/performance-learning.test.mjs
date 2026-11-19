@@ -74,3 +74,21 @@ test("Scheduler 3 reports partial data and retains the available source", async 
     await rm(outputDir, { recursive: true, force: true });
   }
 });
+
+test("Scheduler 3 keeps missing metric values null and successful empty rows at zero",async()=>{
+ const outputDir=await mkdtemp(path.join(os.tmpdir(),"seo-performance-null-"));
+ try{
+  const result=await runPerformanceLearning({
+   dateRange,outputDir,env:{},
+   collectFn:async({outputDir:dir})=>{
+    const file=path.join(dir,"fixture-null.json");
+    const snapshot={sourceStatus:{gsc:"AVAILABLE",ga4:"AVAILABLE"},sourceErrors:{gsc:null,ga4:null},
+     gsc:{pages:[{clicks:null,impressions:null}]},ga4:[{sessions:null,engagedSessions:null}]};
+    await writeFile(file,JSON.stringify(snapshot));return {file};
+   },
+  });
+  const report=JSON.parse(await readFile(result.path,"utf8"));
+  assert.equal(report.search.clicks,null);assert.equal(report.search.impressions,null);assert.equal(report.search.ctr,null);
+  assert.equal(report.analytics.organicSessions,null);assert.equal(report.analytics.engagedSessions,null);assert.equal(report.analytics.engagementRate,null);
+ }finally{await rm(outputDir,{recursive:true,force:true});}
+});
