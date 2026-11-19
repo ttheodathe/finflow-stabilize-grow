@@ -11,6 +11,17 @@ const fixtures=[
  {id:"fixture-cashflow",targetUrl:"https://www.finflowtrack.com/blog/13-week-cash-flow-forecast-template",targetQuery:"13-week cash flow forecast template",metrics:{impressions:95,clicks:3,ctr:3/95,averagePosition:11.8},reportingPeriodEnd:"2026-11-16",dataSource:"TEST_FIXTURE",evidenceMode:"FIXTURE"},
  {id:"fixture-break-even",targetUrl:"https://www.finflowtrack.com/blog/break-even-analysis-small-business",targetQuery:"small business break-even analysis formula",metrics:{impressions:80,clicks:2,ctr:2/80,averagePosition:17.1},reportingPeriodEnd:"2026-11-16",dataSource:"TEST_FIXTURE",evidenceMode:"FIXTURE"},
 ];
+function mockSoftwareSelectionFetch(url) {
+ const address=String(url);
+ const pages=[
+  ["waveapps.com", "<title>Wave Pricing</title><body>STARTER Plan $0 Create unlimited estimates invoices bills and bookkeeping records. Online payments include 2.9% + $0.60 per credit card transaction. Pro plan adds auto-import bank transactions and digitally capture unlimited receipts.</body>"],
+  ["zoho.com", "<title>Zoho Books US Pricing</title><body>FREE $0 create invoices expenses journals P&L Balance Sheet and 50+ Reports. 1 User + 1 Accountant. Free Plan revenue threshold $50,000. Up to 1,000 invoices and 1,000 expenses annually.</body>"],
+  ["zipbooks.com", "<title>ZipBooks Pricing</title><body>Starter Free. Send unlimited invoices. Manage unlimited vendors and customers. View Basic Reports. Connect 1 bank account.</body>"],
+  ["irs.gov", "<title>What kind of records should I keep</title><body>Keep business records that clearly show income and expenses. Supporting documents include invoices, receipts and bank records.</body>"],
+ ];
+ const found=pages.find(([domain])=>address.includes(domain));
+ return Promise.resolve(new Response(found?.[1] || "<html><body>not found</body></html>",{status:200,headers:{"content-type":"text/html"}}));
+}
 function mockFetch(url){
  const content=String(url).includes("irs.gov/") ? "<html><head><title>Recordkeeping for small business</title></head><body>Good records help identify income sources, track expenses and prepare financial statements. A recordkeeping system should clearly show business income and expenses. Keep supporting documents including invoices, receipts and bank statements. Financial statements and books of accounts should be accurate.</body></html>"
  : String(url).includes("sba.gov/counseling/plan-your-business") || String(url).includes("legacy.sba.gov") ? "<html><head><title>Break-even point</title></head><body>The break-even point is where total cost equals total revenue. Fixed costs divided by price less variable costs gives the break-even point in units. Contribution margin is the difference between price and variable costs. Semi-variable costs combine fixed and variable parts. This calculation is an estimate and is not intended to determine accounting or financing outcomes exactly.</body></html>"
@@ -214,9 +225,9 @@ test("classifies software-selection queries without treating them as generic rec
     const intent = classifySearchIntent(query);
     assert.equal(intent, "Software selection");
     const selection = selectCompatibleSourcePack(query, intent);
-    assert.equal(selection.compatible, false);
-    assert.equal(selection.matchedPackId, "recordkeeping");
-    assert.equal(selection.reason, "SOURCE_PACK_INTENT_INCOMPATIBLE");
+    assert.equal(selection.compatible, true);
+    assert.equal(selection.matchedPackId, "software-selection");
+    assert.equal(selection.reason, null);
   }
   assert.equal(classifySearchIntent("unclear business finance question"), "REVIEW_REQUIRED");
 });
@@ -236,15 +247,20 @@ test("the exact GSC landing page is assessed as an update, not a new article", a
         dataSource: "Google Search Console",
         evidenceMode: "LIVE_OR_PERSISTED",
       }],
-      contentDir: env.contentDir, outputDir: env.outputDir, fetchImpl: mockFetch, now, store: null,
+      contentDir: env.contentDir, outputDir: env.outputDir, fetchImpl: mockSoftwareSelectionFetch, now, store: null,
     });
     const item = result.results[0];
     assert.equal(item.intent, "Software selection");
     assert.equal(item.cannibalization.decision, "UPDATE_EXISTING_ARTICLE");
     assert.equal(item.editorialDecision, "UPDATE_EXISTING_ARTICLE");
-    assert.equal(item.status, "REJECTED");
-    assert.equal(item.sourcePackCompatibility.reason, "SOURCE_PACK_INTENT_INCOMPATIBLE");
-    assert.ok(item.rejectionReasons.includes("SOURCE_PACK_INTENT_INCOMPATIBLE"));
+    assert.equal(item.status, "DRAFT_GENERATED_NOT_ELIGIBLE");
+    assert.equal(item.sourcePackCompatibility.compatible, true);
+    assert.equal(item.sourcePackCompatibility.matchedPackId, "software-selection");
+    assert.equal(item.draft.slug, "free-accounting-software-for-small-business");
+    assert.equal(item.draft.operationType, "EXISTING_ARTICLE_UPDATE");
+    assert.equal(result.draftGeneratedCount, 1);
+    assert.equal(result.readyDraftCount, 0);
+    assert.equal(item.quality.productCapabilities, "VERIFIED_FROM_REPOSITORY");
   } finally {
     await rm(env.root, { recursive: true, force: true });
   }

@@ -19,6 +19,39 @@ function requireUuid(value, label) {
 }
 const SOURCE_PACKS = [
   {
+    id: "software-selection",
+    supportedIntents: ["Software selection", "Feature evaluation", "Pricing and alternatives"],
+    subjectCoverage: ["accounting software", "free accounting software", "bookkeeping platforms", "accounting apps", "invoice tracking", "reporting features"],
+    audience: "Small-business owners, freelancers and microbusinesses comparing financial software",
+    jurisdiction: "Provider-specific plan and regional terms; Zoho source is the United States edition only",
+    approvedSourceTypes: ["OFFICIAL_VENDOR", "OFFICIAL_GOVERNMENT"],
+    match: /free.{0,45}(accounting|bookkeeping).{0,45}(software|apps?|platforms?|programs?|tools?)|(?:accounting|bookkeeping).{0,45}(software|apps?|platforms?|programs?).{0,45}(compare|free|best|recommend|worth)/i,
+    intent: "Commercial investigation",
+    updateSectionHeading: "## Free Accounting Software Options: A Practical Comparison",
+    sources: [
+      { url: "https://www.waveapps.com/pricing", expectedPublisher: "Wave", supports: ["Wave Starter is listed at $0 and includes unlimited estimates, invoices, bills and bookkeeping records; payment processing fees may apply."], terms: ["STARTER", "$0", "invoices", "bookkeeping records", "credit card transaction"] },
+      { url: "https://www.zoho.com/us/books/pricing/", expectedPublisher: "Zoho", supports: ["The United States edition of Zoho Books lists a Free plan with invoicing, expenses, reports and plan-specific user, revenue and annual transaction limits."], terms: ["FREE", "invoices", "expenses", "reports", "1 User", "1,000 invoices", "$50,000"] },
+      { url: "https://zipbooks.com/pricing", expectedPublisher: "ZipBooks", supports: ["ZipBooks Starter is listed as free and includes unlimited invoices, vendors and customers, basic reports and one connected bank account."], terms: ["Starter", "Free", "invoices", "customers", "Basic Reports", "1 bank account"] },
+      { url: "https://www.irs.gov/businesses/small-businesses-self-employed/what-kind-of-records-should-i-keep", expectedPublisher: "Internal Revenue Service", supports: ["Business records should clearly show income and expenses and retain supporting documents."], terms: ["records", "income", "expenses", "invoices", "receipts"] },
+    ],
+    claimSpecs: [
+      { id: "wave-starter", text: "Wave Starter is listed at $0 and includes unlimited estimates, invoices, bills and bookkeeping records; payment processing can involve separate transaction fees.", terms: ["STARTER", "$0", "invoices", "bookkeeping records", "credit card transaction"], sourceIndexes: [0] },
+      { id: "zoho-us-free", text: "Zoho Books' United States Free plan lists invoicing, expenses and reports, with published user, annual invoice and revenue eligibility limits that buyers should check.", terms: ["FREE", "invoices", "expenses", "reports", "1 User", "1,000 invoices", "$50,000"], sourceIndexes: [1] },
+      { id: "zipbooks-starter", text: "ZipBooks Starter is listed as free and includes unlimited invoices, customers and vendors, basic reports and one connected bank account.", terms: ["Starter", "Free", "invoices", "customers", "Basic Reports", "1 bank account"], sourceIndexes: [2] },
+      { id: "recordkeeping", text: "A suitable recordkeeping process should clearly show business income and expenses and retain supporting documents.", terms: ["records", "income", "expenses", "invoices", "receipts"], sourceIndexes: [3] },
+    ],
+    productMention: "free accounting software",
+    title: "Free Accounting Software for Small Business",
+    description: "Compare free accounting software plans for small businesses, including invoicing, expenses, reports, user limits, regional eligibility and payment costs.",
+    sections: [
+      ["Wave Starter: invoicing and bookkeeping records", "Wave lists Starter at $0 and describes unlimited estimates, invoices, bills and bookkeeping records. Its pricing page also lists transaction fees when online card payments are used. The Pro plan adds automated bank transaction imports, transaction merging and categorization, receipt capture and other paid features. A business should therefore compare the $0 subscription with the cost of payment processing and any paid workflow it expects to need. Do not assume that bank automation or receipt capture is part of the Starter plan; check the current feature comparison and the availability of payment services in the business's country."],
+      ["Zoho Books US Free: features with eligibility limits", "The United States edition of Zoho Books lists a Free plan with invoices, expenses, reports and other accounting workflows. Its published plan details also describe one user plus one accountant, annual invoice and expense limits, and a revenue threshold. These conditions matter as much as the $0 headline. The United States plan should not be treated as a global offer: a business operating in another country should open the provider's local edition and check the terms that apply there before relying on the feature list."],
+      ["ZipBooks Starter: basic invoicing and reporting", "ZipBooks lists Starter as a free plan with unlimited invoices, vendors and customers, basic reports and one connected bank account. The next tiers add workflows such as recurring invoices, reminders, additional bank connections, time tracking and larger team access. A business that only needs straightforward invoicing and basic reporting may find the Starter plan worth assessing, while a business that depends on recurring billing, reconciliation or multiple bank accounts should check the paid-tier requirements."],
+      ["Compare the workflow and the total cost", "Before choosing a plan, list the tasks the business must complete each month: creating invoices, recording expenses, maintaining customer records, reviewing reports, reconciling transactions and exporting records. Then check which tasks are included in the free tier, which are limited by user or transaction counts, and which require a paid plan or a separate transaction fee. A free subscription does not automatically mean every payment, add-on or financial workflow is free. Confirm data export, support, regional availability and the terms that apply to the business's location."],
+    ],
+    related: ["how-to-create-an-invoice", "how-to-keep-track-of-business-expenses", "complete-guide-to-small-business-accounting"],
+  },
+  {
     id: "recordkeeping",
     supportedIntents: ["Bookkeeping guidance", "How-to/tutorial", "Accounting education"],
     subjectCoverage: ["bookkeeping", "business records", "income", "expenses", "receipts", "invoices"],
@@ -169,11 +202,23 @@ function htmlMeta(html, pattern) {
 function sourcePublisher(url) {
   const host = new URL(url).hostname.replace(/^www\./, "");
   if (host.endsWith("sba.gov")) return "U.S. Small Business Administration";
-  return ({ "irs.gov": "Internal Revenue Service", "business.gov.au": "Australian Government business.gov.au", "gov.uk": "GOV.UK", "smallbusinesscommissioner.gov.uk": "Office of the Small Business Commissioner (UK)" })[host] || host;
+  const publishers = {
+    "irs.gov":"Internal Revenue Service",
+    "business.gov.au":"Australian Government business.gov.au",
+    "gov.uk":"GOV.UK",
+    "smallbusinesscommissioner.gov.uk":"Office of the Small Business Commissioner (UK)",
+    "waveapps.com":"Wave",
+    "zoho.com":"Zoho",
+    "zipbooks.com":"ZipBooks",
+    "finflowtrack.com":"FinFlow Track",
+  };
+  return publishers[host] || host;
 }
 function sourceReliability(url) {
-  const host = new URL(url).hostname;
-  return /(^|\.)((irs|sba)\.gov|business\.gov\.au|gov\.uk|smallbusinesscommissioner\.gov\.uk)$/.test(host) ? "OFFICIAL_GOVERNMENT" : "UNVERIFIED_PUBLISHER";
+  const host = new URL(url).hostname.replace(/^www\./, "");
+  if (/(^|\.)((irs|sba)\.gov|business\.gov\.au|gov\.uk|smallbusinesscommissioner\.gov\.uk)$/.test(host)) return "OFFICIAL_GOVERNMENT";
+  if (["waveapps.com","zoho.com","zipbooks.com","finflowtrack.com"].some(domain => host === domain || host.endsWith(`.${domain}`))) return "OFFICIAL_VENDOR";
+  return "UNVERIFIED_PUBLISHER";
 }
 function dateFromHtml(html) {
   const raw = htmlMeta(html, /property=["']article:published_time["']/i)
@@ -210,7 +255,8 @@ export function classifySearchIntent(query) {
 }
 
 export function selectCompatibleSourcePack(query, intent) {
-  const matchedPack = SOURCE_PACKS.find(pack => pack.match.test(String(query || "")) || pack.subjectCoverage?.some(term => String(query || "").toLowerCase().includes(term.toLowerCase()))) || null;
+  const matchedPacks = SOURCE_PACKS.filter(pack => pack.match.test(String(query || "")) || pack.subjectCoverage?.some(term => String(query || "").toLowerCase().includes(term.toLowerCase())));
+  const matchedPack = matchedPacks.find(pack => pack.supportedIntents?.includes(intent)) || matchedPacks[0] || null;
   if (intent === "REVIEW_REQUIRED") {
     return { pack: null, matchedPackId: matchedPack?.id || null, compatible: false, reason: "AMBIGUOUS_INTENT_REQUIRES_HUMAN_REVIEW" };
   }
