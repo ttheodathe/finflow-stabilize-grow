@@ -323,6 +323,10 @@ export async function runResearchPipeline({
     const queryRow = queryRows.find(row => row.query === raw.queryText) || queryRows[0] || null;
     const candidate = {
       id: raw.id || raw.opportunityKey || null,
+      persistedOpportunityId: raw.persistedOpportunityId || null,
+      sourceCollectionRunId: raw.sourceCollectionRunId || null,
+      sourceCollectionAt: raw.sourceCollectionAt || raw.evidence?.sourceCollectionAt || null,
+      reportingPeriod: raw.reportingPeriod || raw.evidence?.dateRange || null,
       targetUrl: raw.targetUrl || null,
       targetQuery: raw.targetQuery || raw.queryText || queryRow?.query || "",
       relatedQueries: raw.relatedQueries || queryRows.map(row => row.query).filter(Boolean).slice(1,6),
