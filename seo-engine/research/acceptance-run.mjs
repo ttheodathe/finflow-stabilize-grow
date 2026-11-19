@@ -58,6 +58,7 @@ const historicalS1 = await runSearchIntelligence({
   dateRange: original.dateRange,
   collectFn: async () => ({ file: historicalSnapshotPath }),
   outputDir: historicalDir,
+  runAttempt: 101,
 });
 assert.equal(historicalS1.persistenceStatus, "PERSISTED");
 assert.equal(historicalS1.evidenceMode, "HISTORICAL_GSC_ARTIFACT");
@@ -65,6 +66,7 @@ const historicalReport = JSON.parse(await readFile(historicalS1.path, "utf8"));
 const historicalRunId = historicalReport.persistence?.schedulerRunId;
 assert.match(historicalRunId || "", UUID);
 assert.equal(historicalReport.evidenceMode, "HISTORICAL_GSC_ARTIFACT");
+assert.equal(historicalReport.runAttempt, 101);
 
 const persisted = await store.listPersistedOpportunities({ schedulerRunId: historicalRunId });
 const opportunity = persisted.find(row =>
@@ -105,6 +107,7 @@ const historicalS2 = await runContentOperations({
   env: process.env,
   store: filteredStore,
   allowFixture: false,
+  runAttempt: 103,
 });
 const contentReport = JSON.parse(await readFile(historicalS2.path, "utf8"));
 const accepted = contentReport.results.find(item =>
@@ -118,6 +121,7 @@ assert.equal(accepted.sourcePackCompatibility?.compatible, true);
 assert.equal(accepted.candidate?.evidenceMode, "HISTORICAL_GSC_ARTIFACT");
 assert.equal(accepted.status, "DRAFT_READY_FOR_HUMAN_REVIEW");
 assert.equal(accepted.persistence?.status, "PERSISTED");
+assert.notEqual(accepted.persistence?.schedulerRunId, historicalRunId);
 assert.equal(accepted.persistence?.independentReadback?.verified, true);
 assert.match(accepted.draft?.slug || "", new RegExp("^" + TARGET_SLUG + "$"));
 assert.ok(accepted.persistence?.operationId && UUID.test(accepted.persistence.operationId));
@@ -145,7 +149,7 @@ assert.ok(draftMarkdown.includes("What Does \"Free Accounting Software\" Actuall
 let freshCollection = { status: "NOT_ATTEMPTED" };
 try {
   const freshDir = path.resolve("seo-output/acceptance/fresh");
-  const fresh = await runSearchIntelligence({ outputDir: freshDir });
+  const fresh = await runSearchIntelligence({ outputDir: freshDir, runAttempt: 102 });
   const freshReport = JSON.parse(await readFile(fresh.path, "utf8"));
   freshCollection = {
     status: freshReport.persistence?.status || fresh.persistenceStatus,

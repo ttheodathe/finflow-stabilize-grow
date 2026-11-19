@@ -143,7 +143,7 @@ export function buildOpportunityKey(schedulerRunId, opportunityId, reportingPeri
   return `${schedulerRunId}:${opportunityId}:${reportingPeriodEnd}`;
 }
 
-export async function runSearchIntelligence({ dateRange = resolveDateRange(), collectFn = collect, fetchImpl = fetch, outputDir = OUTPUT } = {}) {
+export async function runSearchIntelligence({ dateRange = resolveDateRange(), collectFn = collect, fetchImpl = fetch, outputDir = OUTPUT, runAttempt = null } = {}) {
   await mkdir(outputDir, { recursive: true });
   const result = await collectFn({ dateRange, outputDir });
   const snapshot = JSON.parse(await readFile(result.file, "utf8"));
@@ -187,7 +187,9 @@ export async function runSearchIntelligence({ dateRange = resolveDateRange(), co
   if (store) {
     let schedulerRunId = null;
     const scheduledFor = new Date().toISOString().slice(0, 10);
-    const attempt = Math.max(1, Number.parseInt(process.env.GITHUB_RUN_ATTEMPT || "1", 10) || 1);
+    const attempt = Number.isInteger(runAttempt) && runAttempt >= 1
+      ? runAttempt
+      : Math.max(1, Number.parseInt(process.env.GITHUB_RUN_ATTEMPT || "1", 10) || 1);
     try {
       schedulerRunId = await store.recordRun({
         schedulerKey: "SEARCH_INTELLIGENCE", scheduledFor, attempt,
@@ -233,7 +235,7 @@ export async function runSearchIntelligence({ dateRange = resolveDateRange(), co
 
   const report = {
     schemaVersion: 1, scheduler: "SEARCH_INTELLIGENCE",
-    generatedAt: new Date().toISOString(), dateRange, evidenceMode,
+    generatedAt: new Date().toISOString(), dateRange, evidenceMode, runAttempt: Number.isInteger(runAttempt) ? runAttempt : null,
     sourceFile: result.file, opportunityCount: opportunities.length,
     technical,
     supplementaryAnalytics: {

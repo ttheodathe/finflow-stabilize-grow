@@ -61,7 +61,7 @@ export async function runContentOperations({
   inputPath = `${OUTPUT}/scheduler-1-opportunities.json`,
   outputDir = OUTPUT, researchDir = RESEARCH_DIR, contentDir = CONTENT_DIR,
   env = process.env, store = createSupabaseSeoStoreFromEnv(env),
-  fetchImpl = fetch, now = new Date(), allowFixture = false,
+  fetchImpl = fetch, now = new Date(), allowFixture = false, runAttempt = null,
 } = {}) {
   assertProductionWritesBlocked(env);
   const input = JSON.parse(await readFile(inputPath, "utf8"));
@@ -100,7 +100,9 @@ export async function runContentOperations({
   })), input.persistence.schedulerRunId);
 
   const scheduledFor = now.toISOString().slice(0,10);
-  const attempt = Math.max(1, Number.parseInt(env.GITHUB_RUN_ATTEMPT || "1",10) || 1);
+  const attempt = Number.isInteger(runAttempt) && runAttempt >= 1
+    ? runAttempt
+    : Math.max(1, Number.parseInt(env.GITHUB_RUN_ATTEMPT || "1",10) || 1);
   const schedulerRunId = await store.recordRun({
     schedulerKey: "CONTENT_OPERATIONS", scheduledFor, attempt,
     status: "RUNNING", upstreamRunId: input.persistence.schedulerRunId,
