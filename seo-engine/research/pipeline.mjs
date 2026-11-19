@@ -36,7 +36,7 @@ const SOURCE_PACKS = [
     ],
     claimSpecs: [
       { id: "wave-starter", text: "Wave Starter is listed at $0 and includes unlimited estimates, invoices, bills and bookkeeping records; payment processing can involve separate transaction fees.", terms: ["STARTER", "$0", "invoices", "bookkeeping records", "credit card transaction"], sourceIndexes: [0] },
-      { id: "zoho-us-free", text: "Zoho Books' United States Free plan lists invoicing, expenses and reports, with published user, annual invoice and revenue eligibility limits that buyers should check.", terms: ["FREE", "invoices", "expenses", "reports", "1 User", "1,000 invoices", "$50,000"], sourceIndexes: [1] },
+      { id: "zoho-us-free", text: "Zoho Books' United States Free plan lists invoicing, expenses and reports, with 1 user plus 1 accountant, 1,000 invoices and 1,000 expenses annually, and a US$50,000 revenue eligibility threshold.", terms: ["FREE", "invoices", "expenses", "reports", "1 User", "1,000 invoices", "1,000 expenses", "$50,000"], sourceIndexes: [1] },
       { id: "zipbooks-starter", text: "ZipBooks Starter is listed as free and includes unlimited invoices, customers and vendors, basic reports and one connected bank account.", terms: ["Starter", "Free", "invoices", "customers", "Basic Reports", "1 bank account"], sourceIndexes: [2] },
       { id: "recordkeeping", text: "A suitable recordkeeping process should clearly show business income and expenses and retain supporting documents.", terms: ["records", "income", "expenses", "invoices", "receipts"], sourceIndexes: [3] },
     ],
@@ -288,6 +288,27 @@ export function findUnsupportedNumericClaims(markdown) {
 export function detectUnsupportedNumericClaims(markdown) {
   return findUnsupportedNumericClaims(markdown).length > 0;
 }
+function normalizeNumericToken(value) {
+  return String(value || "").replace(/[^0-9.]/g, "").replace(/,/g, "");
+}
+export function assessNumericClaims(markdown, claims = [], sourceRecords = []) {
+  const tokens = findUnsupportedNumericClaims(markdown);
+  const verified = [];
+  const unsupported = [];
+  for (const token of tokens) {
+    const normalized = normalizeNumericToken(token);
+    const supported = claims.some(claim => {
+      const claimHasNumber = findUnsupportedNumericClaims(claim.text).some(value => normalizeNumericToken(value) === normalized);
+      if (!claimHasNumber) return false;
+      return (claim.sourceUrls || []).some(url => {
+        const source = sourceRecords.find(item => item.url === url);
+        return (source?.numericTokens || []).some(value => normalizeNumericToken(value) === normalized);
+      });
+    });
+    (supported ? verified : unsupported).push(token);
+  }
+  return { verified, unsupported };
+}
 
 export async function retrieveSource(source, { fetchImpl = fetch, now = new Date() } = {}) {
   const retrievedAt = now.toISOString();
@@ -344,6 +365,7 @@ export async function retrieveSource(source, { fetchImpl = fetch, now = new Date
     const title = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.replace(/\s+/g, " ").trim() || null;
     const excerpt = excerptFor(text, source.terms || []);
     const termMatches = (source.terms || []).filter(term => text.toLowerCase().includes(term.toLowerCase()));
+    const numericTokens = findUnsupportedNumericClaims(text);
     const requiredTermCount = Math.min(2, (source.terms || []).length);
     const keywordMatchPass = requiredTermCount > 0 && termMatches.length >= requiredTermCount && Boolean(excerpt);
     return {
@@ -352,6 +374,7 @@ export async function retrieveSource(source, { fetchImpl = fetch, now = new Date
       publishedAt: dateFromHtml(html),
       excerpt,
       termMatches,
+      numericTokens,
       status: keywordMatchPass ? "RETRIEVED_RELEVANT" : "RETRIEVED_RELEVANCE_UNCONFIRMED",
       verificationStatus: keywordMatchPass ? "KEYWORD_RELEVANCE_PASS_HUMAN_REVIEW_REQUIRED" : "RESEARCH_REQUIRED",
       relevanceAssessment: {
@@ -450,6 +473,14 @@ function buildDraft(candidate, pack, sourceRecords, productEvidence, internalLin
     ? "\n\nFinFlow Track's Free plan includes invoice creation, expense tracking, customer management and basic reports. Check the current [plan details](/pricing) and confirm that the available limits fit your workflow.\n"
     : "";
   const links = internalLinks.map(item => `- [${item.title}](/blog/${item.slug})`).join("\n");
+  const comparisonTable = pack.id === "software-selection" ? [
+    "| Product | What the free plan lists | Limits or costs to verify |",
+    "| --- | --- | --- |",
+    "| FinFlow Track | Invoice creation, expense tracking, customer management and basic reports | Confirm the current plan limits and whether the required workflow is included |",
+    "| Wave Starter | Unlimited estimates, invoices, bills and bookkeeping records | Payment processing fees may apply; automated bank imports and receipt capture are paid features |",
+    "| Zoho Books US Free | Invoices, expenses, P&L, Balance Sheet and 50+ reports | 1 user plus 1 accountant; 1,000 invoices and 1,000 expenses annually; US$50,000 revenue threshold; US edition only |",
+    "| ZipBooks Starter | Unlimited invoices, vendors and customers, basic reports and one bank account | Recurring invoices, multiple bank accounts and team features require checking higher tiers |",
+  ].join("\n") : "";
   const claims = pack.claimSpecs.map(spec => {
     const mappedSources = spec.sourceIndexes.map(index => sourceRecords[index]).filter(Boolean);
     const termsVerified = spec.terms.every(term => mappedSources.some(source => source.termMatches?.some(match => match.toLowerCase() === term.toLowerCase())));
@@ -473,6 +504,7 @@ function buildDraft(candidate, pack, sourceRecords, productEvidence, internalLin
     sourceTitle: s.sourceTitle, publisher: s.publisher, publishedAt: s.publishedAt, retrievedAt: s.retrievedAt,
     httpStatus: s.httpStatus, responseStatus: s.responseStatus, contentType: s.contentType,
     verificationStatus: s.verificationStatus, relevanceAssessment: s.relevanceAssessment,
+    numericTokens: s.numericTokens || [],
     verifiedAt: s.retrievedAt.slice(0,10), supports: s.supportedClaims.join("; "),
     excerpt: s.excerpt, reliability: s.reliability, limitations: s.limitations,
   }));
@@ -633,7 +665,18 @@ export async function runResearchPipeline({
     const frontmatterValid = contentText.data.status === "draft" && contentText.data.publicationStatus === "draft" &&
       contentText.data.title === draft.title && contentText.data.description === draft.description && contentText.data.slug === draft.slug;
     const bodyWords = contentText.content.trim().split(/\s+/).length;
-    const unsupportedNumericClaimMatches = findUnsupportedNumericClaims(contentText.content);
+    let numericReviewText = contentText.content;
+    if (operationType === "EXISTING_ARTICLE_UPDATE" && pack.updateSectionHeading) {
+      const updatedBody = matter(draft.content).content || "";
+      const sectionStart = updatedBody.indexOf(pack.updateSectionHeading);
+      if (sectionStart >= 0) {
+        const nextSection = updatedBody.indexOf("\n## ", sectionStart + pack.updateSectionHeading.length);
+        numericReviewText = updatedBody.slice(sectionStart, nextSection >= 0 ? nextSection : updatedBody.length);
+      }
+      base.editorialReviewQuestions.push("The existing article content outside the replaced comparison section is preserved; verify its inherited numerical claims and citations before approval.");
+    }
+    const numericClaimAssessment = assessNumericClaims(numericReviewText, draft.claims, sourceRecords);
+    const unsupportedNumericClaimMatches = numericClaimAssessment.unsupported;
     const unsupportedNumericClaims = unsupportedNumericClaimMatches.length > 0;
     if (unsupportedNumericClaims) base.rejectionReasons.push("UNSUPPORTED_NUMERIC_CLAIM");
     const existingComparisons = inventory.filter(item => !(operationType === "EXISTING_ARTICLE_UPDATE" && item.slug === target.slug)).map(item => ({
@@ -668,6 +711,7 @@ export async function runResearchPipeline({
     base.existingContentComparison = existingComparisons.slice(0,5);
     base.quality = {
       ...quality, frontmatterValid, bodyWords, duplicateSlug,
+      numericClaims: numericClaimAssessment,
       sourceCount: sourceRecords.length,
       verifiedSourceCount: sourceRecords.filter(source=>source.status==="RETRIEVED_RELEVANT").length,
       originality, numericClaimsVerified: !unsupportedNumericClaims, numericClaimMatches: unsupportedNumericClaimMatches, productCapabilities: productEvidence ? "VERIFIED_FROM_REPOSITORY" : "NOT_VERIFIED",

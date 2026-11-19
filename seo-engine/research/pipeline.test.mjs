@@ -4,7 +4,7 @@ import { mkdtemp, mkdir, writeFile, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import matter from "gray-matter";
-import { runResearchPipeline, freshnessFor, analyzeCannibalization, retrieveSource, detectUnsupportedNumericClaims, findUnsupportedNumericClaims, classifySearchIntent, selectCompatibleSourcePack } from "./pipeline.mjs";
+import { runResearchPipeline, freshnessFor, analyzeCannibalization, retrieveSource, detectUnsupportedNumericClaims, findUnsupportedNumericClaims, classifySearchIntent, selectCompatibleSourcePack, assessNumericClaims } from "./pipeline.mjs";
 
 const now=new Date("2026-11-19T10:00:00.000Z");
 const fixtures=[
@@ -304,4 +304,17 @@ test("source retrieval records redirect, HTTP and content-type evidence and reje
   assert.equal(redirected.status, "UNAVAILABLE");
   assert.equal(redirected.verificationStatus, "REJECTED");
   assert.equal(redirected.error, "UNEXPECTED_REDIRECT_OR_PUBLISHER_MISMATCH");
+});
+
+test("numeric claims require matching source numbers and claim-source mappings", () => {
+  const source = {url:"https://www.zoho.com/us/books/pricing/",numericTokens:["1 User","1,000 invoices","1,000 expenses","$50,000"]};
+  const claims = [{
+    text:"The plan allows 1 user, 1,000 invoices and 1,000 expenses with a $50,000 revenue threshold.",
+    sourceUrls:[source.url],
+  }];
+  const result = assessNumericClaims("1 user; 1,000 invoices; 1,000 expenses; $50,000.",claims,[source]);
+  assert.equal(result.unsupported.length,0);
+  assert.equal(result.verified.length,4);
+  const missingMapping = assessNumericClaims("$50,000.",[{text:"Revenue threshold is $50,000.",sourceUrls:[]}],[source]);
+  assert.deepEqual(missingMapping.unsupported,["$50,000"]);
 });
