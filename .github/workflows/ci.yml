@@ -51,7 +51,7 @@ jobs:
       - name: Test SEO pipeline and content-operation safeguards
         run: node --test seo-engine/*.test.mjs seo-engine/content-ops/*.test.mjs seo-engine/persistence/*.test.mjs seo-engine/research/*.test.mjs seo-engine/schedulers/*.test.mjs
 
-      - name: Generate three fixture-only editorial drafts
+      - name: Verify fixture candidates remain blocked by exact-target intent safeguards
         run: node seo-engine/research/fixture-run.mjs
 
       - name: Upload B7.1 fixture drafts and evidence report

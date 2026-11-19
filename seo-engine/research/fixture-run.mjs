@@ -23,8 +23,12 @@ const result=await runResearchPipeline({
   opportunities,outputDir,fetchImpl:mockFetch,store:null,allowFixture:true,
   now:new Date("2026-11-19T12:00:00.000Z"),
 });
-if(result.draftGeneratedCount!==2 || result.rejectedCount!==1 || result.readyDraftCount!==0) {
-  throw new Error(`Expected two compatible fixture drafts and one exact-target review rejection; got ${result.draftGeneratedCount} generated, ${result.readyDraftCount} ready and ${result.rejectedCount} rejected. Results: ${JSON.stringify(result.results.map(item=>({id:item.candidate.id,reasons:item.rejectionReasons,quality:item.quality?.decision}))) }`);
+const allBlockedForIntentReview = result.results.every(item =>
+  item.status === "REJECTED" &&
+  item.rejectionReasons.includes("EXACT_TARGET_INTENT_MISMATCH_REQUIRES_HUMAN_REVIEW")
+);
+if(result.draftGeneratedCount!==0 || result.rejectedCount!==3 || result.readyDraftCount!==0 || !allBlockedForIntentReview) {
+  throw new Error(`Expected all three fixture candidates to remain blocked by exact-target intent review against the real repository inventory; got ${result.draftGeneratedCount} generated, ${result.readyDraftCount} ready and ${result.rejectedCount} rejected. Results: ${JSON.stringify(result.results.map(item=>({id:item.candidate.id,reasons:item.rejectionReasons,quality:item.quality?.decision}))) }`);
 }
 const persistedDraftCount=0;
 const persistenceStatus="LOCAL_DRY_RUN_ONLY";
