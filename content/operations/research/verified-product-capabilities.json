@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "recordType": "verified_product_capabilities",
+  "verifiedAtCommit": "49635dc300ec7a086efdfbd26e320d55ba5b2a33",
+  "verifiedAt": "2026-11-19",
+  "verificationMethod": "Repository source inspection of pricing page and feature plan-gating catalog; not an authenticated live-account acceptance test.",
+  "sourceFiles": [
+    "src/routes/pricing.tsx",
+    "src/lib/features/catalog.ts",
+    "src/lib/paddle/config.ts"
+  ],
+  "capabilities": [
+    {"name":"Invoice creation","plan":"Free","status":"VERIFIED","evidence":"Free plan feature list on the pricing page."},
+    {"name":"Expense tracking","plan":"Free","status":"VERIFIED","evidence":"Free plan feature list on the pricing page."},
+    {"name":"Customer management","plan":"Free","status":"VERIFIED","evidence":"Free plan feature list on the pricing page."},
+    {"name":"Basic reports","plan":"Free","status":"VERIFIED","evidence":"Free plan feature list on the pricing page and feature catalog."},
+    {"name":"Recurring invoices","plan":"Professional or higher","status":"VERIFIED","evidence":"Feature catalog sets minimum plan to pro."},
+    {"name":"AI Bookkeeper","plan":"Professional or higher","status":"VERIFIED","evidence":"Feature catalog sets minimum plan to pro."}
+  ],
+  "notApprovedForClaims": [
+    "Bank integrations or automatic bank feeds",
+    "Payroll on Free or Professional",
+    "Tax filing or tax compliance",
+    "Security certifications or guarantees",
+    "Customer numbers, testimonials or savings claims",
+    "Guaranteed accounting or tax outcomes"
+  ],
+  "authorPolicy": "No author name is inserted into automated drafts. The author remains unassigned until a human approves an actual author."
+}
