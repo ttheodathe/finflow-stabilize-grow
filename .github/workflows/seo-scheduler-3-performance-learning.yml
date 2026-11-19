@@ -1,0 +1,43 @@
+name: SEO Scheduler 3 - Performance and Learning
+
+on:
+  schedule:
+    - cron: "15 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seo-scheduler-3-performance-learning
+  cancel-in-progress: false
+
+jobs:
+  performance-learning:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Collect independent organic performance report
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          GSC_SITE_URL: ${{ vars.GSC_SITE_URL }}
+          GA4_PROPERTY_ID: ${{ vars.GA4_PROPERTY_ID }}
+          SEO_OUTPUT_DIR: seo-output
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SEO_OPS_ALLOWED_PROJECT_REF: bufbyfwstdqvwnkhyrea
+          DRY_RUN: "true"
+          PUBLISH_ENABLED: "false"
+          CONTENT_UPDATE_ENABLED: "false"
+          PRODUCTION_CONTENT_WRITE_ALLOWED: "false"
+        run: node seo-engine/schedulers/performance-learning.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: seo-scheduler-3-performance-report
+          path: seo-output/scheduler-3-performance-report.json
+          if-no-files-found: error
+          retention-days: 30

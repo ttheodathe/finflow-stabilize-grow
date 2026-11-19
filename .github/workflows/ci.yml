@@ -4,7 +4,9 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [main]
+    branches:
+      - main
+      - feat/three-scheduler-organic-growth-ops
 
 permissions:
   contents: read
@@ -46,8 +48,23 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Test read-only SEO data pipeline utilities
-        run: node --test seo-engine/*.test.mjs
+      - name: Test SEO pipeline and content-operation safeguards
+        run: node --test seo-engine/*.test.mjs seo-engine/content-ops/*.test.mjs seo-engine/persistence/*.test.mjs seo-engine/research/*.test.mjs seo-engine/schedulers/*.test.mjs
+
+      - name: Generate three fixture-only editorial drafts
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SEO_OPS_ALLOWED_PROJECT_REF: bufbyfwstdqvwnkhyrea
+        run: node seo-engine/research/fixture-run.mjs
+
+      - name: Upload B7.1 fixture drafts and evidence report
+        uses: actions/upload-artifact@v4
+        with:
+          name: b7.1-fixture-editorial-drafts
+          path: seo-output/b7.1-fixture/
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Verify dependency ReDoS mitigation
         run: npm run test:security
@@ -77,6 +94,38 @@ jobs:
           test -n "$container_id"
           docker cp supabase/tests/rls-policy-fixture.sql "$container_id:/tmp/rls-policy-fixture.sql"
           docker exec "$container_id" psql -U postgres -d finflow_rls_test -v ON_ERROR_STOP=1 -f /tmp/rls-policy-fixture.sql
+
+      - name: Create isolated SEO operations acceptance database
+        run: |
+          container_id="$(docker ps --filter 'ancestor=postgres:16' --format '{{.ID}}' | head -n 1)"
+          test -n "$container_id"
+          docker exec "$container_id" psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "CREATE DATABASE finflow_seo_ops_test"
+
+      - name: Apply SEO operations persistence migrations and synthetic activation fixture
+        run: |
+          container_id="$(docker ps --filter 'ancestor=postgres:16' --format '{{.ID}}' | head -n 1)"
+          test -n "$container_id"
+          for migration in \
+            supabase/migrations/20261119122622_seo_operations_persistence.sql \
+            supabase/migrations/20261119123210_seo_ops_rpc_ingest.sql \
+            supabase/migrations/20261119123551_seo_ops_activation_snapshot_rpc.sql \
+            supabase/migrations/20261119124259_seo_ops_content_operation_rpc.sql \
+            supabase/migrations/20261119124347_seo_ops_content_operation_key_guard.sql \
+            supabase/migrations/20261119160000_seo_ops_read_persisted_opportunities.sql \
+            supabase/migrations/20261119170000_seo_ops_research_revision_persistence.sql; do
+            name="$(basename "$migration")"
+            docker cp "$migration" "$container_id:/tmp/$name"
+            docker exec "$container_id" psql -U postgres -d finflow_seo_ops_test -v ON_ERROR_STOP=1 -f "/tmp/$name"
+          done
+          docker cp supabase/tests/seo-activation-fixture.sql "$container_id:/tmp/seo-activation-fixture.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_seo_ops_test -v ON_ERROR_STOP=1 -f /tmp/seo-activation-fixture.sql
+
+      - name: Verify SEO operations persistence, RLS and activation aggregation
+        run: |
+          container_id="$(docker ps --filter 'ancestor=postgres:16' --format '{{.ID}}' | head -n 1)"
+          test -n "$container_id"
+          docker cp supabase/tests/seo-ops-persistence-smoke.sql "$container_id:/tmp/seo-ops-persistence-smoke.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_seo_ops_test -v ON_ERROR_STOP=1 -f /tmp/seo-ops-persistence-smoke.sql
 
       - name: Apply payroll entitlement migration
         run: |
