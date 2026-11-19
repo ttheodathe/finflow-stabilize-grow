@@ -19,7 +19,7 @@ const opportunity={
 };
 const mockFetch=async url=>{
  const u=String(url);
- const body=u.includes("irs.gov/recordkeeping")
+ const body=u.includes("irs.gov/")
   ? "<html><head><title>Recordkeeping for small business</title></head><body>A recordkeeping system should clearly show business income and expenses. Keep supporting documents including invoices, receipts and bank statements. Financial statements and books of accounts should be accurate.</body></html>"
   : "<html><head><title>What kind of records should I keep</title></head><body>Supporting documents include invoices, receipts, paid bills and bank records. Keep these documents to support entries in business books and records.</body></html>";
  return new Response(body,{status:200,headers:{"content-type":"text/html"}});
@@ -53,7 +53,7 @@ test("Scheduler 2 reads persisted Scheduler 1 rows and writes only a draft propo
   assert.deepEqual(calls.read,{schedulerRunId:"00000000-0000-4000-8000-000000000001"});
   assert.equal(report.persistedOpportunityCount,1);
   assert.equal(report.candidateCount,1);
-  assert.equal(report.readyDraftCount,1);
+  assert.equal(report.readyDraftCount,1,JSON.stringify(report.results.map(item=>({status:item.status,reasons:item.rejectionReasons,quality:item.quality}))));
   assert.equal(report.results[0].candidate.metrics.impressions,120);
   assert.equal(report.results[0].draft.publicationStatus,"draft");
   assert.equal(report.results[0].persistence,"PERSISTED");

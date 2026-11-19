@@ -1,29 +1,127 @@
 {
   "schemaVersion": 1,
   "recordType": "verified_product_capabilities",
-  "verifiedAtCommit": "49635dc300ec7a086efdfbd26e320d55ba5b2a33",
+  "verifiedAtCommit": "84fe200bc08f696fa03bdcda801ab209aedd6bac",
   "verifiedAt": "2026-11-19",
-  "verificationMethod": "Repository source inspection of pricing page and feature plan-gating catalog; not an authenticated live-account acceptance test.",
+  "verificationMethod": "Repository source inspection of the pricing route, plan feature catalog and plan configuration; not an authenticated live-account acceptance test.",
   "sourceFiles": [
     "src/routes/pricing.tsx",
     "src/lib/features/catalog.ts",
     "src/lib/paddle/config.ts"
   ],
   "capabilities": [
-    {"name":"Invoice creation","plan":"Free","status":"VERIFIED","evidence":"Free plan feature list on the pricing page."},
-    {"name":"Expense tracking","plan":"Free","status":"VERIFIED","evidence":"Free plan feature list on the pricing page."},
-    {"name":"Customer management","plan":"Free","status":"VERIFIED","evidence":"Free plan feature list on the pricing page."},
-    {"name":"Basic reports","plan":"Free","status":"VERIFIED","evidence":"Free plan feature list on the pricing page and feature catalog."},
-    {"name":"Recurring invoices","plan":"Professional or higher","status":"VERIFIED","evidence":"Feature catalog sets minimum plan to pro."},
-    {"name":"AI Bookkeeper","plan":"Professional or higher","status":"VERIFIED","evidence":"Feature catalog sets minimum plan to pro."}
+    {
+      "name": "Basic accounting",
+      "plan": "Free",
+      "status": "VERIFIED",
+      "articleClaimAllowed": false,
+      "sourceFile": "src/routes/pricing.tsx",
+      "evidence": "Free plan feature list."
+    },
+    {
+      "name": "Invoice creation",
+      "plan": "Free",
+      "status": "VERIFIED",
+      "articleClaimAllowed": true,
+      "sourceFile": "src/routes/pricing.tsx",
+      "evidence": "Free plan feature list and PLANS.free.features."
+    },
+    {
+      "name": "Expense tracking",
+      "plan": "Free",
+      "status": "VERIFIED",
+      "articleClaimAllowed": true,
+      "sourceFile": "src/routes/pricing.tsx",
+      "evidence": "Free plan feature list and PLANS.free.features."
+    },
+    {
+      "name": "Customer management",
+      "plan": "Free",
+      "status": "VERIFIED",
+      "articleClaimAllowed": true,
+      "sourceFile": "src/routes/pricing.tsx",
+      "evidence": "Free plan feature list and PLANS.free.features."
+    },
+    {
+      "name": "Basic reports",
+      "plan": "Free",
+      "status": "VERIFIED",
+      "articleClaimAllowed": true,
+      "sourceFile": "src/routes/pricing.tsx",
+      "evidence": "Free plan feature list and FEATURES.basicReports."
+    },
+    {
+      "name": "Recurring invoices",
+      "plan": "Professional",
+      "status": "VERIFIED",
+      "articleClaimAllowed": false,
+      "sourceFile": "src/lib/features/catalog.ts",
+      "evidence": "FEATURES.recurringInvoices minimum plan is pro."
+    },
+    {
+      "name": "Bank reconciliation",
+      "plan": "Professional",
+      "status": "VERIFIED",
+      "articleClaimAllowed": false,
+      "sourceFile": "src/lib/features/catalog.ts",
+      "evidence": "FEATURES.bankReconciliation minimum plan is pro."
+    },
+    {
+      "name": "Advanced reports",
+      "plan": "Professional",
+      "status": "VERIFIED",
+      "articleClaimAllowed": false,
+      "sourceFile": "src/lib/features/catalog.ts",
+      "evidence": "FEATURES.advancedReports minimum plan is pro."
+    },
+    {
+      "name": "AI Bookkeeper",
+      "plan": "Professional",
+      "status": "VERIFIED",
+      "articleClaimAllowed": false,
+      "sourceFile": "src/lib/features/catalog.ts",
+      "evidence": "FEATURES.aiBookkeeper minimum plan is pro."
+    },
+    {
+      "name": "Payroll",
+      "plan": "Business",
+      "status": "VERIFIED",
+      "articleClaimAllowed": false,
+      "sourceFile": "src/lib/features/catalog.ts",
+      "evidence": "FEATURES.payroll minimum plan is business and Business plan feature list."
+    },
+    {
+      "name": "CRM",
+      "plan": "Business",
+      "status": "VERIFIED",
+      "articleClaimAllowed": false,
+      "sourceFile": "src/lib/paddle/config.ts",
+      "evidence": "PLANS.business.features includes CRM."
+    },
+    {
+      "name": "HR",
+      "plan": "Business",
+      "status": "VERIFIED",
+      "articleClaimAllowed": false,
+      "sourceFile": "src/lib/features/catalog.ts",
+      "evidence": "FEATURES.hr minimum plan is business."
+    },
+    {
+      "name": "API access",
+      "plan": "Business",
+      "status": "VERIFIED",
+      "articleClaimAllowed": false,
+      "sourceFile": "src/lib/features/catalog.ts",
+      "evidence": "FEATURES.apiAccess minimum plan is business."
+    }
   ],
   "notApprovedForClaims": [
-    "Bank integrations or automatic bank feeds",
-    "Payroll on Free or Professional",
-    "Tax filing or tax compliance",
-    "Security certifications or guarantees",
-    "Customer numbers, testimonials or savings claims",
-    "Guaranteed accounting or tax outcomes"
+    "Bank integrations or automatic bank feeds (not verified; do not confuse with bank reconciliation).",
+    "Tax filing, tax compliance or guaranteed tax outcomes.",
+    "Security certifications, compliance attestations or absolute security guarantees.",
+    "Customer numbers, customer testimonials, case studies or quantified savings.",
+    "Guaranteed accounting, profitability or cash-flow outcomes.",
+    "Professional-plan or Business-plan capabilities in Free-plan marketing."
   ],
-  "authorPolicy": "No author name is inserted into automated drafts. The author remains unassigned until a human approves an actual author."
+  "authorPolicy": "Automated drafts leave the author unassigned. An author name may be added only after explicit human approval."
 }

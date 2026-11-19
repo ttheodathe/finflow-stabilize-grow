@@ -27,13 +27,19 @@ The adapter supports repository Markdown create/update operations on an explicit
 
 The adapter's public URL verifier currently checks HTTP success, expected title/text, and canonical URL. It does not yet verify Vercel deployment state/commit identity, noindex, sitemap, or RSS membership. A GitHub commit is not reported as publication success unless the configured URL check passes.
 
-Scheduler 2 only queues GSC targets whose slugs match existing files in `content/blog/`. Unmatched targets are reported rather than misclassified as article updates. The queue is research-required and does not generate an article without verifiable sources.
+Scheduler 2 requires a persisted Scheduler 1 run ID and reads opportunity rows directly from Supabase through the service-role-only `seo_ops_get_opportunities` RPC. It expands persisted query samples, preserves null metrics, checks reporting-period freshness, compares target queries and intent against the frontmatter inventory, and flags competing pages before choosing an update or new-article path. It retrieves allowlisted official sources, records publisher/title/date/retrieval time/short supporting excerpts, maps claims to sources, and validates product claims against `content/operations/research/verified-product-capabilities.json`.
+
+## B7.1 research and editorial drafts
+
+The research engine lives in `seo-engine/research/pipeline.mjs`; it reuses the existing content inventory, opportunity scoring, draft validator, Supabase store and content-operation ledger. It rejects stale or incomplete GSC evidence, unknown topics without an approved source pack, unresolved cannibalization, inaccessible or irrelevant sources, unverified claims, duplicate slugs, invalid frontmatter and substantial text overlap. Deterministic keyword matching is a screening layer only; it does not claim semantic fact-checking or originality certification.
+
+Accepted drafts are written only under `content/operations/research/drafts/` and stored as `DRAFTED` content-operation proposals with the source register, claim map, content hash and `DRY_RUN_ONLY` marker. No generated Markdown is written to `content/blog/`. The fixture runner creates three explicitly synthetic candidates for tests; those fixture metrics are never accepted by scheduled Scheduler 2 runs. Fixture output is not live GSC evidence.
 
 ## Durable persistence
 
 Scheduler 3 uses `collectPartial` so a GSC outage does not discard GA4 data and a GA4 outage does not discard GSC data. Unavailable provider metrics remain `null`; successful empty results remain numeric zero. `seo-engine/performance-learning.test.mjs` covers both one-source failure directions and report-level partial status.\n\nThe acceptance project contains the private `seo_ops` schema with 11 RLS-enabled tables. Browser roles have no schema usage or table privileges; only `service_role` is granted access. Public-schema RPC entry points are executable only by `service_role` and write to the private schema.
 
-The acceptance migrations provide RPCs for scheduler runs, opportunities, performance snapshots, activation snapshots, and target-bound content-operation proposals. The store client is server-only and uses `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. Scheduler 1 and Scheduler 2 fail closed if persistence credentials are absent. Scheduler 3 still emits its independent report when persistence is unavailable.
+The acceptance migrations provide RPCs for scheduler runs, opportunity ingestion and restricted opportunity retrieval, performance snapshots, activation snapshots, and target-bound content-operation proposals. The store client is server-only and uses `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. Scheduler 1 and Scheduler 2 fail closed if persistence credentials are absent. Scheduler 3 still emits its independent report when persistence is unavailable.
 
 ## Activation and attribution
 

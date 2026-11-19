@@ -2,6 +2,7 @@ import { readFile, readdir, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import matter from "gray-matter";
+import productCapabilityRecord from "../../content/operations/research/verified-product-capabilities.json" with { type: "json" };
 import { validateDraft } from "../content-ops/validate-draft.mjs";
 import { createSupabaseSeoStoreFromEnv } from "../persistence/supabase-store.mjs";
 
@@ -82,20 +83,40 @@ const SOURCE_PACKS = [
     productMention: "receivables",
     related: ["accounts-receivable-management", "reducing-late-invoice-payments", "how-to-create-an-invoice"],
   },
+  {
+    id: "break-even",
+    match: /break[- ]even|fixed costs.*variable costs/i,
+    intent: "Informational",
+    sources: [
+      { url: "https://www.sba.gov/counseling/plan-your-business/break-even-point-calculator/", expectedPublisher: "U.S. Small Business Administration", supports: ["Break-even units use fixed costs, selling price and variable costs per unit"], terms: ["break-even point", "fixed costs", "variable costs", "price"] },
+      { url: "https://legacy.sba.gov/business-guide/plan-your-business/calculate-your-startup-costs/break-even-point", expectedPublisher: "U.S. Small Business Administration", supports: ["The break-even point is where total cost equals total revenue, with no loss or gain"], terms: ["break-even point", "total cost", "total revenue", "contribution margin"] },
+    ],
+    title: "Break-Even Analysis for a Small Business: Formula and Example",
+    description: "Learn how to calculate a small-business break-even point using fixed costs, selling price and variable costs, then interpret the result for planning.",
+    sections: [
+      ["What the break-even point tells you", "The break-even point is where total costs and total revenue are equal. At that point, the business has neither a profit nor a loss from the activity being measured. It is a planning measure that helps an owner understand the sales level needed to cover the costs included in the calculation."],
+      ["Identify the inputs", "Start by separating fixed costs from variable costs. Fixed costs are tied to a time period and generally do not change with sales volume over that period. Variable costs change with the number of units or services delivered. If a cost has both fixed and variable elements, separate the parts where possible rather than counting the full amount twice."],
+      ["Use the break-even formula", "For a single product or service, the break-even point in units is calculated as: fixed costs divided by the selling price per unit minus variable cost per unit. The difference between selling price and variable cost is the contribution per unit. Make sure all figures use the same time period."],
+      ["Example: calculate a break-even point", "Example (illustrative figures only): suppose monthly fixed costs are $2,000, the selling price is $50 per unit and variable cost is $30 per unit. The contribution per unit is $20. Dividing $2,000 by $20 gives a break-even point of 100 units for that period. This is a worked arithmetic example, not an industry benchmark or a forecast for a real business."],
+      ["Check the assumptions before using the result", "A break-even calculation is only as useful as the inputs. Include relevant costs, use a consistent time period, distinguish fixed from variable costs and review any semi-variable costs. The single-product formula may not describe a business that sells several products or services with different prices and costs."],
+      ["Use break-even analysis as one planning tool", "The result can help frame pricing and sales targets, but it is not a guarantee that a business will reach that level of sales. Update the inputs when costs, prices or the product mix change, and use the calculation alongside current financial records and other planning information."],
+    ],
+    claimSpecs: [
+      { id: "break-even-definition", text: "The break-even point is where total costs and total revenue are equal, resulting in no loss or gain.", terms: ["break-even point", "total cost", "total revenue"], sourceIndexes: [1] },
+      { id: "break-even-formula", text: "For one product or service, break-even units use fixed costs divided by selling price less variable cost per unit.", terms: ["fixed costs", "price", "variable costs"], sourceIndexes: [0] },
+      { id: "break-even-contribution", text: "Contribution margin is the difference between selling price and variable cost, expressed per unit or as a ratio.", terms: ["contribution margin", "price", "variable costs"], sourceIndexes: [1] },
+    ],
+    related: ["how-to-create-a-business-budget", "profit-and-loss-statement-small-business", "financial-ratios-for-small-business"],
+  },
 ];
 
 const VERIFIED_PRODUCT = Object.freeze({
-  checkedAtCommit: "49635dc300ec7a086efdfbd26e320d55ba5b2a33",
-  sourceFiles: ["src/routes/pricing.tsx", "src/lib/features/catalog.ts", "src/lib/paddle/config.ts"],
-  verifiedCapabilities: [
-    { name: "Invoice creation", plan: "Free", source: "src/routes/pricing.tsx", evidence: "Free plan feature list" },
-    { name: "Expense tracking", plan: "Free", source: "src/routes/pricing.tsx", evidence: "Free plan feature list" },
-    { name: "Customer management", plan: "Free", source: "src/routes/pricing.tsx", evidence: "Free plan feature list" },
-    { name: "Basic reports", plan: "Free", source: "src/routes/pricing.tsx", evidence: "Free plan feature list" },
-    { name: "Recurring invoices", plan: "Professional or higher", source: "src/lib/features/catalog.ts", evidence: "Feature catalog minimum plan pro" },
-    { name: "AI Bookkeeper", plan: "Professional or higher", source: "src/lib/features/catalog.ts", evidence: "Feature catalog minimum plan pro" },
-  ],
-  explicitlyNotVerifiedOrExcluded: ["Bank integrations", "Payroll on Free or Professional", "Tax filing or tax compliance", "Security certifications", "Automated bank feeds", "Customer testimonials", "Customer counts", "Guaranteed savings"],
+  checkedAtCommit: productCapabilityRecord.verifiedAtCommit,
+  sourceFiles: productCapabilityRecord.sourceFiles,
+  verifiedCapabilities: productCapabilityRecord.capabilities
+    .filter(item => item.status === "VERIFIED")
+    .map(item => ({ name:item.name, plan:item.plan, source:item.sourceFile, evidence:item.evidence, articleClaimAllowed:item.articleClaimAllowed === true })),
+  explicitlyNotVerifiedOrExcluded: productCapabilityRecord.notApprovedForClaims,
 });
 
 function cleanText(html) {
@@ -117,7 +138,8 @@ function htmlMeta(html, pattern) {
 }
 function sourcePublisher(url) {
   const host = new URL(url).hostname.replace(/^www\./, "");
-  return ({ "irs.gov": "Internal Revenue Service", "sba.gov": "U.S. Small Business Administration", "business.gov.au": "Australian Government business.gov.au", "gov.uk": "GOV.UK", "smallbusinesscommissioner.gov.uk": "Office of the Small Business Commissioner (UK)" })[host] || host;
+  if (host.endsWith("sba.gov")) return "U.S. Small Business Administration";
+  return ({ "irs.gov": "Internal Revenue Service", "business.gov.au": "Australian Government business.gov.au", "gov.uk": "GOV.UK", "smallbusinesscommissioner.gov.uk": "Office of the Small Business Commissioner (UK)" })[host] || host;
 }
 function sourceReliability(url) {
   const host = new URL(url).hostname;
@@ -216,7 +238,7 @@ export function analyzeCannibalization(query, inventory, targetUrl = null) {
     method: "Token-overlap screening across title, description, slug and tags; not a semantic substitute for editorial review.",
   };
 }
-function buildDraft(candidate, pack, sourceRecords, productEvidence, internalLinks, target) {
+function buildDraft(candidate, pack, sourceRecords, productEvidence, internalLinks, target, now) {
   const sourceLines = sourceRecords.filter(s => s.status === "RETRIEVED_RELEVANT").map(s => `- [${s.publisher}: ${s.sourceTitle}](${s.url})`).join("\n");
   const sections = pack.sections.map(([heading, body]) => `## ${heading}\n\n${body}`).join("\n\n");
   const productLine = productEvidence
@@ -250,7 +272,7 @@ function buildDraft(candidate, pack, sourceRecords, productEvidence, internalLin
   if (productEvidence) evidence.push({
     sourceUrl: "https://www.finflowtrack.com/pricing", sourceType: "first_party_product_documentation",
     sourceTitle: "FinFlow Track pricing page and feature catalog", publisher: "FinFlow Track",
-    publishedAt: null, retrievedAt: new Date().toISOString(), verifiedAt: new Date().toISOString().slice(0,10),
+    publishedAt: null, retrievedAt: now.toISOString(), verifiedAt: now.toISOString().slice(0,10),
     supports: "Free plan feature list in src/routes/pricing.tsx; plan gating in src/lib/features/catalog.ts",
     excerpt: null, reliability: "FIRST_PARTY_REPOSITORY_VERIFIED",
     limitations: ["Verified against repository source, not a live authenticated account."],
@@ -321,11 +343,11 @@ export async function runResearchPipeline({
         !spec.terms.every(term => mapped.some(source => source.termMatches?.some(match => match.toLowerCase() === term.toLowerCase())));
     });
     if (sourceFailures.length || unsupported.length) base.rejectionReasons.push("SOURCE_VERIFICATION_INCOMPLETE");
-    const productEvidence = ["Invoice creation","Expense tracking","Customer management","Basic reports"]
-      .every(name => VERIFIED_PRODUCT.verifiedCapabilities.some(item => item.name === name));
+    const productEvidence = Boolean(pack.productMention) && ["Invoice creation","Expense tracking","Customer management","Basic reports"]
+      .every(name => VERIFIED_PRODUCT.verifiedCapabilities.some(item => item.name === name && item.articleClaimAllowed));
     const related = pack.related.map(slug => inventory.find(item => item.slug === slug))
       .filter(item => item && item.slug !== target.slug).map(item => ({slug:item.slug,title:item.title}));
-    const draft = buildDraft(candidate,pack,sourceRecords,productEvidence,related,target);
+    const draft = buildDraft(candidate,pack,sourceRecords,productEvidence,related,target,now);
     const duplicateSlug = operationType === "NEW_ARTICLE" && inventory.some(item => item.slug === draft.slug);
     const contentText = matter(draft.content);
     const frontmatterValid = contentText.data.status === "draft" && contentText.data.publicationStatus === "draft" &&
@@ -366,7 +388,7 @@ export async function runResearchPipeline({
       base.contentHash = hash;
       if (store) {
         const scheduledFor = now.toISOString().slice(0,10);
-        const operationKey = `research:${candidate.id || draft.slug}:${freshness.reportingPeriodEnd}`;
+        const operationKey = `research:${candidate.id || draft.slug}:${freshness.reportingPeriodEnd}:${hash.slice(0,16)}`;
         await store.recordContentOperation({
           operationKey, operationType,
           targetPath:`content/blog/${draft.slug}.md`, slug:draft.slug, status:"DRAFTED",

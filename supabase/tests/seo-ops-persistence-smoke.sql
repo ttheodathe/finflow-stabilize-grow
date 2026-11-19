@@ -1,7 +1,7 @@
 do $$
 declare
   v_run uuid; v_run2 uuid; v_opp uuid; v_opp2 uuid; v_snap uuid; v_snap2 uuid;
-  v_activation uuid; v_content uuid; v_content2 uuid; v_counts record; v_count integer; v_read_count integer; v_read_count integer;
+  v_activation uuid; v_content uuid; v_content2 uuid; v_counts record; v_count integer; v_read_count integer;
   v_attempt integer := extract(epoch from clock_timestamp())::integer;
 begin
   v_run := public.seo_ops_record_run('SEARCH_INTELLIGENCE',date '2026-11-20',v_attempt,'RUNNING','{"fixture":true}'::jsonb);
