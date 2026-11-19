@@ -41,29 +41,104 @@ function scorePage(page, queries) {
   };
 }
 
-export async function runSearchIntelligence({ dateRange = resolveDateRange(), collectFn = collect } = {}) {
+function extractMeta(html, name) {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\export async function runSearchIntelligence({ dateRange = resolveDateRange(), collectFn = collect } = {}) {");
+  return html.match(new RegExp(`<meta[^>]+name=["']${escaped}["'][^>]+content=["']([^"']*)["']`, "i"))?.[1]
+    || html.match(new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]+name=["']${escaped}["']`, "i"))?.[1]
+    || null;
+}
+
+export async function checkTechnicalUrls(urls, { fetchImpl = fetch, maxPages = 40 } = {}) {
+  const base = "https://www.finflowtrack.com";
+  const sitemapUrl = `${base}/sitemap.xml`;
+  let sitemapText = null;
+  let sitemapStatus = null;
+  try {
+    const sitemap = await fetchImpl(sitemapUrl, { redirect: "follow" });
+    sitemapStatus = sitemap.status;
+    if (sitemap.ok) sitemapText = await sitemap.text();
+  } catch { /* A failed external check is reported separately, not as a confirmed defect. */ }
+
+  const checks = [];
+  for (const rawUrl of urls.slice(0, maxPages)) {
+    let url;
+    try { url = new URL(rawUrl); } catch {
+      checks.push({ url: rawUrl, checkStatus: "INVALID_URL", confirmedIssues: ["INVALID_URL"] });
+      continue;
+    }
+    if (!["finflowtrack.com", "www.finflowtrack.com"].includes(url.hostname)) {
+      checks.push({ url: rawUrl, checkStatus: "SKIPPED_EXTERNAL_HOST", confirmedIssues: [] });
+      continue;
+    }
+    try {
+      const response = await fetchImpl(url.toString(), { redirect: "follow" });
+      const html = response.ok ? await response.text() : "";
+      const finalUrl = response.url || url.toString();
+      const canonical = html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i)?.[1]
+        || html.match(/<link[^>]+href=["']([^"']+)["'][^>]+rel=["']canonical["']/i)?.[1]
+        || null;
+      const titlePresent = /<title[^>]*>[^<]+<\/title>/i.test(html);
+      const descriptionPresent = Boolean(extractMeta(html, "description"));
+      const robots = extractMeta(html, "robots") || "";
+      const xRobots = response.headers?.get?.("x-robots-tag") || "";
+      const noindex = /noindex/i.test(robots) || /noindex/i.test(xRobots);
+      const issues = [];
+      if (response.status >= 400) issues.push("HTTP_ERROR");
+      if (noindex) issues.push("NOINDEX");
+      if (canonical && canonical !== finalUrl) issues.push("CANONICAL_MISMATCH");
+      if (!canonical) issues.push("MISSING_CANONICAL");
+      if (!titlePresent) issues.push("MISSING_TITLE");
+      if (!descriptionPresent) issues.push("MISSING_META_DESCRIPTION");
+      if (sitemapText && !sitemapText.includes(finalUrl)) issues.push("NOT_IN_SITEMAP");
+      checks.push({
+        url: url.toString(), finalUrl, httpStatus: response.status,
+        canonical, indexable: !noindex, titlePresent, descriptionPresent,
+        sitemapChecked: sitemapText !== null, sitemapStatus,
+        checkStatus: "COMPLETED", confirmedIssues: issues,
+      });
+    } catch (error) {
+      checks.push({ url: url.toString(), checkStatus: "EXTERNAL_CHECK_FAILED", confirmedIssues: [], error: String(error.message || error) });
+    }
+  }
+  return {
+    generatedAt: new Date().toISOString(),
+    checkedCount: checks.length,
+    confirmedIssueCount: checks.reduce((sum, item) => sum + item.confirmedIssues.length, 0),
+    checks,
+  };
+}
+
+export async function runSearchIntelligence({ dateRange = resolveDateRange(), collectFn = collect, fetchImpl = fetch } = {}) {
   await mkdir(OUTPUT, { recursive: true });
   const result = await collectFn({ dateRange, outputDir: OUTPUT });
   const snapshot = JSON.parse(await readFile(result.file, "utf8"));
   const pages = new Map();
   for (const row of snapshot.gsc.pages) {
-    const current = pages.get(row.page) || { page: row.page, clicks: 0, impressions: 0, ctr: 0, position: 0, rows: 0 };
+    const current = pages.get(row.page) || { page: row.page, clicks: 0, impressions: 0, ctr: 0, positionWeighted: 0, positionImpressions: 0, rows: 0 };
     current.clicks += row.clicks;
     current.impressions += row.impressions;
-    current.position += row.position;
+    current.positionWeighted += row.position * row.impressions;
+    current.positionImpressions += row.impressions;
     current.rows += 1;
     pages.set(row.page, current);
   }
   const queries = snapshot.gsc.pageQueries;
   const opportunities = [...pages.values()].map((page) => {
     page.ctr = page.impressions ? page.clicks / page.impressions : 0;
-    page.position = page.rows ? page.position / page.rows : 0;
+    page.position = page.positionImpressions ? page.positionWeighted / page.positionImpressions : 0;
     return scorePage({ ...page, dateRange }, queries);
   }).sort((a, b) => b.score - a.score);
+  const technical = await checkTechnicalUrls([...pages.values()].sort((a, b) => b.impressions - a.impressions).map((page) => page.page), { fetchImpl });
   const report = {
     schemaVersion: 1, scheduler: "SEARCH_INTELLIGENCE",
     generatedAt: new Date().toISOString(), dateRange,
     sourceFile: result.file, opportunityCount: opportunities.length,
+    technical,
+    gscDimensions: {
+      countries: snapshot.gsc.pagesByCountry?.length ?? 0,
+      devices: snapshot.gsc.pagesByDevice?.length ?? 0,
+      searchAppearances: snapshot.gsc.searchAppearance?.length ?? 0,
+    },
     limitations: ["GSC average position is an aggregate, not a fixed rank.", "Search volume and competitor difficulty are not inferred.", "Opportunities are recommendations, not publishing authorization."],
     opportunities,
   };
