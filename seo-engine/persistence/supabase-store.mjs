@@ -70,6 +70,19 @@ export function createSupabaseSeoStore({ url, serviceRoleKey, fetchImpl = fetch 
         p_proposed_content_hash: proposedContentHash, p_expected_blob_sha: expectedBlobSha,
       });
     },
+    recordResearchRecord({ opportunityId, sourceUrl, sourceTitle, sourcePublishedAt = null, retrievedAt, supportedClaims = [], unresolvedClaims = [] }) {
+      return rpc("seo_ops_record_research_record", {
+        p_opportunity_id: opportunityId, p_source_url: sourceUrl, p_source_title: sourceTitle,
+        p_source_published_at: sourcePublishedAt, p_retrieved_at: retrievedAt,
+        p_supported_claims: supportedClaims, p_unresolved_claims: unresolvedClaims,
+      });
+    },
+    recordContentRevision({ operationId, revisionNumber, contentHash, markdown, revisionState = "PROPOSED" }) {
+      return rpc("seo_ops_record_content_revision", {
+        p_operation_id: operationId, p_revision_number: revisionNumber,
+        p_content_hash: contentHash, p_markdown: markdown, p_revision_state: revisionState,
+      });
+    },
   });
 }
 
