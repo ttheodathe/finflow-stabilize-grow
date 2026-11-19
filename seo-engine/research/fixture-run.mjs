@@ -5,7 +5,7 @@ import { createSupabaseSeoStoreFromEnv } from "../persistence/supabase-store.mjs
 const opportunities = [
   { id:"fixture-recordkeeping", targetUrl:"https://www.finflowtrack.com/blog/small-business-bookkeeping-checklist", targetQuery:"small business bookkeeping records checklist", metrics:{impressions:120,clicks:4,ctr:4/120,averagePosition:14.2}, reportingPeriodEnd:"2026-11-16", dataSource:"TEST_FIXTURE", evidenceMode:"FIXTURE" },
   { id:"fixture-cashflow", targetUrl:"https://www.finflowtrack.com/blog/13-week-cash-flow-forecast-template", targetQuery:"13-week cash flow forecast template", metrics:{impressions:95,clicks:3,ctr:3/95,averagePosition:11.8}, reportingPeriodEnd:"2026-11-16", dataSource:"TEST_FIXTURE", evidenceMode:"FIXTURE" },
-  { id:"fixture-break-even", targetUrl:"https://www.finflowtrack.com/blog/break-even-analysis-small-business", targetQuery:"small business break-even analysis formula", metrics:{impressions:80,clicks:2,ctr:2/80,averagePosition:17.1}, reportingPeriodEnd:"2026-11-16", dataSource:"TEST_FIXTURE", evidenceMode:"FIXTURE" },
+  { id:"fixture-break-even", targetUrl:"https://www.finflowtrack.com/blog/break-even-analysis-small-business", targetQuery:"break-even analysis small business break-even point formula", metrics:{impressions:80,clicks:2,ctr:2/80,averagePosition:17.1}, reportingPeriodEnd:"2026-11-16", dataSource:"TEST_FIXTURE", evidenceMode:"FIXTURE" },
 ];
 const mockFetch = async url => {
   const target=String(url);
