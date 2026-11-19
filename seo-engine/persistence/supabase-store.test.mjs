@@ -84,3 +84,17 @@ test("content operation proposals use a stable, target-bound RPC", async () => {
   assert.equal(payload.p_target_path, "content/blog/cash-flow.md");
   assert.equal(payload.p_status, "PROPOSED");
 });
+
+test("Scheduler 2 reads only persisted opportunities for a validated run ID",async()=>{
+ let request;
+ const store=createSupabaseSeoStore({
+  url:"https://project.supabase.co",serviceRoleKey:"server-only-test-key",
+  fetchImpl:async(url,options)=>{request={url,options};return Response.json([{opportunity_key:"key-1",target_url:"https://www.finflowtrack.com/blog/a"}]);},
+ });
+ const rows=await store.listPersistedOpportunities({schedulerRunId:"00000000-0000-4000-8000-000000000001"});
+ assert.equal(request.url,"https://project.supabase.co/rest/v1/rpc/seo_ops_get_opportunities");
+ assert.equal(JSON.parse(request.options.body).p_scheduler_run_id,"00000000-0000-4000-8000-000000000001");
+ assert.equal(request.options.headers.authorization,"Bearer server-only-test-key");
+ assert.equal(rows[0].opportunity_key,"key-1");
+ await assert.rejects(store.listPersistedOpportunities({schedulerRunId:"not-a-uuid"}),/valid persisted Scheduler 1 run ID/);
+});
