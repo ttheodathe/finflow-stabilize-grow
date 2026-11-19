@@ -87,6 +87,13 @@ export function createGitHubContentAdapter({
     });
   }
 
+  async function deleteFile(path, message, sha) {
+    return request(path, {
+      method: "DELETE",
+      body: JSON.stringify({ message, sha, branch }),
+    });
+  }
+
   async function verifyPublic(url, expectedTitle, expectedText, expectedCanonicalUrl = url, { fetchPublic = fetchImpl, attempts = 5 } = {}) {
     for (let attempt = 0; attempt < attempts; attempt += 1) {
       const response = await fetchPublic(url, { redirect: "follow" });
@@ -137,7 +144,7 @@ export function createGitHubContentAdapter({
     }
 
     const current = await readFile(targetPath);
-    if (isNew && current && current.content !== content) throw new Error("Duplicate slug: article already exists with different content.");
+    if (isNew && current) throw new Error("Duplicate slug: article already exists.");
     if (!isNew && !current) throw new Error("Update target does not exist.");
     if (!isNew && !operation.expectedBlobSha) throw new Error("Update requires the reviewed baseline blob SHA.");
     if (!isNew && current.sha !== operation.expectedBlobSha && current.content !== content) {
@@ -147,6 +154,9 @@ export function createGitHubContentAdapter({
     if (!isNew) {
       const snapshotFile = snapshotPath(operation.id);
       const existingSnapshot = await readFile(snapshotFile);
+      if (!existingSnapshot && current.sha !== operation.expectedBlobSha) {
+        throw new Error("Cannot safely recover an update whose baseline changed before its snapshot was recorded.");
+      }
       if (!existingSnapshot) {
         const snapshot = {
           operationId: operation.id, targetPath, originalSha: current.sha,
@@ -187,48 +197,101 @@ export function createGitHubContentAdapter({
     return record;
   }
 
-  async function rollback(operationId) {
-    assertExecutionAllowed("EXISTING_ARTICLE_UPDATE", policy);
-    const raw = await readFile(snapshotPath(operationId));
-    if (!raw) throw new Error("No immutable pre-update snapshot exists.");
-    const snapshot = JSON.parse(raw.content);
-    const current = await readFile(snapshot.targetPath);
-    if (!current) throw new Error("Cannot rollback: target article no longer exists.");
+  async function verifyAbsent(url, { fetchPublic = fetchImpl, attempts = 5 } = {}) {
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+      const response = await fetchPublic(url, { redirect: "follow" });
+      if (response.status === 404 || response.status === 410) {
+        return { verified: true, status: response.status, checkedAt: new Date().toISOString() };
+      }
+      if (attempt < attempts - 1) await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)));
+    }
+    return { verified: false, status: null, checkedAt: new Date().toISOString() };
+  }
 
-    let restored = current;
-    if (current.content !== snapshot.originalContent) {
-      const result = await writeFile(snapshot.targetPath, snapshot.originalContent, `Rollback SEO operation ${operationId}`, current.sha);
-      if (!result?.content?.sha) throw new Error("Rollback write was not acknowledged.");
-      restored = { sha: result.content.sha, content: snapshot.originalContent };
+  async function rollback(operationId, { reason = "Editorial rollback" } = {}) {
+    if (policy.DRY_RUN) throw new Error("DRY_RUN is enabled; rollback mutations are blocked.");
+    if (policy.targetEnvironment !== "staging" || policy.targetBranch === "main") {
+      throw new Error("Rollback is restricted to an explicitly configured non-production staging branch.");
+    }
+    if (!policy.PUBLISH_ENABLED && !policy.CONTENT_UPDATE_ENABLED) {
+      throw new Error("Staging rollback is disabled because no content operation type is enabled.");
     }
 
-    const slug = snapshot.targetPath.split("/").pop().replace(/\.md$/, "");
+    const rollbackPath = `.seo-operations/rollbacks/${operationId}.json`;
+    const priorRollback = await readFile(rollbackPath);
+    if (priorRollback) {
+      const priorRecord = JSON.parse(priorRollback.content);
+      if (priorRecord.status === "ROLLED_BACK") return { ...priorRecord, idempotentReplay: true };
+    }
+
+    const ledgerFile = await readFile(operationPath(operationId));
+    if (!ledgerFile) throw new Error("Cannot rollback: operation ledger record is missing.");
+    const ledger = JSON.parse(ledgerFile.content);
+    const current = await readFile(ledger.targetPath);
+    const slug = ledger.targetPath.split("/").pop().replace(/\\.md$/, "");
     const url = `${effectivePublicBaseUrl}/blog/${slug}`;
     const canonicalUrl = `${canonicalOrigin}/blog/${slug}`;
-    const originalBody = snapshot.originalContent.replace(/^---[\\s\\S]*?---\\s*/, "").trim();
-    const verification = await verifyPublic(
-      url,
-      snapshot.originalMetadata?.title || null,
-      originalBody,
-      canonicalUrl,
-    );
+    let restoredBlobSha = null;
+    let verification;
+
+    if (ledger.type === "NEW_ARTICLE") {
+      if (!policy.PUBLISH_ENABLED) throw new Error("New-article rollback requires staging publishing to be enabled.");
+      if (!current) {
+        verification = await verifyAbsent(url);
+      } else {
+        if (current.sha !== ledger.contentBlobSha) {
+          throw new Error("Concurrent modification detected: new article changed after the recorded operation; refusing deletion.");
+        }
+        const removed = await deleteFile(ledger.targetPath, `Rollback new SEO article ${operationId}`, current.sha);
+        if (!removed?.commit?.sha) throw new Error("GitHub did not acknowledge the new-article rollback deletion.");
+        verification = await verifyAbsent(url);
+      }
+    } else if (ledger.type === "EXISTING_ARTICLE_UPDATE") {
+      if (!policy.CONTENT_UPDATE_ENABLED) throw new Error("Article-update rollback requires staging updates to be enabled.");
+      const raw = await readFile(snapshotPath(operationId));
+      if (!raw) throw new Error("No immutable pre-update snapshot exists.");
+      const snapshot = JSON.parse(raw.content);
+      if (snapshot.targetPath !== ledger.targetPath) throw new Error("Snapshot target does not match the operation ledger.");
+      if (!current) throw new Error("Cannot rollback: updated article no longer exists.");
+      if (current.content !== snapshot.originalContent) {
+        if (current.sha !== ledger.contentBlobSha) {
+          throw new Error("Concurrent modification detected: target changed after the approved update; refusing overwrite.");
+        }
+        const result = await writeFile(
+          snapshot.targetPath, snapshot.originalContent,
+          `Rollback SEO operation ${operationId}`, current.sha,
+        );
+        if (!result?.content?.sha) throw new Error("Rollback write was not acknowledged.");
+        restoredBlobSha = result.content.sha;
+      } else {
+        restoredBlobSha = current.sha;
+      }
+      const originalBody = snapshot.originalContent.replace(/^---[\\s\\S]*?---\\s*/, "").trim();
+      verification = await verifyPublic(
+        url, snapshot.originalMetadata?.title || null, originalBody, canonicalUrl,
+      );
+    } else {
+      throw new Error("Unsupported operation type in rollback ledger.");
+    }
+
     const rollbackRecord = {
       operationId,
-      targetPath: snapshot.targetPath,
-      restoredBlobSha: restored.sha,
-      originalBlobSha: snapshot.originalSha,
+      type: ledger.type,
+      targetPath: ledger.targetPath,
+      reason,
+      expectedCurrentBlobSha: ledger.contentBlobSha,
+      restoredBlobSha,
+      originalBlobSha: ledger.type === "EXISTING_ARTICLE_UPDATE"
+        ? JSON.parse((await readFile(snapshotPath(operationId))).content).originalSha
+        : null,
       canonicalUrl,
       status: verification.verified ? "ROLLED_BACK" : "ROLLBACK_WRITE_SUCCEEDED_VERIFICATION_PENDING",
       verification,
       rolledBackAt: new Date().toISOString(),
     };
-    const rollbackPath = `.seo-operations/rollbacks/${operationId}.json`;
-    const priorRollback = await readFile(rollbackPath);
     const saved = await writeFile(
-      rollbackPath,
-      JSON.stringify(rollbackRecord, null, 2),
-      `Record SEO rollback ${operationId}`,
-      priorRollback?.sha,
+      rollbackPath, JSON.stringify(rollbackRecord, null, 2),
+      `Record SEO rollback ${operationId}`, priorRollback?.sha,
     );
     if (!saved?.content?.sha) throw new Error("Rollback audit record could not be persisted.");
     return rollbackRecord;
