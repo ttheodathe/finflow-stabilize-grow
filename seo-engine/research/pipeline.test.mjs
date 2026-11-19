@@ -9,7 +9,7 @@ const now=new Date("2026-11-19T10:00:00.000Z");
 const fixtures=[
  {id:"fixture-recordkeeping",targetUrl:"https://www.finflowtrack.com/blog/small-business-bookkeeping-checklist",targetQuery:"small business bookkeeping records checklist",metrics:{impressions:120,clicks:4,ctr:4/120,averagePosition:14.2},reportingPeriodEnd:"2026-11-16",dataSource:"TEST_FIXTURE",evidenceMode:"FIXTURE"},
  {id:"fixture-cashflow",targetUrl:"https://www.finflowtrack.com/blog/cash-flow-forecasting-small-business",targetQuery:"small business cash flow forecast",metrics:{impressions:95,clicks:3,ctr:3/95,averagePosition:11.8},reportingPeriodEnd:"2026-11-16",dataSource:"TEST_FIXTURE",evidenceMode:"FIXTURE"},
- {id:"fixture-receivables",targetUrl:"https://www.finflowtrack.com/blog/reducing-late-invoice-payments",targetQuery:"how to follow up unpaid business invoices",metrics:{impressions:80,clicks:2,ctr:2/80,averagePosition:17.1},reportingPeriodEnd:"2026-11-16",dataSource:"TEST_FIXTURE",evidenceMode:"FIXTURE"},
+ {id:"fixture-receivables",targetUrl:"https://www.finflowtrack.com/blog/reducing-late-invoice-payments",targetQuery:"reducing late invoice payments for small business",metrics:{impressions:80,clicks:2,ctr:2/80,averagePosition:17.1},reportingPeriodEnd:"2026-11-16",dataSource:"TEST_FIXTURE",evidenceMode:"FIXTURE"},
 ];
 function mockFetch(url){
  const content=String(url).includes("irs.gov/") ? "<html><head><title>Recordkeeping for small business</title></head><body>A recordkeeping system should clearly show business income and expenses. Keep supporting documents including invoices, receipts and bank statements. Financial statements and books of accounts should be accurate.</body></html>"
@@ -88,4 +88,30 @@ test("unresolved cannibalization is not silently converted into a new article",(
  const inventory=[{slug:"a",title:"Small business bookkeeping records",description:"bookkeeping records",tags:[]}];
  const result=analyzeCannibalization("small business bookkeeping records",inventory,null);
  assert.equal(result.decision,"UPDATE_EXISTING_ARTICLE");
+});
+
+test("draft queue persistence is stable across duplicate runs and stores full evidence",async()=>{
+ const env=await setup(), calls=[];
+ const store={recordContentOperation:async input=>{calls.push(input);return "fixture-operation-id";}};
+ try{
+  await runResearchPipeline({opportunities:fixtures,contentDir:env.contentDir,outputDir:env.outputDir,fetchImpl:mockFetch,now,store,allowFixture:true});
+  await runResearchPipeline({opportunities:fixtures,contentDir:env.contentDir,outputDir:env.outputDir,fetchImpl:mockFetch,now,store,allowFixture:true});
+  assert.equal(calls.length,6);
+  for(let i=0;i<3;i++){
+   assert.equal(calls[i].operationKey,calls[i+3].operationKey);
+   assert.equal(calls[i].status,"DRAFTED");
+   assert.equal(calls[i].payload.publicationStatus,"draft");
+   assert.equal(calls[i].payload.execution,"DRY_RUN_ONLY");
+   assert.ok(calls[i].payload.sources.length>=2);
+   assert.ok(calls[i].payload.draftMarkdown.includes('publicationStatus: "draft"'));
+  }
+ }finally{await rm(env.root,{recursive:true,force:true});}
+});
+test("unavailable or irrelevant official sources block draft generation",async()=>{
+ const env=await setup();
+ try{
+  const result=await runResearchPipeline({opportunities:[fixtures[0]],contentDir:env.contentDir,outputDir:env.outputDir,fetchImpl:async()=>new Response("Not found",{status:404}),now,store:null,allowFixture:true});
+  assert.equal(result.readyDraftCount,0);
+  assert.ok(result.results[0].rejectionReasons.includes("SOURCE_VERIFICATION_INCOMPLETE"));
+ }finally{await rm(env.root,{recursive:true,force:true});}
 });
