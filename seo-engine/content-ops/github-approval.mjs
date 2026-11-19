@@ -53,7 +53,7 @@ export async function verifyGitHubApproval({
     `operationType="${operation.type}"`,
     `targetPath="${targetPath}"`,
     `contentHash="${expectedContentHash}"`,
-    "-->";
+    "-->"
   ].join(" ");
   if (!String(pr.body || "").includes(marker)) {
     throw new Error("PR approval marker does not bind this exact operation, target and content hash.");
