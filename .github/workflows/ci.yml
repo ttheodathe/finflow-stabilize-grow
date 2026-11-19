@@ -51,6 +51,17 @@ jobs:
       - name: Test SEO pipeline and content-operation safeguards
         run: node --test seo-engine/*.test.mjs seo-engine/content-ops/*.test.mjs seo-engine/persistence/*.test.mjs seo-engine/research/*.test.mjs seo-engine/schedulers/*.test.mjs
 
+      - name: Generate three fixture-only editorial drafts
+        run: node seo-engine/research/fixture-run.mjs
+
+      - name: Upload B7.1 fixture drafts and evidence report
+        uses: actions/upload-artifact@v4
+        with:
+          name: b7.1-fixture-editorial-drafts
+          path: seo-output/b7.1-fixture/
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Verify dependency ReDoS mitigation
         run: npm run test:security
 
@@ -95,7 +106,8 @@ jobs:
             supabase/migrations/20261119123210_seo_ops_rpc_ingest.sql \
             supabase/migrations/20261119123551_seo_ops_activation_snapshot_rpc.sql \
             supabase/migrations/20261119124259_seo_ops_content_operation_rpc.sql \
-            supabase/migrations/20261119124347_seo_ops_content_operation_key_guard.sql \\\n            supabase/migrations/20261119160000_seo_ops_read_persisted_opportunities.sql; do
+            supabase/migrations/20261119124347_seo_ops_content_operation_key_guard.sql \\
+            supabase/migrations/20261119160000_seo_ops_read_persisted_opportunities.sql; do
             name="$(basename "$migration")"
             docker cp "$migration" "$container_id:/tmp/$name"
             docker exec "$container_id" psql -U postgres -d finflow_seo_ops_test -v ON_ERROR_STOP=1 -f "/tmp/$name"
