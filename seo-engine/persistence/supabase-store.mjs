@@ -57,6 +57,13 @@ export function createSupabaseSeoStore({ url, serviceRoleKey, fetchImpl = fetch 
         p_source_watermark: sourceWatermark, p_limitations: limitations,
       });
     },
+    recordContentOperation({ operationKey, operationType, targetPath, slug, status = "PROPOSED", payload = {}, proposedContentHash = null, expectedBlobSha = null }) {
+      return rpc("seo_ops_record_content_operation", {
+        p_operation_key: operationKey, p_operation_type: operationType,
+        p_target_path: targetPath, p_slug: slug, p_status: status, p_payload: payload,
+        p_proposed_content_hash: proposedContentHash, p_expected_blob_sha: expectedBlobSha,
+      });
+    },
   });
 }
 
