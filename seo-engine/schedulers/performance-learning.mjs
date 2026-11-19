@@ -76,8 +76,15 @@ export async function runPerformanceLearning({
       "The production expenses table has no status/reversal column; persisted expense rows are treated as qualifying, and hard-deleted rows are absent.",
     ],
   };
-  const store = createSupabaseSeoStoreFromEnv(env);
-  let persistence = { status: "NOT_CONFIGURED", schedulerRunId: null };
+  let store = null;
+  let storeConfigurationError = null;
+  try { store = createSupabaseSeoStoreFromEnv(env); }
+  catch (error) { storeConfigurationError = String(error.message || error); }
+  let persistence = store
+    ? { status: "PENDING", schedulerRunId: null }
+    : storeConfigurationError
+      ? { status: "BLOCKED", reason: "ACCEPTANCE_PROJECT_GUARD_OR_CREDENTIALS", schedulerRunId: null, error: storeConfigurationError }
+      : { status: "NOT_CONFIGURED", schedulerRunId: null };
   if (store) {
     const scheduledFor = new Date().toISOString().slice(0, 10);
     const attempt = Math.max(1, Number.parseInt(env.GITHUB_RUN_ATTEMPT || "1", 10) || 1);

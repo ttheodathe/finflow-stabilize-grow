@@ -126,7 +126,7 @@ test("unsupported numerical claims are blocked unless explicitly labelled illust
 });
 
 test("an exact GSC landing page remains an update candidate despite low token overlap",()=>{
- const inventory=[{slug:"break-even-analysis-small-business",title:"Break-Even Analysis for Small Business: How to Calculate Your Break-Even Point",description:"Break-even point formula and calculation",tags:["break even","small business"]}];
+ const inventory=[{slug:"break-even-analysis-small-business",title:"Operating Cash Management and Monthly Budget Review for Growing Organisations",description:"A practical guide to working capital, monthly costs, financial statements, reporting routines and business resources.",tags:["cash management","budgeting","working capital","monthly reporting","operating costs","business resources"]}];
  const result=analyzeCannibalization(
   "small business break-even analysis formula",
   inventory,

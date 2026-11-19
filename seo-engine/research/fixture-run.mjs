@@ -20,6 +20,7 @@ const mockFetch = async url => {
 const outputDir="seo-output/b7.1-fixture";
 await mkdir(outputDir,{recursive:true});
 const result=await runResearchPipeline({opportunities,outputDir,fetchImpl:mockFetch,store:null,allowFixture:true,now:new Date("2026-11-19T12:00:00.000Z")});
+if(result.readyDraftCount!==opportunities.length || result.rejectedCount!==0) throw new Error(`Expected ${opportunities.length} fixture drafts with no rejections; got ${result.readyDraftCount} ready and ${result.rejectedCount} rejected.`);
 const summary={mode:"FIXTURE_TEST_ONLY",gscEvidence:"SYNTHETIC_NOT_LIVE_GSC",candidateCount:result.results.length,readyDraftCount:result.readyDraftCount,rejectedCount:result.rejectedCount,results:result.results.map(item=>({id:item.candidate.id,query:item.candidate.targetQuery,decision:item.cannibalization?.decision,status:item.status,slug:item.draft?.slug,sourceCount:item.quality?.sourceCount,reasons:item.rejectionReasons,reviewQuestions:item.editorialReviewQuestions}))};
 await writeFile("seo-output/b7.1-fixture/fixture-summary.json",JSON.stringify(summary,null,2)+"\n");
 console.log(JSON.stringify(summary,null,2));
