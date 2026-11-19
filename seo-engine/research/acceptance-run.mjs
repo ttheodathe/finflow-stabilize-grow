@@ -101,7 +101,7 @@ if (!hasAcceptanceSupabase) {
     },
   };
   await mkdir(path.resolve("seo-output/acceptance"),{recursive:true});
-  await writeFile(path.resolve("seo-output/acceptance/acceptance-summary.json"),JSON.stringify(blockedSummary,null,2)+"\\n");
+  await writeFile(path.resolve("seo-output/acceptance/acceptance-summary.json"),JSON.stringify(blockedSummary,null,2)+"\n");
   console.log(JSON.stringify(blockedSummary,null,2));
   process.exit(0);
 }
