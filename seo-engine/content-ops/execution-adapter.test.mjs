@@ -158,7 +158,7 @@ test("existing article update snapshots original content and rollback restores i
   assert.equal(mock.files.get("content/blog/test-article.md").content, revised);
   assert.ok(mock.files.has(".seo-operations/snapshots/operation-001.json"));
   const rollback = await adapter.rollback("operation-001");
-  assert.equal(rollback.status, "ROLLED_BACK");
+  assert.equal(rollback.status, "ROLLED_BACK", JSON.stringify(rollback.verification));
   assert.equal(mock.files.get("content/blog/test-article.md").content, original);
   assert.ok(mock.files.has(".seo-operations/rollbacks/operation-001.json"));
 });
