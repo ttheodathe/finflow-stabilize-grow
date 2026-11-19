@@ -1,6 +1,7 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { collect } from "../collect.mjs";
 import { resolveDateRange } from "../normalize.mjs";
+import { createSupabaseSeoStoreFromEnv } from "../persistence/supabase-store.mjs";
 
 const OUTPUT = process.env.SEO_OUTPUT_DIR || "seo-output";
 
@@ -134,6 +135,52 @@ export async function runSearchIntelligence({ dateRange = resolveDateRange(), co
     [...pageValues].sort((a, b) => b.impressions - a.impressions).map((page) => page.page),
     { fetchImpl },
   );
+  const store = createSupabaseSeoStoreFromEnv(process.env, { fetchImpl });
+  let persistence = { status: "NOT_CONFIGURED", schedulerRunId: null, opportunityRecords: 0 };
+  let persistenceError = null;
+  if (!store && process.env.SEO_PERSISTENCE_REQUIRED === "true") {
+    persistenceError = new Error("Supabase SEO persistence is required but its server-side credentials are not configured.");
+    persistence = { ...persistence, status: "FAILED", error: persistenceError.message };
+  }
+  if (store) {
+    let schedulerRunId = null;
+    try {
+      const scheduledFor = new Date().toISOString().slice(0, 10);
+      schedulerRunId = await store.recordRun({
+        schedulerKey: "SEARCH_INTELLIGENCE", scheduledFor, attempt: 1,
+        status: "RUNNING", output: { dateRange },
+      });
+      for (const opportunity of opportunities) {
+        await store.recordOpportunity({
+          opportunityKey: `${opportunity.id}:${dateRange.endDate}`,
+          schedulerRunId,
+          targetUrl: opportunity.targetUrl,
+          queryText: opportunity.evidence?.sampleQueries?.[0]?.query || null,
+          opportunityType: opportunity.action,
+          score: opportunity.score,
+          evidence: { ...opportunity.evidence, scoring: opportunity.scoring, decision: opportunity.decision },
+        });
+      }
+      await store.recordRun({
+        schedulerKey: "SEARCH_INTELLIGENCE", scheduledFor, attempt: 1,
+        status: "SUCCEEDED",
+        output: { opportunityCount: opportunities.length, technicalIssueCount: technical.confirmedIssueCount, dateRange },
+      });
+      persistence = { status: "PERSISTED", schedulerRunId, opportunityRecords: opportunities.length };
+    } catch (error) {
+      persistenceError = error;
+      persistence = { status: "FAILED", schedulerRunId, opportunityRecords: 0, error: String(error.message || error) };
+      if (schedulerRunId) {
+        try {
+          await store.recordRun({
+            schedulerKey: "SEARCH_INTELLIGENCE", scheduledFor: new Date().toISOString().slice(0, 10),
+            attempt: 1, status: "FAILED", output: { dateRange }, errorSummary: String(error.message || error),
+          });
+        } catch { /* Preserve the original persistence error. */ }
+      }
+    }
+  }
+
   const report = {
     schemaVersion: 1, scheduler: "SEARCH_INTELLIGENCE",
     generatedAt: new Date().toISOString(), dateRange,
@@ -151,10 +198,12 @@ export async function runSearchIntelligence({ dateRange = resolveDateRange(), co
       "Opportunities are recommendations, not publishing authorization.",
     ],
     opportunities,
+    persistence,
   };
   const path = `${OUTPUT}/scheduler-1-opportunities.json`;
   await writeFile(path, JSON.stringify(report, null, 2) + "\n", { flag: "w" });
-  return { path, opportunityCount: opportunities.length, dateRange };
+  if (persistenceError) throw persistenceError;
+  return { path, opportunityCount: opportunities.length, dateRange, persistenceStatus: persistence.status };
 }
 
 if (import.meta.url === new URL(process.argv[1], "file:").href) {
