@@ -8,6 +8,8 @@ import { runContentOperations } from "./content-operations.mjs";
 const now=new Date("2026-11-19T12:00:00.000Z");
 const safeEnv={DRY_RUN:"true",PUBLISH_ENABLED:"false",CONTENT_UPDATE_ENABLED:"false",PRODUCTION_CONTENT_WRITE_ALLOWED:"false",GITHUB_RUN_ATTEMPT:"1"};
 const opportunity={
+ id:"00000000-0000-4000-8000-000000000789",
+ source_run_output:{fixture:true},
  opportunity_key:"gsc-opportunity-1",target_url:"https://www.finflowtrack.com/blog/small-business-bookkeeping-checklist",
  query_text:"small business bookkeeping records checklist",opportunity_type:"REVIEW_EXISTING_PAGE",score:70,
  evidence:{
@@ -47,7 +49,7 @@ test("Scheduler 2 reads persisted Scheduler 1 rows and writes only a draft propo
   await writeFile(inputPath,JSON.stringify({scheduler:"SEARCH_INTELLIGENCE",dateRange:{startDate:"2026-11-01",endDate:"2026-11-16"},opportunities:[],persistence:{status:"PERSISTED",schedulerRunId:"00000000-0000-4000-8000-000000000001"}}));
   const result=await runContentOperations({
    inputPath,outputDir:env.outputDir,researchDir:env.researchDir,contentDir:env.contentDir,
-   env:safeEnv,store:makeStore([opportunity],calls),fetchImpl:mockFetch,now,
+   env:safeEnv,store:makeStore([opportunity],calls),fetchImpl:mockFetch,now,allowFixture:true,
   });
   const report=JSON.parse(await readFile(result.path,"utf8"));
   assert.deepEqual(calls.read,{schedulerRunId:"00000000-0000-4000-8000-000000000001"});
