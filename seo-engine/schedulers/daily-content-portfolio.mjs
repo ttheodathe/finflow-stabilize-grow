@@ -1,4 +1,4 @@
-import { analyzeCannibalization, classifySearchIntent, selectCompatibleSourcePack } from "../research/pipeline.mjs";
+import { analyzeCannibalization, classifySearchIntent, freshnessFor, selectCompatibleSourcePack } from "../research/pipeline.mjs";
 
 function evidenceScore(candidate) {
   const impressions = Number.isFinite(candidate.metrics?.impressions) ? candidate.metrics.impressions : 0;
@@ -14,7 +14,7 @@ function evidenceScore(candidate) {
  * Missing slots remain explicitly unfilled; the selector never fabricates topics
  * or relaxes the research pipeline's freshness, source, or quality gates.
  */
-export function selectDailyContentPortfolio(candidates, inventory) {
+export function selectDailyContentPortfolio(candidates, inventory, now = new Date()) {
   if (!Array.isArray(candidates) || !Array.isArray(inventory)) {
     throw new TypeError("Daily content portfolio requires candidate and inventory arrays.");
   }
@@ -23,6 +23,8 @@ export function selectDailyContentPortfolio(candidates, inventory) {
     .map(candidate => {
       const reasons = [];
       if (candidate.evidenceMode === "FIXTURE") reasons.push("FIXTURE_EVIDENCE");
+      const freshness = freshnessFor(candidate, now);
+      if (freshness.status !== "FRESH") reasons.push(`GSC_EVIDENCE_${freshness.status}`);
       if (candidate.dataSource !== "Google Search Console") reasons.push("NON_GSC_SOURCE");
       if (!Number.isFinite(candidate.metrics?.impressions) || candidate.metrics.impressions <= 0
         || !Number.isFinite(candidate.metrics?.clicks)
@@ -37,6 +39,7 @@ export function selectDailyContentPortfolio(candidates, inventory) {
 
   const classified = candidates
     .filter(candidate => candidate.evidenceMode !== "FIXTURE"
+      && freshnessFor(candidate, now).status === "FRESH"
       && candidate.dataSource === "Google Search Console"
       && Number.isFinite(candidate.metrics?.impressions) && candidate.metrics.impressions > 0
       && Number.isFinite(candidate.metrics?.clicks)
