@@ -100,6 +100,15 @@ export function createSupabaseSeoStore({ url, serviceRoleKey, fetchImpl = fetch 
         p_supported_claims: supportedClaims, p_unresolved_claims: unresolvedClaims,
       }), "Research record persistence");
     },
+    async advanceContentRevision({ operationId, revisionNumber, contentHash, markdown, previousContentHash = null, operationPayload }) {
+      requireUuid(operationId, "Content revision operation ID");
+      if (!/^[a-f0-9]{64}$/.test(contentHash || "")) throw new Error("Content revision hash must be a SHA-256 hex digest.");
+      return requireUuid(await rpc("seo_ops_advance_content_revision", {
+        p_operation_id: operationId, p_revision_number: revisionNumber,
+        p_content_hash: contentHash, p_markdown: markdown,
+        p_previous_content_hash: previousContentHash, p_operation_payload: operationPayload,
+      }), "Content revision advancement persistence");
+    },
     async recordContentRevision({ operationId, revisionNumber, contentHash, markdown, revisionState = "PROPOSED" }) {
       requireUuid(operationId, "Content revision operation ID");
       return requireUuid(await rpc("seo_ops_record_content_revision", {
