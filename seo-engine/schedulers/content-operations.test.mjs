@@ -54,6 +54,18 @@ function makeStore(rows,calls){
    calls.research=[...researchBySource.values()];
    return record.id;
   },
+  advanceContentRevision:async args=>{
+   if(args.previousContentHash){
+    const previous=revisionsByHash.get(args.previousContentHash);
+    if(previous && previous.revision_state==="PROPOSED") previous.revision_state="SUPERSEDED";
+   }
+   if(!revisionsByHash.has(args.contentHash)) revisionsByHash.set(args.contentHash,{
+    id:"00000000-0000-4000-8000-000000000777",revision_number:args.revisionNumber,
+    content_hash:args.contentHash,markdown:args.markdown,revision_state:"PROPOSED",operation_id:args.operationId
+   });
+   calls.revisions=[...revisionsByHash.values()];
+   return revisionsByHash.get(args.contentHash).id;
+  },
   recordContentRevision:async args=>{
    if(!revisionsByHash.has(args.contentHash)) revisionsByHash.set(args.contentHash,{id:"00000000-0000-4000-8000-000000000777",content_hash:args.contentHash,markdown:args.markdown,revision_state:args.revisionState,operation_id:args.operationId});
    calls.revisions=[...revisionsByHash.values()];
