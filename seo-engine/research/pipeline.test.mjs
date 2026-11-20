@@ -245,7 +245,7 @@ test("an exact GSC target with matching editorial intent remains an update despi
     [{
       slug: "free-accounting-software-for-small-business",
       title: "Free Accounting Software for Small Business",
-      description: "Job? A guide to free accounting software and small-business bookkeeping apps",
+      description: "A guide to free accounting software and small-business bookkeeping apps",
       tags: ["accounting software", "small business"],
       content: "Compare accounting software options for small businesses.",
     }],
