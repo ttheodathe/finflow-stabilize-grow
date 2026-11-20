@@ -845,13 +845,21 @@ export async function runResearchPipeline({
     };
     base.status = base.rejectionReasons.length ? "REJECTED" : "DRAFT_READY_FOR_HUMAN_REVIEW";
     if (base.status === "DRAFT_READY_FOR_HUMAN_REVIEW" && typeof articleGenerator === "function") {
-      base.articleProduction = await runArticleProduction({
+      const articleProduction = await runArticleProduction({
         research: { ...base, candidate, draft, sourceRecords, internalLinks: related,
           audience: pack.audience, jurisdiction: pack.jurisdiction,
           productEvidence: productEvidence ? VERIFIED_PRODUCT : null,
           outline: pack.sections.map(([heading]) => heading), readerQuestions: pack.readerQuestions || [] },
         generateArticle: articleGenerator, outputDir: articleOutputDir, now,
       });
+      if (articleProduction.status === "READY_FOR_HUMAN_REVIEW") {
+        draft.content = articleProduction.articleMarkdown;
+        base.articleProduction = { ...articleProduction, articleMarkdown: undefined };
+      } else {
+        base.rejectionReasons.push(...(articleProduction.blockers || [articleProduction.status]));
+        base.status = "REJECTED";
+        base.articleProduction = { ...articleProduction, articleMarkdown: undefined };
+      }
     }
     if (base.status === "DRAFT_READY_FOR_HUMAN_REVIEW") {
       const hash = createHash("sha256").update(draft.content).digest("hex");
