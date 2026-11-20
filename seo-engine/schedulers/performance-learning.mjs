@@ -15,7 +15,8 @@ function sumKnown(rows, key) {
 
 export async function runPerformanceLearning({
   dateRange = resolveDateRange(), collectFn = collectPartial,
-  outputDir = OUTPUT, env = process.env, store: injectedStore = undefined,\n  activationCollectorFn = collectProductionActivationAggregate,
+  outputDir = OUTPUT, env = process.env, store: injectedStore = undefined,
+  activationCollectorFn = collectProductionActivationAggregate,
 } = {}) {
   await mkdir(outputDir, { recursive: true });
   let snapshot = null;
