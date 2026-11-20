@@ -1,5 +1,7 @@
 import { analyzeCannibalization, classifySearchIntent, freshnessFor, selectCompatibleSourcePack } from "../research/pipeline.mjs";
 
+const MIN_QUERY_IMPRESSIONS = 10;
+
 function isDomainOnlyQuery(query) {
   return /^(?:https?:\/\/)?(?:www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}(?:\/.*)?$/i.test(String(query || "").trim());
 }
@@ -31,6 +33,7 @@ export function selectDailyContentPortfolio(candidates, inventory, now = new Dat
       const freshness = freshnessFor(candidate, now);
       if (freshness.status !== "FRESH") reasons.push(`GSC_EVIDENCE_${freshness.status}`);
       if (candidate.dataSource !== "Google Search Console") reasons.push("NON_GSC_SOURCE");
+      if (!Number.isFinite(candidate.metrics?.impressions) || candidate.metrics.impressions < MIN_QUERY_IMPRESSIONS) reasons.push("LOW_GSC_QUERY_IMPRESSIONS");
       if (!Number.isFinite(candidate.metrics?.impressions) || candidate.metrics.impressions <= 0
         || !Number.isFinite(candidate.metrics?.clicks)
         || !Number.isFinite(candidate.metrics?.ctr)
@@ -47,7 +50,7 @@ export function selectDailyContentPortfolio(candidates, inventory, now = new Dat
       && !isDomainOnlyQuery(candidate.targetQuery)
       && freshnessFor(candidate, now).status === "FRESH"
       && candidate.dataSource === "Google Search Console"
-      && Number.isFinite(candidate.metrics?.impressions) && candidate.metrics.impressions > 0
+      && Number.isFinite(candidate.metrics?.impressions) && candidate.metrics.impressions >= MIN_QUERY_IMPRESSIONS
       && Number.isFinite(candidate.metrics?.clicks)
       && Number.isFinite(candidate.metrics?.ctr)
       && Number.isFinite(candidate.metrics?.averagePosition))
