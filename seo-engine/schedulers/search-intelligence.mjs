@@ -3,6 +3,7 @@ import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { collect } from "../collect.mjs";
 import { resolveDateRange } from "../normalize.mjs";
 import { createSupabaseSeoStoreFromEnv } from "../persistence/supabase-store.mjs";
+import { resolveSchedulerAttempt } from "./run-attempt.mjs";
 
 const OUTPUT = process.env.SEO_OUTPUT_DIR || "seo-output";
 
@@ -218,9 +219,7 @@ export async function runSearchIntelligence({ dateRange = resolveDateRange(), co
   if (store) {
     let schedulerRunId = null;
     const scheduledFor = new Date().toISOString().slice(0, 10);
-    const attempt = Number.isInteger(runAttempt) && runAttempt >= 1
-      ? runAttempt
-      : Math.max(1, Number.parseInt(process.env.GITHUB_RUN_ATTEMPT || "1", 10) || 1);
+    const attempt = resolveSchedulerAttempt(process.env, runAttempt);
     try {
       schedulerRunId = await store.recordRun({
         schedulerKey: "SEARCH_INTELLIGENCE", scheduledFor, attempt,
