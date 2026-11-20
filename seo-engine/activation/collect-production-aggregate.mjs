@@ -21,7 +21,7 @@ function validateConnectionString(value) {
 function parseAggregateOutput(stdout) {
   const rows = String(stdout).trim().split(/\r?\n/).filter(Boolean);
   if (rows.length !== 1) throw new Error("Production activation query returned an unexpected number of rows.");
-  const fields = rows[0].split("\t");
+  const fields = rows[0].split("|");
   if (fields.length !== 9) throw new Error("Production activation query returned an unexpected column count.");
   const sourceWatermark = new Date(fields[0]);
   if (!Number.isFinite(sourceWatermark.getTime())) throw new Error("Production activation query returned an invalid source watermark.");
@@ -61,7 +61,7 @@ export async function collectProductionActivationAggregate({
   try {
     result = await execFileImpl("psql", [
       "--no-psqlrc", "--set=ON_ERROR_STOP=1", "--no-align", "--tuples-only",
-      "--field-separator=\\t", "--file", queryFile, "--dbname", databaseUrl,
+      "--field-separator=|", "--file", queryFile, "--dbname", databaseUrl,
     ], {
       encoding: "utf8",
       timeout: 45_000,
