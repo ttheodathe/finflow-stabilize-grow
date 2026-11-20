@@ -132,7 +132,7 @@ test("draft queue persistence is idempotent and requires independent operation, 
    }));
    return researchIds.get(key);
   },
-  recordContentRevision:async input=>{
+  advanceContentRevision:async input=>{
    if(!revisionIds.has(input.contentHash)){
     const id="00000000-0000-4000-8000-"+String(700+revisionIds.size).padStart(12,"0");
     revisionIds.set(input.contentHash,id);
