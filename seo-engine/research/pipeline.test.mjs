@@ -271,11 +271,21 @@ test("the exact GSC landing page is assessed as an update, not a new article", a
         metrics: { impressions: 31, clicks: 0, ctr: 0, averagePosition: 9.77 },
         reportingPeriodEnd: "2026-11-15",
         dataSource: "Google Search Console",
-        evidenceMode: "LIVE_OR_PERSISTED",
+        evidenceMode: "HISTORICAL_GSC_ARTIFACT",
+        historicalProvenance: {
+          artifactId: "fixture-artifact",
+          sha256: "b".repeat(64),
+          evidenceMode: "HISTORICAL_GSC_ARTIFACT",
+        },
       }],
       contentDir: env.contentDir, outputDir: env.outputDir, fetchImpl: mockSoftwareSelectionFetch, now, store: null,
     });
     const item = result.results[0];
+    assert.deepEqual(item.candidate.historicalProvenance, {
+      artifactId: "fixture-artifact",
+      sha256: "b".repeat(64),
+      evidenceMode: "HISTORICAL_GSC_ARTIFACT",
+    });
     assert.equal(item.intent, "Software selection");
     assert.equal(item.cannibalization.decision, "UPDATE_EXISTING_ARTICLE");
     assert.equal(item.editorialDecision, "UPDATE_EXISTING_ARTICLE");
