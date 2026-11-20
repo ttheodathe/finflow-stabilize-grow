@@ -1,7 +1,7 @@
 import { analyzeCannibalization, classifySearchIntent, freshnessFor, selectCompatibleSourcePack } from "../research/pipeline.mjs";
 
 function isDomainOnlyQuery(query) {
-  return /^(?:https?:\\/\\/)?(?:www\\.)?[a-z0-9-]+(?:\\.[a-z0-9-]+)*\\.[a-z]{2,}(?:\\/.*)?$/i.test(String(query || "").trim());
+  return /^(?:https?:\/\/)?(?:www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}(?:\/.*)?$/i.test(String(query || "").trim());
 }
 
 function evidenceScore(candidate) {
