@@ -1,45 +1,71 @@
 # Stage C — Article Production Engine
 
-## Scope
+## Draft pipeline
 
-Stage C adds an editorial production boundary after the existing evidence-backed research
-pipeline. It turns a researched opportunity into a structured editorial brief, accepts a
-pluggable article generator, validates the resulting Markdown, and saves a revision-hashed
-draft plus publication package.
+Stage C builds a research-backed editorial brief, invokes an explicitly configured article
+generator, validates its Markdown and stores each draft outside the public blog. The normal
+pipeline is opt-in: no provider is called unless ARTICLE_GENERATOR_ENABLED=true and a
+compatible endpoint and model are configured.
 
-## Workflow
+The provider adapter uses an OpenAI-compatible chat-completions contract. It does not select
+a paid provider, create credentials, or enable generation by default. A local endpoint is only
+reachable when the runner can reach that host; a GitHub-hosted runner cannot reach a developer's
+personal localhost.
 
-1. Accept a research result with a target query, intent, audience, evidence records, and
-   internal-link inventory.
-2. Build an editorial brief containing reader questions, article angle, outline, jurisdiction
-   scope, source evidence, and conversion objective.
-3. Require an explicitly injected `generateArticle` provider. No provider is configured by
-   default; the engine does not silently fabricate a long-form article or make paid API calls.
-4. Block drafting if any required source is unavailable or irrelevant.
-5. Validate draft metadata, source register, claim mappings, internal links, heading structure,
-   and minimum word count.
-6. Save the Markdown and publication package under
-   `content/operations/article-production/<slug>/<hash-prefix>/`, never under `content/blog`.
-7. Record the SHA-256 content hash. Human approval records are bound to that exact hash; any
-   content edit invalidates the approval.
+## Originality screening
 
-## Security and publication controls
+Generated drafts are compared with the repository's existing article inventory using normalized
+five-word shingles, Jaccard overlap and containment. A high-overlap result blocks the draft.
+This is an internal-inventory text screen, not an external plagiarism database or a semantic
+originality guarantee. Every passing draft still requires human originality, attribution and
+quotation review.
 
-- No direct writes to `content/blog`.
-- No production content writes or publishing.
-- Publication package always records `publishEnabled: false` and
-  `productionWriteAllowed: false`.
-- Semantic fact-checking, originality review, jurisdiction review, and final editorial sign-off
-  remain human responsibilities.
-- The approval helper verifies a supplied human approval record against exact content bytes;
-  it is not an identity provider or a substitute for authenticated reviewer permissions.
-- A generation provider is injected by the caller. This stage does not add API keys, paid model
-  dependencies, or automatic external requests.
+## Authenticated editorial approval
 
-## Current limits
+The seo-editorial-approval Supabase Edge Function verifies the caller's bearer token with
+Supabase Auth, then submits the verified Auth user ID to a service-role-only transactional RPC.
+The RPC checks the reviewer allowlist, operation, exact revision ID and SHA-256 content hash,
+then appends a durable decision. The reviewer allowlist is intentionally empty until an
+administrator explicitly adds approved reviewer Auth user IDs to
+seo_ops.editorial_reviewers in the isolated acceptance project.
 
-- The deterministic checks cannot prove that a generated article is original, useful,
-  comprehensive, or factually correct.
-- Evidence retrieval and GSC topic selection remain owned by the existing research pipeline.
-- A later stage must connect authenticated approval events and performance attribution to
-  persisted content operations before production publication can be considered.
+The in-memory hash helper is not an authentication mechanism. The authenticated Edge
+Function and database RPC are the only intended approval path. Approval means editorial
+approval of a draft only; it does not enable deployment or publication.
+
+## Durable revision handling
+
+A stable operation key is used for the same opportunity and reporting period. The revision
+advancement RPC serializes updates, enforces sequential revision numbers, supersedes the prior
+PROPOSED revision, stores the exact Markdown and hash, and updates the operation's current hash
+atomically. Approved operations cannot be silently rewritten. Independent readback still checks
+the operation, source records and complete revision before the draft is marked ready for review.
+
+## Article performance attribution
+
+Scheduler 3 now groups actual GSC page rows and GA4 organic landing-page rows by /blog/<slug>.
+It persists per-article, per-source, date-range snapshots. The report distinguishes
+PAGE_LEVEL_DIRECT URL measurements from aggregate scheduler totals.
+
+Revision attribution remains UNKNOWN unless a verified deployment-to-revision mapping exists.
+Page-level clicks, sessions or key events are not proof that a particular content revision
+caused a change, and they do not establish that an article caused a user registration or
+activation. No user-level tracking or personal visitor data is added by this stage.
+
+## Security and rollout
+
+- Draft files and publication packages are written under content/operations/article-production/, never content/blog/.
+- Publication package always records publishEnabled=false and productionWriteAllowed=false.
+- No production content writes, publishing or deployment are enabled.
+- The approval migration and Edge Function are repository artifacts only until separately reviewed and installed in the isolated acceptance project.
+- No production database migration, reviewer allowlist entry, Edge Function deployment, or generator secret has been configured by this change.
+- Keep SEO_PERSISTENCE_REQUIRED=true, SEO_OPS_ALLOWED_PROJECT_REF=bufbyfwstdqvwnkhyrea, DRY_RUN=true, PUBLISH_ENABLED=false, CONTENT_UPDATE_ENABLED=false, and PRODUCTION_CONTENT_WRITE_ALLOWED=false.
+
+## Remaining gates before operational activation
+
+1. Apply and validate the new migration in the isolated acceptance project only.
+2. Add one explicitly designated reviewer Auth UUID to the acceptance allowlist.
+3. Deploy and test the approval Edge Function in acceptance; verify unauthorized users, stale hashes, duplicate decisions and exact-revision binding are rejected.
+4. Select and test a provider endpoint/model. Do not set a paid API key or enable generation without explicit budget approval.
+5. Run Scheduler 3 against genuine page-level GSC and GA4 data and independently read back article snapshots.
+6. Keep the feature in draft-only mode until the acceptance checks pass.
