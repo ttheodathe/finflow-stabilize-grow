@@ -274,3 +274,31 @@ test("GA4 missing metric values remain null instead of becoming zero", async () 
     await rm(outputDir, { recursive: true, force: true });
   }
 });
+
+
+test("Scheduler 3 maps page-level GSC and GA4 landing-page metrics to article slugs without revision claims", async () => {
+  const { buildArticlePageMetrics } = await import("./schedulers/performance-learning.mjs");
+  const rows = buildArticlePageMetrics({
+    gsc: { pages: [
+      { page: "https://www.finflowtrack.com/blog/cash-flow-guide", clicks: 4, impressions: 40, position: 8 },
+      { page: "https://www.finflowtrack.com/blog/cash-flow-guide", clicks: 6, impressions: 60, position: 10 },
+      { page: "https://www.finflowtrack.com/pricing", clicks: 2, impressions: 20, position: 4 },
+    ] },
+    ga4: [
+      { landingPage: "/blog/cash-flow-guide", sessions: 12, activeUsers: 9, engagedSessions: 7, keyEvents: 1 },
+      { landingPage: "/blog/cash-flow-guide", sessions: 8, activeUsers: 7, engagedSessions: 5, keyEvents: 0 },
+    ],
+  });
+  assert.equal(rows.length, 2);
+  const gsc = rows.find(row => row.source === "GSC");
+  const ga4 = rows.find(row => row.source === "GA4");
+  assert.equal(gsc.slug, "cash-flow-guide");
+  assert.equal(gsc.metrics.clicks, 10);
+  assert.equal(gsc.metrics.impressions, 100);
+  assert.equal(gsc.metrics.ctr, 0.1);
+  assert.equal(gsc.metrics.averagePosition, 9.2);
+  assert.equal(ga4.metrics.organicSessions, 20);
+  assert.equal(ga4.metrics.engagedSessions, 12);
+  assert.equal(gsc.revisionAttribution, "UNKNOWN");
+  assert.equal(gsc.measurementScope, "PAGE_LEVEL_DIRECT");
+});
