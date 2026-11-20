@@ -72,7 +72,7 @@ async function collectGsc(accessToken, dateRange, fetchImpl = fetch) {
   const pageQueries = await collectGscDimension(accessToken, dateRange, ["date", "page", "query"], fetchImpl);
   const pagesByCountry = await collectGscDimension(accessToken, dateRange, ["date", "page", "country"], fetchImpl);
   const pagesByDevice = await collectGscDimension(accessToken, dateRange, ["date", "page", "device"], fetchImpl);
-  const searchAppearance = await collectGscDimension(accessToken, dateRange, ["date", "searchAppearance"], fetchImpl);
+  const searchAppearance = await collectGscDimension(accessToken, dateRange, ["searchAppearance"], fetchImpl);
   return { pages, queries, pageQueries, pagesByCountry, pagesByDevice, searchAppearance };
 }
 
