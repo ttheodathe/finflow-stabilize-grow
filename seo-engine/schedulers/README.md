@@ -1,10 +1,12 @@
 # Three-scheduler SEO operations
 
-All schedules use UTC. Africa/Kigali is UTC+2.
+GitHub Actions cron expressions are UTC. Each workflow uses an `America/New_York` runtime gate and paired UTC cron entries so the daily operating window follows Eastern daylight-saving changes automatically. Scheduled runs are best-effort; GitHub may delay scheduled events, so these times are targets rather than a completion SLA.
 
-- **Scheduler 1 — Search intelligence:** 00:15 UTC / 02:15 Kigali. Collects GSC evidence, scores page opportunities, runs selected technical checks, and persists run and opportunity records.
-- **Scheduler 2 — Content operations:** 01:45 UTC / 03:45 Kigali. Requires a successful Scheduler 1 run for the same UTC day. It validates targets against the Markdown inventory, creates a dry-run editorial queue, and persists proposal records.
-- **Scheduler 3 — Performance and learning:** 03:15 UTC / 05:15 Kigali. Runs independently, collects GSC and GA4 aggregates independently, preserves either source when the other fails, reports explicit per-source availability, and persists available performance snapshots.
+- **Scheduler 1 — Search intelligence:** 9:05 AM US Eastern. Collects GSC evidence, scores page opportunities, runs selected technical checks, and persists run and opportunity records.
+- **Scheduler 2 — Content operations:** 10:00 AM US Eastern. Requires a successful Scheduler 1 run for the same UTC day. It selects the daily content portfolio, validates targets against the Markdown inventory, creates dry-run editorial drafts, and persists proposal records.
+- **Scheduler 3 — Performance and learning:** 10:50 AM US Eastern. Collects GSC and GA4 aggregates independently, preserves either source when the other fails, reports explicit per-source availability, and persists available performance snapshots.
+
+For Kigali, the target run times are 15:05, 16:00, and 16:50 during US daylight time, and 16:05, 17:00, and 17:50 during US standard time.
 
 These are the only three daily SEO scheduler workflows. The existing `seo-data-collection.yml` remains manual-dispatch only. The general CI workflow is not a scheduler.
 
@@ -28,6 +30,12 @@ The adapter supports repository Markdown create/update operations on an explicit
 The adapter's public URL verifier currently checks HTTP success, expected title/text, and canonical URL. It does not yet verify Vercel deployment state/commit identity, noindex, sitemap, or RSS membership. A GitHub commit is not reported as publication success unless the configured URL check passes.
 
 Scheduler 2 requires a persisted Scheduler 1 run ID and reads opportunity rows directly from Supabase through the service-role-only `seo_ops_get_opportunities` RPC. It expands persisted query samples, preserves null metrics, checks reporting-period freshness, compares target queries and intent against the frontmatter inventory, and flags competing pages before choosing an update or new-article path. It retrieves allowlisted official sources, records publisher/title/date/retrieval time/short supporting excerpts, maps claims to sources, and validates product claims against `content/operations/research/verified-product-capabilities.json`.
+
+## Daily content portfolio
+
+Scheduler 2 targets one new article and one existing-article update per day. `daily-content-portfolio.mjs` ranks persisted, complete, live Google Search Console candidates using observed impressions, clicks, CTR, and position. An update slot requires an exact landing-page slug and matching search intent; a new-article slot requires no strong existing-content match. Fixture data, incomplete metrics, inferred cannibalization targets, and ambiguous exact-page intent are excluded. If either slot has no qualified candidate, it is explicitly reported as unfilled and the run is `PARTIAL`; the engine does not invent a topic or lower the source, freshness, or editorial quality gates.
+
+The selector feeds no more than one candidate into each daily slot. The research pipeline still writes drafts only to `content/operations/research/drafts/`. The existing public blog reads Markdown from `content/blog/*.md` at build time, so an approved staging/production content operation must follow the existing blog frontmatter and build validation rather than creating another CMS. No public blog file is changed by the scheduled dry-run workflow.
 
 ## B7.1 research and editorial drafts
 
