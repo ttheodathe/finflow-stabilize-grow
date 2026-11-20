@@ -205,9 +205,9 @@ test("Scheduler 3 fails the job after recording an explicit persistence failure"
 });
 
 test("Scheduler 3 derives unique persistence attempts for separate workflow runs and reruns", () => {
-  assert.equal(resolveSchedulerAttempt({ GITHUB_RUN_NUMBER: "42", GITHUB_RUN_ATTEMPT: "1" }), 4201);
-  assert.equal(resolveSchedulerAttempt({ GITHUB_RUN_NUMBER: "42", GITHUB_RUN_ATTEMPT: "2" }), 4202);
-  assert.equal(resolveSchedulerAttempt({ GITHUB_RUN_NUMBER: "43", GITHUB_RUN_ATTEMPT: "1" }), 4301);
+  assert.equal(resolveSchedulerAttempt({ GITHUB_RUN_NUMBER: "42", GITHUB_RUN_ATTEMPT: "1" }), 42001);
+  assert.equal(resolveSchedulerAttempt({ GITHUB_RUN_NUMBER: "42", GITHUB_RUN_ATTEMPT: "2" }), 42002);
+  assert.equal(resolveSchedulerAttempt({ GITHUB_RUN_NUMBER: "43", GITHUB_RUN_ATTEMPT: "1" }), 43001);
   assert.equal(resolveSchedulerAttempt({}), 1);
 });
 
