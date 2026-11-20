@@ -361,3 +361,69 @@ jobs:
             seo-output/scheduler-3-performance-report.json
           if-no-files-found: warn
           retention-days: 14
+
+  daily-portfolio-acceptance:
+    name: Live GSC daily portfolio and Scheduler 3 acceptance
+    needs: validate
+    if: github.event_name == 'pull_request' && github.event.pull_request.number == 121 && contains(github.event.pull_request.labels.*.name, 'acceptance-write-authorized') && needs.validate.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+    env:
+      DRY_RUN: "true"
+      PUBLISH_ENABLED: "false"
+      CONTENT_UPDATE_ENABLED: "false"
+      PRODUCTION_CONTENT_WRITE_ALLOWED: "false"
+      SEO_OPS_ALLOWED_PROJECT_REF: "bufbyfwstdqvwnkhyrea"
+      SEO_PERSISTENCE_REQUIRED: "true"
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+      GSC_SITE_URL: ${{ vars.GSC_SITE_URL }}
+      GA4_PROPERTY_ID: ${{ vars.GA4_PROPERTY_ID }}
+      SEO_OUTPUT_DIR: seo-output
+      SEO_RESEARCH_OUTPUT_DIR: content/operations/research
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Scheduler 1 with live GSC evidence against acceptance persistence
+        run: node seo-engine/schedulers/search-intelligence.mjs
+      - name: Run Scheduler 2 daily new/update portfolio against persisted opportunities
+        run: node seo-engine/schedulers/content-operations.mjs seo-output/scheduler-1-opportunities.json
+      - name: Run Scheduler 3 performance and learning against acceptance persistence
+        run: node seo-engine/schedulers/performance-learning.mjs
+      - name: Summarize daily portfolio acceptance evidence
+        run: |
+          node --input-type=module -e '
+            import { readFileSync } from "node:fs";
+            const report = JSON.parse(readFileSync("seo-output/scheduler-2-content-queue.json", "utf8"));
+            console.log(JSON.stringify({
+              selectedCandidateCount: report.selectedCandidateCount,
+              readyDraftCount: report.readyDraftCount,
+              rejectedCount: report.rejectedCount,
+              dailyPortfolio: report.dailyPortfolio,
+              productionMutation: report.productionMutation,
+              persistence: report.persistence
+            }, null, 2));
+            if (report.productionMutation !== "BLOCKED" || report.persistence?.status !== "PERSISTED") process.exit(1);
+          '
+      - name: Upload live daily portfolio acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seo-daily-portfolio-acceptance-${{ github.sha }}
+          path: |
+            seo-output/
+            content/operations/research/research-pipeline-report.json
+            content/operations/research/drafts/*.md
+          if-no-files-found: warn
+          retention-days: 14
