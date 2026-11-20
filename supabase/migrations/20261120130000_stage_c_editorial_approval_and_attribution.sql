@@ -77,7 +77,7 @@ begin
     update seo_ops.content_operations set status = 'APPROVED', approved_content_hash = p_content_hash,
       payload = payload || jsonb_build_object('workflowState','EDITORIALLY_APPROVED_DRAFT_ONLY','editorialApprovalId',v_id,'approvedRevisionId',p_revision_id),
       updated_at = now() where id = p_operation_id;
-  else
+  elsif p_decision = 'CHANGES_REQUESTED' then
     update seo_ops.content_operations set status = 'AWAITING_APPROVAL',
       payload = payload || jsonb_build_object('workflowState','CHANGES_REQUESTED','latestEditorialDecision',p_decision),
       updated_at = now() where id = p_operation_id;
@@ -141,7 +141,7 @@ begin
     raise exception 'Invalid revision advancement input';
   end if;
   select * into v_operation from seo_ops.content_operations where id = p_operation_id for update;
-  if not found or v_operation.status <> 'PROPOSED' then
+  if not found or v_operation.status not in ('PROPOSED','AWAITING_APPROVAL') then
     raise exception 'Only a proposed content operation can receive a new revision';
   end if;
 
@@ -183,6 +183,7 @@ begin
   returning id into v_id;
   update seo_ops.content_operations
     set proposed_content_hash = p_content_hash,
+        status = 'PROPOSED',
         payload = coalesce(p_operation_payload, payload),
         updated_at = now()
     where id = p_operation_id;
