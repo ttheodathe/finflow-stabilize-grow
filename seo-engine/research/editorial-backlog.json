@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "policy": {
+    "objective": "Maintain a curated, source-backed discovery backlog for genuinely new FinFlow Track educational articles.",
+    "selection": "A topic is eligible only when its source pack is active, fresh complete Google Search Console query evidence meets the daily portfolio threshold, intent is compatible, and inventory/cannibalization/originality checks pass.",
+    "gscMinimumImpressions": 10,
+    "freshnessDays": 30,
+    "dailyLimit": 1,
+    "noDemandGuarantee": "Backlog membership is not evidence of search demand. Never generate a draft or claim search volume from a backlog entry alone.",
+    "geography": "Global educational audience. Government guidance must remain explicitly scoped to its jurisdiction.",
+    "review": "Every draft requires human fact, source relevance, originality, product-claim and editorial review before publication."
+  },
+  "activePackIds": [
+    "software-selection",
+    "recordkeeping",
+    "cashflow",
+    "receivables",
+    "break-even",
+    "finflow-free-plan-capabilities",
+    "bank-reconciliation",
+    "cash-vs-accrual",
+    "journals-and-ledgers"
+  ],
+  "topics": [
+    {
+      "id": "bank-reconciliation",
+      "status": "ACTIVE_SOURCE_PACK",
+      "title": "How to Reconcile a Business Bank Statement: A Monthly Checklist",
+      "audience": "Small-business owners, freelancers and bookkeepers",
+      "queryPatterns": [
+        "how to reconcile a business bank statement",
+        "bank reconciliation for small business",
+        "how to reconcile business bank account"
+      ],
+      "intent": [
+        "How-to/tutorial",
+        "Bookkeeping guidance"
+      ],
+      "angle": "Practical reconciliation workflow, timing differences, source documents and monthly review; avoid tax or legal conclusions.",
+      "officialSources": [
+        "https://www.irs.gov/publications/p583",
+        "https://www.irs.gov/businesses/small-businesses-self-employed/what-kind-of-records-should-i-keep"
+      ],
+      "jurisdiction": "United States examples only; clearly distinguish local requirements elsewhere.",
+      "existingContentToCheck": [
+        "complete-guide-to-small-business-accounting",
+        "content-blog-how-to-do-bookkeeping-for-a-small-business",
+        "content-blog-small-business-bookkeeping-checklist"
+      ],
+      "gscGate": "At least 10 fresh query impressions with complete clicks, CTR and average-position fields."
+    },
+    {
+      "id": "cash-vs-accrual",
+      "status": "ACTIVE_SOURCE_PACK",
+      "title": "Cash vs. Accrual Accounting: How the Methods Differ",
+      "audience": "Small-business owners learning bookkeeping and financial reporting",
+      "queryPatterns": [
+        "cash vs accrual accounting",
+        "cash method vs accrual method",
+        "difference between cash and accrual accounting"
+      ],
+      "intent": [
+        "Accounting education",
+        "How-to/tutorial",
+        "Bookkeeping guidance"
+      ],
+      "angle": "Explain recognition timing and why profit and cash can differ; explicitly scope all tax-method rules to US IRS guidance.",
+      "officialSources": [
+        "https://www.irs.gov/publications/p583"
+      ],
+      "jurisdiction": "United States federal tax-method overview only; never imply that IRS eligibility rules apply globally.",
+      "existingContentToCheck": [
+        "content-blog-bookkeeping-vs-accounting",
+        "complete-guide-to-small-business-accounting",
+        "cash-flow-forecasting-small-business"
+      ],
+      "gscGate": "At least 10 fresh query impressions with complete clicks, CTR and average-position fields."
+    },
+    {
+      "id": "journals-and-ledgers",
+      "status": "ACTIVE_SOURCE_PACK",
+      "title": "Accounting Journals vs. Ledgers: A Small-Business Guide",
+      "audience": "Small-business owners, bookkeepers and accounting learners",
+      "queryPatterns": [
+        "journal vs ledger in accounting",
+        "what is a general ledger for a small business",
+        "accounting journal and ledger examples"
+      ],
+      "intent": [
+        "Bookkeeping guidance",
+        "Accounting education",
+        "How-to/tutorial"
+      ],
+      "angle": "Explain chronological transaction entry, account-level organization, double-entry flow and supporting evidence.",
+      "officialSources": [
+        "https://www.irs.gov/businesses/small-businesses-self-employed/how-should-i-record-my-business-transactions"
+      ],
+      "jurisdiction": "General bookkeeping concepts, supported by a US government recordkeeping source.",
+      "existingContentToCheck": [
+        "complete-guide-to-small-business-accounting",
+        "content-blog-how-to-do-bookkeeping-for-a-small-business",
+        "content-blog-bookkeeping-vs-accounting"
+      ],
+      "gscGate": "At least 10 fresh query impressions with complete clicks, CTR and average-position fields."
+    }
+  ]
+}
