@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { collect, collectPartial } from "./collect.mjs";
-import { runPerformanceLearning } from "./schedulers/performance-learning.mjs";
+import { resolveSchedulerAttempt, runPerformanceLearning } from "./schedulers/performance-learning.mjs";
 
 const dateRange = { startDate: "2026-11-17", endDate: "2026-11-18" };
 const ok = (body) => new Response(JSON.stringify(body), { status: 200 });
@@ -139,4 +139,69 @@ test("Scheduler 1 retains genuine GSC collection when supplementary GA4 fails", 
   } finally {
     await rm(outputDir, { recursive: true, force: true });
   }
+});
+
+
+test("Scheduler 3 fails closed and writes an explicit report when required persistence credentials are missing", async () => {
+  const outputDir = await mkdtemp(path.join(os.tmpdir(), "seo-performance-required-"));
+  try {
+    await assert.rejects(
+      runPerformanceLearning({
+        dateRange, outputDir,
+        env: { SEO_PERSISTENCE_REQUIRED: "true" },
+        collectFn: async ({ outputDir: dir }) => {
+          const file = path.join(dir, "fixture-required.json");
+          await writeFile(file, JSON.stringify({
+            sourceStatus: { gsc: "AVAILABLE", ga4: "AVAILABLE" },
+            sourceErrors: { gsc: null, ga4: null },
+            gsc: { pages: [] }, ga4: [],
+          }));
+          return { file };
+        },
+      }),
+      /Required SEO persistence needs SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY/,
+    );
+    const report = JSON.parse(await readFile(path.join(outputDir, "scheduler-3-performance-report.json"), "utf8"));
+    assert.equal(report.persistence.status, "BLOCKED");
+    assert.equal(report.persistence.reason, "REQUIRED_PERSISTENCE_UNAVAILABLE");
+  } finally {
+    await rm(outputDir, { recursive: true, force: true });
+  }
+});
+
+test("Scheduler 3 fails the job after recording an explicit persistence failure", async () => {
+  const outputDir = await mkdtemp(path.join(os.tmpdir(), "seo-performance-rpc-failure-"));
+  try {
+    const store = {
+      recordRun: async () => { throw new Error("simulated database outage"); },
+      recordPerformanceSnapshot: async () => { throw new Error("should not be reached"); },
+    };
+    await assert.rejects(
+      runPerformanceLearning({
+        dateRange, outputDir, env: { SEO_PERSISTENCE_REQUIRED: "true" }, store,
+        collectFn: async ({ outputDir: dir }) => {
+          const file = path.join(dir, "fixture-rpc-failure.json");
+          await writeFile(file, JSON.stringify({
+            sourceStatus: { gsc: "AVAILABLE", ga4: "AVAILABLE" },
+            sourceErrors: { gsc: null, ga4: null },
+            gsc: { pages: [] }, ga4: [],
+          }));
+          return { file };
+        },
+      }),
+      /simulated database outage/,
+    );
+    const report = JSON.parse(await readFile(path.join(outputDir, "scheduler-3-performance-report.json"), "utf8"));
+    assert.equal(report.persistence.status, "FAILED");
+    assert.match(report.persistence.error, /simulated database outage/);
+  } finally {
+    await rm(outputDir, { recursive: true, force: true });
+  }
+});
+
+test("Scheduler 3 derives unique persistence attempts for separate workflow runs and reruns", () => {
+  assert.equal(resolveSchedulerAttempt({ GITHUB_RUN_NUMBER: "42", GITHUB_RUN_ATTEMPT: "1" }), 4201);
+  assert.equal(resolveSchedulerAttempt({ GITHUB_RUN_NUMBER: "42", GITHUB_RUN_ATTEMPT: "2" }), 4202);
+  assert.equal(resolveSchedulerAttempt({ GITHUB_RUN_NUMBER: "43", GITHUB_RUN_ATTEMPT: "1" }), 4301);
+  assert.equal(resolveSchedulerAttempt({}), 1);
 });
