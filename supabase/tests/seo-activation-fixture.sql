@@ -45,7 +45,7 @@ as $$
     where u.created_at <= p_as_of and u.deleted_at is null
   ),
   onboarded as (
-    select distinct o.user_id
+    select distinct o.user_id, o.completed_at
     from app_fixture.onboarding_progress o
     join registered r on r.id=o.user_id
     where o.completed_at is not null and o.completed_at <= p_as_of
