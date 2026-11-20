@@ -293,7 +293,7 @@ test("the exact GSC landing page is assessed as an update, not a new article", a
     assert.deepEqual(item.rejectionReasons, []);
     assert.deepEqual(item.quality.numericClaims.unsupported, []);
     assert.equal(item.draft.claims.find(claim => claim.id === "zoho-us-free").verificationStatus, "KEYWORD_RELEVANCE_PASS_HUMAN_REVIEW_REQUIRED");
-    assert.doesNotMatch(item.draft.content, /\\$50,000|1,000 invoices|1,000 expenses/);
+    assert.doesNotMatch(item.draft.content, /\$50,000|1,000 invoices|1,000 expenses/);
     assert.match(item.draft.content, /one-user allowance/i);
     assert.equal(item.sourcePackCompatibility.compatible, true);
     assert.equal(item.sourcePackCompatibility.matchedPackId, "software-selection");
