@@ -205,3 +205,32 @@ test("Scheduler 3 derives unique persistence attempts for separate workflow runs
   assert.equal(resolveSchedulerAttempt({ GITHUB_RUN_NUMBER: "43", GITHUB_RUN_ATTEMPT: "1" }), 4301);
   assert.equal(resolveSchedulerAttempt({}), 1);
 });
+
+
+test("Scheduler 3 does not undercount when any row in an aggregate is incomplete", async () => {
+  const outputDir = await mkdtemp(path.join(os.tmpdir(), "seo-performance-mixed-null-"));
+  try {
+    const result = await runPerformanceLearning({
+      dateRange, outputDir, env: {},
+      collectFn: async ({ outputDir: dir }) => {
+        const file = path.join(dir, "fixture-mixed-null.json");
+        await writeFile(file, JSON.stringify({
+          sourceStatus: { gsc: "AVAILABLE", ga4: "AVAILABLE" },
+          sourceErrors: { gsc: null, ga4: null },
+          gsc: { pages: [{ clicks: 5, impressions: 10 }, { clicks: null, impressions: 20 }] },
+          ga4: [{ sessions: 3, engagedSessions: 2 }, { sessions: null, engagedSessions: 1 }],
+        }));
+        return { file };
+      },
+    });
+    const report = JSON.parse(await readFile(result.path, "utf8"));
+    assert.equal(report.search.clicks, null);
+    assert.equal(report.search.impressions, 30);
+    assert.equal(report.search.ctr, null);
+    assert.equal(report.analytics.organicSessions, null);
+    assert.equal(report.analytics.engagedSessions, 3);
+    assert.equal(report.analytics.engagementRate, null);
+  } finally {
+    await rm(outputDir, { recursive: true, force: true });
+  }
+});
