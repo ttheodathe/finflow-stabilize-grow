@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -69,4 +69,11 @@ test("production activation collector never leaks driver errors or credentials",
     assert.equal(error.message.includes("db.example"), false);
     return true;
   });
+});
+
+test("production activation query reads only the private nine-column aggregate view", async () => {
+  const sql = await readFile("seo-engine/activation/production-aggregate-readonly.sql", "utf8");
+  assert.match(sql, /from\\s+seo_private\\.activation_aggregate/i);
+  assert.doesNotMatch(sql, /from\\s+public\\.(profiles|onboarding_progress|invoices|expenses)/i);
+  assert.doesNotMatch(sql, /\\b(user_id|email|full_name|amount|total|invoice_number)\\b/i);
 });
