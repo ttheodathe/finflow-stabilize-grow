@@ -6,6 +6,7 @@ import matter from "gray-matter";
 import productCapabilityRecord from "../../content/operations/research/verified-product-capabilities.json" with { type: "json" };
 import editorialBacklog from "./editorial-backlog.json" with { type: "json" };
 import { validateDraft } from "../content-ops/validate-draft.mjs";
+import { runArticleProduction } from "./article-production.mjs";
 import { createSupabaseSeoStoreFromEnv } from "../persistence/supabase-store.mjs";
 
 const CONTENT_DIR = "content/blog";
@@ -692,6 +693,8 @@ export async function runResearchPipeline({
   opportunities, contentDir = CONTENT_DIR, outputDir = RESEARCH_DIR,
   fetchImpl = fetch, now = new Date(), store = createSupabaseSeoStoreFromEnv(process.env),
   allowFixture = false,
+  articleGenerator = null,
+  articleOutputDir = path.join(outputDir, "article-production"),
 } = {}) {
   if (!Array.isArray(opportunities)) throw new Error("Research pipeline requires an opportunities array.");
   const inventory = await loadInventory({ contentDir });
@@ -777,6 +780,12 @@ export async function runResearchPipeline({
       .filter(item => item && item.slug !== target.slug).map(item => ({slug:item.slug,title:item.title}));
     const existingArticle = operationType === "EXISTING_ARTICLE_UPDATE" ? inventory.find(item => item.slug === target.slug) || null : null;
     const draft = buildDraft(candidate,pack,sourceRecords,productEvidence,related,target,now,existingArticle);
+    base.sourceRecords = sourceRecords;
+    base.internalLinks = related;
+    base.audience = pack.audience;
+    base.articleAngle = pack.angle || pack.sections.map(([heading]) => heading).join("; ");
+    base.jurisdiction = pack.jurisdiction;
+    base.productEvidence = productEvidence ? VERIFIED_PRODUCT : null;
     const duplicateSlug = operationType === "NEW_ARTICLE" && inventory.some(item => item.slug === draft.slug);
     const contentText = matter(draft.content);
     const frontmatterValid = contentText.data.status === "draft" && contentText.data.publicationStatus === "draft" &&
@@ -835,6 +844,15 @@ export async function runResearchPipeline({
       originality, numericClaimsVerified: !unsupportedNumericClaims, numericClaimMatches: unsupportedNumericClaimMatches, productCapabilities: productEvidence ? "VERIFIED_FROM_REPOSITORY" : "NOT_VERIFIED",
     };
     base.status = base.rejectionReasons.length ? "REJECTED" : "DRAFT_READY_FOR_HUMAN_REVIEW";
+    if (base.status === "DRAFT_READY_FOR_HUMAN_REVIEW" && typeof articleGenerator === "function") {
+      base.articleProduction = await runArticleProduction({
+        research: { ...base, candidate, draft, sourceRecords, internalLinks: related,
+          audience: pack.audience, jurisdiction: pack.jurisdiction,
+          productEvidence: productEvidence ? VERIFIED_PRODUCT : null,
+          outline: pack.sections.map(([heading]) => heading), readerQuestions: pack.readerQuestions || [] },
+        generateArticle: articleGenerator, outputDir: articleOutputDir, now,
+      });
+    }
     if (base.status === "DRAFT_READY_FOR_HUMAN_REVIEW") {
       const hash = createHash("sha256").update(draft.content).digest("hex");
       const filename = `${candidate.id || draft.slug}-${hash.slice(0,10)}.md`.replace(/[^a-zA-Z0-9._-]/g,"-");
