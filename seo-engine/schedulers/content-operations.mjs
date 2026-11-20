@@ -104,7 +104,7 @@ export async function runContentOperations({
   })), input.persistence.schedulerRunId);
 
   const inventory = await loadInventory({ contentDir });
-  const dailyPortfolio = selectDailyContentPortfolio(candidates, inventory);
+  const dailyPortfolio = selectDailyContentPortfolio(candidates, inventory, now);
   const selectedCandidates = dailyPortfolio.selectedCandidates;
 
   const scheduledFor = now.toISOString().slice(0,10);
