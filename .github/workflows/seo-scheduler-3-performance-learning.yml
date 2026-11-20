@@ -48,8 +48,7 @@ jobs:
           PRODUCTION_CONTENT_WRITE_ALLOWED: "false"
         run: node seo-engine/schedulers/performance-learning.mjs
       - uses: actions/upload-artifact@v4
-        if: steps.time-gate.outputs.run == 'true'
-        if: always()
+        if: always() && steps.time-gate.outputs.run == 'true'
         with:
           name: seo-scheduler-3-performance-report
           path: seo-output/scheduler-3-performance-report.json
