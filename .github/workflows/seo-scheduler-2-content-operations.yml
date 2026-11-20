@@ -71,6 +71,11 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           SEO_OPS_ALLOWED_PROJECT_REF: bufbyfwstdqvwnkhyrea
           SEO_PERSISTENCE_REQUIRED: "true"
+          ARTICLE_GENERATOR_ENABLED: ${{ vars.ARTICLE_GENERATOR_ENABLED || 'false' }}
+          ARTICLE_GENERATOR_ENDPOINT: ${{ vars.ARTICLE_GENERATOR_ENDPOINT || '' }}
+          ARTICLE_GENERATOR_MODEL: ${{ vars.ARTICLE_GENERATOR_MODEL || '' }}
+          ARTICLE_GENERATOR_API_KEY: ${{ secrets.ARTICLE_GENERATOR_API_KEY || '' }}
+          ARTICLE_GENERATOR_TIMEOUT_MS: "120000"
         run: node seo-engine/schedulers/content-operations.mjs seo-output/scheduler-1-opportunities.json
       - uses: actions/upload-artifact@v4
         if: steps.time-gate.outputs.run == 'true'
