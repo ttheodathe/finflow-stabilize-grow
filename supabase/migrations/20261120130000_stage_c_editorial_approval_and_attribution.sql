@@ -116,3 +116,92 @@ revoke all on function public.seo_ops_record_article_approval(uuid,uuid,text,uui
 revoke all on function public.seo_ops_record_article_performance(text,uuid,uuid,text,text,text,date,date,jsonb,text,text) from public, anon, authenticated;
 grant execute on function public.seo_ops_record_article_approval(uuid,uuid,text,uuid,text,text,text) to service_role;
 grant execute on function public.seo_ops_record_article_performance(text,uuid,uuid,text,text,text,date,date,jsonb,text,text) to service_role;
+
+
+-- Atomic revision advancement: supersede the previous proposal and bind the new hash.
+create or replace function public.seo_ops_advance_content_revision(
+  p_operation_id uuid,
+  p_revision_number integer,
+  p_content_hash text,
+  p_markdown text,
+  p_previous_content_hash text,
+  p_operation_payload jsonb
+) returns uuid
+language plpgsql security invoker
+set search_path = pg_catalog, seo_ops
+as $$
+declare
+  v_operation seo_ops.content_operations%rowtype;
+  v_existing seo_ops.content_revisions%rowtype;
+  v_latest_number integer;
+  v_id uuid;
+begin
+  if p_content_hash is null or p_content_hash !~ '^[a-f0-9]{64}$'
+     or p_markdown is null or p_revision_number is null or p_revision_number < 1 then
+    raise exception 'Invalid revision advancement input';
+  end if;
+  select * into v_operation from seo_ops.content_operations where id = p_operation_id for update;
+  if not found or v_operation.status <> 'PROPOSED' then
+    raise exception 'Only a proposed content operation can receive a new revision';
+  end if;
+
+  select * into v_existing from seo_ops.content_revisions
+  where operation_id = p_operation_id and content_hash = p_content_hash;
+  if found then
+    if v_existing.revision_number <> p_revision_number or v_existing.markdown <> p_markdown then
+      raise exception 'Revision retry does not match immutable stored revision';
+    end if;
+    update seo_ops.content_operations
+      set proposed_content_hash = p_content_hash,
+          payload = coalesce(p_operation_payload, payload),
+          updated_at = now()
+      where id = p_operation_id;
+    return v_existing.id;
+  end if;
+
+  select coalesce(max(revision_number),0) into v_latest_number
+  from seo_ops.content_revisions where operation_id = p_operation_id;
+  if p_revision_number <> v_latest_number + 1 then
+    raise exception 'Revision number must be the next sequential revision';
+  end if;
+  if v_latest_number = 0 then
+    if v_operation.proposed_content_hash is distinct from p_content_hash
+       and p_previous_content_hash is not null then
+      raise exception 'Initial revision has an unexpected previous hash';
+    end if;
+  else
+    if p_previous_content_hash is null or v_operation.proposed_content_hash <> p_previous_content_hash then
+      raise exception 'Previous revision hash does not match current operation state';
+    end if;
+    update seo_ops.content_revisions
+      set revision_state = 'SUPERSEDED'
+      where operation_id = p_operation_id and revision_state = 'PROPOSED';
+  end if;
+
+  insert into seo_ops.content_revisions(operation_id,revision_number,content_hash,markdown,revision_state)
+  values (p_operation_id,p_revision_number,p_content_hash,p_markdown,'PROPOSED')
+  returning id into v_id;
+  update seo_ops.content_operations
+    set proposed_content_hash = p_content_hash,
+        payload = coalesce(p_operation_payload, payload),
+        updated_at = now()
+    where id = p_operation_id;
+  return v_id;
+end;
+$$;
+revoke all on function public.seo_ops_advance_content_revision(uuid,integer,text,text,text,jsonb) from public, anon, authenticated;
+grant execute on function public.seo_ops_advance_content_revision(uuid,integer,text,text,text,jsonb) to service_role;
+
+create or replace function public.seo_ops_get_article_approval(p_approval_id uuid)
+returns table (
+  id uuid, operation_id uuid, revision_id uuid, reviewer_user_id uuid,
+  decision text, content_hash text, approved_at timestamptz
+)
+language sql stable security invoker
+set search_path = pg_catalog, seo_ops
+as $$
+  select a.id,a.operation_id,a.revision_id,a.reviewer_user_id,a.decision,a.content_hash,a.approved_at
+  from seo_ops.article_approvals a where a.id = p_approval_id;
+$$;
+revoke all on function public.seo_ops_get_article_approval(uuid) from public, anon, authenticated;
+grant execute on function public.seo_ops_get_article_approval(uuid) to service_role;
