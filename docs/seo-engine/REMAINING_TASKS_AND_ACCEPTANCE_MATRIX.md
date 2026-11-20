@@ -92,3 +92,26 @@ Acceptance and production database writes remain prohibited. No new live API or 
 | Production migration ledger | BLOCKED | Production is out of scope; no production connection or query attempted |
 
 These findings are read-only acceptance evidence. Do not treat them as production schema verification.
+
+
+## Live reconstruction update — 2026-11-20
+
+| Requirement | Status | Evidence / limitation |
+|---|---|---|
+| Remote recovery branch and HEAD | VERIFIED | Remote ref resolved to `83373b83518fb172f93c6c4c87c98d3968ec39b6`; workspace fast-forwarded from stale local HEAD `8238674` after preserving its uncommitted work in a stash |
+| PR #119 merge provenance | VERIFIED | Main merge commit `915eee2fe57b890bc51779d2a3fcab038d94d998` identifies PR #119 |
+| Historical acceptance write outcome | VERIFIED | Run `44560803819` logs show empty acceptance Supabase credentials and script result `BLOCKED_MISSING_ACCEPTANCE_SUPABASE_CREDENTIALS`; no write attempted despite green wrapper job |
+| Fresh live GSC collection | BLOCKED | Historical run failed before API collection because dateRange was undefined; date-default fix and fixture tests pass, but no fresh authenticated API result |
+| Main daily scheduler safety | INVESTIGATING | Three main workflows run at 00:15, 01:45 and 03:15 UTC and pass acceptance project/service-role configuration; do not trigger or modify |
+| Migration version-alignment branches | INVESTIGATING | Several branch comparisons show rename-only migration changes with zero SQL changes; cross-branch duplicate-prefix provenance and exact merge/apply history remain unresolved |
+| Current recovery duplicate migration prefixes | INVESTIGATING | 18130000 and 18140000 files exist on recovery; cross-branch collision mapping not yet fully reconstructed |
+| GA4 event-level conversion collection | NOT STARTED | Existing app events exist, but GA4 collector only collects session/landing-page metrics and keyEvents; no eventName report |
+| Email sign_up / login standard events | NOT STARTED | Current auth route records custom auth_completed; standard GA4 recommended events not yet present |
+| First-value analytics proxy | IMPLEMENTED | Invoice/expense routes call trackAccountingAction; helper uses company-level counts and is not authoritative user activation |
+| Database-verified activation | BLOCKED | Read-only SQL exists; no authorized production aggregate connection and no live verification |
+| Local test/build baseline | TESTED | 16/16 app unit, 104/104 SEO/scheduler, security check, lint exit 0, build exit 0, typecheck exit 0 |
+| Local uncommitted route tree | INVESTIGATING | Generated routeTree.gen.ts remained staged in persistent sandbox snapshot; no commit/push; pre-resume stash preserved |
+| Acceptance/production writes | BLOCKED | Explicitly prohibited by current mission; no write, migration, re-key, replay or deployment performed |
+
+### Operational caution
+The main-branch daily schedulers contain acceptance-project service-role configuration. Their dry-run flags are not sufficient evidence that persistence is disabled. Do not dispatch, modify or disable these workflows under this mission. Their current run history and secret availability require separate owner-controlled review.
