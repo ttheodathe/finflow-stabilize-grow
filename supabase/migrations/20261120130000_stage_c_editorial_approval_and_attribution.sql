@@ -81,6 +81,10 @@ begin
     update seo_ops.content_operations set status = 'AWAITING_APPROVAL',
       payload = payload || jsonb_build_object('workflowState','CHANGES_REQUESTED','latestEditorialDecision',p_decision),
       updated_at = now() where id = p_operation_id;
+  else
+    update seo_ops.content_operations set status = 'REJECTED',
+      payload = payload || jsonb_build_object('workflowState','EDITORIALLY_REJECTED','latestEditorialDecision',p_decision),
+      updated_at = now() where id = p_operation_id;
   end if;
   return v_id;
 end;
