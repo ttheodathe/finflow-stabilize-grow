@@ -3,6 +3,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import matter from "gray-matter";
 import { validateDraft } from "../content-ops/validate-draft.mjs";
+import { verifyArticleOriginality } from "./originality.mjs";
 
 const DEFAULT_MIN_WORDS = 1200;
 const HASH_RE = /^[a-f0-9]{64}$/;
@@ -152,6 +153,11 @@ export async function runArticleProduction({
     targetSlug: expected.slug || null,
   });
   const words = wordCount(parsed.content || "");
+  const originality = verifyArticleOriginality({
+    markdown: content,
+    inventory: Array.isArray(research.existingInventory) ? research.existingInventory : [],
+    targetSlug: expected.slug || null,
+  });
   const headings = (parsed.content || "").match(/^#{2,3}\s+.+$/gm) || [];
   const linkTargets = [...(parsed.content || "").matchAll(/\[[^\]]+\]\(([^)]+)\)/g)].map(match => match[1]);
   const internalLinkFailures = brief.internalLinks.filter(link =>
@@ -170,7 +176,7 @@ export async function runArticleProduction({
     metadataValid: validation.errors.every(error => !error.startsWith("MISSING_METADATA") && error !== "INVALID_SLUG"),
     deterministicValidation: validation,
     semanticAccuracy: "HUMAN_REVIEW_REQUIRED",
-    originality: "SIMILARITY_CHECK_REQUIRED",
+    originality,
   };
   const blockers = [
     ...validation.errors,
@@ -179,6 +185,7 @@ export async function runArticleProduction({
     ...(words < minWordCount ? ["ARTICLE_BELOW_MINIMUM_WORD_COUNT"] : []),
     ...(headings.length < 3 ? ["INSUFFICIENT_ARTICLE_STRUCTURE"] : []),
     ...(internalLinkFailures.length ? ["REQUIRED_INTERNAL_LINKS_MISSING"] : []),
+    ...(originality.status !== "SCREEN_PASSED_HUMAN_ORIGINALITY_REVIEW_REQUIRED" ? ["ARTICLE_ORIGINALITY_SCREEN_BLOCKED"] : []),
   ];
   const contentHash = sha256(content);
   const safeSlug = typeof metadata.slug === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(metadata.slug)
