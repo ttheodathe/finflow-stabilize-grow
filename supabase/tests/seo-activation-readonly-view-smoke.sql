@@ -63,9 +63,9 @@ begin
     raise exception 'aggregate view must expose exactly nine output columns, found %',v_column_count;
   end if;
 
-  select relowner::regrole::text into v
+  select relowner::regrole::text as owner_name into v
   from pg_class where oid='seo_private.activation_aggregate'::regclass;
-  if v.relowner <> 'seo_activation_aggregator' then
+  if v.owner_name <> 'seo_activation_aggregator' then
     raise exception 'aggregate view owner is not the restricted non-login role';
   end if;
 end
