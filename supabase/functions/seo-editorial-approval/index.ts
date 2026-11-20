@@ -29,9 +29,7 @@ Deno.serve(async (request: Request) => {
   }
 
   const authorization = request.headers.get("Authorization") || "";
-  const token = authorization.startsWith("Bearer ")
-    ? authorization.slice(7)
-    : "";
+  const token = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
   if (!token) {
     return json({ error: "A signed-in reviewer session is required" }, 401);
   }
@@ -39,8 +37,7 @@ Deno.serve(async (request: Request) => {
   const authClient = createClient(url, anonKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
-  const { data: userData, error: authError } =
-    await authClient.auth.getUser(token);
+  const { data: userData, error: authError } = await authClient.auth.getUser(token);
   if (authError || !userData.user?.id) {
     return json({ error: "Reviewer session could not be verified" }, 401);
   }
@@ -56,8 +53,7 @@ Deno.serve(async (request: Request) => {
   const revisionId = String(body.revisionId || "");
   const contentHash = String(body.contentHash || "");
   const decision = String(body.decision || "");
-  const reviewNotes =
-    typeof body.reviewNotes === "string" ? body.reviewNotes.slice(0, 4000) : null;
+  const reviewNotes = typeof body.reviewNotes === "string" ? body.reviewNotes.slice(0, 4000) : null;
 
   if (
     !/^[0-9a-f-]{36}$/i.test(operationId) ||
@@ -90,10 +86,9 @@ Deno.serve(async (request: Request) => {
     );
   }
 
-  const { data: rows, error: readError } = await admin.rpc(
-    "seo_ops_get_article_approval",
-    { p_approval_id: data },
-  );
+  const { data: rows, error: readError } = await admin.rpc("seo_ops_get_article_approval", {
+    p_approval_id: data,
+  });
   const approval = Array.isArray(rows) ? rows[0] : null;
   if (
     readError ||
@@ -105,8 +100,7 @@ Deno.serve(async (request: Request) => {
   ) {
     return json(
       {
-        error:
-          "Approval persistence readback did not confirm the exact authenticated decision",
+        error: "Approval persistence readback did not confirm the exact authenticated decision",
       },
       500,
     );
