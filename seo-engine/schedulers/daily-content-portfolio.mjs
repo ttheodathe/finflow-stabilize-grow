@@ -1,4 +1,4 @@
-import { analyzeCannibalization } from "../research/pipeline.mjs";
+import { analyzeCannibalization, classifySearchIntent, selectCompatibleSourcePack } from "../research/pipeline.mjs";
 
 function evidenceScore(candidate) {
   const impressions = Number.isFinite(candidate.metrics?.impressions) ? candidate.metrics.impressions : 0;
@@ -27,9 +27,12 @@ export function selectDailyContentPortfolio(candidates, inventory) {
       && Number.isFinite(candidate.metrics?.ctr)
       && Number.isFinite(candidate.metrics?.averagePosition))
     .map(candidate => {
+    const intent = classifySearchIntent(candidate.targetQuery);
+    const sourcePack = selectCompatibleSourcePack(candidate.targetQuery, intent);
     const analysis = analyzeCannibalization(candidate.targetQuery, inventory, candidate.targetUrl);
     let slot = null;
     if (
+      sourcePack.compatible &&
       analysis.decision === "UPDATE_EXISTING_ARTICLE" &&
       analysis.targetQueryMatch === "EXACT_LANDING_PAGE_INTENT_MATCH" &&
       !analysis.unresolved &&
@@ -38,13 +41,14 @@ export function selectDailyContentPortfolio(candidates, inventory) {
     ) {
       slot = "UPDATE_EXISTING_ARTICLE";
     } else if (
+      sourcePack.compatible &&
       analysis.decision === "NEW_ARTICLE_CANDIDATE" &&
       !analysis.target &&
       !analysis.unresolved
     ) {
       slot = "NEW_ARTICLE";
     }
-    return { candidate, analysis, slot, score: evidenceScore(candidate) };
+    return { candidate, analysis, intent, sourcePackId: sourcePack.matchedPackId, slot, score: evidenceScore(candidate) };
   });
 
   const choose = slot => classified
