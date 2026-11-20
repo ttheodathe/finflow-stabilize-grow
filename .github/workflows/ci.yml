@@ -113,7 +113,8 @@ jobs:
             supabase/migrations/20261119160000_seo_ops_read_persisted_opportunities.sql \
             supabase/migrations/20261119170000_seo_ops_research_revision_persistence.sql \
             supabase/migrations/20261119154716_seo_ops_research_readback.sql \
-            supabase/migrations/20261120115501_seo_ops_content_revision_immutability.sql; do
+            supabase/migrations/20261120115501_seo_ops_content_revision_immutability.sql \\
+            supabase/migrations/20261120130000_stage_c_editorial_approval_and_attribution.sql; do
             name="$(basename "$migration")"
             docker cp "$migration" "$container_id:/tmp/$name"
             docker exec "$container_id" psql -U postgres -d finflow_seo_ops_test -v ON_ERROR_STOP=1 -f "/tmp/$name"
