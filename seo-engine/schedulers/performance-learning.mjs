@@ -26,7 +26,7 @@ export function buildArticlePageMetrics(snapshot) {
   const grouped = new Map();
   const add = (source, slug, canonicalUrl, row) => {
     if (!slug) return;
-    const key = \`\${source}:\${slug}\`;
+    const key = `${source}:${slug}`;
     if (!grouped.has(key)) grouped.set(key, { source, slug, canonicalUrl, rows: [] });
     grouped.get(key).rows.push(row);
   };
@@ -37,7 +37,7 @@ export function buildArticlePageMetrics(snapshot) {
   for (const row of snapshot?.ga4 || []) {
     const path = row.landingPage;
     const slug = resolveBlogSlug(path);
-    add("GA4", slug, \`https://www.finflowtrack.com/blog/\${slug}\`, row);
+    add("GA4", slug, `https://www.finflowtrack.com/blog/${slug}`, row);
   }
   return [...grouped.values()].map(group => {
     const rows = group.rows;
