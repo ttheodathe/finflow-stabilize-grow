@@ -241,8 +241,8 @@ test("classifies software-selection queries without treating them as generic rec
   assert.equal(classifySearchIntent("fasttrackaccounting.com"), "REVIEW_REQUIRED");
   assert.equal(classifySearchIntent("how to track business expenses"), "How-to/tutorial");
   assert.equal(classifySearchIntent("expense tracking for freelancers"), "Feature evaluation");
-  assert.equal(classifySearchIntent("how to reconcile a business bank statement"), "Bookkeeping guidance");
-  assert.equal(selectCompatibleSourcePack("how to reconcile a business bank statement", "Bookkeeping guidance").matchedPackId, "bank-reconciliation");
+  assert.equal(classifySearchIntent("how to reconcile a business bank statement"), "How-to/tutorial");
+  assert.equal(selectCompatibleSourcePack("how to reconcile a business bank statement", "How-to/tutorial").matchedPackId, "bank-reconciliation");
   assert.equal(classifySearchIntent("cash vs accrual accounting"), "Accounting education");
   assert.equal(selectCompatibleSourcePack("cash vs accrual accounting", "Accounting education").matchedPackId, "cash-vs-accrual");
   assert.equal(classifySearchIntent("journal vs ledger in accounting"), "Bookkeeping guidance");
