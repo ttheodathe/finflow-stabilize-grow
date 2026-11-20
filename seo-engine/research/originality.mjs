@@ -1,7 +1,7 @@
 import matter from "gray-matter";
 
 const DEFAULT_THRESHOLD = 0.32;
-const MIN_COMPARABLE_WORDS = 80;
+const MIN_COMPARABLE_WORDS = 30;
 
 function normalizeBody(markdown) {
   const body = matter(markdown || "").content
