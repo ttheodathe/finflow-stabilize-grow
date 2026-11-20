@@ -73,7 +73,7 @@ test("production activation collector never leaks driver errors or credentials",
 
 test("production activation query reads only the private nine-column aggregate view", async () => {
   const sql = await readFile("seo-engine/activation/production-aggregate-readonly.sql", "utf8");
-  assert.match(sql, /from\\s+seo_private\\.activation_aggregate/i);
-  assert.doesNotMatch(sql, /from\\s+public\\.(profiles|onboarding_progress|invoices|expenses)/i);
-  assert.doesNotMatch(sql, /\\b(user_id|email|full_name|amount|total|invoice_number)\\b/i);
+  assert.match(sql, /from\s+seo_private\.activation_aggregate/i);
+  assert.doesNotMatch(sql, /from\s+public\.(profiles|onboarding_progress|invoices|expenses)/i);
+  assert.doesNotMatch(sql, /\b(user_id|email|full_name|amount|total|invoice_number)\b/i);
 });
