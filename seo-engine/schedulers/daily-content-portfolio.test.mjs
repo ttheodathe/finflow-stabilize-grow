@@ -33,9 +33,9 @@ function candidate(id, query, targetUrl, impressions = 100, clicks = 5) {
 test("selects at most one new article and one exact-intent existing article update", () => {
   const result = selectDailyContentPortfolio([
     candidate("update-1", "small business bookkeeping records checklist", "https://www.finflowtrack.com/blog/small-business-bookkeeping-checklist", 250, 4),
-    candidate("update-2", "cash flow forecasting for small business", "https://www.finflowtrack.com/blog/cash-flow-forecasting-small-business", 500, 10),
-    candidate("new-1", "inventory turnover calculation for small retailers", "https://www.finflowtrack.com/", 300, 3),
-    candidate("new-2", "cash runway planning for early stage startups", "https://www.finflowtrack.com/", 150, 2),
+    candidate("update-2", "build a cash flow forecast for a small business", "https://www.finflowtrack.com/blog/cash-flow-forecasting-small-business", 500, 10),
+    candidate("new-1", "how to follow up unpaid invoices with customers", "https://www.finflowtrack.com/", 300, 3),
+    candidate("new-2", "how to manage overdue customer invoices", "https://www.finflowtrack.com/", 150, 2),
   ], inventory);
 
   assert.equal(result.selectedCandidateCount, 2);
