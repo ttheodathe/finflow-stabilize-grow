@@ -20,8 +20,8 @@ export function resolveSchedulerAttempt(env = process.env, explicitAttempt = nul
 
 function sumKnown(rows, key) {
   if (rows.length === 0) return 0;
-  const values = rows.map(row => row[key]).filter(Number.isFinite);
-  return values.length ? values.reduce((sum,value)=>sum+value,0) : null;
+  if (rows.some(row => !Number.isFinite(row[key]))) return null;
+  return rows.reduce((sum, row) => sum + row[key], 0);
 }
 
 export async function runPerformanceLearning({
