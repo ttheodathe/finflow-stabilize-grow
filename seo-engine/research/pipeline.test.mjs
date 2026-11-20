@@ -16,7 +16,7 @@ function mockSoftwareSelectionFetch(url) {
  const address=String(url);
  const pages=[
   ["waveapps.com", "<title>Wave Pricing</title><body>STARTER Plan $0 Create unlimited estimates invoices bills and bookkeeping records. Online payments include 2.9% + $0.60 per credit card transaction. Pro plan adds auto-import bank transactions and digitally capture unlimited receipts.</body>"],
-  ["zoho.com", "<title>Zoho Books US Pricing</title><body>FREE $0 create invoices expenses journals P&L Balance Sheet and 50+ Reports. 1 User + 1 Accountant. Free Plan revenue threshold $50,000. Up to 1,000 invoices and 1,000 expenses annually.</body>"],
+  ["zoho.com", "<title>Zoho Books US Pricing</title><body>FREE $0 create invoices expenses journals P&L Balance Sheet and reports. 1 User + 1 Accountant.</body>"],
   ["zipbooks.com", "<title>ZipBooks Pricing</title><body>Starter Free. Send unlimited invoices. Manage unlimited vendors and customers. View Basic Reports. Connect 1 bank account.</body>"],
   ["irs.gov", "<title>What kind of records should I keep</title><body>Keep business records that clearly show income and expenses. Supporting documents include invoices, receipts and bank records.</body>"],
  ];
@@ -290,6 +290,11 @@ test("the exact GSC landing page is assessed as an update, not a new article", a
     assert.equal(item.cannibalization.decision, "UPDATE_EXISTING_ARTICLE");
     assert.equal(item.editorialDecision, "UPDATE_EXISTING_ARTICLE");
     assert.equal(item.status, "DRAFT_GENERATED_NOT_ELIGIBLE", JSON.stringify({reasons:item.rejectionReasons,quality:item.quality,numeric:item.quality?.numericClaims}));
+    assert.deepEqual(item.rejectionReasons, []);
+    assert.deepEqual(item.quality.numericClaims.unsupported, []);
+    assert.equal(item.draft.claims.find(claim => claim.id === "zoho-us-free").verificationStatus, "KEYWORD_RELEVANCE_PASS_HUMAN_REVIEW_REQUIRED");
+    assert.doesNotMatch(item.draft.content, /\\$50,000|1,000 invoices|1,000 expenses/);
+    assert.match(item.draft.content, /one-user allowance/i);
     assert.equal(item.sourcePackCompatibility.compatible, true);
     assert.equal(item.sourcePackCompatibility.matchedPackId, "software-selection");
     assert.equal(item.draft.slug, "free-accounting-software-for-small-business");
@@ -343,14 +348,14 @@ test("source retrieval records redirect, HTTP and content-type evidence and reje
 });
 
 test("numeric claims require matching source numbers and claim-source mappings", () => {
-  const source = {url:"https://www.zoho.com/us/books/pricing/",numericTokens:["1 User","1,000 invoices","1,000 expenses","$50,000"]};
+  const source = {url:"https://www.zoho.com/us/books/pricing/",numericTokens:["1 User"]};
   const claims = [{
-    text:"The plan allows 1 user, 1,000 invoices and 1,000 expenses with a $50,000 revenue threshold.",
+    text:"The plan allows 1 user and lists a US$50,000 revenue threshold.",
     sourceUrls:[source.url],
   }];
-  const result = assessNumericClaims("1 user; 1,000 invoices; 1,000 expenses; $50,000.",claims,[source]);
-  assert.equal(result.unsupported.length,0);
-  assert.equal(result.verified.length,2);
+  const result = assessNumericClaims("1 user; $50,000.",claims,[source]);
+  assert.deepEqual(result.verified,["1 user"]);
+  assert.deepEqual(result.unsupported,["$50,000"]);
   const missingMapping = assessNumericClaims("$50,000.",[{text:"Revenue threshold is $50,000.",sourceUrls:[]}],[source]);
   assert.deepEqual(missingMapping.unsupported,["$50,000"]);
 });
