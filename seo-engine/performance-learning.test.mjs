@@ -93,34 +93,39 @@ test("Scheduler 3 keeps missing metric values null and successful empty rows at 
  }finally{await rm(outputDir,{recursive:true,force:true});}
 });
 
-test("Scheduler 3 emits partial metrics report when acceptance-project guard blocks persistence",async()=>{
- const outputDir=await mkdtemp(path.join(os.tmpdir(),"seo-performance-guard-"));
- try{
-  const result=await runPerformanceLearning({
-   dateRange,outputDir,
-   env:{
-    SEO_OPS_ALLOWED_PROJECT_REF:"bufbyfwstdqvwnkhyrea",
-    SUPABASE_URL:"https://production-project.supabase.co",
-    SUPABASE_SERVICE_ROLE_KEY:"test-key",
-   },
-   collectFn:async({outputDir:dir})=>{
-    const file=path.join(dir,"fixture-guard.json");
-    const snapshot={
-     sourceStatus:{gsc:"AVAILABLE",ga4:"UNAVAILABLE"},
-     sourceErrors:{gsc:null,ga4:"GA4 unavailable"},
-     gsc:{pages:[{clicks:3,impressions:20}]},ga4:null,
-    };
-    const {writeFile}=await import("node:fs/promises");
-    await writeFile(file,JSON.stringify(snapshot));return {file};
-   },
-  });
-  const report=JSON.parse(await readFile(result.path,"utf8"));
-  assert.equal(report.dataQuality.collectionStatus,"PARTIAL");
-  assert.equal(report.search.clicks,3);
-  assert.equal(report.analytics.organicSessions,null);
-  assert.equal(report.persistence.status,"BLOCKED");
-  assert.match(report.persistence.error,/does not match the explicitly allowed SEO acceptance project/);
- }finally{await rm(outputDir,{recursive:true,force:true});}
+test("Scheduler 3 writes a blocked report and fails when the project guard rejects persistence", async () => {
+  const outputDir = await mkdtemp(path.join(os.tmpdir(), "seo-performance-guard-"));
+  try {
+    await assert.rejects(
+      runPerformanceLearning({
+        dateRange, outputDir,
+        env: {
+          SEO_OPS_ALLOWED_PROJECT_REF: "bufbyfwstdqvwnkhyrea",
+          SUPABASE_URL: "https://production-project.supabase.co",
+          SUPABASE_SERVICE_ROLE_KEY: "test-key",
+        },
+        collectFn: async ({ outputDir: dir }) => {
+          const file = path.join(dir, "fixture-guard.json");
+          const snapshot = {
+            sourceStatus: { gsc: "AVAILABLE", ga4: "UNAVAILABLE" },
+            sourceErrors: { gsc: null, ga4: "GA4 unavailable" },
+            gsc: { pages: [{ clicks: 3, impressions: 20 }] }, ga4: null,
+          };
+          await writeFile(file, JSON.stringify(snapshot));
+          return { file };
+        },
+      }),
+      /does not match the explicitly allowed SEO acceptance project/,
+    );
+    const report = JSON.parse(await readFile(path.join(outputDir, "scheduler-3-performance-report.json"), "utf8"));
+    assert.equal(report.dataQuality.collectionStatus, "PARTIAL");
+    assert.equal(report.search.clicks, 3);
+    assert.equal(report.analytics.organicSessions, null);
+    assert.equal(report.persistence.status, "BLOCKED");
+    assert.match(report.persistence.error, /does not match the explicitly allowed SEO acceptance project/);
+  } finally {
+    await rm(outputDir, { recursive: true, force: true });
+  }
 });
 
 test("Scheduler 1 retains genuine GSC collection when supplementary GA4 fails", async () => {
