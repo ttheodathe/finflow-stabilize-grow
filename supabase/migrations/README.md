@@ -23,3 +23,13 @@ The repository filename uses that exact recorded version. The migration adds ser
 ## Production boundary
 
 No production migration, schema, policy, credential or environment change is authorized by this recovery. Production project reference: `zjaamxvqjiymgfujrtjm`.
+
+## Content revision immutability migration
+
+The additive content-revision immutability function was applied only to the acceptance project. Supabase recorded it as:
+
+- `20261120115501 seo_ops_content_revision_immutability`
+
+The repository migration file now uses the same version: `20261120115501_seo_ops_content_revision_immutability.sql`. This prevents a later `supabase db push` from treating the already-applied acceptance migration as a new version. The CI fixture applies the opportunity/readback/revision SQL in dependency order; the acceptance ledger combines the effects of the two intermediate repository files under `20261119145113`.
+
+Production migration history was inspected read-only and contains no SEO operations migrations. No SEO migration was applied to production. Do not apply these acceptance-only migrations to production without a separate schema, permission, migration-history, and rollback review.
