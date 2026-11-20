@@ -133,13 +133,20 @@ test("draft queue persistence is idempotent and requires independent operation, 
    return researchIds.get(key);
   },
   advanceContentRevision:async input=>{
-   if(!revisionIds.has(input.contentHash)){
+   const key=input.operationId+":"+input.contentHash;
+   if(!revisionIds.has(key)){
     const id="00000000-0000-4000-8000-"+String(700+revisionIds.size).padStart(12,"0");
-    revisionIds.set(input.contentHash,id);
+    revisionIds.set(key,id);
    }
-   const id=revisionIds.get(input.contentHash);
+   const id=revisionIds.get(key);
    calls.revisionsById ||= new Map();
-   calls.revisionsById.set(id,{id,content_hash:input.contentHash,markdown:input.markdown,revision_state:"PROPOSED",operation_id:input.operationId});
+   if(input.previousContentHash){
+    for(const [priorId,prior] of calls.revisionsById){
+     if(prior.operation_id===input.operationId && prior.content_hash===input.previousContentHash && prior.revision_state==="PROPOSED")
+      calls.revisionsById.set(priorId,{...prior,revision_state:"SUPERSEDED"});
+    }
+   }
+   calls.revisionsById.set(id,{id,revision_number:input.revisionNumber,content_hash:input.contentHash,markdown:input.markdown,revision_state:"PROPOSED",operation_id:input.operationId});
    calls.revisions=[...calls.revisionsById.values()];
    return id;
   },
