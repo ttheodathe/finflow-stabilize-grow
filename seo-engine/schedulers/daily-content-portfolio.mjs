@@ -19,6 +19,22 @@ export function selectDailyContentPortfolio(candidates, inventory) {
     throw new TypeError("Daily content portfolio requires candidate and inventory arrays.");
   }
 
+  const evidenceRejected = candidates
+    .map(candidate => {
+      const reasons = [];
+      if (candidate.evidenceMode === "FIXTURE") reasons.push("FIXTURE_EVIDENCE");
+      if (candidate.dataSource !== "Google Search Console") reasons.push("NON_GSC_SOURCE");
+      if (!Number.isFinite(candidate.metrics?.impressions) || candidate.metrics.impressions <= 0
+        || !Number.isFinite(candidate.metrics?.clicks)
+        || !Number.isFinite(candidate.metrics?.ctr)
+        || !Number.isFinite(candidate.metrics?.averagePosition)) {
+        reasons.push("INCOMPLETE_GSC_METRICS");
+      }
+      return { candidate, reasons };
+    })
+    .filter(item => item.reasons.length > 0)
+    .map(item => ({ candidateId: item.candidate.id, targetQuery: item.candidate.targetQuery, reasons: item.reasons }));
+
   const classified = candidates
     .filter(candidate => candidate.evidenceMode !== "FIXTURE"
       && candidate.dataSource === "Google Search Console"
@@ -27,29 +43,34 @@ export function selectDailyContentPortfolio(candidates, inventory) {
       && Number.isFinite(candidate.metrics?.ctr)
       && Number.isFinite(candidate.metrics?.averagePosition))
     .map(candidate => {
-    const intent = classifySearchIntent(candidate.targetQuery);
-    const sourcePack = selectCompatibleSourcePack(candidate.targetQuery, intent);
-    const analysis = analyzeCannibalization(candidate.targetQuery, inventory, candidate.targetUrl);
-    let slot = null;
-    if (
-      sourcePack.compatible &&
-      analysis.decision === "UPDATE_EXISTING_ARTICLE" &&
-      analysis.targetQueryMatch === "EXACT_LANDING_PAGE_INTENT_MATCH" &&
-      !analysis.unresolved &&
-      analysis.target &&
-      inventory.some(item => item.slug === analysis.target.slug)
-    ) {
-      slot = "UPDATE_EXISTING_ARTICLE";
-    } else if (
-      sourcePack.compatible &&
-      analysis.decision === "NEW_ARTICLE_CANDIDATE" &&
-      !analysis.target &&
-      !analysis.unresolved
-    ) {
-      slot = "NEW_ARTICLE";
-    }
-    return { candidate, analysis, intent, sourcePackId: sourcePack.matchedPackId, slot, score: evidenceScore(candidate) };
-  });
+      const intent = classifySearchIntent(candidate.targetQuery);
+      const sourcePack = selectCompatibleSourcePack(candidate.targetQuery, intent);
+      const analysis = analyzeCannibalization(candidate.targetQuery, inventory, candidate.targetUrl);
+      let slot = null;
+      if (
+        sourcePack.compatible &&
+        analysis.decision === "UPDATE_EXISTING_ARTICLE" &&
+        analysis.targetQueryMatch === "EXACT_LANDING_PAGE_INTENT_MATCH" &&
+        !analysis.unresolved &&
+        analysis.target &&
+        inventory.some(item => item.slug === analysis.target.slug)
+      ) {
+        slot = "UPDATE_EXISTING_ARTICLE";
+      } else if (
+        sourcePack.compatible &&
+        analysis.decision === "NEW_ARTICLE_CANDIDATE" &&
+        !analysis.target &&
+        !analysis.unresolved
+      ) {
+        slot = "NEW_ARTICLE";
+      }
+      const rejectionReasons = [];
+      if (!sourcePack.compatible) rejectionReasons.push(sourcePack.reason || "NO_APPROVED_SOURCE_PACK_FOR_INTENT");
+      if (analysis.targetQueryMatch === "EXACT_LANDING_PAGE_REVIEW_REQUIRED") rejectionReasons.push("EXACT_TARGET_INTENT_MISMATCH");
+      if (analysis.unresolved) rejectionReasons.push("UNRESOLVED_CANNIBALIZATION");
+      if (!slot && rejectionReasons.length === 0) rejectionReasons.push("NO_CLEAR_NEW_OR_UPDATE_CLASSIFICATION");
+      return { candidate, analysis, intent, sourcePackId: sourcePack.matchedPackId, slot, rejectionReasons, score: evidenceScore(candidate) };
+    });
 
   const choose = slot => classified
     .filter(item => item.slot === slot)
@@ -76,6 +97,11 @@ export function selectDailyContentPortfolio(candidates, inventory) {
     evaluatedCandidateCount: classified.length,
     selectedCandidateCount: selected.length,
     excludedCandidateCount: candidates.length - selected.length,
+    excludedCandidates: [
+      ...evidenceRejected,
+      ...classified.filter(item => !item.slot).map(item => ({ candidateId: item.candidate.id, targetQuery: item.candidate.targetQuery, reasons: item.rejectionReasons })),
+      ...classified.filter(item => item.slot).filter(item => !selected.some(selectedItem => selectedItem.candidate.id === item.candidate.id)).map(item => ({ candidateId: item.candidate.id, targetQuery: item.candidate.targetQuery, reasons: ["DAILY_SLOT_ALREADY_FILLED_BY_HIGHER_RANKED_CANDIDATE"] })),
+    ],
     policy: "ONE_NEW_ARTICLE_AND_ONE_EXISTING_ARTICLE_UPDATE_PER_DAY_WHEN_EVIDENCE_AND_QUALITY_GATES_ALLOW",
   };
 }
