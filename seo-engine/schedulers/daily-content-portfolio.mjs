@@ -1,5 +1,9 @@
 import { analyzeCannibalization, classifySearchIntent, freshnessFor, selectCompatibleSourcePack } from "../research/pipeline.mjs";
 
+function isDomainOnlyQuery(query) {
+  return /^(?:https?:\\/\\/)?(?:www\\.)?[a-z0-9-]+(?:\\.[a-z0-9-]+)*\\.[a-z]{2,}(?:\\/.*)?$/i.test(String(query || "").trim());
+}
+
 function evidenceScore(candidate) {
   const impressions = Number.isFinite(candidate.metrics?.impressions) ? candidate.metrics.impressions : 0;
   const clicks = Number.isFinite(candidate.metrics?.clicks) ? candidate.metrics.clicks : 0;
@@ -23,6 +27,7 @@ export function selectDailyContentPortfolio(candidates, inventory, now = new Dat
     .map(candidate => {
       const reasons = [];
       if (candidate.evidenceMode === "FIXTURE") reasons.push("FIXTURE_EVIDENCE");
+      if (isDomainOnlyQuery(candidate.targetQuery)) reasons.push("BRANDED_OR_DOMAIN_NAVIGATIONAL_QUERY");
       const freshness = freshnessFor(candidate, now);
       if (freshness.status !== "FRESH") reasons.push(`GSC_EVIDENCE_${freshness.status}`);
       if (candidate.dataSource !== "Google Search Console") reasons.push("NON_GSC_SOURCE");
@@ -39,6 +44,7 @@ export function selectDailyContentPortfolio(candidates, inventory, now = new Dat
 
   const classified = candidates
     .filter(candidate => candidate.evidenceMode !== "FIXTURE"
+      && !isDomainOnlyQuery(candidate.targetQuery)
       && freshnessFor(candidate, now).status === "FRESH"
       && candidate.dataSource === "Google Search Console"
       && Number.isFinite(candidate.metrics?.impressions) && candidate.metrics.impressions > 0
