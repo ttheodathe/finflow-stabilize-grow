@@ -204,3 +204,22 @@ Read-only inspection of the three workflows on `main` found daily schedules at 0
 
 ### Exact next safe engineering action
 Resume a repository execution workspace from the persistent recovery snapshot or another authorized local workspace, inspect its preserved stash and staged generated route tree, then implement GA4 eventName collection and regression tests. Do not change the main scheduled workflows or execute acceptance persistence. Re-run the complete validation command above before committing any code.
+
+
+## Stage E GA4 measurement execution — 2026-11-20
+
+Current remote recovery branch HEAD at entry: `018bc9f708c33a9d3a2536806e891ea50e622a44`. The branch is two documentation-only commits ahead of code HEAD `83373b83518fb172f93c6c4c87c98d3968ec39b6`. The required branch exists and is not merged into main.
+
+Read-only source inspection confirms:
+- `seo-engine/collect.mjs` currently collects GA4 date + landingPagePlusQueryString + sessionDefaultChannelGroup with sessions, activeUsers, engagedSessions and keyEvents. It has no eventName/eventCount/totalUsers report.
+- `src/routes/auth.tsx` emits custom auth_completed for email signup when Supabase returns a user (even if email confirmation means there is no session) and for successful email login. Standard sign_up/login are absent from the inspected auth route.
+- `src/routes/__root.tsx` emits OAuth auth_completed after SIGNED_IN using the callback URL's mode query. That mode is not reliable proof that the user is new and the handler has no explicit deduplication mechanism.
+- `src/routes/onboarding.tsx` emits onboarding_completed after the completion upsert returns no error. `src/lib/auth-flow.ts` uses company_members membership as its onboarding gate.
+- `src/lib/analytics.ts` emits first_value_action_completed when combined invoice/expense counts for a company equal one. It does not establish that the authenticated user personally performed the action; it remains analytics-only.
+- `src/lib/referral.ts` stores a browser-local ffVisitorId and the most recent pendingReferralCode. It sends landing path, referrer and UTM values to the partner click endpoint. The inspected helper is last-touch referral capture, not a verified first-touch organic attribution chain.
+
+No Stage E code or tests were changed. No new tests were run. The earlier 16/16 app and 104/104 SEO suite results belong to the prior code baseline and are not represented as Stage E validation.
+
+Execution was blocked by loss of the executable Vercel workspace: previous sessions timed out; an available snapshot restore returned HTTP 400, an older snapshot was expired (HTTP 410), and fresh Vercel v3/v4 sandbox creation returned HTTP 400. The mapped CLI fallback is unavailable and the current container cannot resolve github.com. The previous stash and uncommitted generated route-tree change were not modified or discarded; no claim is made that they were restored.
+
+No authenticated GA4 call, live registration query, activation query, acceptance/production database operation, migration, protected workflow operation, deployment, publishing, secret change, or main merge was performed. The next step is to recover a working repository execution environment without touching the preserved stash, then implement and test event-level GA4 collection and the safe auth/attribution changes described in the acceptance matrix.
