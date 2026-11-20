@@ -127,8 +127,8 @@ test("generated article is blocked when it substantially overlaps an existing in
   const root = await mkdtemp(path.join(os.tmpdir(), "stage-c-duplicate-"));
   try {
     const body = Array.from({ length: 12 }, (_, index) =>
-      \`Section \${index + 1} explains how a small business can organize expected receipts, planned payments, operating costs, timing assumptions, supporting records and regular review routines to understand its cash position.\`
-    ).join("\\n\\n");
+      `Section ${index + 1} explains how a small business can organize expected receipts, planned payments, operating costs, timing assumptions, supporting records and regular review routines to understand its cash position.`
+    ).join("\n\n");
     const markdown = [
       "---",
       'title: "Small Business Cash Flow Planning"',
@@ -145,7 +145,7 @@ test("generated article is blocked when it substantially overlaps an existing in
       "## Review the results",
       body,
       "[Small Business Accounting Guide](/blog/small-business-accounting-guide)",
-    ].join("\\n\\n");
+    ].join("\n\n");
     const result = await runArticleProduction({
       research: { ...research, existingInventory: [{ slug: "existing-cash-flow-guide", title: "Existing cash flow guide", content: markdown }] },
       outputDir: root,
