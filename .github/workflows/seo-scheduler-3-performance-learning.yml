@@ -37,8 +37,9 @@ jobs:
           PRODUCTION_CONTENT_WRITE_ALLOWED: "false"
         run: node seo-engine/schedulers/performance-learning.mjs
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: seo-scheduler-3-performance-report
           path: seo-output/scheduler-3-performance-report.json
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 30
