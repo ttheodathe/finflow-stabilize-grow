@@ -1,6 +1,7 @@
 import { readFile, readdir, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { createHash } from "node:crypto";
+import { isDeepStrictEqual } from "node:util";
 import matter from "gray-matter";
 import productCapabilityRecord from "../../content/operations/research/verified-product-capabilities.json" with { type: "json" };
 import { validateDraft } from "../content-ops/validate-draft.mjs";
@@ -819,8 +820,8 @@ export async function runResearchPipeline({
           for (const expected of researchRecordExpectations) {
             const actual = researchReadback.find(record => record.id === expected.id && record.source_url === expected.sourceUrl);
             if (!actual
-              || JSON.stringify(actual.supported_claims || []) !== JSON.stringify(expected.supportedClaims)
-              || JSON.stringify(actual.unresolved_claims || []) !== JSON.stringify(expected.unresolvedClaims)) {
+              || !isDeepStrictEqual(actual.supported_claims || [], expected.supportedClaims)
+              || !isDeepStrictEqual(actual.unresolved_claims || [], expected.unresolvedClaims)) {
               throw new Error("Independent research readback did not confirm a source record and its claim-source mappings.");
             }
           }
