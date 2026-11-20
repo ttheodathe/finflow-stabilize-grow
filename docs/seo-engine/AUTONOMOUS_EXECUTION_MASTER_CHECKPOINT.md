@@ -15,6 +15,20 @@ Complete the existing acquisition engine in place. Optimize for qualified organi
 - PR #119 is closed. Main contains merge commit 915eee2... despite PR body saying draft, no merge authorization requested, and "do not merge". Historical actor/authorization is not established. No PR reviews/inline review threads were found. Comments record two Vercel free-tier deployment-quota failures and a later Ready preview. This is not evidence of production deployment.
 - A local build regenerated src/routeTree.gen.ts and a rerun of typecheck passed. That generated file is currently a local change and has not been pushed to the recovery branch.
 
+## PR #119 acceptance job forensic review
+
+- GitHub Actions run 44560803819 completed with overall CI success. Its Genuine GSC to persisted editorial draft acceptance job (135690305719) ran on merge ref 3c90f52915abc400c1c409e38348c8dfe467452b.
+- The job downloaded the original historical GSC artifact and verified SHA-256 38e932ab4052dfb2d001e0e7935e40ee87227b0f2e212db40321981a1f5022cd.
+- The acceptance runner reported BLOCKED_MISSING_ACCEPTANCE_SUPABASE_CREDENTIALS. SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY were empty. It explicitly states no acceptance write and no Scheduler 2 execution were attempted.
+- The fresh read-only collection failed before any Google API request because the caller omitted dateRange; error: Cannot read properties of undefined (reading 'startDate').
+- The blocked branch used process.exit(0), so GitHub marked the acceptance job successful even though persistence was blocked. This was a false-green status, not a successful acceptance test.
+- The recovery branch fix defaults collect() and collectPartial() to resolveDateRange(), adds regression tests, requires SEO_ACCEPTANCE_WRITE_AUTHORIZED=true before acceptance writes, requires the acceptance-write-authorized PR label, makes blocked acceptance exit non-zero, and uploads the blocked evidence artifact with if: always().
+- The acceptance job is hard-coded to PR #119, now closed. No new acceptance run was triggered. The historical run did not write to acceptance.
+
+## Main-branch scheduler safety note
+
+The three workflows present on main have daily schedules and reference SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY, target bufbyfwstdqvwnkhyrea, and set SEO_PERSISTENCE_REQUIRED=true. The PR #119 run showed those secret values empty in that run, but actual scheduled run history and current secret availability were not independently verified. No schedule was triggered or disabled. main remains out of scope; any pause/disable action requires separate authorization.
+
 ## Tests on the inspected workspace
 - SEO/scheduler/content/persistence/research suite: 100/100 passed.
 - Application unit tests: 16/16 passed.
@@ -39,7 +53,7 @@ Migration ledger has seven entries: 20261119122622, 20261119123210, 202611191235
 - No historical genuine GSC opportunity set is present in acceptance. This does not prove no earlier colliding upsert overwrote a row; overwritten values cannot be inferred from current state.
 
 ## System reconstruction
-- GSC: official Search Analytics API; default property sc-domain:finflowtrack.com; page/query/page-query/country/device/search-appearance dimensions; 25,000 row pages; 250,000 safety cap; retries for 429/5xx.
+- GSC: official Search Analytics API; default property sc-domain:finflowtrack.com; page/query/page-query/country/device/search-appearance dimensions; 25,000 row pages; 250,000 safety cap; retries for 429/5xx. The missing default date range exposed by PR #119 is fixed with regression tests.
 - GA4: Analytics Data API property 546829553; Organic Search sessions, active users, engaged sessions, keyEvents; 100,000 row pages; 500,000 safety cap. Scheduler 1 treats GA4 as supplementary; Scheduler 3 preserves independent source status.
 - Previously verified historical GSC artifact: Actions run 44448533423, artifact 14494691265, property sc-domain:finflowtrack.com, 2026-10-19..2026-11-15, extracted JSON SHA-256 b44222f584e963e3de17f450fee8dba68c6b1586cbbbf8f025973c2c0c6eff83. This does not prove current API permissions/freshness.
 - App events exist for auth_started, auth_completed (mode distinguishes signup/login), onboarding_completed, invoice_created, expense_created and first_value_action_completed. First-value is inferred client-side after a successful invoice/expense write by querying company record counts. Event-level GA4 reporting and reliable cross-session attribution are not yet verified.
@@ -71,7 +85,7 @@ Repository tree, package.json, .env.example names only, SEO README, scheduler RE
 - docs/seo-engine/REMAINING_TASKS_AND_ACCEPTANCE_MATRIX.md
 
 ## Restrictions and security
-Keep DRY_RUN=true, PUBLISH_ENABLED=false, CONTENT_UPDATE_ENABLED=false, PRODUCTION_CONTENT_WRITE_ALLOWED=false. Do not run acceptance-run.mjs with credentials, apply migrations, re-key, replay, publish, deploy production, change secrets/env, or merge main. Never expose credential values. Only acceptance SELECT/catalog reads were performed.
+Keep DRY_RUN=true, PUBLISH_ENABLED=false, CONTENT_UPDATE_ENABLED=false, PRODUCTION_CONTENT_WRITE_ALLOWED=false. Acceptance writes additionally require SEO_ACCEPTANCE_WRITE_AUTHORIZED=true and the acceptance-write-authorized PR label. Do not run acceptance-run.mjs with credentials, apply migrations, re-key, replay, publish, deploy production, change secrets/env, or merge main. Never expose credential values. Only acceptance SELECT/catalog reads were performed.
 
 ## Next actions
 1. Finish read-only migration collision and provenance analysis; no ledger changes.

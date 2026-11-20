@@ -308,7 +308,7 @@ jobs:
   genuine-acceptance:
     name: Genuine GSC to persisted editorial draft acceptance
     needs: validate
-    if: github.event_name == 'pull_request' && github.event.pull_request.number == 119 && needs.validate.result == 'success'
+    if: github.event_name == 'pull_request' && github.event.pull_request.number == 119 && contains(github.event.pull_request.labels.*.name, 'acceptance-write-authorized') && needs.validate.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     permissions:
@@ -321,6 +321,7 @@ jobs:
       PRODUCTION_CONTENT_WRITE_ALLOWED: "false"
       SEO_OPS_ALLOWED_PROJECT_REF: "bufbyfwstdqvwnkhyrea"
       SEO_PERSISTENCE_REQUIRED: "true"
+      SEO_ACCEPTANCE_WRITE_AUTHORIZED: "true"
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
@@ -347,9 +348,10 @@ jobs:
       - name: Run genuine GSC to editorial draft acceptance
         run: node seo-engine/research/acceptance-run.mjs historical-gsc/seo-data-2026-10-19-to-2026-11-15.json
       - name: Upload genuine acceptance evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: seo-recovery-genuine-acceptance-${{ github.sha }}
           path: seo-output/acceptance/
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 14

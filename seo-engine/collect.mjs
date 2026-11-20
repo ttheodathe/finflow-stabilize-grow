@@ -136,7 +136,7 @@ async function collectGa4(accessToken, dateRange, fetchImpl = fetch) {
   return rows;
 }
 
-export async function collect({ dateRange, token, outputDir = OUTPUT_DIR, fetchImpl = fetch } = {}) {
+export async function collect({ dateRange = resolveDateRange(), token, outputDir = OUTPUT_DIR, fetchImpl = fetch } = {}) {
   const accessToken = token || await createAccessToken({ fetchImpl });
   // GSC is Scheduler 1's required evidence source. GA4 is supplementary:
   // a GA4 outage must never discard a successful GSC collection.
@@ -179,7 +179,7 @@ export async function collect({ dateRange, token, outputDir = OUTPUT_DIR, fetchI
  * Collect GSC and GA4 independently for Scheduler 3. One provider outage must
  * not discard the other provider's valid read-only metrics.
  */
-export async function collectPartial({ dateRange, token, outputDir = OUTPUT_DIR, fetchImpl = fetch } = {}) {
+export async function collectPartial({ dateRange = resolveDateRange(), token, outputDir = OUTPUT_DIR, fetchImpl = fetch } = {}) {
   let accessToken = token || null;
   let tokenError = null;
   if (!accessToken) {

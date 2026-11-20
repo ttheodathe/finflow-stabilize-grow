@@ -7,7 +7,7 @@ Status definitions: NOT STARTED, INVESTIGATING, IMPLEMENTING, IMPLEMENTED, TESTE
 | Stage / requirement | Status | Evidence / dependency |
 |---|---|---|
 | A — branch, baseline, ancestry, initial working tree | VERIFIED | Recovery branch at 91638005; baseline and repair are ancestors; entry tree clean |
-| A — PR #119 provenance and main divergence | INVESTIGATING | PR closed and main merge commit 915eee2 exists despite draft/no-merge wording; historical authorization actor unknown |
+| A — PR #119 provenance and main divergence | INVESTIGATING | PR closed and main merge commit 915eee2 exists despite draft/no-merge wording; historical authorization actor unknown. Run 44560803819's acceptance job was green but blocked by empty Supabase secrets and a dateRange bug; no DB write attempted |
 | A — architecture/workflows/schema/module map | IMPLEMENTED | Core repo and workflow inventory inspected; full audit remains |
 | A — complete threat model/unused code/ownership | NOT STARTED | Exhaustive review pending |
 | B — acceptance migration ledger | VERIFIED | Seven SEO ledger entries read from acceptance project bufbyfwstdqvwnkhyrea |
@@ -20,7 +20,7 @@ Status definitions: NOT STARTED, INVESTIGATING, IMPLEMENTING, IMPLEMENTED, TESTE
 | C — official GSC collector/auth/dimensions | IMPLEMENTED | Read-only Search Analytics API; domain property; six dimension reports |
 | C — pagination/retry/null metric handling | TESTED | 25k page size, 250k cap, 429/5xx retry; tests pass |
 | C — historical GSC artifact and score distinction | TESTED | Run 44448533423/artifact 14494691265; regression preserves 78 vs 31 |
-| C — current live GSC API permissions/fresh collection | BLOCKED | No authenticated dispatch run performed in this checkpoint |
+| C — current live GSC API permissions/fresh collection | BLOCKED | PR #119 attempted fresh read-only collection but failed before API access because collect() received no dateRange; default-range fix and regression test added, but no fresh API result yet |
 | C — incremental backfill/reconciliation | IMPLEMENTED | Existing collector paths; operational live validation pending |
 | D — GA4 organic sessions/engagement | IMPLEMENTED | Analytics Data API property 546829553; organic channel report |
 | D — registration/onboarding events | IMPLEMENTED | auth_completed(mode=signup/login), onboarding_completed |
@@ -44,8 +44,8 @@ Status definitions: NOT STARTED, INVESTIGATING, IMPLEMENTING, IMPLEMENTED, TESTE
 | I — 24/7 availability | BLOCKED | Daily cron is not continuous worker uptime; free-tier constraints unresolved |
 | J — RLS/RPC/content approval safeguards | TESTED | CI/isolated database tests and server-only RPCs |
 | J — secrets, SSRF, SQL injection, privacy, dependency review | INVESTIGATING | Existing security check passes; exhaustive audit pending |
-| K — acceptance migration/re-key/replay | BLOCKED | Separate explicit write authorization required |
-| K — executable acceptance test plan | IMPLEMENTED | acceptance-run.mjs and isolated CI DB fixtures exist; final gated commands to review |
+| K — acceptance migration/re-key/replay | BLOCKED | Separate explicit write authorization required; runner now requires SEO_ACCEPTANCE_WRITE_AUTHORIZED=true and CI label acceptance-write-authorized |
+| K — executable acceptance test plan | IMPLEMENTED | acceptance-run.mjs and isolated CI DB fixtures exist; blocked path now fails non-zero and preserves evidence artifact; CI job gated by explicit PR label |
 | K — production deploy/publish | BLOCKED | Explicitly out of scope |
 | L — product-relevant SEO topics/conversion paths | IMPLEMENTED | Accounting, invoices, expenses, multi-currency and bookkeeping topics |
 | L — real organic registrations/activated customers | BLOCKED | No verified live attribution dataset |

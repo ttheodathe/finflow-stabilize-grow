@@ -31,6 +31,7 @@ function assertProductionSafeguards() {
 function assertAcceptanceProject() {
   assert.ok(process.env.SUPABASE_URL, "SUPABASE_URL must be configured for the acceptance project.");
   assert.ok(process.env.SUPABASE_SERVICE_ROLE_KEY, "Acceptance Supabase service-role credential is required.");
+  assert.equal(process.env.SEO_ACCEPTANCE_WRITE_AUTHORIZED, "true", "Acceptance writes require explicit SEO_ACCEPTANCE_WRITE_AUTHORIZED=true.");
   const projectUrl = new URL(process.env.SUPABASE_URL);
   assert.equal(projectUrl.hostname.split(".")[0], ACCEPTANCE_PROJECT_REF, "Refusing to write outside the isolated acceptance Supabase project.");
 }
@@ -112,7 +113,7 @@ if (!hasAcceptanceSupabase) {
   await mkdir(path.resolve("seo-output/acceptance"),{recursive:true});
   await writeFile(path.resolve("seo-output/acceptance/acceptance-summary.json"),JSON.stringify(blockedSummary,null,2)+"\n");
   console.log(JSON.stringify(blockedSummary,null,2));
-  process.exit(0);
+  process.exitCode = 2;
 }
 
 assertAcceptanceProject();
