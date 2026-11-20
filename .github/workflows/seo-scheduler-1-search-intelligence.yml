@@ -2,7 +2,7 @@ name: SEO Scheduler 1 - Search Intelligence
 
 on:
   schedule:
-    - cron: "15 0 * * *"
+    - cron: "5 13,14 * * *"
   workflow_dispatch:
 
 permissions:
@@ -21,7 +21,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Gate scheduled execution to 9:05 AM US Eastern (DST-aware)
+        id: time-gate
+        shell: bash
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" != "schedule" ]] || [[ "$(TZ=America/New_York date +%H)" == "09" ]]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "Ignoring seasonal duplicate UTC cron; target is 9:05 AM America/New_York."
+          fi
       - name: Collect and rank search opportunities
+        if: steps.time-gate.outputs.run == 'true'
         env:
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
           GSC_SITE_URL: ${{ vars.GSC_SITE_URL }}
@@ -39,6 +50,7 @@ jobs:
           test -n "$GOOGLE_SERVICE_ACCOUNT_JSON"
           node seo-engine/schedulers/search-intelligence.mjs
       - uses: actions/upload-artifact@v4
+        if: steps.time-gate.outputs.run == 'true'
         with:
           name: seo-scheduler-1-opportunities
           path: seo-output/

@@ -2,7 +2,7 @@ name: SEO Scheduler 2 - Content Operations
 
 on:
   schedule:
-    - cron: "45 1 * * *"
+    - cron: "0 14,15 * * *"
   workflow_dispatch:
 
 permissions:
@@ -22,7 +22,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Gate scheduled execution to 10:00 AM US Eastern (DST-aware)
+        id: time-gate
+        shell: bash
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" != "schedule" ]] || [[ "$(TZ=America/New_York date +%H)" == "10" ]]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "Ignoring seasonal duplicate UTC cron; target is 10:00 AM America/New_York."
+          fi
       - name: Require today's successful Scheduler 1 run
+        if: steps.time-gate.outputs.run == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           SCHEDULER_BRANCH: ${{ github.ref_name }}
@@ -40,10 +51,12 @@ jobs:
           run_id="$(cat /tmp/seo-scheduler-1-run-id)"
           echo "SCHEDULER_1_RUN_ID=$run_id" >> "$GITHUB_ENV"
       - name: Download Scheduler 1 evidence
+        if: steps.time-gate.outputs.run == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh run download "$SCHEDULER_1_RUN_ID" --name seo-scheduler-1-opportunities --dir seo-output
       - name: Process content queue in fail-closed dry-run mode
+        if: steps.time-gate.outputs.run == 'true'
         env:
           DRY_RUN: "true"
           PUBLISH_ENABLED: "false"
@@ -57,6 +70,7 @@ jobs:
           SEO_PERSISTENCE_REQUIRED: "true"
         run: node seo-engine/schedulers/content-operations.mjs seo-output/scheduler-1-opportunities.json
       - uses: actions/upload-artifact@v4
+        if: steps.time-gate.outputs.run == 'true'
         with:
           name: seo-scheduler-2-content-queue
           path: |
