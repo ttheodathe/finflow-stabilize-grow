@@ -1,7 +1,9 @@
+import { setTimeout as delay } from "node:timers/promises";
+
 const DEFAULT_TIMEOUT_MS = 120_000;
 
 function required(value, name) {
-  if (typeof value !== "string" || !value.trim()) throw new Error(\`\${name} is required.\`);
+  if (typeof value !== "string" || !value.trim()) throw new Error(name + " is required.");
   return value.trim();
 }
 
@@ -21,7 +23,7 @@ export function createArticleGeneratorFromEnv(env = process.env, { fetchImpl = f
 
   return async function generateArticle({ brief }) {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    const timeout = setTimeout(function abortRequest() { controller.abort(); }, timeoutMs);
     try {
       const response = await fetchImpl(url, {
         method: "POST",
@@ -29,10 +31,10 @@ export function createArticleGeneratorFromEnv(env = process.env, { fetchImpl = f
         headers: {
           "content-type": "application/json",
           accept: "application/json",
-          ...(apiKey ? { authorization: \`Bearer \${apiKey}\` } : {}),
+          ...(apiKey ? { authorization: "Bearer " + apiKey } : {}),
         },
         body: JSON.stringify({
-          model,
+          model: model,
           temperature: 0.2,
           messages: [
             {
@@ -48,20 +50,17 @@ export function createArticleGeneratorFromEnv(env = process.env, { fetchImpl = f
                 "Do not claim the article is published or approved.",
               ].join(" "),
             },
-            {
-              role: "user",
-              content: JSON.stringify(brief),
-            },
+            { role: "user", content: JSON.stringify(brief) },
           ],
         }),
       });
-      if (!response.ok) throw new Error(\`Article generator returned HTTP \${response.status}.\`);
+      if (!response.ok) throw new Error("Article generator returned HTTP " + response.status + ".");
       const payload = await response.json();
-      const markdown = payload?.choices?.[0]?.message?.content;
+      const markdown = payload && payload.choices && payload.choices[0] && payload.choices[0].message && payload.choices[0].message.content;
       if (typeof markdown !== "string" || !markdown.trim()) {
         throw new Error("Article generator response did not contain choices[0].message.content.");
       }
-      return { markdown, provider: "OPENAI_COMPATIBLE", model };
+      return { markdown: markdown, provider: "OPENAI_COMPATIBLE", model: model };
     } finally {
       clearTimeout(timeout);
     }
