@@ -19,7 +19,14 @@ export function selectDailyContentPortfolio(candidates, inventory) {
     throw new TypeError("Daily content portfolio requires candidate and inventory arrays.");
   }
 
-  const classified = candidates.map(candidate => {
+  const classified = candidates
+    .filter(candidate => candidate.evidenceMode !== "FIXTURE"
+      && candidate.dataSource === "Google Search Console"
+      && Number.isFinite(candidate.metrics?.impressions) && candidate.metrics.impressions > 0
+      && Number.isFinite(candidate.metrics?.clicks)
+      && Number.isFinite(candidate.metrics?.ctr)
+      && Number.isFinite(candidate.metrics?.averagePosition))
+    .map(candidate => {
     const analysis = analyzeCannibalization(candidate.targetQuery, inventory, candidate.targetUrl);
     let slot = null;
     if (
@@ -62,7 +69,7 @@ export function selectDailyContentPortfolio(candidates, inventory) {
       dailyPortfolioSlot: item.slot,
     })),
     slots,
-    evaluatedCandidateCount: candidates.length,
+    evaluatedCandidateCount: classified.length,
     selectedCandidateCount: selected.length,
     excludedCandidateCount: candidates.length - selected.length,
     policy: "ONE_NEW_ARTICLE_AND_ONE_EXISTING_ARTICLE_UPDATE_PER_DAY_WHEN_EVIDENCE_AND_QUALITY_GATES_ALLOW",
