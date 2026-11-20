@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { resolveNextRoute } from "@/lib/auth-flow";
 import { trackEvent } from "@/lib/analytics";
+import { isNewEmailSignup } from "@/lib/auth-analytics";
+import { getAttributionEventParams } from "@/lib/referral";
 
 function getSafeNextPath(value?: string): string | null {
   if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("\\")) {
@@ -39,315 +41,8 @@ export const Route = createFileRoute("/auth")({
       {
         title:
           match.search?.mode === "signup"
-            ? "Create your account | FinFlowTrack"
-            : "Sign in | FinFlowTrack",
-      },
-      // Account pages have no value in search results.
-      { name: "robots", content: "noindex, follow" },
-    ],
-  }),
-  component: AuthPage,
-});
-
-function AuthPage() {
-  const { mode: initialMode, plan, next } = Route.useSearch();
-  const navigate = useNavigate();
-  const [mode, setMode] = useState<"login" | "signup">(initialMode);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-
-  useEffect(() => setMode(initialMode), [initialMode]);
-
-  useEffect(() => {
-    let cancelled = false;
-    async function redirectSignedInUser() {
-      try {
-        const { data, error } = await supabase.auth.getUser();
-        if (error) throw error;
-        if (!data.user || cancelled) return;
-
-        // Always enforce verification/onboarding before honoring a return path.
-        const target = await resolveNextRoute(data.user);
-        if (cancelled) return;
-        if (target.to !== "/dashboard" && target.to !== "/onboarding") {
-          navigate({ ...(target as any), replace: true });
-          return;
-        }
-
-        const safeNext = getSafeNextPath(next);
-        navigate({ ...(safeNext ? { to: safeNext } : (target as any)), replace: true } as any);
-      } catch (error) {
-        console.error("[auth] Could not resolve signed-in destination:", error);
-        toast.error("We couldn't load your account. Please refresh and try again.");
-      }
-    }
-    void redirectSignedInUser();
-    return () => {
-      cancelled = true;
-    };
-  }, [navigate, next]);
-
-  async function handleGoogleSignIn() {
-    trackEvent("auth_started", { method: "google", mode });
-    setGoogleLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          // Supabase returns to this route after Google authentication.
-          // The existing signed-in redirect then enforces verification and onboarding.
-          redirectTo: `${window.location.origin}/auth?mode=${mode}`,
-          queryParams: { prompt: "select_account" },
-        },
-      });
-      if (error) throw error;
-    } catch (err) {
-      console.error("[auth] Google OAuth failed:", err);
-      toast.error(
-        err instanceof Error ? err.message : "Couldn't continue with Google. Please try again.",
-      );
-      setGoogleLoading(false);
-    }
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    trackEvent("auth_started", { method: "email", mode });
-    setLoading(true);
-    try {
-      if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/onboarding`,
-            data: { full_name: fullName, plan: plan ?? "free" },
-          },
-        });
-        if (error) throw error;
-        if (data.user) trackEvent("auth_completed", { method: "email", mode: "signup" });
-        // If Supabase requires email confirmation there is no session yet.
-        if (!data.session) {
-          toast.success("Account created â€” check your email to verify.");
-          navigate({ to: "/verify-email", search: { email } });
-          return;
-        }
-        toast.success("Account created!");
-        navigate({ to: "/onboarding" });
-      } else {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        trackEvent("auth_completed", { method: "email", mode: "login" });
-        toast.success("Welcome back!");
-        const target = await resolveNextRoute(data.user);
-        if (target.to !== "/dashboard" && target.to !== "/onboarding") {
-          navigate({ ...(target as any), replace: true });
-        } else {
-          const safeNext = getSafeNextPath(next);
-          navigate({ ...(safeNext ? { to: safeNext } : (target as any)), replace: true } as any);
-        }
-      }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Authentication failed");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-subtle flex items-center justify-center px-4 py-8 sm:py-12">
-      <div className="w-full max-w-md">
-        <Link to="/" className="mb-8 flex justify-center" aria-label="FinFlow Track home">
-          <img
-            src="/logo.png"
-            alt="FinFlow Track â€” Smart Finance. Clear Growth."
-            className="h-12 w-auto max-w-[220px] object-contain"
-          />
-        </Link>
-        <div className="bg-card border rounded-2xl shadow-elevated p-5 sm:p-8">
-          <h1 className="text-2xl font-bold mb-1">
-            {mode === "login" ? "Welcome back" : "Create your account"}
-          </h1>
-          <p className="text-sm text-muted-foreground mb-6">
-            {mode === "login"
-              ? "Sign in to continue managing your business finances."
-              : "Set up your business, send client invoices and keep track of what is still unpaid."}
-          </p>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={loading || googleLoading}
-            onClick={handleGoogleSignIn}
-            className="mb-5 h-11 w-full gap-3"
-          >
-            {googleLoading ? (
-              <span
-                className="h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent"
-                aria-hidden="true"
-              />
-            ) : (
-              <svg aria-hidden="true" viewBox="0 0 48 48" className="h-5 w-5">
-                <path
-                  fill="#EA4335"
-                  d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5Z"
-                  transform="translate(0 5)"
-                />
-                <path
-                  fill="#4285F4"
-                  d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.25 5.47-4.72 7.16l7.62 5.91c4.45-4.11 7.14-10.16 7.14-17.54Z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M10.53 28.59A14.4 14.4 0 0 1 9.75 24c0-1.59.27-3.13.76-4.59l-7.98-6.19A23.9 23.9 0 0 0 0 24c0 3.87.93 7.52 2.56 10.78l7.97-6.19Z"
-                  transform="translate(0 0)"
-                />
-                <path
-                  fill="#34A853"
-                  d="M24 48c6.48 0 11.93-2.13 15.9-5.91l-7.62-5.91c-2.11 1.42-4.81 2.27-8.28 2.27-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48Z"
-                />
-              </svg>
-            )}
-            {googleLoading ? "Connecting to Googleâ€¦" : `Continue with Google`}
-          </Button>
-          <div className="relative mb-5">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-3 text-muted-foreground">Or continue with email</span>
-            </div>
-          </div>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {mode === "signup" && (
-              <div>
-                <Label htmlFor="name">Full name</Label>
-                <Input
-                  id="name"
-                  autoComplete="name"
-                  autoCapitalize="words"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
-                  className="h-11"
-                />
-              </div>
-            )}
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="h-11"
-              />
-            </div>
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete={mode === "login" ? "current-password" : "new-password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={mode === "signup" ? 12 : undefined}
-                  className="h-11 pr-12"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((visible) => !visible)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  aria-pressed={showPassword}
-                  className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-md text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-              {mode === "signup" && (
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Use at least 12 characters for a stronger password.
-                </p>
-              )}
-            </div>
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-hero shadow-glow"
-            >
-              {loading ? "Please waitâ€¦" : mode === "login" ? "Sign in" : "Create account"}
-            </Button>
-            {mode === "signup" && (
-              <p className="text-center text-xs text-muted-foreground">
-                By creating an account you agree to our{" "}
-                <Link to="/terms" className="underline underline-offset-2 hover:text-foreground">
-                  Terms of Service
-                </Link>{" "}
-                and{" "}
-                <Link to="/privacy" className="underline underline-offset-2 hover:text-foreground">
-                  Privacy Policy
-                </Link>
-                .
-              </p>
-            )}
-          </form>
-          <div className="mt-4 flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
-            <button
-              type="button"
-              onClick={() => {
-                const nextMode = mode === "login" ? "signup" : "login";
-                setMode(nextMode);
-                navigate({
-                  to: "/auth",
-                  search: {
-                    mode: nextMode,
-                    ...(plan ? { plan } : {}),
-                    ...(next ? { next } : {}),
-                  },
-                  replace: true,
-                });
-              }}
-              className="text-primary hover:underline"
-            >
-              {mode === "login" ? "Need an account? Sign up" : "Have an account? Sign in"}
-            </button>
-            {mode === "login" && (
-              <Link to="/forgot-password" className="text-muted-foreground hover:text-foreground">
-                Forgot password?
-              </Link>
-            )}
-          </div>
-        </div>
-        <p className="mt-6 text-center text-xs leading-relaxed text-muted-foreground">
-          FinFlowTrack is operated by 2005CLG Ltd, a company registered in Rwanda.{" "}
-          <Link to="/about" className="underline underline-offset-2 hover:text-foreground">
-            About us
-          </Link>
-          {" Â· "}
-          <Link to="/security" className="underline underline-offset-2 hover:text-foreground">
-            Security
-          </Link>
-          {" Â· "}
-          <Link to="/contact" className="underline underline-offset-2 hover:text-foreground">
-            Contact
-          </Link>
-          <br />
-          Need help?{" "}
-          <a
-            href="mailto:support@finflowtrack.com"
-            className="underline underline-offset-2 hover:text-foreground"
-          >
-            support@finflowtrack.com
-          </a>
-        </p>
-      </div>
-    </div>
-  );
-}
+            ? "Create your accou¶»§q«^u¸¹½É¥¥¹ô½…ÕÑ ıµ½‘”ô‘íµ½‘•õ€°(€€€€€€€€€ÅÕ•ÉåA…É…µÌèìÁÉ½µÁĞè€‰Í•±•Ñ}…½Õ¹Ğˆô°(€€€€€€€ô°(€€€€€ô¤ì(€€€€€¥˜€¡•ÉÉ½È¤Ñ¡É½Ü•ÉÉ½Èì(€€€ô…Ñ €¡•ÉÈ¤ì(€€€€€½¹Í½±”¹•ÉÉ½È ‰m…ÕÑ¡t½½±”=ÕÑ ™…¥±•èˆ°•ÉÈ¤ì(€€€€€Ñ½…ÍĞ¹•ÉÉ½È (€€€€€€€•ÉÈ¥¹ÍÑ…¹•½˜ÉÉ½È€ü•ÉÈ¹µ•ÍÍ…”€è€‰½Õ±‘¸Ğ½¹Ñ¥¹Õ”İ¥Ñ ½½±”¸A±•…Í”ÑÉä……¥¸¸ˆ°(€€€€€€¤ì(€€€€€Í•Ñ½½±•1½…‘¥¹œ¡™…±Í”¤ì(€€€ô(€ô((€…Íå¹Œ™Õ¹Ñ¥½¸¡…¹‘±•MÕ‰µ¥Ğ¡”èI•…Ğ¹½ÉµÙ•¹Ğ¤ì(€€€”¹ÁÉ•Ù•¹Ñ•™…Õ±Ğ ¤ì(€€€ÑÉ…­Ù•¹Ğ ‰…ÕÑ¡}ÍÑ…ÉÑ•ˆ°ìµ•Ñ¡½è€‰•µ…¥°ˆ°µ½‘”ô¤ì(€€€Í•Ñ1½…‘¥¹œ¡ÑÉÕ”¤ì(€€€ÑÉäì(€€€€€¥˜€¡µ½‘”€ôôô€‰Í¥¹ÕÀˆ¤ì(€€€€€€€½¹ÍĞì‘…Ñ„°•ÉÉ½Èô€ô…İ…¥ĞÍÕÁ…‰…Í”¹…ÕÑ ¹Í¥¹UÀ¡ì(€€€€€€€€€•µ…¥°°(€€€€€€€€€Á…ÍÍİ½É°(€€€€€€€€€½ÁÑ¥½¹Ìèì(€€€€€€€€€€€•µ…¥±I•‘¥É•ÑQ¼è€‘íİ¥¹‘½Ü¹±½…Ñ¥½¸¹½É¥¥¹ô½½¹‰½…É‘¥¹€°(€€€€€€€€€€€‘…Ñ„èì™Õ±±}¹…µ”è™Õ±±9…µ”°Á±…¸èÁ±…¸€üü€‰™É•”ˆô°(€€€€€€€€€ô°(€€€€€€€ô¤ì(€€€€€€€¥˜€¡•ÉÉ½È¤Ñ¡É½Ü•ÉÉ½Èì(€€€€€€€¥˜€¡¥Í9•İµ…¥±M¥¹ÕÀ¡‘…Ñ„¹ÕÍ•È¤¤ÑÉ…­Ù•¹Ğ ‰Í¥¹}ÕÀˆ°ìµ•Ñ¡½è€‰•µ…¥°ˆ°•µ…¥±}½¹™¥Éµ…Ñ¥½¹}É•ÅÕ¥É•è€…‘…Ñ„¹Í•ÍÍ¥½¸°€¸¸¹•ÑÑÑÉ¥‰ÕÑ¥½¹Ù•¹ÑA…É…µÌ ¤ô¤ì(€€€€€€€€¼¼%˜MÕÁ…‰…Í”É•ÅÕ¥É•Ì•µ…¥°½¹™¥Éµ…Ñ¥½¸Ñ¡•É”¥Ì¹¼Í•ÍÍ¥½¸å•Ğ¸(€€€€€€€¥˜€ …‘…Ñ„¹Í•ÍÍ¥½¸¤ì(€€€€€€€€€Ñ½…ÍĞ¹ÍÕ•ÍÌ ‰½Õ¹ĞÉ•…Ñ•ƒŠP¡•¬å½ÕÈ•µ…¥°Ñ¼Ù•É¥™ä¸ˆ¤ì(€€€€€€€€€¹…Ù¥…Ñ”¡ìÑ¼è€ˆ½Ù•É¥™äµ•µ…¥°ˆ°Í•…É èì•µ…¥°ôô¤ì(€€€€€€€€€É•ÑÕÉ¸ì(€€€€€€€ô(€€€€€€€Ñ½…ÍĞ¹ÍÕ•ÍÌ ‰½Õ¹ĞÉ•…Ñ•„ˆ¤ì(€€€€€€€¹…Ù¥…Ñ”¡ìÑ¼è€ˆ½½¹‰½…É‘¥¹œˆô¤ì(€€€€€ô•±Í”ì(€€€€€€€½¹ÍĞì‘…Ñ„°•ÉÉ½Èô€ô…İ…¥ĞÍÕÁ…‰…Í”¹…ÕÑ ¹Í¥¹%¹]¥Ñ¡A…ÍÍİ½É¡ì•µ…¥°°ÂÚîÆ­yÓRÓbãƒT33Rã’"ã3‚3ãCr#BBãc"bãSRã3‚"ãSb2ã#&Ãrã“‚bã”3"ãC22ãs"rãsB’ãR#B’ãU¢ ¢G&ç6f÷&ÓÒ'G&ç6ÆFRƒR’ ¢óà¢ÇF€¢f–ÆÃÒ"3C#ƒTcB ¢CÒ$ÓCbã“‚#BãSV3ÓãSrÒãRÓ2ã’Òã3‚ÓBãSTƒ#Gc’ã&ƒ"ã“F2ÒãS‚"ã“bÓ"ã#RRãCrÓBãs"rãfÃrãc"Rã“3BãCRÓBãrãBÓãbrãBÓrãSE¢ ¢óà¢ÇF€¢f–ÆÃÒ"4d$$3R ¢CÒ$ÓãS2#‚ãS”BãBBãB’ãsR#F3ÓãS’ã#rÓ2ã2ãsbÓBãS–ÂÓrã“‚Óbã”#2ã’#2ã’#F32ãƒrã“2rãS""ãSbãs†Ãrã“rÓbã•¢ ¢G&ç6f÷&ÓÒ'G&ç6ÆFRƒ’ ¢óà¢ÇF€¢f–ÆÃÒ"33DƒS2 ¢CÒ$Ó#BC†3bãC‚ã“2Ó"ã2Rã’ÓRã“ÂÓrãc"ÓRã“2Ó"ããC"ÓBãƒ"ã#rÓ‚ã#‚"ã#rÓbã#bÓãSrÓBã#"Ó2ãCrÓ’ã“ÂÓrã“‚bã”3bãSC"ãc"Bãc"C‚#BC…¢ ¢óà¢Â÷7fsà¢—Ğ¢¶vöövÆTÆöF–ærò$6öææV7F–ærFòvöövÆ^(
+b"¢6öçF–çVRv—F‚vöövÆVĞ¢Âô'WGFöãà¢ÆF—b6Æ74æÖSÒ'&VÆF—fRÖ"ÓR#à¢ÆF—b6Æ74æÖSÒ&'6öÇWFR–ç6WBÓfÆW‚—FV×2Ö6VçFW"#à¢Ç7â6Æ74æÖSÒ'rÖgVÆÂ&÷&FW"×B"óà¢ÂöF—cà¢ÆF—b6Æ74æÖSÒ'&VÆF—fRfÆW‚§W7F–g’Ö6VçFW"FW‡B×‡2WW&66R#à¢Ç7â6Æ74æÖSÒ&&rÖ6&B‚Ó2FW‡BÖ×WFVBÖf÷&Vw&÷VæB#ä÷"6öçF–çVRv—F‚VÖ–ÃÂ÷7ãà¢ÂöF—cà¢ÂöF—cà¢Æf÷&Òöå7V&Ö—C×¶†æFÆU7V&Ö—GÒ6Æ74æÖSÒ'76R×’ÓB#à¢¶ÖöFRkºwµçH]Û‚ˆ\OHœİX›Z]‚ˆ\ØX›Y^ÛØY[™ßBˆÛ\ÜÓ˜[YOHËY[™ËYÜ˜YY[Z\›ÈÚYİËYÛİÈ‚ˆ‚ˆÛØY[™ÈÈ”X\ÙHØZ]8 )ˆˆˆ[ÙHOOH›ÙÚ[ˆˆÈ”ÚYÛˆ[ˆˆˆÜ™X]HXØÛİ[ŸBˆĞ]Û‚ˆÛ[ÙHOOHœÚYÛ\ˆ	‰ˆ
+ˆÛ\ÜÓ˜[YOH^XÙ[\ˆ^^È^[]]YY›Ü™YÜ›İ[™‚ˆHÜ™X][™È[ˆXØÛİ[[İHYÜ™YHÈİ\ÈˆŸBˆ[šÈÏH‹İ\›\ÈˆÛ\ÜÓ˜[YOH[™\›[™H[™\›[™K[Ù™œÙ]Lˆİ™\^Y›Ü™YÜ›İ[™‚ˆ\›\ÈÙˆÙ\šXÙBˆÓ[šÏÈˆŸBˆ[™ÈˆŸBˆ[šÈÏH‹Üš]˜XŞHˆÛ\ÜÓ˜[YOH[™\›[™H[™\›[™K[Ù™œÙ]Lˆİ™\^Y›Ü™YÜ›İ[™‚ˆš]˜XŞHÛXŞBˆÓ[šÏ‚ˆ‚ˆÜ‚ˆ
+_BˆÙ›Ü›O‚ˆ]ˆÛ\ÜÓ˜[YOH›]M›^›^XÛÛØ\LÈ^\ÛHÛN™›^\›İÈÛNš][\ËXÙ[\ˆÛNš\İYKX™]ÙY[ˆ‚ˆ]Û‚ˆ\OH˜]Ûˆ‚ˆÛÛXÚÏ^Ê
+HOˆÂˆÛÛœİ™^[ÙHH[ÙHOOH›ÙÚ[ˆˆÈœÚYÛ\ˆˆ›ÙÚ[ˆÂˆÙ][ÙJ™^[ÙJNÂˆ˜]šYØ]JÂˆÎˆ‹Ø]]‹ˆÙX\˜ÚˆÂˆ[ÙNˆ™^[ÙKˆ‹‹Š[ˆÈÈ[ˆHˆßJKˆ‹‹Š™^ÈÈ™^HˆßJKˆKˆ™\XÙNˆYKˆJNÂˆ_BˆÛ\ÜÓ˜[YOH^\š[X\Hİ™\[­®éÜj×

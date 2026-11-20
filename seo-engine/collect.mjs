@@ -8,225 +8,54 @@ const OUTPUT_DIR = process.env.SEO_OUTPUT_DIR || "seo-output";
 const PAGE_SIZE = 25_000;
 const GA4_PAGE_SIZE = 100_000;
 
-async function requestJson(url, options, { fetchImpl = fetch, retries = 3 } = {}) {
+const defaultSleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function requestJson(url, options, { fetchImpl = fetch, retries = 3, sleepImpl = defaultSleep } = {}) {
   for (let attempt = 0; attempt <= retries; attempt += 1) {
-    const response = await fetchImpl(url, options);
-    if (response.ok) return response.json();
+    let response;
+    try { response = await fetchImpl(url, options); }
+    catch (error) {
+      if (attempt < retries) { await sleepImpl(500 * 2 ** attempt); continue; }
+      throw new Error("Google API network request failed after " + (attempt + 1) + " attempts: " + String(error?.message || error));
+    }
+    if (response.ok) {
+      try { return await response.json(); }
+      catch (error) { throw new Error("Google API returned invalid JSON: " + String(error?.message || error)); }
+    }
     if ((response.status === 429 || response.status >= 500) && attempt < retries) {
-      await new Promise((resolve) => setTimeout(resolve, 500 * 2 ** attempt));
+      await sleepImpl(500 * 2 ** attempt);
       continue;
     }
     const message = await response.text().catch(() => "");
-    throw new Error(`Google API request failed (HTTP ${response.status}): ${message.slice(0, 500)}`);
-  }
-  throw new Error("Google API request exhausted its retry budget.");
-}
-
-async function collectGscDimension(accessToken, dateRange, dimensions, fetchImpl = fetch) {
-  const endpoint = `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(GSC_SITE_URL)}/searchAnalytics/query`;
-  const rows = [];
-  for (let startRow = 0; ; startRow += PAGE_SIZE) {
-    const page = await requestJson(endpoint, {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${accessToken}`,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        startDate: dateRange.startDate,
-        endDate: dateRange.endDate,
-        dimensions,
-        type: "web",
-        aggregationType: "auto",
-        rowLimit: PAGE_SIZE,
-        startRow,
-      }),
-    }, { fetchImpl });
-    const batch = Array.isArray(page.rows) ? page.rows : [];
-    rows.push(...batch.map((row) => {
-      const metric = (value) => value === null || value === undefined
-        ? null : Number.isFinite(Number(value)) ? Number(value) : null;
-      const record = {
-        clicks: metric(row.clicks),
-        impressions: metric(row.impressions),
-        ctr: metric(row.ctr),
-        position: metric(row.position),
-      };
-      dimensions.forEach((dimension, index) => {
-        const value = row.keys?.[index] ?? null;
-        record[dimension] = dimension === "page" && value ? normalizePageUrl(value) : value;
-      });
-      return record;
-    }));
-    if (batch.length < PAGE_SIZE) break;
-    if (startRow >= 250_000) throw new Error("GSC pagination safety limit reached (250,000 rows). Narrow the date range.");
-  }
-  return rows;
-}
-
-async function collectGsc(accessToken, dateRange, fetchImpl = fetch) {
-  // Keep total-page metrics separate from query rows: anonymized queries are
-  // omitted from query-dimension reports and must not understate page totals.
-  const pages = await collectGscDimension(accessToken, dateRange, ["date", "page"], fetchImpl);
-  const queries = await collectGscDimension(accessToken, dateRange, ["date", "query"], fetchImpl);
-  const pageQueries = await collectGscDimension(accessToken, dateRange, ["date", "page", "query"], fetchImpl);
-  const pagesByCountry = await collectGscDimension(accessToken, dateRange, ["date", "page", "country"], fetchImpl);
-  const pagesByDevice = await collectGscDimension(accessToken, dateRange, ["date", "page", "device"], fetchImpl);
-  const searchAppearance = await collectGscDimension(accessToken, dateRange, ["date", "searchAppearance"], fetchImpl);
-  return { pages, queries, pageQueries, pagesByCountry, pagesByDevice, searchAppearance };
-}
-
-async function collectGa4(accessToken, dateRange, fetchImpl = fetch) {
-  const endpoint = `https://analyticsdata.googleapis.com/v1beta/properties/${encodeURIComponent(GA4_PROPERTY_ID)}:runReport`;
-  const rows = [];
-  for (let offset = 0; ; offset += GA4_PAGE_SIZE) {
-    const page = await requestJson(endpoint, {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${accessToken}`,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        dateRanges: [{ startDate: dateRange.startDate, endDate: dateRange.endDate }],
-        dimensions: [
-          { name: "date" },
-          { name: "landingPagePlusQueryString" },
-          { name: "sessionDefaultChannelGroup" },
-        ],
-        metrics: [
-          { name: "sessions" },
-          { name: "activeUsers" },
-          { name: "engagedSessions" },
-          { name: "keyEvents" },
-        ],
-        dimensionFilter: {
-          filter: {
-            fieldName: "sessionDefaultChannelGroup",
-            stringFilter: { matchType: "EXACT", value: "Organic Search" },
-          },
-        },
-        limit: GA4_PAGE_SIZE,
-        offset,
-      }),
-    }, { fetchImpl });
-    const batch = Array.isArray(page.rows) ? page.rows : [];
-    rows.push(...batch.map((row) => {
-      const dimension = row.dimensionValues || [];
-      const metric = row.metricValues || [];
-      const landing = dimension[1]?.value || "/";
-      let landingPath = landing;
-      try {
-        landingPath = normalizePageUrl(new URL(landing, "https://www.finflowtrack.com").toString());
-      } catch {
-        landingPath = "/";
-      }
-      return {
-        date: dimension[0]?.value ?? null,
-        landingPage: landingPath,
-        channel: dimension[2]?.value ?? "Organic Search",
-        sessions: Number(metric[0]?.value ?? 0),
-        activeUsers: Number(metric[1]?.value ?? 0),
-        engagedSessions: Number(metric[2]?.value ?? 0),
-        keyEvents: Number(metric[3]?.value ?? 0),
-      };
-    }));
-    if (batch.length < GA4_PAGE_SIZE) break;
-    if (offset >= 500_000) throw new Error("GA4 pagination safety limit reached (500,000 rows). Narrow the date range.");
-  }
-  return rows;
-}
-
-export async function collect({ dateRange = resolveDateRange(), token, outputDir = OUTPUT_DIR, fetchImpl = fetch } = {}) {
-  const accessToken = token || await createAccessToken({ fetchImpl });
-  // GSC is Scheduler 1's required evidence source. GA4 is supplementary:
-  // a GA4 outage must never discard a successful GSC collection.
-  const gscRows = await collectGsc(accessToken, dateRange, fetchImpl);
-  let ga4Rows = null;
-  let ga4Error = null;
-  try {
-    ga4Rows = await collectGa4(accessToken, dateRange, fetchImpl);
-  } catch (error) {
-    ga4Error = String(error.message || error);
-  }
-  const snapshot = {
-    schemaVersion: 1,
-    source: "independent read-only Google Search Console and GA4 APIs",
-    property: { gsc: GSC_SITE_URL, ga4: GA4_PROPERTY_ID },
-    dateRange,
-    fetchedAt: new Date().toISOString(),
-    sourceStatus: { gsc: "AVAILABLE", ga4: ga4Rows === null ? "UNAVAILABLE" : "AVAILABLE" },
-    sourceErrors: { gsc: null, ga4: ga4Error },
-    counts: {
-      gscPageRows: gscRows.pages.length,
-      gscQueryRows: gscRows.queries.length,
-      gscPageQueryRows: gscRows.pageQueries.length,
-      gscPageCountryRows: gscRows.pagesByCountry.length,
-      gscPageDeviceRows: gscRows.pagesByDevice.length,
-      gscSearchAppearanceRows: gscRows.searchAppearance.length,
-      ga4Rows: ga4Rows?.length ?? null,
-    },
-    gsc: gscRows,
-    ga4: ga4Rows,
-  };
-  await mkdir(outputDir, { recursive: true });
-  const file = `${outputDir}/seo-data-${dateRange.startDate}-to-${dateRange.endDate}.json`;
-  await writeFile(file, `${JSON.stringify(snapshot, null, 2)}\n`, { flag: "w" });
-  return { file, counts: snapshot.counts, dateRange };
-}
-
-
-/**
- * Collect GSC and GA4 independently for Scheduler 3. One provider outage must
- * not discard the other provider's valid read-only metrics.
- */
-export async function collectPartial({ dateRange = resolveDateRange(), token, outputDir = OUTPUT_DIR, fetchImpl = fetch } = {}) {
-  let accessToken = token || null;
-  let tokenError = null;
-  if (!accessToken) {
-    try { accessToken = await createAccessToken({ fetchImpl }); }
-    catch (error) { tokenError = String(error.message || error); }
-  }
-
-  const [gscResult, ga4Result] = accessToken
-    ? await Promise.allSettled([
-      collectGsc(accessToken, dateRange, fetchImpl),
-      collectGa4(accessToken, dateRange, fetchImpl),
-    ])
-    : [null, null];
-
-  const gscAvailable = gscResult?.status === "fulfilled";
-  const ga4Available = ga4Result?.status === "fulfilled";
-  const gscError = tokenError || (gscResult?.status === "rejected" ? String(gscResult.reason?.message || gscResult.reason) : null);
-  const ga4Error = tokenError || (ga4Result?.status === "rejected" ? String(ga4Result.reason?.message || ga4Result.reason) : null);
-  const gsc = gscAvailable ? gscResult.value : null;
-  const ga4 = ga4Available ? ga4Result.value : null;
-
-  const snapshot = {
-    schemaVersion: 1,
-    source: "independent read-only Google Search Console and GA4 APIs",
-    property: { gsc: GSC_SITE_URL, ga4: GA4_PROPERTY_ID },
-    dateRange,
-    fetchedAt: new Date().toISOString(),
-    sourceStatus: {
-      gsc: gscAvailable ? "AVAILABLE" : "UNAVAILABLE",
-      ga4: ga4Available ? "AVAILABLE" : "UNAVAILABLE",
-    },
-    sourceErrors: { gsc: gscError, ga4: ga4Error },
-    counts: {
-      gscPageRows: gsc?.pages.length ?? null,
+    throw new Error("Google API request failed (HTTP " + response.status + "): " + message.slice(¶»§q«^u…•ÍÍQ½­•¸°‘…Ñ•I…¹”°l‰‘…Ñ”ˆ°€‰Á…”ˆ°€‰½Õ¹ÑÉä‰t°™•Ñ¡%µÁ°¤ì(€½¹ÍĞÁ…•Í	å•Ù¥”€ô…İ…¥Ğ½±±•ÑÍ¥µ•¹Í¥½¸¡…•ÍÍQ½­•¸°‘…Ñ•I…¹”°l‰‘…Ñ”ˆ°€‰Á…”ˆ°€‰‘•Ù¥”‰t°™•Ñ¡%µÁ°¤ì(€½¹ÍĞÍ•…É¡ÁÁ•…É…¹”€ô…İ…¥Ğ½±±•ÑÍ¥µ•¹Í¥½¸¡…•ÍÍQ½­•¸°‘…Ñ•I…¹”°l‰‘…Ñ”ˆ°€‰Í•…É¡ÁÁ•…É…¹”‰t°™•Ñ¡%µÁ°¤ì(€É•ÑÕÉ¸ìÁ…•Ì°ÅÕ•É¥•Ì°Á…•EÕ•É¥•Ì°Á…•Í	å½Õ¹ÑÉä°Á…•Í	å•Ù¥”°Í•…É¡ÁÁ•…É…¹”ôì)ô()•áÁ½ÉĞ…Íå¹Œ™Õ¹Ñ¥½¸½±±•Ñ„Ğ¡…•ÍÍQ½­•¸°‘…Ñ•I…¹”°™•Ñ¡%µÁ°€ô™•Ñ ¤ì(€½¹ÍĞ•¹‘Á½¥¹Ğ€ô¡ÑÑÁÌè¼½…¹…±åÑ¥Í‘…Ñ„¹½½±•…Á¥Ì¹½´½ØÅ‰•Ñ„½ÁÉ½Á•ÉÑ¥•Ì¼‘í•¹½‘•UI%½µÁ½¹•¹Ğ¡Ñ}AI=AIQe}%¥ôéÉÕ¹I•Á½ÉÑ€ì(€½¹ÍĞÉ½İÌ€ômtì(€™½È€¡±•Ğ½™™Í•Ğ€ô€Àì€ì½™™Í•Ğ€¬ôÑ}A}M%i¤ì(€€€½¹ÍĞÁ…”€ô…İ…¥ĞÉ•ÅÕ•ÍÑ)Í½¸¡•¹‘Á½¥¹Ğ°ì(€€€€€µ•Ñ¡½è€‰A=MPˆ°(€€€€€¡•…‘•ÉÌèì(€€€€€€€…ÕÑ¡½É¥é…Ñ¥½¸è	•…É•È€‘í…•ÍÍQ½­•¹õ€°(€€€€€€€€‰½¹Ñ•¹ĞµÑåÁ”ˆè€‰…ÁÁ±¥…Ñ¥½¸½©Í½¸ˆ°(€€€€€ô°(€€€€€‰½‘äè)M=8¹ÍÑÉ¥¹¥™ä¡ì(€€€€€€€‘…Ñ•I…¹•ÌèmìÍÑ…ÉÑ…Ñ”è‘…Ñ•I…¹”¹ÍÑ…ÉÑ…Ñ”°•¹‘…Ñ”è‘…Ñ•I…¹”¹•¹‘…Ñ”õt°(€€€€€€€‘¥µ•¹Í¥½¹Ìèl(€€€€€€€€€ì¹…µ”è€‰‘…Ñ”ˆô°(€€€€€€€€€ì¹…µ”è€‰±…¹‘¥¹A…•A±ÕÍEÕ•ÉåMÑÉ¥¹œˆô°(€€€€€€€€€ì¹…µ”è€‰Í•ÍÍ¥½¹•™…Õ±Ñ¡…¹¹•±É½ÕÀˆô°(€€€€€€€t°(€€€€€€€µ•ÑÉ¥Ìèl(€€€€€€€€€ì¹…µ”è€‰Í•ÍÍ¥½¹Ìˆô°(€€€€€€€€€ì¹…µ”è€‰…Ñ¥Ù•UÍ•ÉÌˆô°(€€€€€€€€€ì¹…µ”è€‰•¹…•‘M•ÍÍ¥½¹Ìˆô°(€€€€€€€€€ì¹…µ”è€‰­•åÙ•¹ÑÌˆô°(€€€€€€€t°(€€€€€€€‘¥µ•¹Í¥½¹¥±Ñ•Èèì(€€€€€€€€€™¥±Ñ•Èèì(€€€€€€€€€€€™¥•±‘9…µ”è€‰Í•ÍÍ¥½¹•™…Õ±Ñ¡…¹¹•±É½ÕÀˆ°(€€€€€€€€€€€ÍÑÉ¥¹¥±Ñ•Èèìµ…Ñ¡QåÁ”è€‰aPˆ°Ù…±Õ”è€‰=É…¹¥ŒM•…É ˆô°(€€€€€€€€€ô°(€€€€€€€ô°(€‚ÚîÆ­y×2æ6öÒ÷c&WF÷&÷W'F–W2ò"²Væ6öFUU$”6ö×öæVçB„tEõ$õU%E•ô”B’²#§'Vå&W÷'B#°¢6öç7B&÷w2ÒµÓ°¢6öç7BfWF6†VDBÒæWrFFR‚’çFô•4õ7G&–ær‚“°¢f÷"†ÆWBöfg6WBÒ²²öfg6WB³ÒtEõtUõ4•¤R’°¢6öç7BvRÒv—B&WVW7D§6öâ†VæGö–çBÂ°¢ÖWF†öC¢%õ5B"À¢†VFW'3¢²WF†÷&—¦F–öã¢$&V&W""²66W75Fö¶VâÂ&6öçFVçB×G—R#¢&Æ–6F–öâö§6öâ"ÒÀ¢&öG“¢¥4ôâç7G&–æv–g’‡°¢FFU&ævW3¢·²7F'DFFS¢FFU&ævRç7F'DFFRÂVæDFFS¢FFU&ævRæVæDFFRÕÒÀ¢F–ÖVç6–öç3¢·²æÖS¢&WfVçDæÖR"ÕÒÀ¢ÖWG&–73¢·²æÖS¢&WfVçD6÷VçB"ÒÂ²æÖS¢'F÷FÅW6W'2"ÕÒÀ¢Æ–Ö—C¢tEõtUõ4•¤RÀ¢öfg6WBÀ¢Ò’À¢ÒÂ²fWF6„–×ÂÂ6ÆVW–×ÂÒ“°¢–b‚vRÇÂG—VöbvRÓÒ&ö&¦V7B"ÇÂ'&’æ—4'&’‡vR’ÇÂ‡vRç&÷w2ÓÒVæFVf–æVBbb'&’æ—4'&’‡vRç&÷w2’’’°¢F‡&÷ræWrW'&÷"‚$tBWfVçG2&W÷'B&WGW&æVBÖÆf÷&ÖVB&W7öç6Râ"“°¢Ğ¢6öç7B&÷t6÷VçBÒvRç&÷t6÷VçBÓÓÒVæFVf–æVBòçVÆÂ¢çVÖ&W"‡vRç&÷t6÷VçB“°¢–b‡&÷t6÷VçBÓÒçVÆÂbb‚çVÖ&W"æ—4–çFVvW"‡&÷t6÷VçB’ÇÂ&÷t6÷VçBÂ’’F‡&÷ræWrW'&÷"‚$tBWfVçG2&W÷'B&WGW&æVBâ–çfÆ–B&÷t6÷VçBâ"“°¢–b‚'&’æ—4'&’‡vRç&÷w2’bb&÷t6÷VçBÓÒ’F‡&÷ræWrW'&÷"‚$tBWfVçG2&W÷'BöÖ—GFVB&÷w2v—F†÷WB6öæf—&Ö–ærâV×G’&W7VÇBâ"“°¢6öç7B&F6‚ÒvRç&÷w2ÇÂµÓ°¢&÷w2çW6‚‚ââæ&F6‚æÖ‚‡&÷r’Óâ°¢6öç7BF–ÖVç6–öç2Ò&÷ræF–ÖVç6–öåfÇVW2ÇÂµÓ°¢6öç7BÖWG&–72Ò&÷ræÖWG&–5fÇVW2ÇÂµÓ°¢6öç7BWfVçDæÖRÒF–ÖVç6–öç5³ÓòçfÇVS°¢6öç7BWfVçD6÷VçBÒçVÖ&W"†Ûkºwµç\Y]Y]NˆÂˆØMÙ\ÜÚ[ÛœÎˆÈİ]\ÎˆØM›İÜÈÈURSP“Hˆˆ•SURSP“H‹ØÛÜNˆ“Ô‘ĞS’P×ÔÑPTÒ‹™]ÚY]ˆØM›İÜÈÈ™]È]J
+KÒTÓÔİš[™Ê
+Hˆ[KˆØM]™[ÎˆÈİ]\ÎˆØM]™[™\ÜÈURSP“Hˆˆ•SURSP“H‹ØÛÜNˆSĞÒS“‘SÈ‹™]ÚY]ˆØM]™[™\ÜË™™]ÚY]ÏÈ[KˆKˆÛİ[ÎˆÂˆÜØÔYÙT›İÜÎˆÜØÔ›İÜËœYÙ\Ë›[™İˆÜØÔ]Y\T›İÜÎˆÜØÔ›İÜËœ]Y\šY\Ë›[™İˆÜØÔYÙT]Y\T›İÜÎˆÜØÔ›İÜËœYÙT]Y\šY\Ë›[™İˆÜØÔYÙPÛİ[T›İÜÎˆÜØÔ›İÜËœYÙ\ĞPÛİ[K›[™İˆÜØÔYÙQ]šXÙT›İÜÎˆÜØÔ›İÜËœYÙ\ĞQ]šXÙK›[™İˆÜØÔÙX\˜Ú\X\˜[˜ÙT›İÜÎˆÜØÔ›İÜËœÙX\˜Ú\X\˜[˜ÙK›[™İˆØM›İÜÎˆØM›İÜÏË›[™İÏÈ[ˆØM]™[›İÜÎˆØM]™[™\ÜËœ›İÜË›[™İÏÈ[ˆKˆÜØÎˆÜØÔ›İÜËˆØMˆØM›İÜËˆØM]™[ÎˆØM]™[™\ÜËœ›İÜÈÏÈ[ˆNÂˆ]ØZ]ZÙ\Šİ]]\‹È™Xİ\œÚ]™NˆYHJNÂˆÛÛœİš[HHİ]]\ˆ
+È‹ÜÙ[ËY]KHˆ
+È]T˜[™ÙKœİ\]H
+È‹]ËHˆ
+È]T˜[™ÙK™[™]H
+È‹šœÛÛˆÂˆ]ØZ]Üš]Qš[Jš[K”ÓÓ‹œİš[™ÚYJÛ˜\Úİ[ŠH
+È—ˆ‹È›YÎˆÈˆJNÂˆ™]\›ˆÈš[KÛİ[ÎˆÛ˜\Úİ˜Ûİ[Ë]T˜[™ÙKÛİ\˜ÙTİ]\ÎˆÛ˜\ÚİœÛİ\˜ÙTİ]\ËÛİ\˜ÙQ\œ›ÜœÎˆÛ˜\ÚİœÛİ\˜ÙQ\œ›ÜœÈNÂŸB‚‹ÊŠ‚ˆ
+ˆÛÛXİÔĞÈ[™ĞM[™\[™[H›ÜˆØÚY[\ˆËˆÛ™H›İšY\ˆİ]YÙH]\İˆ
+ˆ›İ\ØØ\™Hİ\ˆ›İšY\‰ÜÈ˜[Y™XY[Û›HY]šXÜË‚ˆ
+‹Â™^Ü\Ş[˜È[˜İ[ÛˆÛÛXİ\X[
+È]T˜[™ÙHH™\ÛÛ™Q]T˜[™ÙJ
+KÚÙ[‹İ]]\ˆHÕUUÑT‹™]Ú[\H™]ÚHHßJHÂˆ]XØÙ\ÜÕÚÙ[ˆHÚÙ[ˆ-®éÜj×null,
       gscQueryRows: gsc?.queries.length ?? null,
       gscPageQueryRows: gsc?.pageQueries.length ?? null,
       gscPageCountryRows: gsc?.pagesByCountry.length ?? null,
       gscPageDeviceRows: gsc?.pagesByDevice.length ?? null,
       gscSearchAppearanceRows: gsc?.searchAppearance.length ?? null,
-      ga4Rows: ga4?.length ?? null,
+      ga4Rows: sessions?.length ?? null,
+      ga4EventRows: events?.rows.length ?? null,
     },
     gsc,
-    ga4,
+    ga4: sessions,
+    ga4Events: events?.rows ?? null,
   };
   await mkdir(outputDir, { recursive: true });
-  const file = `${outputDir}/seo-data-partial-${dateRange.startDate}-to-${dateRange.endDate}.json`;
-  await writeFile(file, `${JSON.stringify(snapshot, null, 2)}\n`, { flag: "w" });
+  const file = outputDir + "/seo-data-partial-" + dateRange.startDate + "-to-" + dateRange.endDate + ".json";
+  await writeFile(file, JSON.stringify(snapshot, null, 2) + "\n", { flag: "w" });
   return { file, counts: snapshot.counts, dateRange, sourceStatus: snapshot.sourceStatus, sourceErrors: snapshot.sourceErrors };
 }
 
@@ -247,7 +76,4 @@ if (import.meta.url === new URL(process.argv[1], "file:").href) {
     const result = await collect({ dateRange });
     console.log(JSON.stringify(result, null, 2));
   } catch (error) {
-    console.error(`SEO data collection failed: ${error.message}`);
-    process.exitCode = 1;
-  }
-}
+    console.error(`SE¶»§q«^
