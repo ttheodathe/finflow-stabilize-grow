@@ -66,6 +66,17 @@ export function createSupabaseSeoStore({ url, serviceRoleKey, fetchImpl = fetch 
         p_period_start: periodStart, p_period_end: periodEnd, p_source: source, p_metrics: metrics,
       }), "Performance snapshot persistence");
     },
+    async recordArticlePerformanceSnapshot({ snapshotKey, operationId = null, revisionId = null, slug, canonicalUrl, source, periodStart, periodEnd, metrics, measurementScope = "PAGE_LEVEL_DIRECT", revisionAttribution = "UNKNOWN" }) {
+      if (operationId != null) requireUuid(operationId, "Article performance operation ID");
+      if (revisionId != null) requireUuid(revisionId, "Article performance revision ID");
+      if (typeof snapshotKey !== "string" || !snapshotKey.trim()) throw new Error("Article performance snapshot key is required.");
+      return requireUuid(await rpc("seo_ops_record_article_performance", {
+        p_snapshot_key: snapshotKey, p_operation_id: operationId, p_revision_id: revisionId,
+        p_slug: slug, p_canonical_url: canonicalUrl, p_source: source,
+        p_period_start: periodStart, p_period_end: periodEnd, p_metrics: metrics,
+        p_measurement_scope: measurementScope, p_revision_attribution: revisionAttribution,
+      }), "Article performance snapshot persistence");
+    },
     async recordActivationSnapshot({ snapshotDate, registeredUsers, onboardingCompletions, activatedUsers, returningActivatedUsers, definitionVersion, sourceWatermark, limitations = [] }) {
       return requireUuid(await rpc("seo_ops_record_activation_snapshot", {
         p_snapshot_date: snapshotDate, p_registered_users: registeredUsers,
