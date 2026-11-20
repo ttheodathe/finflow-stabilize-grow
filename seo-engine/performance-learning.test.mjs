@@ -4,7 +4,8 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { collect, collectPartial } from "./collect.mjs";
-import { resolveSchedulerAttempt, runPerformanceLearning } from "./schedulers/performance-learning.mjs";
+import { runPerformanceLearning } from "./schedulers/performance-learning.mjs";
+import { resolveSchedulerAttempt } from "./schedulers/run-attempt.mjs";
 
 const dateRange = { startDate: "2026-11-17", endDate: "2026-11-18" };
 const ok = (body) => new Response(JSON.stringify(body), { status: 200 });
