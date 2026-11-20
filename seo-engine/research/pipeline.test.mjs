@@ -239,6 +239,25 @@ test("classifies software-selection queries without treating them as generic rec
   assert.equal(classifySearchIntent("unclear business finance question"), "REVIEW_REQUIRED");
 });
 
+test("an exact GSC target with matching editorial intent remains an update despite low lexical overlap", () => {
+  const result = analyzeCannibalization(
+    "free business accounting apps worth considering",
+    [{
+      slug: "free-accounting-software-for-small-business",
+      title: "Free Accounting Software for Small Business",
+      description: "Job? A guide to free accounting software and small-business bookkeeping apps",
+      tags: ["accounting software", "small business"],
+      content: "Compare accounting software options for small businesses.",
+    }],
+    "https://www.finflowtrack.com/blog/free-accounting-software-for-small-business",
+  );
+  assert.equal(result.target.exactTarget, true);
+  assert.equal(result.target.intentMatch, true);
+  assert.equal(result.targetQueryMatch, "EXACT_LANDING_PAGE_INTENT_MATCH");
+  assert.equal(result.editorialDecision, "UPDATE_EXISTING_ARTICLE");
+  assert.equal(result.requiresHumanReview, false);
+});
+
 test("the exact GSC landing page is assessed as an update, not a new article", async () => {
   const env = await setup();
   try {
