@@ -22,6 +22,8 @@ const inventory = [
 function candidate(id, query, targetUrl, impressions = 100, clicks = 5) {
   return {
     id,
+    dataSource: "Google Search Console",
+    evidenceMode: "LIVE_OR_PERSISTED",
     targetQuery: query,
     targetUrl,
     metrics: { impressions, clicks, ctr: clicks / impressions, averagePosition: 12 },
@@ -55,4 +57,15 @@ test("leaves a daily slot unfilled rather than inventing an unsupported opportun
   assert.equal(result.selectedCandidateCount, 1);
   assert.equal(result.slots.articleUpdate.status, "SELECTED");
   assert.equal(result.slots.newArticle.status, "UNFILLED_NO_QUALIFIED_CANDIDATE");
+});
+
+test("excludes fixture and incomplete GSC rows from both daily slots", () => {
+  const fixture = { ...candidate("fixture", "inventory turnover calculation for small retailers", "https://www.finflowtrack.com/"), evidenceMode: "FIXTURE" };
+  const incomplete = { ...candidate("incomplete", "inventory turnover calculation for small retailers", "https://www.finflowtrack.com/"), metrics: { impressions: 20, clicks: null, ctr: null, averagePosition: 10 } };
+  const result = selectDailyContentPortfolio([fixture, incomplete], inventory);
+
+  assert.equal(result.selectedCandidateCount, 0);
+  assert.equal(result.slots.newArticle.status, "UNFILLED_NO_QUALIFIED_CANDIDATE");
+  assert.equal(result.slots.articleUpdate.status, "UNFILLED_NO_QUALIFIED_CANDIDATE");
+  assert.equal(result.evaluatedCandidateCount, 0);
 });
