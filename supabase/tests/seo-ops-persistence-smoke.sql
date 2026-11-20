@@ -220,9 +220,11 @@ declare
   v_reviewer uuid := gen_random_uuid();
   v_operation uuid;
   v_revision uuid;
+  v_revision2 uuid;
   v_approval uuid;
   v_performance uuid;
   v_hash text := repeat('c',64);
+  v_hash2 text := repeat('d',64);
   v_count integer;
 begin
   insert into seo_ops.editorial_reviewers(user_id,is_active,reviewer_role)
@@ -236,26 +238,33 @@ begin
     v_operation,1,v_hash,'# Stage C smoke article',null,
     '{"workflowState":"PERSISTED_PENDING_READBACK","draftMarkdown":"# Stage C smoke article"}'::jsonb
   );
+  v_revision2 := public.seo_ops_advance_content_revision(
+    v_operation,2,v_hash2,'# Stage C smoke article revised',v_hash,
+    '{"workflowState":"PERSISTED_PENDING_READBACK","draftMarkdown":"# Stage C smoke article revised"}'::jsonb
+  );
+  select count(*) into v_count from seo_ops.content_revisions
+   where operation_id=v_operation and revision_number=1 and revision_state='SUPERSEDED';
+  if v_count <> 1 then raise exception 'previous article revision was not superseded'; end if;
   v_approval := public.seo_ops_record_article_approval(
-    v_operation,v_revision,v_hash,v_reviewer,v_reviewer::text,'APPROVED','CI synthetic approval'
+    v_operation,v_revision2,v_hash2,v_reviewer,v_reviewer::text,'APPROVED','CI synthetic approval'
   );
   select count(*) into v_count from public.seo_ops_get_article_approval(v_approval)
    where id=v_approval and reviewer_user_id=v_reviewer and content_hash=v_hash and decision='APPROVED';
   if v_count <> 1 then raise exception 'authenticated article approval readback failed'; end if;
   select count(*) into v_count from seo_ops.content_operations
-   where id=v_operation and status='APPROVED' and approved_content_hash=v_hash;
+   where id=v_operation and status='APPROVED' and approved_content_hash=v_hash2;
   if v_count <> 1 then raise exception 'approved operation did not bind exact revision hash'; end if;
 
   v_performance := public.seo_ops_record_article_performance(
     'stage-c-smoke-performance-' || gen_random_uuid()::text,
-    v_operation,v_revision,'stage-c-smoke',
+    v_operation,v_revision2,'stage-c-smoke',
     'https://www.finflowtrack.com/blog/stage-c-smoke','GSC',
     date '2026-11-01',date '2026-11-20',
     '{"clicks":4,"impressions":100,"ctr":0.04}'::jsonb,
     'PAGE_LEVEL_DIRECT','UNKNOWN'
   );
   select count(*) into v_count from seo_ops.article_performance_snapshots
-   where id=v_performance and slug='stage-c-smoke' and revision_attribution='UNKNOWN';
+   where id=v_performance and slug='stage-c-smoke' and revision_id=v_revision2 and revision_attribution='UNKNOWN';
   if v_count <> 1 then raise exception 'article performance snapshot persistence failed'; end if;
 
   if has_function_privilege('anon','public.seo_ops_record_article_approval(uuid,uuid,text,uuid,text,text,text)','EXECUTE')
