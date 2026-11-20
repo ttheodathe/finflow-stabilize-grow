@@ -109,8 +109,10 @@ test("Scheduler 2 preserves missing query metrics and rejects the candidate",asy
   const missing={...opportunity,evidence:{...opportunity.evidence,sampleQueries:[{query:"small business bookkeeping records checklist",clicks:4,impressions:120,ctr:null,position:14.2}]}};
   const result=await runContentOperations({inputPath,outputDir:env.outputDir,researchDir:env.researchDir,contentDir:env.contentDir,env:safeEnv,store:makeStore([missing],calls),fetchImpl:mockFetch,now});
   const report=JSON.parse(await readFile(result.path,"utf8"));
-  assert.equal(report.results[0].candidate.metrics.ctr,null);
-  assert.ok(report.results[0].rejectionReasons.includes("INCOMPLETE_GSC_METRICS"));
+  assert.equal(report.selectedCandidateCount,0);
+  assert.equal(report.results.length,0);
+  assert.equal(report.dailyPortfolio.newArticle.status,"UNFILLED_NO_QUALIFIED_CANDIDATE");
+  assert.equal(report.dailyPortfolio.articleUpdate.status,"UNFILLED_NO_QUALIFIED_CANDIDATE");
   assert.equal(calls.operations.length,0);
  }finally{await rm(env.root,{recursive:true,force:true});}
 });
@@ -122,8 +124,10 @@ test("Scheduler 2 marks non-GSC persisted fixtures as fixtures and blocks them",
   const fixture={...opportunity,evidence:{...opportunity.evidence,source:"TEST_FIXTURE"}};
   const result=await runContentOperations({inputPath,outputDir:env.outputDir,researchDir:env.researchDir,contentDir:env.contentDir,env:safeEnv,store:makeStore([fixture],calls),fetchImpl:mockFetch,now});
   const report=JSON.parse(await readFile(result.path,"utf8"));
-  assert.equal(report.results[0].candidate.evidenceMode,"FIXTURE");
-  assert.ok(report.results[0].rejectionReasons.includes("FIXTURE_EVIDENCE_NOT_ALLOWED_IN_SCHEDULED_RUN"));
+  assert.equal(report.selectedCandidateCount,0);
+  assert.equal(report.results.length,0);
+  assert.equal(report.dailyPortfolio.newArticle.status,"UNFILLED_NO_QUALIFIED_CANDIDATE");
+  assert.equal(report.dailyPortfolio.articleUpdate.status,"UNFILLED_NO_QUALIFIED_CANDIDATE");
   assert.equal(calls.operations.length,0);
  }finally{await rm(env.root,{recursive:true,force:true});}
 });
