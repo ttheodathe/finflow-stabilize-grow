@@ -162,8 +162,10 @@ export async function runPerformanceLearning({
           limitations,
         });
         await store.recordPerformanceSnapshot({
-          snapshotKey: `scheduler-3:${scheduledFor}:${attempt}:SUPABASE_ACTIVATION:${dateRange.startDate}-${dateRange.endDate}`,
-          schedulerRunId, periodStart: dateRange.startDate, periodEnd: dateRange.endDate,
+          snapshotKey: `scheduler-3:${scheduledFor}:${attempt}:SUPABASE_ACTIVATION:30d`,
+          schedulerRunId,
+          periodStart: new Date(Date.now() - 29 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+          periodEnd: scheduledFor,
           source: "SUPABASE_ACTIVATION",
           metrics: {
             registeredUsersAllTime: activationAggregate.registeredUsersAllTime,
@@ -180,7 +182,7 @@ export async function runPerformanceLearning({
       }
       await store.recordRun({
         schedulerKey: "PERFORMANCE_AND_LEARNING", scheduledFor, attempt,
-        status: gscAvailable && ga4Available ? "SUCCEEDED" : "PARTIAL",
+        status: gscAvailable && ga4Available && !activationCollectionError ? "SUCCEEDED" : "PARTIAL",
         output: { search, analytics, productAcquisition: report.productAcquisition, activationMeasurement: report.activationMeasurement, dataQuality: report.dataQuality },
         errorSummary: collectionError || Object.values(snapshot?.sourceErrors || {}).filter(Boolean).join("; ") || null,
       });
