@@ -13,6 +13,7 @@ test("acceptance database writes require explicit authorization", () => {
 
 test("blocked acceptance is non-zero and its evidence upload is unconditional", () => {
   assert.match(runner, /process\.exitCode\s*=\s*2/);
+  assert.match(runner, /process\.exitCode\s*=\s*2;\s*\}\s*else\s*\{/);
   assert.doesNotMatch(runner, /process\.exit\(0\)/);
   assert.match(workflow, /name: Upload genuine acceptance evidence\n\s+if: always\(\)/);
 });

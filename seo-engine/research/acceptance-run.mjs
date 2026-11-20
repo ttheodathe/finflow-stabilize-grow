@@ -114,7 +114,7 @@ if (!hasAcceptanceSupabase) {
   await writeFile(path.resolve("seo-output/acceptance/acceptance-summary.json"),JSON.stringify(blockedSummary,null,2)+"\n");
   console.log(JSON.stringify(blockedSummary,null,2));
   process.exitCode = 2;
-}
+} else {
 
 assertAcceptanceProject();
 const store = createSupabaseSeoStoreFromEnv(process.env);
@@ -311,3 +311,4 @@ const summary = {
 };
 await writeFile(path.resolve("seo-output/acceptance/acceptance-summary.json"), JSON.stringify(summary, null, 2) + "\n");
 console.log(JSON.stringify(summary, null, 2));
+}
