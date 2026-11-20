@@ -70,3 +70,15 @@ test("excludes fixture and incomplete GSC rows from both daily slots", () => {
   assert.equal(result.slots.articleUpdate.status, "UNFILLED_NO_QUALIFIED_CANDIDATE");
   assert.equal(result.evaluatedCandidateCount, 0);
 });
+
+test("does not turn a competitor domain query into a new article", () => {
+  const result = selectDailyContentPortfolio([
+    candidate("brand-domain", "fasttrackaccounting.com", "https://www.finflowtrack.com/guides"),
+  ], inventory);
+
+  assert.equal(result.selectedCandidateCount, 0);
+  assert.equal(result.slots.newArticle.status, "UNFILLED_NO_QUALIFIED_CANDIDATE");
+  assert.ok(result.excludedCandidates.some(item =>
+    item.candidateId === "brand-domain" && item.reasons.includes("BRANDED_OR_DOMAIN_NAVIGATIONAL_QUERY")
+  ));
+});
