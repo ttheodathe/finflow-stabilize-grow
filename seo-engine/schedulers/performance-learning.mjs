@@ -15,7 +15,7 @@ function sumKnown(rows, key) {
 
 export async function runPerformanceLearning({
   dateRange = resolveDateRange(), collectFn = collectPartial,
-  outputDir = OUTPUT, env = process.env, store: injectedStore = undefined,
+  outputDir = OUTPUT, env = process.env, store: injectedStore = undefined,\n  activationCollectorFn = collectProductionActivationAggregate,
 } = {}) {
   await mkdir(outputDir, { recursive: true });
   let snapshot = null;
@@ -51,7 +51,7 @@ export async function runPerformanceLearning({
   let activationCollectionError = null;
   if (env.SEO_PRODUCTION_READONLY_DATABASE_URL) {
     try {
-      activationAggregate = await collectProductionActivationAggregate({
+      activationAggregate = await activationCollectorFn({
         connectionString: env.SEO_PRODUCTION_READONLY_DATABASE_URL,
       });
     } catch (error) {
