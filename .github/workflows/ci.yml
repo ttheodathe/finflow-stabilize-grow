@@ -286,6 +286,8 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Emit Prettier-formatted approval endpoint for review
+        run: npx prettier supabase/functions/seo-editorial-approval/index.ts
       - name: Check formatting of changed files
         if: github.event_name == 'pull_request'
         run: |
