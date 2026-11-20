@@ -308,7 +308,7 @@ jobs:
 
   # PR 120 acceptance writes require the explicit acceptance-write-authorized label.
   genuine-acceptance:
-    name: Genuine GSC to persisted editorial draft acceptance
+    name: Genuine GSC-to-draft and Scheduler 3 persistence acceptance
     needs: validate
     if: github.event_name == 'pull_request' && github.event.pull_request.number == 120 && contains(github.event.pull_request.labels.*.name, 'acceptance-write-authorized') && needs.validate.result == 'success'
     runs-on: ubuntu-latest
@@ -349,11 +349,15 @@ jobs:
           github-token: ${{ github.token }}
       - name: Run genuine GSC to editorial draft acceptance
         run: node seo-engine/research/acceptance-run.mjs historical-gsc/seo-data-2026-10-19-to-2026-11-15.json
+      - name: Run Scheduler 3 live metrics and acceptance persistence check
+        run: node seo-engine/schedulers/performance-learning.mjs
       - name: Upload genuine acceptance evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: seo-recovery-genuine-acceptance-${{ github.sha }}
-          path: seo-output/acceptance/
+          path: |
+            seo-output/acceptance/
+            seo-output/scheduler-3-performance-report.json
           if-no-files-found: warn
           retention-days: 14
