@@ -241,3 +241,24 @@ test("article performance snapshots use the dedicated page-level persistence RPC
   assert.equal(payload.p_operation_id, null);
   assert.equal(payload.p_measurement_scope, "PAGE_LEVEL_DIRECT");
 });
+
+test("content revision advancement uses a transactional RPC and sends previous-hash guard", async () => {
+  let request;
+  const operationId = "00000000-0000-4000-8000-000000000020";
+  const revisionId = "00000000-0000-4000-8000-000000000021";
+  const store = createSupabaseSeoStore({
+    url: "https://project.supabase.co", serviceRoleKey: "server-only-test-key",
+    fetchImpl: async (url, options) => { request = { url, options }; return Response.json(revisionId); },
+  });
+  await store.advanceContentRevision({
+    operationId, revisionNumber: 2, contentHash: "b".repeat(64),
+    markdown: "# Revision two", previousContentHash: "a".repeat(64),
+    operationPayload: { workflowState: "PERSISTED_PENDING_READBACK" },
+  });
+  assert.match(request.url, /seo_ops_advance_content_revision/);
+  const payload = JSON.parse(request.options.body);
+  assert.equal(payload.p_revision_number, 2);
+  assert.equal(payload.p_previous_content_hash, "a".repeat(64));
+  assert.equal(payload.p_content_hash, "b".repeat(64));
+  assert.equal(payload.p_operation_payload.workflowState, "PERSISTED_PENDING_READBACK");
+});
