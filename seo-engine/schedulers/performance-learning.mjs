@@ -45,13 +45,13 @@ export function buildArticlePageMetrics(snapshot) {
     if (group.source === "GSC") {
       const clicks = aggregateKnown(rows, "clicks");
       const impressions = aggregateKnown(rows, "impressions");
-      const positionRows = rows.filter(row => Number.isFinite(row.position) && Number.isFinite(row.impressions));
-      const positionWeight = positionRows.reduce((sum, row) => sum + row.impressions, 0);
+      const positionComplete = rows.every(row => Number.isFinite(row.position) && Number.isFinite(row.impressions));
+      const positionWeight = positionComplete ? rows.reduce((sum, row) => sum + row.impressions, 0) : 0;
       metrics = {
         clicks, impressions,
         ctr: clicks === null || impressions === null ? null : impressions > 0 ? clicks / impressions : 0,
-        averagePosition: positionRows.length && positionWeight > 0
-          ? positionRows.reduce((sum, row) => sum + row.position * row.impressions, 0) / positionWeight
+        averagePosition: positionComplete && positionWeight > 0
+          ? rows.reduce((sum, row) => sum + row.position * row.impressions, 0) / positionWeight
           : null,
       };
     } else {
