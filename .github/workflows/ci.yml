@@ -306,6 +306,7 @@ jobs:
       - name: Enforce high-severity dependency audit
         run: node scripts/check-npm-audit.mjs
 
+  # PR 120 acceptance writes require the explicit acceptance-write-authorized label.
   genuine-acceptance:
     name: Genuine GSC to persisted editorial draft acceptance
     needs: validate
