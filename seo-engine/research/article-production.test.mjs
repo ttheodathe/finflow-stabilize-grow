@@ -77,7 +77,7 @@ test("article production writes a revision-hashed draft package outside the publ
       "Compare actual results with the forecast and explain material differences.",
       "## Related guide",
       "[Small Business Accounting Guide](/blog/small-business-accounting-guide)",
-    ].join("\\n\\n");
+    ].join("\n\n");
     const markdown = [
       "---",
       'title: "Small Business Cash Flow Planning"',
@@ -89,7 +89,7 @@ test("article production writes a revision-hashed draft package outside the publ
       "",
       body,
       "",
-    ].join("\\n");
+    ].join("\n");
     const result = await runArticleProduction({
       research, outputDir: root, minWordCount: 10,
       generateArticle: async ({ brief }) => {
@@ -102,16 +102,16 @@ test("article production writes a revision-hashed draft package outside the publ
     assert.equal(result.publication.productionWriteAllowed, false);
     assert.equal(result.quality.internalLinkFailures.length, 0);
     assert.match(result.articlePath, /stage-c-/);
-    assert.doesNotMatch(result.articlePath, /content[\\/]blog/);
+    assert.doesNotMatch(result.articlePath, /content[\/]blog/);
     const saved = await readFile(result.articlePath, "utf8");
-    assert.equal(saved, markdown.trim() + "\\n");
+    assert.equal(saved, markdown.trim() + "\n");
   } finally {
     await rm(root, { recursive: true, force: true });
   }
 });
 
 test("human approval is cryptographically bound to one exact content hash", () => {
-  const content = "# Approved article\\n";
+  const content = "# Approved article\n";
   const approval = createHumanApproval({
     content, reviewerId: "editor-1", approvedAt: "2026-11-20T12:00:00.000Z",
   });
