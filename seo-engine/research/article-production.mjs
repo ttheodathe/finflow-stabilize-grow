@@ -50,7 +50,8 @@ export function createEditorialBrief(research) {
       : (Array.isArray(draft.content?.match(/^## .+$/gm)) ? draft.content.match(/^## .+$/gm).map(line => line.replace(/^## /, "")) : []),
     internalLinks: internalLinks.map(link => ({ slug: link.slug, title: link.title })),
     evidence: verifiedSources.map(source => ({
-      url: source.finalUrl || source.url,
+      url: source.url,
+      finalUrl: source.finalUrl || source.url,
       title: source.sourceTitle || source.publisher || source.url,
       publisher: source.publisher || null,
       publishedAt: source.publishedAt || null,
@@ -156,7 +157,11 @@ export async function runArticleProduction({
   const internalLinkFailures = brief.internalLinks.filter(link =>
     !linkTargets.some(target => target.includes(link.slug))
   );
+  const targetSlugMatches = metadata.slug === expected.slug;
+  const draftStatusValid = metadata.status === "draft" && metadata.publicationStatus === "draft";
   const quality = {
+    targetSlugMatches,
+    draftStatusValid,
     wordCount: words,
     minimumWordCount: minWordCount,
     wordCountPass: words >= minWordCount,
@@ -169,6 +174,8 @@ export async function runArticleProduction({
   };
   const blockers = [
     ...validation.errors,
+    ...(!targetSlugMatches ? ["ARTICLE_TARGET_SLUG_MISMATCH"] : []),
+    ...(!draftStatusValid ? ["ARTICLE_NOT_MARKED_AS_DRAFT"] : []),
     ...(words < minWordCount ? ["ARTICLE_BELOW_MINIMUM_WORD_COUNT"] : []),
     ...(headings.length < 3 ? ["INSUFFICIENT_ARTICLE_STRUCTURE"] : []),
     ...(internalLinkFailures.length ? ["REQUIRED_INTERNAL_LINKS_MISSING"] : []),
@@ -192,6 +199,7 @@ export async function runArticleProduction({
     approval: null,
     publication: { status: "DISABLED", productionWriteAllowed: false, publishEnabled: false },
     articlePath: path.join(packageDir, "article.md"),
+    articleMarkdown: content,
   };
   await writeFile(path.join(packageDir, "publication-package.json"), JSON.stringify(packageRecord, null, 2) + "\n", { flag: "wx" }).catch(async error => {
     if (error.code !== "EEXIST") throw error;
