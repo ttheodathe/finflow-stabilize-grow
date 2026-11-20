@@ -123,7 +123,8 @@ export async function runContentOperations({
     });
     const bothDailySlotsSelected = dailyPortfolio.slots.newArticle.status === "SELECTED"
       && dailyPortfolio.slots.articleUpdate.status === "SELECTED";
-    const finalStatus = bothDailySlotsSelected && pipelineResult.readyDraftCount > 0 && pipelineResult.rejectedCount === 0
+    const finalStatus = bothDailySlotsSelected && selectedCandidates.length === 2
+      && pipelineResult.readyDraftCount === 2 && pipelineResult.rejectedCount === 0
       ? "SUCCEEDED" : "PARTIAL";
     await store.recordRun({
       schedulerKey: "CONTENT_OPERATIONS", scheduledFor, attempt,
