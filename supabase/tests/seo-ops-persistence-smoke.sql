@@ -221,10 +221,12 @@ declare
   v_operation uuid;
   v_revision uuid;
   v_revision2 uuid;
+  v_revision3 uuid;
   v_approval uuid;
   v_performance uuid;
   v_hash text := repeat('c',64);
   v_hash2 text := repeat('d',64);
+  v_hash3 text := repeat('e',64);
   v_count integer;
 begin
   insert into seo_ops.editorial_reviewers(user_id,is_active,reviewer_role)
@@ -246,25 +248,35 @@ begin
    where operation_id=v_operation and revision_number=1 and revision_state='SUPERSEDED';
   if v_count <> 1 then raise exception 'previous article revision was not superseded'; end if;
   v_approval := public.seo_ops_record_article_approval(
-    v_operation,v_revision2,v_hash2,v_reviewer,v_reviewer::text,'APPROVED','CI synthetic approval'
+    v_operation,v_revision2,v_hash2,v_reviewer,v_reviewer::text,'CHANGES_REQUESTED','CI synthetic revision request'
+  );
+  v_revision3 := public.seo_ops_advance_content_revision(
+    v_operation,3,v_hash3,'# Stage C smoke article final',v_hash2,
+    '{"workflowState":"PERSISTED_PENDING_READBACK","draftMarkdown":"# Stage C smoke article final"}'::jsonb
+  );
+  select count(*) into v_count from seo_ops.content_revisions
+   where operation_id=v_operation and revision_number=2 and revision_state='SUPERSEDED';
+  if v_count <> 1 then raise exception 'revision after change request did not supersede the prior proposal'; end if;
+  v_approval := public.seo_ops_record_article_approval(
+    v_operation,v_revision3,v_hash3,v_reviewer,v_reviewer::text,'APPROVED','CI synthetic approval'
   );
   select count(*) into v_count from public.seo_ops_get_article_approval(v_approval)
    where id=v_approval and reviewer_user_id=v_reviewer and content_hash=v_hash and decision='APPROVED';
   if v_count <> 1 then raise exception 'authenticated article approval readback failed'; end if;
   select count(*) into v_count from seo_ops.content_operations
-   where id=v_operation and status='APPROVED' and approved_content_hash=v_hash2;
+   where id=v_operation and status='APPROVED' and approved_content_hash=v_hash3;
   if v_count <> 1 then raise exception 'approved operation did not bind exact revision hash'; end if;
 
   v_performance := public.seo_ops_record_article_performance(
     'stage-c-smoke-performance-' || gen_random_uuid()::text,
-    v_operation,v_revision2,'stage-c-smoke',
+    v_operation,v_revision3,'stage-c-smoke',
     'https://www.finflowtrack.com/blog/stage-c-smoke','GSC',
     date '2026-11-01',date '2026-11-20',
     '{"clicks":4,"impressions":100,"ctr":0.04}'::jsonb,
     'PAGE_LEVEL_DIRECT','UNKNOWN'
   );
   select count(*) into v_count from seo_ops.article_performance_snapshots
-   where id=v_performance and slug='stage-c-smoke' and revision_id=v_revision2 and revision_attribution='UNKNOWN';
+   where id=v_performance and slug='stage-c-smoke' and revision_id=v_revision3 and revision_attribution='UNKNOWN';
   if v_count <> 1 then raise exception 'article performance snapshot persistence failed'; end if;
 
   if has_function_privilege('anon','public.seo_ops_record_article_approval(uuid,uuid,text,uuid,text,text,text)','EXECUTE')
