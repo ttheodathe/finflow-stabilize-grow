@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import matter from "gray-matter";
 import productCapabilityRecord from "../../content/operations/research/verified-product-capabilities.json" with { type: "json" };
+import editorialBacklog from "./editorial-backlog.json" with { type: "json" };
 import { validateDraft } from "../content-ops/validate-draft.mjs";
 import { createSupabaseSeoStoreFromEnv } from "../persistence/supabase-store.mjs";
 
@@ -280,6 +281,10 @@ const SOURCE_PACKS = [
   },
 ];
 
+const ACTIVE_SOURCE_PACK_IDS = new Set(editorialBacklog.activePackIds);
+const UNKNOWN_BACKLOG_PACKS = [...ACTIVE_SOURCE_PACK_IDS].filter(id => !SOURCE_PACKS.some(pack => pack.id === id));
+if (UNKNOWN_BACKLOG_PACKS.length) throw new Error(`Editorial backlog references missing source packs: ${UNKNOWN_BACKLOG_PACKS.join(", ")}`);
+
 const VERIFIED_PRODUCT = Object.freeze({
   checkedAtCommit: productCapabilityRecord.verifiedAtCommit,
   sourceFiles: productCapabilityRecord.sourceFiles,
@@ -365,7 +370,8 @@ export function classifySearchIntent(query) {
 }
 
 export function selectCompatibleSourcePack(query, intent) {
-  const matchedPacks = SOURCE_PACKS.filter(pack => pack.match.test(String(query || "")) || pack.subjectCoverage?.some(term => String(query || "").toLowerCase().includes(term.toLowerCase())));
+  const matchedPacks = SOURCE_PACKS.filter(pack => ACTIVE_SOURCE_PACK_IDS.has(pack.id)
+    && (pack.match.test(String(query || "")) || pack.subjectCoverage?.some(term => String(query || "").toLowerCase().includes(term.toLowerCase()))));
   const matchedPack = matchedPacks.find(pack => pack.supportedIntents?.includes(intent)) || matchedPacks[0] || null;
   if (intent === "REVIEW_REQUIRED") {
     return { pack: null, matchedPackId: matchedPack?.id || null, compatible: false, reason: "AMBIGUOUS_INTENT_REQUIRES_HUMAN_REVIEW" };
