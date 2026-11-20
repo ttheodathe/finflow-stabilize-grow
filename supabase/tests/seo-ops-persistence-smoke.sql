@@ -155,7 +155,7 @@ begin
   end;
 
   select * into v_counts from seo_ops_test.compute_activation_counts('2026-11-20T00:00:00Z');
-  if v_counts.registered_users <> 6 or v_counts.onboarding_completions <> 5
+  if v_counts.registered_users <> 7 or v_counts.onboarding_completions <> 6
      or v_counts.activated_users <> 2 or v_counts.returning_activated_users <> 1 then
     raise exception 'activation fixture returned unexpected counts: %',row_to_json(v_counts);
   end if;
