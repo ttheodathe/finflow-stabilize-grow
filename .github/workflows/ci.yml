@@ -309,7 +309,7 @@ jobs:
   genuine-acceptance:
     name: Genuine GSC to persisted editorial draft acceptance
     needs: validate
-    if: github.event_name == 'pull_request' && github.event.pull_request.number == 119 && contains(github.event.pull_request.labels.*.name, 'acceptance-write-authorized') && needs.validate.result == 'success'
+    if: github.event_name == 'pull_request' && github.event.pull_request.number == 120 && contains(github.event.pull_request.labels.*.name, 'acceptance-write-authorized') && needs.validate.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     permissions:
