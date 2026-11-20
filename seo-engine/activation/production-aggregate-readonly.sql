@@ -27,6 +27,7 @@ activated as (
   join onboarded o on o.user_id=a.user_id
   join registered r on r.id=a.user_id
   where o.completed_at >= r.created_at
+    and a.created_at >= o.completed_at
     and a.created_at >= r.created_at
 ),
 returning_all_time as (
@@ -35,6 +36,7 @@ returning_all_time as (
   join onboarded o on o.user_id=a.user_id
   join registered r on r.id=a.user_id
   where o.completed_at >= r.created_at
+    and a.created_at >= o.completed_at
     and a.created_at >= r.created_at
   group by a.user_id
   having count(distinct a.action_day)>=2
@@ -53,13 +55,14 @@ new_activated as (
   select distinct nr.id
   from new_registered nr
   join onboarded o on o.user_id=nr.id and o.completed_at >= nr.created_at
-  join actions a on a.user_id=nr.id and a.created_at >= nr.created_at
+  join actions a on a.user_id=nr.id and a.created_at >= o.completed_at and a.created_at >= nr.created_at
 ),
 new_returning as (
   select a.user_id
   from actions a
   join new_registered nr on nr.id=a.user_id and a.created_at >= nr.created_at
   join onboarded o on o.user_id=nr.id and o.completed_at >= nr.created_at
+  where a.created_at >= o.completed_at
   group by a.user_id
   having count(distinct a.action_day)>=2
 )
