@@ -85,7 +85,6 @@ Recovery branch code HEAD at verification: 57c4f7f4b1d7a02977e6499ff9d6c8d92e570
    | Opportunity page identity | `seo-engine/schedulers/search-intelligence.mjs` hashes a canonical absolute HTTP(S) URL with SHA-256. It rejects embedded credentials and strips fragments, but preserves query strings, scheme and host variants. GSC collection separately calls `normalizePageUrl`, which strips query/hash and trailing slash but deliberately preserves scheme and host variants until redirect/canonical behavior is verified. | VERIFIED implementation behavior. Keep scheme/host variants distinct until production canonical routing evidence supports safe consolidation. Test identity on direct inputs and normalized GSC inputs. |
    | Opportunity idempotency | `buildOpportunityKey(runI...[truncated]
 
-
 ## B1.2 execution review — 2026-11-20
 
 - PR #120 remains draft and unmerged. The latest previously completed genuine acceptance run, [#44738664619](https://github.com/ttheodathe/finflow-stabilize-grow/actions/runs/44738664619), passed both `validate` and genuine GSC-to-draft acceptance. Its acceptance log confirms fresh read-only GSC collection, Scheduler 2 draft generation, and independent readback of the content operation, research records, and revision. This run predates the Scheduler 3 and activation fixes below.
@@ -99,7 +98,6 @@ Recovery branch code HEAD at verification: 57c4f7f4b1d7a02977e6499ff9d6c8d92e570
 ## Production-readiness decision
 
 `NOT READY FOR PRODUCTION` until: latest CI is green; the PR scope and stale historical docs are reconciled; migration provenance and production migration strategy are independently reviewed; Scheduler 3's corrected tests pass; production scheduling uses an approved least-privilege design (not the acceptance key/project); alerting/recovery and operational ownership are defined; and the Scheduler 2 → Scheduler 3 content-outcome loop is either implemented or explicitly excluded from the first production milestone. Keep human approval mandatory and publishing disabled.
-
 
 ### Main-branch scheduler evidence and CI correction — 2026-11-20
 
