@@ -7,10 +7,12 @@ generator, validates its Markdown and stores each draft outside the public blog.
 pipeline is opt-in: no provider is called unless ARTICLE_GENERATOR_ENABLED=true and a
 compatible endpoint and model are configured.
 
-The provider adapter uses an OpenAI-compatible chat-completions contract. It does not select
-a paid provider, create credentials, or enable generation by default. A local endpoint is only
-reachable when the runner can reach that host; a GitHub-hosted runner cannot reach a developer's
-personal localhost.
+The provider adapter uses an OpenAI-compatible chat-completions contract and is wired into
+Scheduler 2. It does not select a paid provider, create credentials, or enable generation by
+default. Scheduler 2 reads the repository variable ARTICLE_GENERATOR_ENABLED (default false),
+ARTICLE_GENERATOR_ENDPOINT and ARTICLE_GENERATOR_MODEL, plus the server-only secret
+ARTICLE_GENERATOR_API_KEY. A local endpoint is only reachable when the runner can reach that
+host; a GitHub-hosted runner cannot reach a developer's personal localhost.
 
 ## Originality screening
 
