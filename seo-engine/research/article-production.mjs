@@ -11,7 +11,7 @@ function sha256(value) {
   return createHash("sha256").update(value, "utf8").digest("hex");
 }
 function wordCount(markdown) {
-  return (markdown.match(/[\\p{L}\\p{N}]+(?:['’.-][\\p{L}\\p{N}]+)*/gu) || []).length;
+  return (markdown.match(/[\p{L}\p{N}]+(?:['’.-][\p{L}\p{N}]+)*/gu) || []).length;
 }
 function requireText(value, label) {
   if (typeof value !== "string" || !value.trim()) throw new Error(`${label} is required.`);
@@ -123,7 +123,7 @@ export async function runArticleProduction({
     throw new Error("Article generator must return non-empty Markdown in a markdown property.");
   }
   const parsed = matter(generated.markdown);
-  const content = generated.markdown.trim() + "\\n";
+  const content = generated.markdown.trim() + "\n";
   const metadata = parsed.data || {};
   const expected = research.draft || {};
   const draft = {
@@ -151,8 +151,8 @@ export async function runArticleProduction({
     targetSlug: expected.slug || null,
   });
   const words = wordCount(parsed.content || "");
-  const headings = (parsed.content || "").match(/^#{2,3}\\s+.+$/gm) || [];
-  const linkTargets = [...(parsed.content || "").matchAll(/\\[[^\\]]+\\]\\(([^)]+)\\)/g)].map(match => match[1]);
+  const headings = (parsed.content || "").match(/^#{2,3}\s+.+$/gm) || [];
+  const linkTargets = [...(parsed.content || "").matchAll(/\[[^\]]+\]\(([^)]+)\)/g)].map(match => match[1]);
   const internalLinkFailures = brief.internalLinks.filter(link =>
     !linkTargets.some(target => target.includes(link.slug))
   );
@@ -193,7 +193,7 @@ export async function runArticleProduction({
     publication: { status: "DISABLED", productionWriteAllowed: false, publishEnabled: false },
     articlePath: path.join(packageDir, "article.md"),
   };
-  await writeFile(path.join(packageDir, "publication-package.json"), JSON.stringify(packageRecord, null, 2) + "\\n", { flag: "wx" }).catch(async error => {
+  await writeFile(path.join(packageDir, "publication-package.json"), JSON.stringify(packageRecord, null, 2) + "\n", { flag: "wx" }).catch(async error => {
     if (error.code !== "EEXIST") throw error;
   });
   return packageRecord;
