@@ -249,7 +249,7 @@ export function classifySearchIntent(query) {
     || /(accounting|bookkeeping).{0,45}(software|apps?|platforms?|programs?|tools?).{0,45}(best|free|compare|review|recommend|worth)/.test(value)
     || /software selection|accounting software comparison/.test(value)) return "Software selection";
   if (/reporting features?|track invoices?|track sales|expense tracking|invoice tracking|features? of/.test(value)) return "Feature evaluation";
-  if (/how to|step[- ]by[- ]step|tutorial|template|checklist|guide|create|build|set up|track|manage/.test(value)) return "How-to/tutorial";
+  if (/\b(?:how to|step[- ]by[- ]step|tutorial|template|checklist|guide|create|build|set up|track(?:ing)?|manage(?:ment|ing)?)\b/.test(value)) return "How-to/tutorial";
   if (/bookkeep|recordkeeping|financial records|receipts?|ledger|transaction records/.test(value)) return "Bookkeeping guidance";
   if (/what is|meaning of|definition|accounting basics|formula|calculate|principles of|accounting education/.test(value)) return "Accounting education";
   return "REVIEW_REQUIRED";
