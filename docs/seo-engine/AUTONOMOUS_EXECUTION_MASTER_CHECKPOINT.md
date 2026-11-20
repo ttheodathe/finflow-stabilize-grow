@@ -112,3 +112,19 @@ Do not run acceptance replay or production commands on resume.
 - PR #119: https://github.com/ttheodathe/finflow-stabilize-grow/pull/119
 - Main merge commit: https://github.com/ttheodathe/finflow-stabilize-grow/commit/915eee2fe57b890bc51779d2a3fcab038d94d998
 - Migration provenance: https://github.com/ttheodathe/finflow-stabilize-grow/blob/main/supabase/migrations/README.md
+
+## C.0.3 verification update — 2026-11-20
+
+Latest recovery code commit before this documentation update: 57c4f7f4b1d7a02977e6499ff9d6c8d92e570dbd. Code changes are in 4cd29843ed72c975a4f828a6fc8f0a70ef4175ca and follow-up 57c4f7f4b1d7a02977e6499ff9d6c8d92e570dbd.
+
+- New collector default-range tests: 2 passed. New acceptance-safety tests: 2 passed.
+- Full SEO/scheduler/content/persistence/research suite: 104/104 passed.
+- Application unit tests: 16/16 passed.
+- Security/ReDoS check: passed.
+- Lint: exit 0, 44 warnings and 0 errors.
+- Production build: exit 0. Typecheck after build: exit 0.
+- Build emits existing chunk-size and module-directive warnings; these are not build failures.
+- No live GSC API request, acceptance write, replay, migration, or production action was performed. The default-range fix is fixture-tested; current live GSC permissions/freshness remain unverified.
+- The acceptance job now requires the explicit PR label and environment authorization flag, preserves blocked evidence even when the run fails, and stops before persistence when credentials are absent.
+
+Next engineering focus: complete the read-only migration collision provenance review, then add event-level GA4 registration/activation reporting using the existing app events. Do not infer registrations or activation from aggregate keyEvents alone.

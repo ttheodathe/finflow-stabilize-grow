@@ -60,3 +60,20 @@ Status definitions: NOT STARTED, INVESTIGATING, IMPLEMENTING, IMPLEMENTED, TESTE
 3. Clearly label fixtures as synthetic; never present them as genuine GSC, GA4, registration, activation, or customer evidence.
 4. Mocked RPC, isolated CI database tests, and daily cron schedules are not live persistence or 24/7 availability proof.
 5. Update the master checkpoint after each major milestone.
+
+## C.0.3 verification update — 2026-11-20
+
+Recovery branch code HEAD at verification: 57c4f7f4b1d7a02977e6499ff9d6c8d92e570dbd.
+
+| New verification | Status | Evidence |
+|---|---|---|
+| Collector default date range when omitted | TESTED | 2 fixture tests cover collect() and collectPartial() defaulting to resolveDateRange() |
+| Acceptance write authorization gate | TESTED | 2 static contract tests verify explicit env flag, PR label, non-zero blocked result and unconditional evidence upload |
+| Full SEO suite | TESTED | 104/104 passed |
+| Application unit suite | TESTED | 16/16 passed |
+| Security/ReDoS | TESTED | passed |
+| Lint | TESTED | exit 0; 44 warnings, 0 errors |
+| Build + typecheck | TESTED | build exit 0; typecheck exit 0 after generated routes are refreshed |
+| Fresh live GSC collection | BLOCKED | No authenticated read-only dispatch was available; the historical PR attempt failed before API access, now fixed and covered by fixtures only |
+
+Acceptance and production database writes remain prohibited. No new live API or persistence operation was triggered.
