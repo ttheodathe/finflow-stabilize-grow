@@ -16,7 +16,7 @@ create table if not exists seo_ops.article_approvals (
   content_hash text not null check (content_hash ~ '^[a-f0-9]{64}$'),
   review_notes text,
   authenticated_subject text not null,
-  approved_at timestamptz not null default now(),
+  decided_at timestamptz not null default now(),
   unique (revision_id, reviewer_user_id, decision)
 );
 create table if not exists seo_ops.article_performance_snapshots (
@@ -205,12 +205,12 @@ grant execute on function public.seo_ops_advance_content_revision(uuid,integer,t
 create or replace function public.seo_ops_get_article_approval(p_approval_id uuid)
 returns table (
   id uuid, operation_id uuid, revision_id uuid, reviewer_user_id uuid,
-  decision text, content_hash text, approved_at timestamptz
+  decision text, content_hash text, decided_at timestamptz
 )
 language sql stable security invoker
 set search_path = pg_catalog, seo_ops
 as $$
-  select a.id,a.operation_id,a.revision_id,a.reviewer_user_id,a.decision,a.content_hash,a.approved_at
+  select a.id,a.operation_id,a.revision_id,a.reviewer_user_id,a.decision,a.content_hash,a.decided_at
   from seo_ops.article_approvals a where a.id = p_approval_id;
 $$;
 revoke all on function public.seo_ops_get_article_approval(uuid) from public, anon, authenticated;
