@@ -115,3 +115,43 @@ These findings are read-only acceptance evidence. Do not treat them as productio
 
 ### Operational caution
 The main-branch daily schedulers contain acceptance-project service-role configuration. Their dry-run flags are not sufficient evidence that persistence is disabled. Do not dispatch, modify or disable these workflows under this mission. Their current run history and secret availability require separate owner-controlled review.
+
+
+## Stage E execution checkpoint — 2026-11-20
+
+**Repository ref:** `fix/seo-engine-controlled-recovery`  
+**Verified branch HEAD:** `018bc9f708c33a9d3a2536806e891ea50e622a44`  
+**Code baseline:** `83373b83518fb172f93c6c4c87c98d3968ec39b6`  
+**Comparison:** recovery branch is exactly two commits ahead of the code baseline; both commits are documentation-only. No application or SEO-engine source changes are present in those two commits.
+
+| Stage E investigation | Status | Evidence / limitation |
+|---|---|---|
+| GA4 collector source | VERIFIED | `seo-engine/collect.mjs` requests date, landingPagePlusQueryString, sessionDefaultChannelGroup with sessions, activeUsers, engagedSessions, keyEvents. No eventName/eventCount/totalUsers report exists in this collector. |
+| Existing GA4 reliability behavior | VERIFIED | Shared request helper retries HTTP 429 and 5xx with exponential delay; report pagination uses 100,000 rows and a 500,000-row guard. These safeguards do not supply event-level reporting or per-report compatibility checks. |
+| Email registration and login | VERIFIED | `src/routes/auth.tsx` calls Supabase signUp/signInWithPassword; emits custom auth_completed after a returned user or successful login. It does not emit standard sign_up/login events. Signup may return a user before email confirmation/session creation. |
+| OAuth registration/login distinction | BLOCKED | `src/routes/__root.tsx` handles OAuth SIGNED_IN and infers mode from the callback URL query (default login). A URL mode is not authoritative proof of a new user; no safe deduplicated new-user signal has been established. |
+| Onboarding completion | VERIFIED | `src/routes/onboarding.tsx` emits onboarding_completed only when the onboarding_progress completion upsert reports no error. `src/lib/auth-flow.ts` uses company_members membership as the authoritative onboarding gate. This is stronger application evidence than the event, but was not live queried in this execution. |
+| First-value instrumentation | VERIFIED | `src/lib/analytics.ts` emits invoice_created/expense_created and first_value_action_completed based on combined company-level invoice + expense counts equalling one. The helper has no user identifier and cannot establish user-level activation. |
+| First-touch attribution | INVESTIGATING | `src/lib/referral.ts` creates a browser-local ffVisitorId and stores only the most recent pendingReferralCode (last-touch); click capture sends landing path, referrer and UTM fields to the partner click endpoint. A first-touch acquisition chain and verified anonymous-to-authenticated link are not established by this helper. |
+| Event-level GA4 implementation | BLOCKED | No source edits were made because the executable workspace could not be recovered or created. |
+| Registration-to-activation test coverage | BLOCKED | No new tests were run or added in this execution. The previous code baseline test results remain historical evidence only and do not validate a new Stage E implementation. |
+| Authenticated GA4 API verification | BLOCKED | No authenticated GA4 Data API request was made. No live event counts or event-level permissions are claimed. |
+| Database-verified registration/activation | BLOCKED | No production or acceptance database query/write was performed in this execution. No registration or activation cohort was independently verified. |
+
+### Execution environment and preservation
+
+- Read-only Vercel project lookup resolved project `prj_SqYEsp2gNmKwu0FHAkM5XPdw8xru` and team `team_Drv3ZaHKhpxixqmHpDqWn1St`.
+- The prior `fc02repair` sessions were stopped by timeout. The latest session snapshot was listed as available, but a fresh sandbox restore attempt returned HTTP 400. An earlier snapshot restore returned HTTP 410 (expired/deleted). Fresh v3/v4 sandbox creation from a Git source also returned HTTP 400.
+- The mapped Vercel CLI fallback is unavailable in the current container; `git ls-remote` also failed because the container cannot resolve github.com. No alternate executable workspace was available.
+- The earlier generated `src/routeTree.gen.ts` change and stash were not edited or discarded by this execution. The original sandbox could not be resumed; their recoverability must be confirmed before any workspace cleanup.
+- No application source, test, migration, workflow, secret, or production artifact was modified.
+
+### Required Stage E design before implementation
+
+1. Add a distinct GA4 event report using compatible dimensions `date,eventName` and metrics `eventCount,totalUsers`; keep session/landing-page reports separate unless the GA4 Data API compatibility endpoint confirms a combined shape.
+2. Preserve source status, errors, freshness, date range and timezone for each report independently; never translate failed/missing metrics to valid zeroes.
+3. Emit standard `sign_up` only from a reliable successful-registration signal; emit `login` only for successful existing-user authentication. OAuth must not infer new registration from a user-controlled query parameter. Deduplicate callbacks without adding a new persistent identity system.
+4. Keep GA4 observations separate from authoritative registration/onboarding/accounting records. The existing company-level first-value event must not be used as verified user activation.
+5. Preserve first-touch attribution separately from referral last-touch; missing source remains unknown, not organic. Do not send personal or financial information to GA4.
+
+Acceptance/production writes, migrations, re-key/replay, protected workflow changes, publishing, deployment, secret changes and merges to main remain prohibited and were not performed.
