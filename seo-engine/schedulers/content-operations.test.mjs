@@ -111,8 +111,8 @@ test("Scheduler 2 preserves missing query metrics and rejects the candidate",asy
   const report=JSON.parse(await readFile(result.path,"utf8"));
   assert.equal(report.selectedCandidateCount,0);
   assert.equal(report.results.length,0);
-  assert.equal(report.dailyPortfolio.newArticle.status,"UNFILLED_NO_QUALIFIED_CANDIDATE");
-  assert.equal(report.dailyPortfolio.articleUpdate.status,"UNFILLED_NO_QUALIFIED_CANDIDATE");
+  assert.equal(report.dailyPortfolio.slots.newArticle.status,"UNFILLED_NO_QUALIFIED_CANDIDATE");
+  assert.equal(report.dailyPortfolio.slots.articleUpdate.status,"UNFILLED_NO_QUALIFIED_CANDIDATE");
   assert.equal(calls.operations.length,0);
  }finally{await rm(env.root,{recursive:true,force:true});}
 });
@@ -126,8 +126,8 @@ test("Scheduler 2 marks non-GSC persisted fixtures as fixtures and blocks them",
   const report=JSON.parse(await readFile(result.path,"utf8"));
   assert.equal(report.selectedCandidateCount,0);
   assert.equal(report.results.length,0);
-  assert.equal(report.dailyPortfolio.newArticle.status,"UNFILLED_NO_QUALIFIED_CANDIDATE");
-  assert.equal(report.dailyPortfolio.articleUpdate.status,"UNFILLED_NO_QUALIFIED_CANDIDATE");
+  assert.equal(report.dailyPortfolio.slots.newArticle.status,"UNFILLED_NO_QUALIFIED_CANDIDATE");
+  assert.equal(report.dailyPortfolio.slots.articleUpdate.status,"UNFILLED_NO_QUALIFIED_CANDIDATE");
   assert.equal(calls.operations.length,0);
  }finally{await rm(env.root,{recursive:true,force:true});}
 });
