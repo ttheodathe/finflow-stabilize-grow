@@ -53,6 +53,112 @@ const SOURCE_PACKS = [
     related: ["how-to-create-an-invoice", "how-to-keep-track-of-business-expenses", "complete-guide-to-small-business-accounting"],
   },
   {
+    id: "bank-reconciliation",
+    supportedIntents: ["How-to/tutorial", "Bookkeeping guidance"],
+    subjectCoverage: ["bank reconciliation", "reconcile bank statement", "reconcile business bank account", "bank statement reconciliation"],
+    audience: "Small-business owners, freelancers and bookkeepers maintaining transaction records",
+    jurisdiction: "United States IRS recordkeeping example; other jurisdictions must use their own local guidance",
+    approvedSourceTypes: ["OFFICIAL_GOVERNMENT"],
+    match: /bank reconciliation|reconcil(?:e|ing).*bank|bank.*reconcil/i,
+    intent: "Informational",
+    sources: [
+      {
+        url: "https://www.irs.gov/publications/p583",
+        expectedPublisher: "Internal Revenue Service",
+        supports: ["Compare the bank statement, checkbook and books; identify bank charges and deposits not yet shown; reconcile the checking account regularly."],
+        terms: ["bank statement", "checkbook", "books", "bank charges", "deposits", "reconcile your checking account each month"],
+      },
+      {
+        url: "https://www.irs.gov/businesses/small-businesses-self-employed/what-kind-of-records-should-i-keep",
+        expectedPublisher: "Internal Revenue Service",
+        supports: ["Bank statements, invoices, receipts and other supporting documents help substantiate business records."],
+        terms: ["bank statements", "invoices", "receipts", "supporting documents"],
+      },
+    ],
+    title: "How to Reconcile a Business Bank Statement: A Monthly Checklist",
+    description: "Learn how to compare bank statements with business records, investigate timing differences and document a repeatable monthly reconciliation.",
+    sections: [
+      ["What bank reconciliation checks", "Bank reconciliation compares the activity and balance shown by a financial institution with the transactions recorded in the business books. The purpose is to identify differences that need explanation, such as transactions recorded in one place but not yet shown in the other, bank charges, or recording mistakes. The IRS describes this process in its United States recordkeeping publication. Businesses in other countries should follow the recordkeeping guidance that applies locally."],
+      ["Prepare the records before comparing", "Gather the statement for the period, the business cash or bank ledger, transaction records, deposit details, payment records and supporting documents. Confirm that the statement and books cover the same account and period. Keep invoices and receipts organized so an entry can be traced to its supporting evidence. Do not treat an unexplained difference as a confirmed error until its timing and source have been checked."],
+      ["Compare transactions and explain differences", "Match deposits and incoming transfers between the statement and the books. Then compare payments, transfers, fees and other withdrawals. Mark items that appear in both records, and list unmatched items for investigation. A deposit made near the statement closing date may appear in the books before it appears on the statement. A bank fee may appear on the statement before it has been entered in the books. Record each explanation clearly."],
+      ["Correct records and keep an audit trail", "Investigate amount or date differences against the original supporting documents. Record missing bank fees or other confirmed items in the books using the business's normal accounting process. Correct data-entry mistakes with a traceable adjustment rather than silently changing historical records. Retain the statement, reconciliation summary and supporting documents together so another reviewer can understand how the final balance was reached."],
+      ["Use a consistent monthly review", "Complete the reconciliation on a consistent schedule, review unresolved items, and assign follow-up actions. The IRS publication recommends reconciling a checking account each month for the recordkeeping example it describes. That is useful United States guidance, not a universal legal deadline. The right review process depends on the business, account activity and local requirements."],
+    ],
+    claimSpecs: [
+      { id: "bank-reconciliation-purpose", text: "Bank reconciliation compares the bank statement with the checkbook and business books to identify differences.", terms: ["bank statement", "checkbook", "books"], sourceIndexes: [0] },
+      { id: "bank-reconciliation-differences", text: "Differences can arise from bank charges and deposits that are not yet shown on the bank statement.", terms: ["bank charges", "deposits", "statement"], sourceIndexes: [0] },
+      { id: "bank-reconciliation-frequency", text: "The IRS publication recommends reconciling the checking account each month in its United States recordkeeping guidance.", terms: ["reconcile your checking account each month"], sourceIndexes: [0], jurisdiction: "United States" },
+      { id: "bank-supporting-records", text: "Bank statements, invoices and receipts are examples of supporting business documents.", terms: ["bank statements", "invoices", "receipts"], sourceIndexes: [1] },
+    ],
+    related: ["complete-guide-to-small-business-accounting", "content-blog-how-to-do-bookkeeping-for-a-small-business", "content-blog-small-business-bookkeeping-checklist"],
+  },
+  {
+    id: "cash-vs-accrual",
+    supportedIntents: ["Accounting education", "How-to/tutorial", "Bookkeeping guidance"],
+    subjectCoverage: ["cash vs accrual accounting", "cash method", "accrual method", "cash basis accounting", "accrual basis accounting"],
+    audience: "Small-business owners learning how timing affects bookkeeping and reporting",
+    jurisdiction: "United States federal tax-method overview only; rules and eligibility differ by entity and jurisdiction",
+    approvedSourceTypes: ["OFFICIAL_GOVERNMENT"],
+    match: /cash.{0,25}accrual|accrual.{0,25}cash|cash method|accrual method/i,
+    intent: "Informational",
+    sources: [
+      {
+        url: "https://www.irs.gov/publications/p583",
+        expectedPublisher: "Internal Revenue Service",
+        supports: ["The cash method generally reports income when received and expenses when paid; the accrual method generally reports income when earned and expenses when incurred."],
+        terms: ["cash method", "tax year you receive it", "accrual method", "year you earn it", "year you incur them"],
+      },
+    ],
+    title: "Cash vs. Accrual Accounting: How the Methods Differ",
+    description: "Understand the timing difference between cash and accrual accounting, what each method shows and why local accounting and tax rules matter.",
+    sections: [
+      ["The core difference is timing", "Cash and accrual methods can record the same business activity in different periods because they recognize income and expenses at different points. Under a cash method, timing is generally tied to receiving or paying money. Under an accrual method, timing is generally tied to earning income or incurring an expense. This distinction helps explain why profit reported for a period and cash available in the bank are not necessarily the same."],
+      ["How the cash method works", "In the United States federal tax overview published by the IRS, the cash method generally reports income in the tax year it is received and deducts or capitalizes expenses in the year they are paid. This can make the timing easier to follow from cash receipts and payments, but it does not by itself show every amount earned or owed during the period. Do not assume that every business is eligible to use this method."],
+      ["How the accrual method works", "The IRS describes the accrual method as generally reporting income in the year it is earned, even if payment arrives later, and accounting for expenses in the year they are incurred, even if payment happens later. This can make unpaid invoices and supplier bills visible in the period they relate to. The detailed rules and exceptions depend on the business and applicable tax requirements."],
+      ["Why reports and cash balances can differ", "A business may issue an invoice near the end of a month and receive payment in the next month. The timing of that transaction can differ between cash and accrual records. The same issue can occur with supplier bills. A cash flow report focuses on cash movement, while an accrual-based profit and loss report can include income earned and expenses incurred but not yet settled."],
+      ["Check the rules before choosing or changing a method", "The IRS publication explains that accounting-method requirements can depend on inventory, the type of business and other conditions, and that changing a method may require approval. This is United States federal guidance, not a global rule or individualized tax advice. Businesses should confirm eligibility and reporting requirements with the relevant tax authority or a qualified professional in their jurisdiction."],
+    ],
+    claimSpecs: [
+      { id: "cash-method-timing", text: "Under the IRS description, the cash method generally reports income in the tax year it is received.", terms: ["cash method", "tax year you receive it"], sourceIndexes: [0], jurisdiction: "United States" },
+      { id: "accrual-income-timing", text: "Under the IRS description, the accrual method generally reports income in the year it is earned, even if payment arrives later.", terms: ["accrual method", "year you earn it"], sourceIndexes: [0], jurisdiction: "United States" },
+      { id: "accrual-expense-timing", text: "Under the IRS description, accrual accounting generally accounts for expenses in the year they are incurred.", terms: ["year you incur them"], sourceIndexes: [0], jurisdiction: "United States" },
+    ],
+    related: ["content-blog-bookkeeping-vs-accounting", "complete-guide-to-small-business-accounting", "cash-flow-forecasting-small-business"],
+  },
+  {
+    id: "journals-and-ledgers",
+    supportedIntents: ["Bookkeeping guidance", "Accounting education", "How-to/tutorial"],
+    subjectCoverage: ["accounting journals and ledgers", "journal vs ledger", "general ledger", "business transaction journal"],
+    audience: "Small-business owners, bookkeepers and accounting students",
+    jurisdiction: "General bookkeeping concepts with United States IRS recordkeeping source",
+    approvedSourceTypes: ["OFFICIAL_GOVERNMENT"],
+    match: /journal.{0,25}ledger|ledger.{0,25}journal|general ledger|accounting journal/i,
+    intent: "Informational",
+    sources: [
+      {
+        url: "https://www.irs.gov/businesses/small-businesses-self-employed/how-should-i-record-my-business-transactions",
+        expectedPublisher: "Internal Revenue Service",
+        supports: ["A journal records transactions from supporting documents; a ledger contains journal totals organized into accounts; double-entry bookkeeping records equal debits and credits."],
+        terms: ["journal", "ledger", "supporting documents", "accounts", "debits", "credits"],
+      },
+    ],
+    title: "Accounting Journals vs. Ledgers: A Small-Business Guide",
+    description: "Learn how journals capture transactions, how ledgers organize account balances and how the two records work together in bookkeeping.",
+    sections: [
+      ["What an accounting journal records", "A journal is a chronological record of business transactions drawn from supporting documents. An entry should be traceable to the underlying invoice, receipt, payment record or other evidence. Some businesses maintain separate journals for transaction types that occur frequently. The right structure depends on the business's activity and the level of detail needed to review its records."],
+      ["What a ledger organizes", "A ledger groups recorded activity by account, such as income, expenses, assets and liabilities. Rather than simply listing transactions in date order, it helps show the accumulated activity and balance for each account. The IRS describes journals and ledgers as ordinary parts of a business recordkeeping system, while noting that the system should suit the type of business."],
+      ["How journal entries flow into ledger accounts", "In a double-entry system, transactions are first entered in a journal and then posted to ledger accounts. Each transaction affects at least two accounts, with debit and credit entries. The total debits must equal the total credits after posting. This structure helps keep the accounting equation in balance, but it does not remove the need to check that the original transaction was recorded accurately."],
+      ["Keep entries connected to evidence", "Use consistent dates, descriptions, account names and references to supporting documents. Review entries for missing information, duplicate recording and incorrect account classification. Keep source documents in an orderly system so a reviewer can move from a ledger balance to the related journal entries and then to the evidence supporting the transaction."],
+      ["Choose a process the business can maintain", "A small operation may use a simple set of books, while a business with more activity may need separate journals and more detailed ledger accounts. Electronic accounting systems can organize these records, but the owner still needs a consistent process for entering transactions and reviewing exceptions. The IRS source describes United States recordkeeping expectations; businesses elsewhere should check local requirements."],
+    ],
+    claimSpecs: [
+      { id: "journal-definition", text: "A journal is where a business records each transaction shown by its supporting documents.", terms: ["journal", "transactions", "supporting documents"], sourceIndexes: [0] },
+      { id: "ledger-definition", text: "A ledger contains totals from journals and is organized into accounts.", terms: ["ledger", "journals", "accounts"], sourceIndexes: [0] },
+      { id: "double-entry-balance", text: "In a double-entry system, total debits must equal total credits after journal entries are posted to the ledger.", terms: ["debits", "credits", "ledger"], sourceIndexes: [0] },
+    ],
+    related: ["complete-guide-to-small-business-accounting", "content-blog-how-to-do-bookkeeping-for-a-small-business", "content-blog-bookkeeping-vs-accounting"],
+  },
+  {
     id: "recordkeeping",
     supportedIntents: ["Bookkeeping guidance", "How-to/tutorial", "Accounting education"],
     subjectCoverage: ["bookkeeping", "business records", "income", "expenses", "receipts", "invoices"],
@@ -250,6 +356,9 @@ export function classifySearchIntent(query) {
     || /software selection|accounting software comparison/.test(value)) return "Software selection";
   if (/reporting features?|track invoices?|track sales|expense tracking|invoice tracking|features? of/.test(value)) return "Feature evaluation";
   if (/\b(?:how to|step[- ]by[- ]step|tutorial|template|checklist|guide|create|build|set up|track(?:ing)?|manage(?:ment|ing)?)\b/.test(value)) return "How-to/tutorial";
+  if (/cash.{0,25}accrual|accrual.{0,25}cash|cash method|accrual method/.test(value)) return "Accounting education";
+  if (/bank reconciliation|reconcil(?:e|ing).*bank|bank.*reconcil/.test(value)) return "Bookkeeping guidance";
+  if (/journal.{0,25}ledger|ledger.{0,25}journal|general ledger|accounting journal/.test(value)) return "Bookkeeping guidance";
   if (/bookkeep|recordkeeping|financial records|receipts?|ledger|transaction records/.test(value)) return "Bookkeeping guidance";
   if (/what is|meaning of|definition|accounting basics|formula|calculate|principles of|accounting education/.test(value)) return "Accounting education";
   return "REVIEW_REQUIRED";
