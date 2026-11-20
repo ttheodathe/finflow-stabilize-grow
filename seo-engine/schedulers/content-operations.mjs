@@ -2,7 +2,8 @@ import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { assertProductionWritesBlocked } from "../content-ops/safety.mjs";
 import { createSupabaseSeoStoreFromEnv } from "../persistence/supabase-store.mjs";
 import { resolveSchedulerAttempt } from "./run-attempt.mjs";
-import { runResearchPipeline } from "../research/pipeline.mjs";
+import { loadInventory, runResearchPipeline } from "../research/pipeline.mjs";
+import { selectDailyContentPortfolio } from "./daily-content-portfolio.mjs";
 
 const OUTPUT = process.env.SEO_OUTPUT_DIR || "seo-output";
 const CONTENT_DIR = "content/blog";
@@ -102,18 +103,22 @@ export async function runContentOperations({
     createdAt: row.created_at,
   })), input.persistence.schedulerRunId);
 
+  const inventory = await loadInventory({ contentDir });
+  const dailyPortfolio = selectDailyContentPortfolio(candidates, inventory);
+  const selectedCandidates = dailyPortfolio.selectedCandidates;
+
   const scheduledFor = now.toISOString().slice(0,10);
   const attempt = resolveSchedulerAttempt(env, runAttempt);
   const schedulerRunId = await store.recordRun({
     schedulerKey: "CONTENT_OPERATIONS", scheduledFor, attempt,
     status: "RUNNING", upstreamRunId: input.persistence.schedulerRunId,
-    output: { persistedOpportunityCount: persistedOpportunities.length, candidateQueryCount: candidates.length },
+    output: { persistedOpportunityCount: persistedOpportunities.length, candidateQueryCount: candidates.length, selectedCandidateCount: selectedCandidates.length, dailyPortfolio },
   });
 
   let pipelineResult;
   try {
     pipelineResult = await runResearchPipeline({
-      opportunities: candidates, contentDir, outputDir: researchDir,
+      opportunities: selectedCandidates, contentDir, outputDir: researchDir,
       fetchImpl, now, store, allowFixture,
     });
     const finalStatus = pipelineResult.readyDraftCount > 0 && pipelineResult.rejectedCount === 0
@@ -124,6 +129,8 @@ export async function runContentOperations({
       output: {
         persistedOpportunityCount: persistedOpportunities.length,
         candidateQueryCount: candidates.length,
+        selectedCandidateCount: selectedCandidates.length,
+        dailyPortfolio,
         readyDraftCount: pipelineResult.readyDraftCount,
         rejectedCount: pipelineResult.rejectedCount,
         mode: "DRY_RUN",
@@ -135,7 +142,7 @@ export async function runContentOperations({
       await store.recordRun({
         schedulerKey: "CONTENT_OPERATIONS", scheduledFor, attempt,
         status: "FAILED", upstreamRunId: input.persistence.schedulerRunId,
-        output: { candidateQueryCount: candidates.length },
+        output: { candidateQueryCount: candidates.length, selectedCandidateCount: selectedCandidates.length, dailyPortfolio },
         errorSummary: String(error.message || error),
       });
     } catch { /* Keep the original pipeline error visible. */ }
@@ -153,6 +160,8 @@ export async function runContentOperations({
     },
     persistedOpportunityCount: persistedOpportunities.length,
     candidateCount: candidates.length,
+    selectedCandidateCount: selectedCandidates.length,
+    dailyPortfolio,
     readyDraftCount: pipelineResult.readyDraftCount,
     rejectedCount: pipelineResult.rejectedCount,
     results: pipelineResult.results.map(result => ({
@@ -187,7 +196,8 @@ export async function runContentOperations({
       "Scheduler 2 reads opportunity rows directly from Supabase using the upstream Scheduler 1 run ID; fixture evidence is blocked in scheduled mode.",
       "Source relevance and originality checks are deterministic screening, not semantic fact-checking.",
       "Every generated draft requires human review and authenticated approval before any staging adapter can be invoked.",
-      "No article Markdown under content/blog is created or updated by this scheduler.",
+      "Daily content targets are one new article and one existing-article update; a slot remains unfilled when no candidate passes the exact-target/cannibalization screen or downstream evidence and quality gates.",
+      "Selected drafts remain in the research area and require authenticated human approval before staging or production content operations.",
     ],
   };
   await mkdir(outputDir,{recursive:true});
@@ -195,6 +205,8 @@ export async function runContentOperations({
   await writeFile(reportPath,JSON.stringify(report,null,2)+"\n",{flag:"w"});
   return {
     path: reportPath, queueCount: candidates.length,
+    selectedCandidateCount: selectedCandidates.length,
+    dailyPortfolio,
     readyDraftCount: pipelineResult.readyDraftCount,
     rejectedCount: pipelineResult.rejectedCount,
     researchReportPath: pipelineResult.reportPath,
