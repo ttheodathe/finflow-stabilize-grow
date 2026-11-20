@@ -121,7 +121,9 @@ export async function runContentOperations({
       opportunities: selectedCandidates, contentDir, outputDir: researchDir,
       fetchImpl, now, store, allowFixture,
     });
-    const finalStatus = pipelineResult.readyDraftCount > 0 && pipelineResult.rejectedCount === 0
+    const bothDailySlotsSelected = dailyPortfolio.slots.newArticle.status === "SELECTED"
+      && dailyPortfolio.slots.articleUpdate.status === "SELECTED";
+    const finalStatus = bothDailySlotsSelected && pipelineResult.readyDraftCount > 0 && pipelineResult.rejectedCount === 0
       ? "SUCCEEDED" : "PARTIAL";
     await store.recordRun({
       schedulerKey: "CONTENT_OPERATIONS", scheduledFor, attempt,
