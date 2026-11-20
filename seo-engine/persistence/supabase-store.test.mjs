@@ -220,3 +220,24 @@ test("content revision writes reject malformed operation IDs before making an RP
   );
   assert.equal(called, false);
 });
+
+test("article performance snapshots use the dedicated page-level persistence RPC", async () => {
+  let request;
+  const store = createSupabaseSeoStore({
+    url: "https://project.supabase.co", serviceRoleKey: "server-only-test-key",
+    fetchImpl: async (url, options) => { request = { url, options }; return Response.json("00000000-0000-4000-8000-000000000012"); },
+  });
+  await store.recordArticlePerformanceSnapshot({
+    snapshotKey: "scheduler-3:2026-11-20:1:ARTICLE:GSC:cash-flow:2026-11-01-2026-11-20",
+    slug: "cash-flow", canonicalUrl: "https://www.finflowtrack.com/blog/cash-flow",
+    source: "GSC", periodStart: "2026-11-01", periodEnd: "2026-11-20",
+    metrics: { clicks: 12, impressions: 300, ctr: 0.04, averagePosition: 9.2 },
+    measurementScope: "PAGE_LEVEL_DIRECT", revisionAttribution: "UNKNOWN",
+  });
+  assert.match(request.url, /seo_ops_record_article_performance/);
+  const payload = JSON.parse(request.options.body);
+  assert.equal(payload.p_slug, "cash-flow");
+  assert.equal(payload.p_revision_attribution, "UNKNOWN");
+  assert.equal(payload.p_operation_id, null);
+  assert.equal(payload.p_measurement_scope, "PAGE_LEVEL_DIRECT");
+});
