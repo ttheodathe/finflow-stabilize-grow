@@ -602,6 +602,7 @@ export async function runResearchPipeline({
       reportingPeriodEnd: raw.reportingPeriodEnd || raw.evidence?.dateRange?.endDate || raw.dateRange?.endDate || null,
       dataSource: raw.dataSource || raw.evidence?.source || "UNKNOWN",
       evidenceMode: raw.evidenceMode || (raw.dataSource === "TEST_FIXTURE" ? "FIXTURE" : "LIVE_OR_PERSISTED"),
+      historicalProvenance: raw.historicalProvenance || raw.evidence?.historicalProvenance || null,
     };
     const freshness = freshnessFor(candidate, now);
     const intent = classifySearchIntent(candidate.targetQuery);
