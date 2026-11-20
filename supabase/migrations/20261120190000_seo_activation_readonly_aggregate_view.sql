@@ -22,7 +22,7 @@ alter role seo_activation_reader
 -- Dedicated roles must not carry pre-existing role memberships. Membership in
 -- either direction could permit role assumption or expose the view owner's
 -- source-table privileges to another login.
-do $
+do $$
 begin
   if exists (
     select 1
