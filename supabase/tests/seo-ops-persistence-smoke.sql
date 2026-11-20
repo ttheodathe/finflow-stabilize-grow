@@ -284,4 +284,18 @@ begin
      or not has_function_privilege('service_role','public.seo_ops_record_article_approval(uuid,uuid,text,uuid,text,text,text)','EXECUTE') then
     raise exception 'article approval RPC execution grants are incorrect';
   end if;
+  if has_table_privilege('anon','seo_ops.article_approvals','SELECT')
+     or has_table_privilege('authenticated','seo_ops.article_approvals','SELECT')
+     or has_table_privilege('service_role','seo_ops.article_approvals','UPDATE')
+     or has_table_privilege('service_role','seo_ops.article_approvals','DELETE') then
+    raise exception 'article approval ledger must be service-role-readable and append-only';
+  end if;
+  if has_function_privilege('anon','public.seo_ops_advance_content_revision(uuid,integer,text,text,text,jsonb)','EXECUTE')
+     or has_function_privilege('authenticated','public.seo_ops_advance_content_revision(uuid,integer,text,text,text,jsonb)','EXECUTE')
+     or not has_function_privilege('service_role','public.seo_ops_advance_content_revision(uuid,integer,text,text,text,jsonb)','EXECUTE')
+     or has_function_privilege('anon','public.seo_ops_get_article_approval(uuid)','EXECUTE')
+     or has_function_privilege('authenticated','public.seo_ops_get_article_approval(uuid)','EXECUTE')
+     or not has_function_privilege('service_role','public.seo_ops_get_article_approval(uuid)','EXECUTE') then
+    raise exception 'Stage C revision or approval readback RPC grants are incorrect';
+  end if;
 end $$;
