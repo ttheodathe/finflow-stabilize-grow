@@ -873,13 +873,13 @@ export async function runResearchPipeline({
       base.contentHash = hash;
       if (store) {
         requireUuid(candidate.persistedOpportunityId, "Persisted Scheduler 1 opportunity");
-        for (const method of ["recordContentOperation","recordResearchRecord","recordContentRevision","getContentOperation","listResearchRecords","listContentRevisions"]) {
+        for (const method of ["recordContentOperation","recordResearchRecord","advanceContentRevision","getContentOperation","listResearchRecords","listContentRevisions"]) {
           if (typeof store[method] !== "function") {
             throw new Error(`Durable draft persistence requires store.${method} for independent readback.`);
           }
         }
         const scheduledFor = now.toISOString().slice(0,10);
-        const operationKey = `research:${candidate.id || draft.slug}:${freshness.reportingPeriodEnd}:${hash.slice(0,16)}`;
+        const operationKey = `research:${candidate.id || draft.slug}:${freshness.reportingPeriodEnd}`;
         const operationInput = {
           operationKey, operationType,
           targetPath:`content/blog/${draft.slug}.md`, slug:draft.slug, status:"PROPOSED",
@@ -930,10 +930,17 @@ export async function runResearchPipeline({
               id:researchRecordId, sourceUrl:source.url, supportedClaims, unresolvedClaims,
             });
           }
-          const revisionId = requireUuid(await store.recordContentRevision({
-            operationId, revisionNumber:1, contentHash:hash,
-            markdown:draft.content, revisionState:"PROPOSED",
-          }), "Content revision persistence");
+          const priorRevisions = await store.listContentRevisions({operationId});
+          const sameRevision = priorRevisions.find(item => item.content_hash === hash);
+          const latestRevision = priorRevisions.reduce((latest,item) =>
+            !latest || item.revision_number > latest.revision_number ? item : latest, null);
+          const revisionNumber = sameRevision?.revision_number
+            || (latestRevision ? latestRevision.revision_number + 1 : 1);
+          const revisionId = requireUuid(await store.advanceContentRevision({
+            operationId, revisionNumber, contentHash:hash, markdown:draft.content,
+            previousContentHash:sameRevision ? null : latestRevision?.content_hash || null,
+            operationPayload:{...operationPayload,workflowState:"PERSISTED_PENDING_READBACK",draftMarkdown:draft.content},
+          }), "Content revision advancement persistence");
 
           const pendingReadbackPayload = {
             ...operationPayload,
