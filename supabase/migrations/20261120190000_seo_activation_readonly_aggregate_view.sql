@@ -19,6 +19,35 @@ alter role seo_activation_aggregator
 alter role seo_activation_reader
   nologin nosuperuser nocreatedb nocreaterole noinherit noreplication nobypassrls;
 
+-- Dedicated roles must not carry pre-existing role memberships. Membership in
+-- either direction could permit role assumption or expose the view owner's
+-- source-table privileges to another login.
+do $
+begin
+  if exists (
+    select 1
+    from pg_auth_members am
+    join pg_roles granted_role on granted_role.oid = am.roleid
+    join pg_roles member_role on member_role.oid = am.member
+    where granted_role.rolname in ('seo_activation_aggregator', 'seo_activation_reader')
+       or member_role.rolname in ('seo_activation_aggregator', 'seo_activation_reader')
+  ) then
+    raise exception 'Stage B2 dedicated roles must have no role memberships in either direction';
+  end if;
+
+  if exists (
+    select 1
+    from pg_class c
+    join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public'
+      and c.relname in ('profiles', 'onboarding_progress', 'invoices', 'expenses')
+      and c.relowner = 'seo_activation_aggregator'::regrole
+  ) then
+    raise exception 'Stage B2 aggregator must not own any source table';
+  end if;
+end
+$;
+
 do $$
 declare
   missing_tables text;
