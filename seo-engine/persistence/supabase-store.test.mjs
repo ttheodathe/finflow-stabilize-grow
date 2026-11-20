@@ -23,7 +23,7 @@ test("service-role RPC requests are server-side, scoped and use stable operation
   });
   assert.equal(calls[0].url, "https://project.supabase.co/rest/v1/rpc/seo_ops_record_run");
   assert.equal(calls[0].options.headers.apikey, "server-only-test-key");
-  assert.equal(calls[0].options.headers.authorization, "Bearer server-only-test-key");
+  assert.equal(calls[0].options.headers.authorization, undefined);
   assert.equal(JSON.parse(calls[0].options.body).p_scheduler_key, "SEARCH_INTELLIGENCE");
 });
 
@@ -94,7 +94,7 @@ test("Scheduler 2 reads only persisted opportunities for a validated run ID",asy
  const rows=await store.listPersistedOpportunities({schedulerRunId:"00000000-0000-4000-8000-000000000001"});
  assert.equal(request.url,"https://project.supabase.co/rest/v1/rpc/seo_ops_get_opportunities");
  assert.equal(JSON.parse(request.options.body).p_scheduler_run_id,"00000000-0000-4000-8000-000000000001");
- assert.equal(request.options.headers.authorization,"Bearer server-only-test-key");
+ assert.equal(request.options.headers.authorization, undefined);
  assert.equal(rows[0].opportunity_key,"key-1");
  await assert.rejects(store.listPersistedOpportunities({schedulerRunId:"not-a-uuid"}),/Persisted Scheduler 1 run ID.*valid UUID/);
 });
@@ -195,7 +195,7 @@ test("content revision writes use the immutable revision RPC contract", async ()
     p_markdown: "# Proposed draft",
     p_revision_state: "PROPOSED",
   });
-  assert.equal(request.options.headers.authorization, "Bearer server-only-test-key");
+  assert.equal(request.options.headers.authorization, undefined);
 });
 
 test("content revision writes reject malformed operation IDs before making an RPC", async () => {
