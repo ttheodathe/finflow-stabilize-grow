@@ -112,6 +112,7 @@ test("unresolved cannibalization is not silently converted into a new article",(
 
 test("draft queue persistence is idempotent and requires independent operation, research and revision readback",async()=>{
  const env=await setup(), calls={operations:[],research:[],revisions:[]};
+ const jsonbLike=value=>Array.isArray(value)?value.map(jsonbLike):value&&typeof value==="object"?Object.fromEntries(Object.entries(value).sort(([left],[right])=>left.localeCompare(right)).map(([key,item])=>[key,jsonbLike(item)])):value;
  const operationIds=new Map(),researchIds=new Map(),revisionIds=new Map(),operationPayloads=new Map(),researchClaims=new Map();
  const store={
   recordContentOperation:async input=>{
@@ -126,8 +127,8 @@ test("draft queue persistence is idempotent and requires independent operation, 
    researchClaims.set(key,{supportedClaims:input.supportedClaims,unresolvedClaims:input.unresolvedClaims});
    calls.research=[...researchIds].map(([k,id])=>({
     id,source_url:k.split(":").slice(1).join(":"),opportunity_id:k.split(":")[0],
-    supported_claims:researchClaims.get(k)?.supportedClaims || [],
-    unresolved_claims:researchClaims.get(k)?.unresolvedClaims || [],
+    supported_claims:jsonbLike(researchClaims.get(k)?.supportedClaims || []),
+    unresolved_claims:jsonbLike(researchClaims.get(k)?.unresolvedClaims || []),
    }));
    return researchIds.get(key);
   },
