@@ -161,3 +161,62 @@ test("independent readback methods use the dedicated restricted RPCs", async () 
   assert.match(calls[1].url,/seo_ops_get_research_records/);
   assert.match(calls[2].url,/seo_ops_get_content_revisions/);
 });
+
+test("content revision writes use the immutable revision RPC contract", async () => {
+  let request;
+  const operationId = "00000000-0000-4000-8000-000000000010";
+  const revisionId = "00000000-0000-4000-8000-000000000011";
+  const store = createSupabaseSeoStore({
+    url: "https://project.supabase.co",
+    serviceRoleKey: "server-only-test-key",
+    fetchImpl: async (url, options) => {
+      request = { url, options };
+      return Response.json(revisionId);
+    },
+  });
+
+  const result = await store.recordContentRevision({
+    operationId,
+    revisionNumber: 2,
+    contentHash: "a".repeat(64),
+    markdown: "# Proposed draft",
+  });
+
+  assert.equal(result, revisionId);
+  assert.equal(
+    request.url,
+    "https://project.supabase.co/rest/v1/rpc/seo_ops_record_content_revision",
+  );
+  const payload = JSON.parse(request.options.body);
+  assert.deepEqual(payload, {
+    p_operation_id: operationId,
+    p_revision_number: 2,
+    p_content_hash: "a".repeat(64),
+    p_markdown: "# Proposed draft",
+    p_revision_state: "PROPOSED",
+  });
+  assert.equal(request.options.headers.authorization, "Bearer server-only-test-key");
+});
+
+test("content revision writes reject malformed operation IDs before making an RPC", async () => {
+  let called = false;
+  const store = createSupabaseSeoStore({
+    url: "https://project.supabase.co",
+    serviceRoleKey: "server-only-test-key",
+    fetchImpl: async () => {
+      called = true;
+      return Response.json("00000000-0000-4000-8000-000000000011");
+    },
+  });
+
+  await assert.rejects(
+    store.recordContentRevision({
+      operationId: "not-a-uuid",
+      revisionNumber: 1,
+      contentHash: "a".repeat(64),
+      markdown: "# Draft",
+    }),
+    /Content revision operation ID.*valid UUID/,
+  );
+  assert.equal(called, false);
+});
