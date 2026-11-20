@@ -39,7 +39,7 @@ test("production activation collector rejects missing, malformed, and administra
   await assert.rejects(collectProductionActivationAggregate({ connectionString: "https://example.com" }), /valid PostgreSQL connection URI/);
   await assert.rejects(collectProductionActivationAggregate({
     connectionString: "postgresql://postgres:admin-password@db.example.supabase.co:5432/postgres",
-  }), /dedicated username/);
+  }), /dedicated non-administrator database username/);
 });
 
 test("production activation collector fails closed when the SQL file is not the approved read-only query", async () => {
