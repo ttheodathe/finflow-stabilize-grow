@@ -12,7 +12,7 @@ function validateConnectionString(value) {
   let parsed;
   try { parsed = new URL(value); }
   catch { throw new Error("SEO_PRODUCTION_READONLY_DATABASE_URL must be a valid PostgreSQL connection URI."); }
-  if (!["postgres:", "postgresql:"].includes(parsed.protocol) || !parsed.hostname || !parsed.username || !parsed.pathname || parsed.pathname === "/" || decodeURIComponent(parsed.username).split(".")[0].toLowerCase() === "postgres") {
+  if (!["postgres:", "postgresql:"].includes(parsed.protocol) || !parsed.hostname || !parsed.username || !parsed.pathname || parsed.pathname === "/" || decodeURIComponent(parsed.username).split(".")[0].toLowerCase() === "postgres" || (parsed.searchParams.has("sslmode") && !["require", "verify-ca", "verify-full"].includes(parsed.searchParams.get("sslmode")))) {
     throw new Error("SEO_PRODUCTION_READONLY_DATABASE_URL must include a PostgreSQL host, dedicated username, and database name.");
   }
   return value;
