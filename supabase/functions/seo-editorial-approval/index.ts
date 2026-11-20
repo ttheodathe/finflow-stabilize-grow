@@ -47,5 +47,11 @@ Deno.serve(async (request: Request) => {
     p_review_notes: reviewNotes,
   });
   if (error) return json({ error: "Editorial decision was not accepted", code: error.code || "APPROVAL_REJECTED" }, 403);
-  return json({ approvalId: data, decision, contentHash });
+  const { data: rows, error: readError } = await admin.rpc("seo_ops_get_article_approval", { p_approval_id: data });
+  const approval = Array.isArray(rows) ? rows[0] : null;
+  if (readError || !approval || approval.id !== data || approval.reviewer_user_id !== userData.user.id
+      || approval.content_hash !== contentHash || approval.decision !== decision) {
+    return json({ error: "Approval persistence readback did not confirm the exact authenticated decision" }, 500);
+  }
+  return json({ approvalId: data, decision, contentHash, reviewerUserId: approval.reviewer_user_id });
 });
