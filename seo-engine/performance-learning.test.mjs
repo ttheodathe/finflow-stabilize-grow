@@ -209,6 +209,7 @@ test("Scheduler 3 derives unique persistence attempts for separate workflow runs
   assert.equal(resolveSchedulerAttempt({ GITHUB_RUN_NUMBER: "42", GITHUB_RUN_ATTEMPT: "2" }), 42002);
   assert.equal(resolveSchedulerAttempt({ GITHUB_RUN_NUMBER: "43", GITHUB_RUN_ATTEMPT: "1" }), 43001);
   assert.equal(resolveSchedulerAttempt({}), 1);
+  assert.throws(() => resolveSchedulerAttempt({ GITHUB_RUN_NUMBER: "42", GITHUB_RUN_ATTEMPT: "1000" }), /reserved idempotency-key range/);
 });
 
 
