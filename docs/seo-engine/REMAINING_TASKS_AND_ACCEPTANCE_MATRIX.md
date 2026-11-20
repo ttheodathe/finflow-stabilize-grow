@@ -12,9 +12,9 @@ Status definitions: NOT STARTED, INVESTIGATING, IMPLEMENTING, IMPLEMENTED, TESTE
 | A — complete threat model/unused code/ownership | NOT STARTED | Exhaustive review pending |
 | B — acceptance migration ledger | VERIFIED | Seven SEO ledger entries read from acceptance project bufbyfwstdqvwnkhyrea |
 | B — disputed 145113 migration provenance | VERIFIED | Stored SQL MD5 equals 170000 migration file; README documents combined 160000+170000 effects |
-| B — visitor_key_hash | VERIFIED | Live column TEXT NOT NULL + UNIQUE; zero rows |
+| B — visitor_key_hash | VERIFIED | Source migration 20261119122622 and live acceptance column both TEXT NOT NULL + UNIQUE; zero rows |
 | B — UUID/FK integrity | VERIFIED | UUID PKs; opportunities→scheduler_runs; research→opportunities; revisions→content_operations |
-| B — migration timestamp collisions | INVESTIGATING | Active tree duplicates 18130000 and 18140000; historical branches also 17161000/17170000/17180000 |
+| B — migration timestamp collisions | INVESTIGATING | Active tree duplicates 18130000 and 18140000; file histories traced to commits 703d412/aba4508 and ff9e78e/c9f91ad/5bcea750/4bfd383; historical branches also 17161000/17170000/17180000; production ledger not inspected |
 | B — historical genuine opportunities/overwritten rows | BLOCKED | Current acceptance has only fixture rows; overwritten values cannot be recovered from current state |
 | B — UUID-preserving re-key plan | INVESTIGATING | UUID relationships support key-only mapping in principle; complete key mapping and separate write authorization required |
 | C — official GSC collector/auth/dimensions | IMPLEMENTED | Read-only Search Analytics API; domain property; six dimension reports |
