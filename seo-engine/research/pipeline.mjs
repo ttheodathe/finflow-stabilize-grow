@@ -7,6 +7,7 @@ import productCapabilityRecord from "../../content/operations/research/verified-
 import editorialBacklog from "./editorial-backlog.json" with { type: "json" };
 import { validateDraft } from "../content-ops/validate-draft.mjs";
 import { runArticleProduction } from "./article-production.mjs";
+import { createArticleGeneratorFromEnv } from "./article-generator-provider.mjs";
 import { createSupabaseSeoStoreFromEnv } from "../persistence/supabase-store.mjs";
 
 const CONTENT_DIR = "content/blog";
@@ -693,7 +694,7 @@ export async function runResearchPipeline({
   opportunities, contentDir = CONTENT_DIR, outputDir = RESEARCH_DIR,
   fetchImpl = fetch, now = new Date(), store = createSupabaseSeoStoreFromEnv(process.env),
   allowFixture = false,
-  articleGenerator = null,
+  articleGenerator = createArticleGeneratorFromEnv(process.env),
   articleOutputDir = path.join(outputDir, "article-production"),
 } = {}) {
   if (!Array.isArray(opportunities)) throw new Error("Research pipeline requires an opportunities array.");
