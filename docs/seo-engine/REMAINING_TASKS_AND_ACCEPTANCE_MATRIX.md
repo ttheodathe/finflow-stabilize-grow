@@ -77,3 +77,18 @@ Recovery branch code HEAD at verification: 57c4f7f4b1d7a02977e6499ff9d6c8d92e570
 | Fresh live GSC collection | BLOCKED | No authenticated read-only dispatch was available; the historical PR attempt failed before API access, now fixed and covered by fixtures only |
 
 Acceptance and production database writes remain prohibited. No new live API or persistence operation was triggered.
+
+## Stage B read-only schema audit — verified findings
+
+| Requirement | Status | Evidence / limitation |
+|---|---|---|
+| RLS on seo_ops tables | VERIFIED | All 11 tables have RLS enabled; service_role-only policies; anon/authenticated policies absent |
+| RPC privilege/security posture | VERIFIED | 11 public.seo_ops_* RPCs are SECURITY INVOKER, fixed search_path pg_catalog/seo_ops, EXECUTE granted only to service_role |
+| Trigger inventory | VERIFIED | No user-defined triggers on seo_ops tables |
+| Unique indexes and foreign keys | VERIFIED | Full pg_indexes/pg_constraint inventory read from acceptance |
+| Non-unique performance indexes | INVESTIGATING | None found on seo_ops tables; consider indexes on FK/run lookup columns after migration history is resolved |
+| Opportunity upsert collision behavior | VERIFIED | seo_ops_record_opportunity overwrites URL/query/type/score/evidence on opportunity_key conflict; historic overwritten values are not recoverable from current fixture-only state |
+| Opportunity score upper bound | INVESTIGATING | DB CHECK is score >= 0 only; application tests enforce <=100; DDL not authorized |
+| Production migration ledger | BLOCKED | Production is out of scope; no production connection or query attempted |
+
+These findings are read-only acceptance evidence. Do not treat them as production schema verification.

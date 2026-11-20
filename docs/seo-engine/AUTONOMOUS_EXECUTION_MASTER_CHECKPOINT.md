@@ -128,3 +128,19 @@ Latest recovery code commit before this documentation update: 57c4f7f4b1d7a02977
 - The acceptance job now requires the explicit PR label and environment authorization flag, preserves blocked evidence even when the run fails, and stops before persistence when credentials are absent.
 
 Next engineering focus: complete the read-only migration collision provenance review, then add event-level GA4 registration/activation reporting using the existing app events. Do not infer registrations or activation from aggregate keyEvents alone.
+
+## Stage B read-only schema, index, RPC and overwrite audit
+
+Inspected acceptance project bufbyfwstdqvwnkhyrea only.
+
+- All 11 seo_ops tables have RLS enabled (not FORCE RLS). Each has a service_role_full_access policy; no anon/authenticated policy was found.
+- No user-defined triggers exist on seo_ops tables.
+- Eleven public.seo_ops_* RPCs exist. All are SECURITY INVOKER (not SECURITY DEFINER), owned by postgres, use a fixed search_path of pg_catalog + seo_ops, and are executable by service_role only; anon and authenticated have no EXECUTE privilege.
+- Read RPCs cover opportunities, research records, content operations and revisions. Write RPCs cover run, opportunity, research, activation snapshot, performance snapshot, content operation and content revision records.
+- Unique indexes/constraints cover primary keys, opportunity_key, scheduler run key/date/attempt, research opportunity/source URL, content operation key, revision operation/hash and operation/revision number, performance snapshot key, activation snapshot date, attribution visitor hash, and GitHub review ID. No non-unique secondary indexes were found on seo_ops tables. Foreign-key lookup indexes are therefore a future scale/performance consideration; no DDL was applied.
+- The opportunity score CHECK enforces score >= 0 but not score <= 100; application scoring tests enforce the 0–100 scale. A database upper-bound constraint is a possible future migration after migration provenance is reconciled.
+- Critical overwrite behavior: public.seo_ops_record_opportunity uses ON CONFLICT(opportunity_key) DO UPDATE and replaces scheduler_run_id, target_url, query_text, opportunity_type, score and evidence. Thus a legacy key collision can overwrite a previously distinct page record. Current acceptance contains only one synthetic opportunity, so no prior genuine record can be recovered or mapped from this database snapshot.
+- The visitor_key_hash source migration and live acceptance column both declare TEXT NOT NULL + UNIQUE. The table is empty, so uniqueness is schema-verified but not data-stress-tested.
+- The 20261119160000 and 20261119170000 prefixes are each unique in the active recovery tree; the ledger's 20261119145113 combined statement matches the 170000 SQL hash. The actual active-tree duplicate prefixes are 20261118130000 and 20261118140000. Production migration history remains uninspected/out of scope.
+
+Stage B remains INVESTIGATING because the duplicate migration prefixes and historical merge/apply provenance cannot be reconciled against production under the current scope. No database writes or schema changes were made.
