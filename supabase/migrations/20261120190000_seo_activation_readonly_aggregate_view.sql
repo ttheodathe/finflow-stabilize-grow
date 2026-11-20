@@ -12,7 +12,7 @@ begin
     create role seo_activation_reader;
   end if;
 end;
-$;
+$$;
 
 alter role seo_activation_aggregator
   nologin nosuperuser nocreatedb nocreaterole noinherit noreplication nobypassrls;
@@ -46,7 +46,7 @@ begin
     raise exception 'Stage B2 aggregator must not own any source table';
   end if;
 end;
-$;
+$$;
 
 do $$
 declare
@@ -74,7 +74,7 @@ begin
     raise exception 'Stage B2 requires existing public tables with RLS enabled: %', missing_tables;
   end if;
 end;
-$;
+$$;
 
 create schema if not exists seo_private;
 revoke all on schema seo_private from public;
