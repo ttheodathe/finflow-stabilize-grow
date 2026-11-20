@@ -8,6 +8,7 @@ on:
       - main
       - feat/three-scheduler-organic-growth-ops
       - feat/stage-c-article-production-engine
+      - feat/stage-c-governance-attribution
 
 permissions:
   contents: read
