@@ -113,6 +113,12 @@ async function collectGa4(accessToken, dateRange, fetchImpl = fetch) {
     rows.push(...batch.map((row) => {
       const dimension = row.dimensionValues || [];
       const metric = row.metricValues || [];
+      const metricNumber = (index) => {
+        const value = metric[index]?.value;
+        if (value === null || value === undefined || value === "") return null;
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : null;
+      };
       const landing = dimension[1]?.value || "/";
       let landingPath = landing;
       try {
