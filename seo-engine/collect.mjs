@@ -124,10 +124,10 @@ async function collectGa4(accessToken, dateRange, fetchImpl = fetch) {
         date: dimension[0]?.value ?? null,
         landingPage: landingPath,
         channel: dimension[2]?.value ?? "Organic Search",
-        sessions: Number(metric[0]?.value ?? 0),
-        activeUsers: Number(metric[1]?.value ?? 0),
-        engagedSessions: Number(metric[2]?.value ?? 0),
-        keyEvents: Number(metric[3]?.value ?? 0),
+        sessions: metricNumber(0),
+        activeUsers: metricNumber(1),
+        engagedSessions: metricNumber(2),
+        keyEvents: metricNumber(3),
       };
     }));
     if (batch.length < GA4_PAGE_SIZE) break;
