@@ -6,6 +6,75 @@ import { resolveSchedulerAttempt } from "./run-attempt.mjs";
 
 const OUTPUT = process.env.SEO_OUTPUT_DIR || "seo-output";
 
+function resolveBlogSlug(value) {
+  if (typeof value !== "string" || !value.trim()) return null;
+  try {
+    const url = new URL(value, "https://www.finflowtrack.com");
+    const match = url.pathname.match(/\/blog\/([a-z0-9-]+)\/?$/i);
+    return match ? match[1].toLowerCase() : null;
+  } catch {
+    return null;
+  }
+}
+
+function aggregateKnown(rows, key) {
+  if (!rows.length || rows.some(row => !Number.isFinite(row[key]))) return null;
+  return rows.reduce((sum, row) => sum + row[key], 0);
+}
+
+export function buildArticlePageMetrics(snapshot) {
+  const grouped = new Map();
+  const add = (source, slug, canonicalUrl, row) => {
+    if (!slug) return;
+    const key = \`\${source}:\${slug}\`;
+    if (!grouped.has(key)) grouped.set(key, { source, slug, canonicalUrl, rows: [] });
+    grouped.get(key).rows.push(row);
+  };
+  for (const row of snapshot?.gsc?.pages || []) {
+    const url = row.page;
+    add("GSC", resolveBlogSlug(url), url, row);
+  }
+  for (const row of snapshot?.ga4 || []) {
+    const path = row.landingPage;
+    const slug = resolveBlogSlug(path);
+    add("GA4", slug, \`https://www.finflowtrack.com/blog/\${slug}\`, row);
+  }
+  return [...grouped.values()].map(group => {
+    const rows = group.rows;
+    let metrics;
+    if (group.source === "GSC") {
+      const clicks = aggregateKnown(rows, "clicks");
+      const impressions = aggregateKnown(rows, "impressions");
+      const positionRows = rows.filter(row => Number.isFinite(row.position) && Number.isFinite(row.impressions));
+      const positionWeight = positionRows.reduce((sum, row) => sum + row.impressions, 0);
+      metrics = {
+        clicks, impressions,
+        ctr: clicks === null || impressions === null ? null : impressions > 0 ? clicks / impressions : 0,
+        averagePosition: positionRows.length && positionWeight > 0
+          ? positionRows.reduce((sum, row) => sum + row.position * row.impressions, 0) / positionWeight
+          : null,
+      };
+    } else {
+      metrics = {
+        organicSessions: aggregateKnown(rows, "sessions"),
+        activeUsers: aggregateKnown(rows, "activeUsers"),
+        engagedSessions: aggregateKnown(rows, "engagedSessions"),
+        keyEvents: aggregateKnown(rows, "keyEvents"),
+      };
+    }
+    return {
+      source: group.source,
+      slug: group.slug,
+      canonicalUrl: group.canonicalUrl,
+      metrics,
+      measurementScope: "PAGE_LEVEL_DIRECT",
+      revisionAttribution: "UNKNOWN",
+      rowCount: rows.length,
+    };
+  }).sort((a, b) => a.slug.localeCompare(b.slug) || a.source.localeCompare(b.source));
+}
+
+
 function sumKnown(rows, key) {
   if (rows.length === 0) return 0;
   if (rows.some(row => !Number.isFinite(row[key]))) return null;
@@ -46,6 +115,7 @@ export async function runPerformanceLearning({
   analytics.engagementRate = analytics.organicSessions === null || analytics.engagedSessions === null
     ? null : analytics.organicSessions > 0 ? analytics.engagedSessions / analytics.organicSessions : 0;
 
+  const articlePageMetrics = buildArticlePageMetrics(snapshot);
   const report = {
     schemaVersion: 1, scheduler: "PERFORMANCE_AND_LEARNING",
     generatedAt: new Date().toISOString(), dateRange, sourceFile,
@@ -62,7 +132,11 @@ export async function runPerformanceLearning({
       queryFile: "seo-engine/activation/production-aggregate-readonly.sql",
       explanation: "The query emits aggregate counts only. Production activation is not automatically collected until a read-only production connection is available.",
     },
-    contentAttribution: { status: "NOT_AVAILABLE", reason: "No operation-to-landing-page baseline and post-change comparison is configured yet." },
+    contentAttribution: articlePageMetrics.length
+      ? { status: "PAGE_LEVEL_METRICS_AVAILABLE", articleCount: new Set(articlePageMetrics.map(item => item.slug)).size,
+          snapshotCount: articlePageMetrics.length, revisionAttribution: "UNKNOWN",
+          note: "GSC and GA4 landing-page metrics are mapped to article URLs. These measurements do not prove a specific revision caused a change or that the page caused a signup." }
+      : { status: "NOT_AVAILABLE", reason: "No article landing-page rows were returned for this period." },
     dataQuality: {
       collectionStatus: gscAvailable && ga4Available ? "COMPLETE" : (gscAvailable || ga4Available ? "PARTIAL" : "FAILED"),
       sourceStatus: snapshot?.sourceStatus || { gsc: "UNAVAILABLE", ga4: "UNAVAILABLE" },
@@ -109,6 +183,16 @@ export async function runPerformanceLearning({
           source: "GSC", metrics: search,
         });
       }
+      for (const article of articlePageMetrics) {
+        await store.recordArticlePerformanceSnapshot({
+          snapshotKey: `scheduler-3:${scheduledFor}:${attempt}:ARTICLE:${article.source}:${article.slug}:${dateRange.startDate}-${dateRange.endDate}`,
+          slug: article.slug, canonicalUrl: article.canonicalUrl, source: article.source,
+          periodStart: dateRange.startDate, periodEnd: dateRange.endDate,
+          metrics: { ...article.metrics, rowCount: article.rowCount },
+          measurementScope: article.measurementScope,
+          revisionAttribution: article.revisionAttribution,
+        });
+      }
       if (ga4Available) {
         await store.recordPerformanceSnapshot({
           snapshotKey: `scheduler-3:${scheduledFor}:${attempt}:GA4:${dateRange.startDate}-${dateRange.endDate}`,
@@ -119,7 +203,7 @@ export async function runPerformanceLearning({
       await store.recordRun({
         schedulerKey: "PERFORMANCE_AND_LEARNING", scheduledFor, attempt,
         status: gscAvailable && ga4Available ? "SUCCEEDED" : "PARTIAL",
-        output: { search, analytics, productAcquisition: report.productAcquisition, dataQuality: report.dataQuality },
+        output: { search, analytics, contentAttribution: report.contentAttribution, productAcquisition: report.productAcquisition, dataQuality: report.dataQuality },
         errorSummary: collectionError || Object.values(snapshot?.sourceErrors || {}).filter(Boolean).join("; ") || null,
       });
       persistence = { status: "PERSISTED", schedulerRunId };
