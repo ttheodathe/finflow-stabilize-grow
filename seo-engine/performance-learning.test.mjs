@@ -241,3 +241,36 @@ test("Scheduler 3 does not undercount when any row in an aggregate is incomplete
     await rm(outputDir, { recursive: true, force: true });
   }
 });
+
+
+test("GA4 missing metric values remain null instead of becoming zero", async () => {
+  const outputDir = await mkdtemp(path.join(os.tmpdir(), "seo-ga4-missing-metrics-"));
+  try {
+    const result = await collectPartial({
+      dateRange, token: "test-token", outputDir,
+      fetchImpl: async (url) => {
+        if (String(url).includes("analyticsdata.googleapis.com")) {
+          return ok({
+            rows: [{
+              dimensionValues: [
+                { value: "20261117" },
+                { value: "/reports" },
+                { value: "Organic Search" },
+              ],
+              metricValues: [],
+            }],
+          });
+        }
+        return ok({ rows: [] });
+      },
+    });
+    const snapshot = JSON.parse(await readFile(result.file, "utf8"));
+    assert.equal(snapshot.sourceStatus.ga4, "AVAILABLE");
+    assert.equal(snapshot.ga4[0].sessions, null);
+    assert.equal(snapshot.ga4[0].activeUsers, null);
+    assert.equal(snapshot.ga4[0].engagedSessions, null);
+    assert.equal(snapshot.ga4[0].keyEvents, null);
+  } finally {
+    await rm(outputDir, { recursive: true, force: true });
+  }
+});
