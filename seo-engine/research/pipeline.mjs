@@ -849,7 +849,8 @@ export async function runResearchPipeline({
         research: { ...base, candidate, draft, sourceRecords, internalLinks: related,
           audience: pack.audience, jurisdiction: pack.jurisdiction,
           productEvidence: productEvidence ? VERIFIED_PRODUCT : null,
-          outline: pack.sections.map(([heading]) => heading), readerQuestions: pack.readerQuestions || [] },
+          outline: pack.sections.map(([heading]) => heading), readerQuestions: pack.readerQuestions || [],
+          existingInventory: inventory },
         generateArticle: articleGenerator, outputDir: articleOutputDir, now,
       });
       if (articleProduction.status === "READY_FOR_HUMAN_REVIEW") {
