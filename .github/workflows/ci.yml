@@ -7,6 +7,7 @@ on:
     branches:
       - main
       - feat/three-scheduler-organic-growth-ops
+      - stage-b2/readonly-activation-collector
 
 permissions:
   contents: read
