@@ -40,10 +40,15 @@ alter table seo_ops.editorial_reviewers enable row level security;
 alter table seo_ops.article_approvals enable row level security;
 alter table seo_ops.article_performance_snapshots enable row level security;
 create policy service_role_full_access on seo_ops.editorial_reviewers for all to service_role using (true) with check (true);
-create policy service_role_full_access on seo_ops.article_approvals for all to service_role using (true) with check (true);
+drop policy if exists service_role_full_access on seo_ops.article_approvals;
+create policy service_role_read on seo_ops.article_approvals for select to service_role using (true);
+create policy service_role_insert on seo_ops.article_approvals for insert to service_role with check (true);
 create policy service_role_full_access on seo_ops.article_performance_snapshots for all to service_role using (true) with check (true);
 revoke all on table seo_ops.editorial_reviewers, seo_ops.article_approvals, seo_ops.article_performance_snapshots from public, anon, authenticated;
-grant select, insert, update, delete on table seo_ops.editorial_reviewers, seo_ops.article_approvals, seo_ops.article_performance_snapshots to service_role;
+grant select, insert, update, delete on table seo_ops.editorial_reviewers to service_role;
+revoke all on table seo_ops.article_approvals from service_role;
+grant select, insert on table seo_ops.article_approvals to service_role;
+grant select, insert, update, delete on table seo_ops.article_performance_snapshots to service_role;
 
 create or replace function public.seo_ops_record_article_approval(
   p_operation_id uuid, p_revision_id uuid, p_content_hash text,
@@ -169,9 +174,9 @@ begin
     raise exception 'Revision number must be the next sequential revision';
   end if;
   if v_latest_number = 0 then
-    if v_operation.proposed_content_hash is distinct from p_content_hash
-       and p_previous_content_hash is not null then
-      raise exception 'Initial revision has an unexpected previous hash';
+    if p_previous_content_hash is not null
+       or v_operation.proposed_content_hash is distinct from p_content_hash then
+      raise exception 'Initial revision must match the operation hash and have no previous hash';
     end if;
   else
     if p_previous_content_hash is null or v_operation.proposed_content_hash <> p_previous_content_hash then
