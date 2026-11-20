@@ -22,6 +22,7 @@ const inventory = [
 function candidate(id, query, targetUrl, impressions = 100, clicks = 5) {
   return {
     id,
+    reportingPeriodEnd: new Date().toISOString().slice(0, 10),
     dataSource: "Google Search Console",
     evidenceMode: "LIVE_OR_PERSISTED",
     targetQuery: query,
