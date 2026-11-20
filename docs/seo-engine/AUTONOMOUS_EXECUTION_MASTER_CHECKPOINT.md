@@ -144,3 +144,63 @@ Inspected acceptance project bufbyfwstdqvwnkhyrea only.
 - The 20261119160000 and 20261119170000 prefixes are each unique in the active recovery tree; the ledger's 20261119145113 combined statement matches the 170000 SQL hash. The actual active-tree duplicate prefixes are 20261118130000 and 20261118140000. Production migration history remains uninspected/out of scope.
 
 Stage B remains INVESTIGATING because the duplicate migration prefixes and historical merge/apply provenance cannot be reconciled against production under the current scope. No database writes or schema changes were made.
+
+
+## Live recovery reconstruction and validation — 2026-11-20
+
+### Verified remote state
+- Repository: `ttheodathe/finflow-stabilize-grow`.
+- Recovery branch: `fix/seo-engine-controlled-recovery`.
+- Remote branch HEAD at start of this verification: `83373b83518fb172f93c6c4c87c98d3968ec39b6`.
+- The branch contains the previously reported identity, acceptance safety, C.0.3 and acceptance schema audit commits. The remote branch had not advanced beyond the reported HEAD at the time of `git ls-remote`.
+- Main is separate at merge commit `915eee2fe57b890bc51779d2a3fcab038d94d998`, whose message confirms PR #119 was merged. Recovery and main have diverged; do not merge or reset either branch.
+- The saved Vercel workspace was at `8238674009fbee6b3860c3724a820dbdbb3b6555`, three commits behind remote. It was fast-forwarded to the verified remote HEAD. The pre-existing modified checkpoint documents and generated `src/routeTree.gen.ts` were preserved in a Git stash before fast-forward. Applying the stash produced documentation conflicts because remote checkpoint sections were newer; remote checkpoint content was retained and the stash was kept. The generated route tree remained staged in the persistent sandbox snapshot and was not committed. The sandbox later stopped; no changes from that local working tree were pushed.
+- GitHub CLI was not authenticated in the sandbox. GitHub connector read-only APIs were used for PR/commit/workflow inspection.
+
+### Fresh local validation on remote HEAD
+Command:
+`npm run test:unit && npm run test:security && node --test $(find seo-engine -type f -name '*.test.mjs' | sort) && npm run lint && npm run build && npm run typecheck`
+
+Results:
+- Application unit tests: 16 passed, 0 failed.
+- SEO engine and scheduler tests: 104 passed, 0 failed.
+- Security/ReDoS check: exit 0.
+- ESLint: exit 0; warnings remain (44 reported in the prior checkpoint).
+- Production build: exit 0.
+- TypeScript typecheck: exit 0.
+- These results are local validation only; they do not establish live Google API collection, live Supabase persistence or production operation.
+
+### PR #119 and historical acceptance-run evidence
+- Main merge commit `915eee2fe57b890bc51779d2a3fcab038d94d998` confirms PR #119 merge.
+- Historical workflow run `44560803819` had a green GitHub job wrapper, but the acceptance script's own JSON result was `BLOCKED_MISSING_ACCEPTANCE_SUPABASE_CREDENTIALS`. The job environment showed both `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` empty. No acceptance database write or Scheduler 2 execution was attempted.
+- The same run downloaded and checksum-verified historical GSC artifact `14494691265` (SHA-256 `38e932ab4052dfb2d001e0e7935e40ee87227b0f2e212db40321981a1f5022cd`).
+- Fresh read-only GSC collection in that run failed before API collection with `Cannot read properties of undefined (reading 'startDate')`; the later recovery commits add date-range defaults and regression tests.
+- The historical script exited successfully despite writing a blocked status artifact. The subsequent fail-closed commits address that misleading green-wrapper behavior. The historical run must not be described as a successful live acceptance test.
+
+### Scheduled workflow risk on main
+Read-only inspection of the three workflows on `main` found daily schedules at 00:15, 01:45 and 03:15 UTC:
+- Scheduler 1: `.github/workflows/seo-scheduler-1-search-intelligence.yml`; sets `SEO_OPS_ALLOWED_PROJECT_REF=bufbyfwstdqvwnkhyrea`, `SEO_PERSISTENCE_REQUIRED=true`, and passes Supabase service-role credentials.
+- Scheduler 2: `.github/workflows/seo-scheduler-2-content-operations.yml`; sets the same acceptance project ref and `SEO_PERSISTENCE_REQUIRED=true`, and passes Supabase service-role credentials.
+- Scheduler 3: `.github/workflows/seo-scheduler-3-performance-learning.yml`; passes the same acceptance project ref and Supabase service-role credentials, but does not set `SEO_PERSISTENCE_REQUIRED` in the workflow.
+- These workflows set dry-run/publishing safeguards, but those safeguards do not by themselves prove that SEO operations persistence is disabled. Their scheduled execution history and current secret availability were not independently listed by the available GitHub connector.
+- Do not dispatch, enable, modify, disable or otherwise interfere with these main-branch workflows under this mission. They are an operational risk requiring a separate owner-controlled decision if acceptance writes must remain prohibited.
+
+### Migration-branch comparison evidence
+- GitHub compare APIs show migration-alignment branches diverged substantially from main and recovery.
+- `chore/reconcile-all-applied-migration-versions` comparison reports five migration file renames with zero SQL additions/deletions/changes for each listed rename.
+- `chore/align-latest-production-migration-versions` reports three migration renames with zero SQL changes.
+- `chore/align-supabase-migration-versions` reports two migration renames with zero SQL changes.
+- `fix/supabase-migration-version-alignment` reports two migration renames with zero SQL changes, plus CI/runbook edits. The compare metadata maps `20261118170000_partner_application_server_rate_limit.sql` to `20261118025042_partner_application_server_rate_limit.sql` and `20261118180000_invoice_share_link_lifecycle.sql` to `20261118025047_invoice_share_link_lifecycle.sql`; fetching the old paths from the current recovery branch returned 404, so the old-path mapping requires commit-level verification before treating it as a current-file inventory.
+- The current recovery branch contains `20261118130000_partner_application_pending_email_uniqueness.sql` (Git blob `8e68176a0b1117746785e54bb81556154f7fa86b`) and `20261118140000_revoke_anonymous_public_table_access.sql` (Git blob `6ac639df40de0b299b0c0241357d7eb6a8c8b756`). This confirms those files exist; it does not by itself resolve the reported cross-branch duplicate-prefix provenance.
+- No migration was edited or applied. Acceptance and production databases were not modified. Production migration history remains uninspected.
+
+### Stage E code inspection
+- The app already emits custom `auth_completed` events for email sign-up and email login, `onboarding_completed`, `invoice_created`, `expense_created`, and `first_value_action_completed`.
+- Invoice and expense creation routes call `trackAccountingAction`. That helper currently checks invoice and expense counts by `company_id` and emits first-value when their combined count is one. This is an analytics proxy, not a verified user activation cohort.
+- The production read-only activation SQL defines a separate user-level cohort using registered profiles, completed onboarding and a persisted invoice/expense action. It excludes void/cancelled/reversed/deleted invoice statuses. The client helper's company-level count is not equivalent to that definition.
+- The GSC collector requests page/query/page-query/country/device/search-appearance dimensions. The GA4 collector currently requests date, landing page and session channel with sessions, active users, engaged sessions and key events. It does not collect `eventName` rows. Therefore event-level GA4 conversion reporting and organic event attribution remain incomplete.
+- The current auth route emits custom `auth_completed`; standard GA4 `sign_up` and `login` events are not yet confirmed in the current recovery branch. Google OAuth new-user versus returning-login distinction is unresolved.
+- No code changes were committed in this verification pass. The Vercel sandbox stopped during the subsequent implementation attempt; the mapped Vercel CLI fallback was unavailable in the execution container. Do not infer that an attempted but unexecuted edit was applied.
+
+### Exact next safe engineering action
+Resume a repository execution workspace from the persistent recovery snapshot or another authorized local workspace, inspect its preserved stash and staged generated route tree, then implement GA4 eventName collection and regression tests. Do not change the main scheduled workflows or execute acceptance persistence. Re-run the complete validation command above before committing any code.
