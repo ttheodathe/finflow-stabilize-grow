@@ -26,6 +26,28 @@ begin
     raise exception 'reader must not inherit or assume aggregator role';
   end if;
 
+  if exists (
+    select 1
+    from pg_auth_members am
+    join pg_roles granted_role on granted_role.oid = am.roleid
+    join pg_roles member_role on member_role.oid = am.member
+    where granted_role.rolname in ('seo_activation_aggregator', 'seo_activation_reader')
+       or member_role.rolname in ('seo_activation_aggregator', 'seo_activation_reader')
+  ) then
+    raise exception 'dedicated roles unexpectedly have role memberships';
+  end if;
+
+  if exists (
+    select 1
+    from pg_class c
+    join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public'
+      and c.relname in ('profiles', 'onboarding_progress', 'invoices', 'expenses')
+      and c.relowner = 'seo_activation_aggregator'::regrole
+  ) then
+    raise exception 'aggregator unexpectedly owns a source table';
+  end if;
+
   if has_table_privilege('seo_activation_reader','public.profiles','SELECT')
      or has_table_privilege('seo_activation_reader','public.onboarding_progress','SELECT')
      or has_table_privilege('seo_activation_reader','public.invoices','SELECT')
