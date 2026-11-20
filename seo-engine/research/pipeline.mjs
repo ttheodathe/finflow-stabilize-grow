@@ -448,7 +448,7 @@ export function analyzeCannibalization(query, inventory, targetUrl = null) {
   const target = exactTarget || inferredTarget;
   const conflict = Boolean(target);
   const targetQueryMatch = !target ? "NO_STRONG_MATCH"
-    : exactTarget && (target.score < 0.30 || !target.intentMatch) ? "EXACT_LANDING_PAGE_REVIEW_REQUIRED"
+    : exactTarget && !target.intentMatch ? "EXACT_LANDING_PAGE_REVIEW_REQUIRED"
     : exactTarget ? "EXACT_LANDING_PAGE_INTENT_MATCH"
     : "INFERRED_EXISTING_INTENT_MATCH";
   const decision = conflict ? "UPDATE_EXISTING_ARTICLE" : "NEW_ARTICLE_CANDIDATE";
