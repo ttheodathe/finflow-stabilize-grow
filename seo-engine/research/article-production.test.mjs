@@ -101,6 +101,7 @@ test("article production writes a revision-hashed draft package outside the publ
     assert.equal(result.publication.publishEnabled, false);
     assert.equal(result.publication.productionWriteAllowed, false);
     assert.equal(result.quality.internalLinkFailures.length, 0);
+    assert.equal(result.quality.originality.status, "SCREEN_PASSED_HUMAN_ORIGINALITY_REVIEW_REQUIRED");
     assert.match(result.articlePath, /stage-c-/);
     assert.doesNotMatch(result.articlePath, /content[\/]blog/);
     const saved = await readFile(result.articlePath, "utf8");
@@ -119,4 +120,42 @@ test("human approval is cryptographically bound to one exact content hash", () =
   assert.equal(verifyHumanApproval({ content: content + "changed", approval }), false);
   assert.equal(verifyHumanApproval({ content, approval: { ...approval, decision: "PENDING" } }), false);
   assert.throws(() => createHumanApproval({ content, reviewerId: "", approvedAt: "2026-11-20" }), /reviewer identifier/);
+});
+
+
+test("generated article is blocked when it substantially overlaps an existing inventory article", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "stage-c-duplicate-"));
+  try {
+    const body = Array.from({ length: 12 }, (_, index) =>
+      \`Section \${index + 1} explains how a small business can organize expected receipts, planned payments, operating costs, timing assumptions, supporting records and regular review routines to understand its cash position.\`
+    ).join("\\n\\n");
+    const markdown = [
+      "---",
+      'title: "Small Business Cash Flow Planning"',
+      'description: "A practical guide to planning and reviewing small-business cash flow."',
+      'slug: "small-business-cash-flow-planning"',
+      'status: "draft"',
+      'publicationStatus: "draft"',
+      "---",
+      "",
+      "## Understand cash flow",
+      body,
+      "## Prepare a forecast",
+      body,
+      "## Review the results",
+      body,
+      "[Small Business Accounting Guide](/blog/small-business-accounting-guide)",
+    ].join("\\n\\n");
+    const result = await runArticleProduction({
+      research: { ...research, existingInventory: [{ slug: "existing-cash-flow-guide", title: "Existing cash flow guide", content: markdown }] },
+      outputDir: root,
+      minWordCount: 10,
+      generateArticle: async () => ({ markdown }),
+    });
+    assert.equal(result.status, "BLOCKED_QUALITY_REVIEW");
+    assert.equal(result.quality.originality.status, "BLOCKED_HIGH_TEXTUAL_OVERLAP");
+    assert.ok(result.blockers.includes("ARTICLE_ORIGINALITY_SCREEN_BLOCKED"));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
