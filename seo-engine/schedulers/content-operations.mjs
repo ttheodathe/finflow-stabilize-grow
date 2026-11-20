@@ -1,6 +1,7 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { assertProductionWritesBlocked } from "../content-ops/safety.mjs";
 import { createSupabaseSeoStoreFromEnv } from "../persistence/supabase-store.mjs";
+import { resolveSchedulerAttempt } from "./run-attempt.mjs";
 import { runResearchPipeline } from "../research/pipeline.mjs";
 
 const OUTPUT = process.env.SEO_OUTPUT_DIR || "seo-output";
@@ -102,9 +103,7 @@ export async function runContentOperations({
   })), input.persistence.schedulerRunId);
 
   const scheduledFor = now.toISOString().slice(0,10);
-  const attempt = Number.isInteger(runAttempt) && runAttempt >= 1
-    ? runAttempt
-    : Math.max(1, Number.parseInt(env.GITHUB_RUN_ATTEMPT || "1",10) || 1);
+  const attempt = resolveSchedulerAttempt(env, runAttempt);
   const schedulerRunId = await store.recordRun({
     schedulerKey: "CONTENT_OPERATIONS", scheduledFor, attempt,
     status: "RUNNING", upstreamRunId: input.persistence.schedulerRunId,
