@@ -5,6 +5,19 @@ import { createSupabaseSeoStoreFromEnv } from "../persistence/supabase-store.mjs
 
 const OUTPUT = process.env.SEO_OUTPUT_DIR || "seo-output";
 
+export function resolveSchedulerAttempt(env = process.env, explicitAttempt = null) {
+  if (Number.isInteger(explicitAttempt) && explicitAttempt >= 1) return explicitAttempt;
+  const runNumber = Number.parseInt(env.GITHUB_RUN_NUMBER || "", 10);
+  const runAttempt = Math.max(1, Number.parseInt(env.GITHUB_RUN_ATTEMPT || "1", 10) || 1);
+  // Workflow run numbers are unique per workflow; including run_attempt makes
+  // a GitHub rerun a distinct idempotency key without colliding with new runs.
+  if (Number.isInteger(runNumber) && runNumber >= 1) {
+    const combined = runNumber * 100 + runAttempt;
+    if (combined <= 2_147_483_647) return combined;
+  }
+  return runAttempt;
+}
+
 function sumKnown(rows, key) {
   if (rows.length === 0) return 0;
   const values = rows.map(row => row[key]).filter(Number.isFinite);
@@ -13,7 +26,7 @@ function sumKnown(rows, key) {
 
 export async function runPerformanceLearning({
   dateRange = resolveDateRange(), collectFn = collectPartial,
-  outputDir = OUTPUT, env = process.env,
+  outputDir = OUTPUT, env = process.env, store: injectedStore = undefined,
 } = {}) {
   await mkdir(outputDir, { recursive: true });
   let snapshot = null;
@@ -76,18 +89,25 @@ export async function runPerformanceLearning({
       "The production expenses table has no status/reversal column; persisted expense rows are treated as qualifying, and hard-deleted rows are absent.",
     ],
   };
-  let store = null;
+  let store = injectedStore;
   let storeConfigurationError = null;
-  try { store = createSupabaseSeoStoreFromEnv(env); }
-  catch (error) { storeConfigurationError = String(error.message || error); }
+  if (injectedStore === undefined) {
+    try { store = createSupabaseSeoStoreFromEnv(env); }
+    catch (error) { storeConfigurationError = String(error.message || error); }
+  }
+  const persistenceRequired = env.SEO_PERSISTENCE_REQUIRED === "true";
+  let persistenceError = storeConfigurationError ? new Error(storeConfigurationError) : null;
   let persistence = store
     ? { status: "PENDING", schedulerRunId: null }
-    : storeConfigurationError
-      ? { status: "BLOCKED", reason: "ACCEPTANCE_PROJECT_GUARD_OR_CREDENTIALS", schedulerRunId: null, error: storeConfigurationError }
+    : storeConfigurationError || persistenceRequired
+      ? { status: "BLOCKED", reason: "REQUIRED_PERSISTENCE_UNAVAILABLE", schedulerRunId: null, error: storeConfigurationError || "SEO_PERSISTENCE_REQUIRED=true but no Supabase persistence store is configured." }
       : { status: "NOT_CONFIGURED", schedulerRunId: null };
+  if (!store && persistenceRequired && !persistenceError) {
+    persistenceError = new Error("SEO_PERSISTENCE_REQUIRED=true but Supabase persistence is not configured.");
+  }
   if (store) {
     const scheduledFor = new Date().toISOString().slice(0, 10);
-    const attempt = Math.max(1, Number.parseInt(env.GITHUB_RUN_ATTEMPT || "1", 10) || 1);
+    const attempt = resolveSchedulerAttempt(env);
     let schedulerRunId = null;
     try {
       schedulerRunId = await store.recordRun({
@@ -116,6 +136,7 @@ export async function runPerformanceLearning({
       });
       persistence = { status: "PERSISTED", schedulerRunId };
     } catch (error) {
+      persistenceError = error;
       persistence = { status: "FAILED", schedulerRunId, error: String(error.message || error) };
       if (schedulerRunId) {
         try {
@@ -130,6 +151,10 @@ export async function runPerformanceLearning({
   report.persistence = persistence;
   const path = `${outputDir}/scheduler-3-performance-report.json`;
   await writeFile(path, JSON.stringify(report, null, 2) + "\n", { flag: "w" });
+  if (persistenceError) throw persistenceError;
+  if (report.dataQuality.collectionStatus === "FAILED") {
+    throw new Error("Scheduler 3 could not collect either GSC or GA4; see the performance report for provider errors.");
+  }
   return {
     path, searchStatus: search.status, analyticsStatus: analytics.status,
     collectionStatus: report.dataQuality.collectionStatus,
