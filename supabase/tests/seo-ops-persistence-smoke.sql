@@ -1,7 +1,8 @@
 do $$
 declare
   v_run uuid; v_run2 uuid; v_opp uuid; v_opp2 uuid; v_snap uuid; v_snap2 uuid;
-  v_activation uuid; v_content uuid; v_content2 uuid; v_research uuid; v_revision uuid;
+  v_activation uuid; v_content uuid; v_content2 uuid; v_research uuid;
+  v_revision uuid; v_revision2 uuid; v_revision_state text;
   v_counts record; v_count integer; v_read_count integer;
   v_attempt integer := extract(epoch from clock_timestamp())::integer;
 begin
@@ -50,10 +51,82 @@ begin
   v_revision := public.seo_ops_record_content_revision(
     v_content,1,repeat('a',64),'# Fixture-only draft','PROPOSED'
   );
+  v_revision2 := public.seo_ops_record_content_revision(
+    v_content,1,repeat('a',64),'# Fixture-only draft','PROPOSED'
+  );
+  if v_revision <> v_revision2 then
+    raise exception 'identical content revision retry did not return the original ID';
+  end if;
+
+  -- Simulate a later authorized workflow transition. A retry must preserve it.
+  update seo_ops.content_revisions
+     set revision_state='APPROVED'
+   where id=v_revision;
+  v_revision2 := public.seo_ops_record_content_revision(
+    v_content,1,repeat('a',64),'# Fixture-only draft','PROPOSED'
+  );
+  select revision_state into v_revision_state
+    from seo_ops.content_revisions where id=v_revision;
+  if v_revision2 <> v_revision or v_revision_state <> 'APPROVED' then
+    raise exception 'revision retry changed identity or downgraded an approved revision';
+  end if;
+
+  v_revision2 := public.seo_ops_record_content_revision(
+    v_content,2,repeat('b',64),'# Second fixture-only draft','PROPOSED'
+  );
+  if v_revision2 = v_revision then
+    raise exception 'distinct content revision reused an existing revision ID';
+  end if;
+
   select count(*) into v_count from seo_ops.content_revisions
    where id=v_revision and operation_id=v_content
-     and content_hash=repeat('a',64) and revision_state='PROPOSED';
+     and content_hash=repeat('a',64) and revision_state='APPROVED';
   if v_count <> 1 then raise exception 'draft revision was not durably persisted'; end if;
+
+  begin
+    perform public.seo_ops_record_content_revision(
+      v_content,3,repeat('a',64),'# Fixture-only draft','PROPOSED'
+    );
+    raise exception 'same hash with a different revision number was not blocked';
+  exception when raise_exception then
+    if sqlerrm = 'same hash with a different revision number was not blocked' then raise; end if;
+  end;
+
+  begin
+    perform public.seo_ops_record_content_revision(
+      v_content,1,repeat('c',64),'# Fixture-only draft','PROPOSED'
+    );
+    raise exception 'same revision number with a different hash was not blocked';
+  exception when raise_exception then
+    if sqlerrm = 'same revision number with a different hash was not blocked' then raise; end if;
+  end;
+
+  begin
+    perform public.seo_ops_record_content_revision(
+      v_content,1,repeat('a',64),'# Altered markdown','PROPOSED'
+    );
+    raise exception 'same hash with altered markdown was not blocked';
+  exception when raise_exception then
+    if sqlerrm = 'same hash with altered markdown was not blocked' then raise; end if;
+  end;
+
+  begin
+    perform public.seo_ops_record_content_revision(
+      v_content,1,repeat('b',64),'# Second fixture-only draft','PROPOSED'
+    );
+    raise exception 'crossed revision-number/hash conflicts were not blocked';
+  exception when raise_exception then
+    if sqlerrm = 'crossed revision-number/hash conflicts were not blocked' then raise; end if;
+  end;
+
+  begin
+    perform public.seo_ops_record_content_revision(
+      v_content,3,repeat('d',64),'# Invalid state draft','APPROVED'
+    );
+    raise exception 'non-PROPOSED revision creation state was not blocked';
+  exception when raise_exception then
+    if sqlerrm = 'non-PROPOSED revision creation state was not blocked' then raise; end if;
+  end;
 
   select count(*) into v_count
   from public.seo_ops_get_content_operation(v_content)
@@ -69,7 +142,7 @@ begin
   select count(*) into v_count
   from public.seo_ops_get_content_revisions(v_content)
   where id = v_revision and content_hash = repeat('a',64)
-    and markdown = '# Fixture-only draft' and revision_state = 'PROPOSED';
+    and markdown = '# Fixture-only draft' and revision_state = 'APPROVED';
   if v_count <> 1 then raise exception 'content revision independent readback failed'; end if;
   begin
     perform public.seo_ops_record_content_operation(
@@ -82,8 +155,8 @@ begin
   end;
 
   select * into v_counts from seo_ops_test.compute_activation_counts('2026-11-20T00:00:00Z');
-  if v_counts.registered_users <> 6 or v_counts.onboarding_completions <> 5
-     or v_counts.activated_users <> 2 or v_counts.returning_activated_users <> 1 then
+  if v_counts.registered_users <> 8 or v_counts.onboarding_completions <> 7
+     or v_counts.activated_users <> 3 or v_counts.returning_activated_users <> 1 then
     raise exception 'activation fixture returned unexpected counts: %',row_to_json(v_counts);
   end if;
   v_activation := public.seo_ops_record_activation_snapshot(

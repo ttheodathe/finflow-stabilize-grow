@@ -21,7 +21,6 @@ export function createSupabaseSeoStore({ url, serviceRoleKey, fetchImpl = fetch 
       method: "POST",
       headers: {
         apikey: serviceRoleKey,
-        authorization: `Bearer ${serviceRoleKey}`,
         "content-type": "application/json",
         accept: "application/json",
         "accept-profile": DEFAULT_SCHEMA,

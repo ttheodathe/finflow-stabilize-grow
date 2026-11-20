@@ -2,18 +2,19 @@ import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { collectPartial } from "../collect.mjs";
 import { resolveDateRange } from "../normalize.mjs";
 import { createSupabaseSeoStoreFromEnv } from "../persistence/supabase-store.mjs";
+import { resolveSchedulerAttempt } from "./run-attempt.mjs";
 
 const OUTPUT = process.env.SEO_OUTPUT_DIR || "seo-output";
 
 function sumKnown(rows, key) {
   if (rows.length === 0) return 0;
-  const values = rows.map(row => row[key]).filter(Number.isFinite);
-  return values.length ? values.reduce((sum,value)=>sum+value,0) : null;
+  if (rows.some(row => !Number.isFinite(row[key]))) return null;
+  return rows.reduce((sum, row) => sum + row[key], 0);
 }
 
 export async function runPerformanceLearning({
   dateRange = resolveDateRange(), collectFn = collectPartial,
-  outputDir = OUTPUT, env = process.env,
+  outputDir = OUTPUT, env = process.env, store: injectedStore = undefined,
 } = {}) {
   await mkdir(outputDir, { recursive: true });
   let snapshot = null;
@@ -76,18 +77,25 @@ export async function runPerformanceLearning({
       "The production expenses table has no status/reversal column; persisted expense rows are treated as qualifying, and hard-deleted rows are absent.",
     ],
   };
-  let store = null;
+  let store = injectedStore;
   let storeConfigurationError = null;
-  try { store = createSupabaseSeoStoreFromEnv(env); }
-  catch (error) { storeConfigurationError = String(error.message || error); }
+  if (injectedStore === undefined) {
+    try { store = createSupabaseSeoStoreFromEnv(env); }
+    catch (error) { storeConfigurationError = String(error.message || error); }
+  }
+  const persistenceRequired = env.SEO_PERSISTENCE_REQUIRED === "true";
+  let persistenceError = storeConfigurationError ? new Error(storeConfigurationError) : null;
   let persistence = store
     ? { status: "PENDING", schedulerRunId: null }
-    : storeConfigurationError
-      ? { status: "BLOCKED", reason: "ACCEPTANCE_PROJECT_GUARD_OR_CREDENTIALS", schedulerRunId: null, error: storeConfigurationError }
+    : storeConfigurationError || persistenceRequired
+      ? { status: "BLOCKED", reason: "REQUIRED_PERSISTENCE_UNAVAILABLE", schedulerRunId: null, error: storeConfigurationError || "SEO_PERSISTENCE_REQUIRED=true but no Supabase persistence store is configured." }
       : { status: "NOT_CONFIGURED", schedulerRunId: null };
+  if (!store && persistenceRequired && !persistenceError) {
+    persistenceError = new Error("SEO_PERSISTENCE_REQUIRED=true but Supabase persistence is not configured.");
+  }
   if (store) {
     const scheduledFor = new Date().toISOString().slice(0, 10);
-    const attempt = Math.max(1, Number.parseInt(env.GITHUB_RUN_ATTEMPT || "1", 10) || 1);
+    const attempt = resolveSchedulerAttempt(env);
     let schedulerRunId = null;
     try {
       schedulerRunId = await store.recordRun({
@@ -116,6 +124,7 @@ export async function runPerformanceLearning({
       });
       persistence = { status: "PERSISTED", schedulerRunId };
     } catch (error) {
+      persistenceError = error;
       persistence = { status: "FAILED", schedulerRunId, error: String(error.message || error) };
       if (schedulerRunId) {
         try {
@@ -130,6 +139,10 @@ export async function runPerformanceLearning({
   report.persistence = persistence;
   const path = `${outputDir}/scheduler-3-performance-report.json`;
   await writeFile(path, JSON.stringify(report, null, 2) + "\n", { flag: "w" });
+  if (persistenceError) throw persistenceError;
+  if (report.dataQuality.collectionStatus === "FAILED") {
+    throw new Error("Scheduler 3 could not collect either GSC or GA4; see the performance report for provider errors.");
+  }
   return {
     path, searchStatus: search.status, analyticsStatus: analytics.status,
     collectionStatus: report.dataQuality.collectionStatus,

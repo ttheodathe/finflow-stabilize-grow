@@ -23,12 +23,20 @@ const result=await runResearchPipeline({
   opportunities,outputDir,fetchImpl:mockFetch,store:null,allowFixture:true,
   now:new Date("2026-11-19T12:00:00.000Z"),
 });
-const allBlockedForIntentReview = result.results.every(item =>
-  item.status === "REJECTED" &&
-  item.rejectionReasons.includes("EXACT_TARGET_INTENT_MISMATCH_REQUIRES_HUMAN_REVIEW")
-);
-if(result.draftGeneratedCount!==0 || result.rejectedCount!==3 || result.readyDraftCount!==0 || !allBlockedForIntentReview) {
-  throw new Error(`Expected all three fixture candidates to remain blocked by exact-target intent review against the real repository inventory; got ${result.draftGeneratedCount} generated, ${result.readyDraftCount} ready and ${result.rejectedCount} rejected. Results: ${JSON.stringify(result.results.map(item=>({id:item.candidate.id,reasons:item.rejectionReasons,quality:item.quality?.decision}))) }`);
+const byId = new Map(result.results.map(item => [item.candidate.id, item]));
+const recordkeeping = byId.get("fixture-recordkeeping");
+const cashflow = byId.get("fixture-cashflow");
+const breakEven = byId.get("fixture-break-even");
+const safeFixtureOutcome =
+  recordkeeping?.status === "DRAFT_GENERATED_NOT_ELIGIBLE" &&
+  cashflow?.status === "DRAFT_GENERATED_NOT_ELIGIBLE" &&
+  breakEven?.status === "REJECTED" &&
+  breakEven.rejectionReasons.includes("EXACT_TARGET_INTENT_MISMATCH_REQUIRES_HUMAN_REVIEW") &&
+  result.draftGeneratedCount === 2 &&
+  result.readyDraftCount === 0 &&
+  result.rejectedCount === 1;
+if (!safeFixtureOutcome) {
+  throw new Error(`Expected exact-intent matches to remain local dry-run drafts, the mismatched target to be rejected, and no draft to become review-ready; got ${result.draftGeneratedCount} generated, ${result.readyDraftCount} ready and ${result.rejectedCount} rejected. Results: ${JSON.stringify(result.results.map(item=>({id:item.candidate.id,status:item.status,reasons:item.rejectionReasons,quality:item.quality?.decision}))) }`);
 }
 const persistedDraftCount=0;
 const persistenceStatus="LOCAL_DRY_RUN_ONLY";

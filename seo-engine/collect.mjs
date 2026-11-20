@@ -72,7 +72,7 @@ async function collectGsc(accessToken, dateRange, fetchImpl = fetch) {
   const pageQueries = await collectGscDimension(accessToken, dateRange, ["date", "page", "query"], fetchImpl);
   const pagesByCountry = await collectGscDimension(accessToken, dateRange, ["date", "page", "country"], fetchImpl);
   const pagesByDevice = await collectGscDimension(accessToken, dateRange, ["date", "page", "device"], fetchImpl);
-  const searchAppearance = await collectGscDimension(accessToken, dateRange, ["date", "searchAppearance"], fetchImpl);
+  const searchAppearance = await collectGscDimension(accessToken, dateRange, ["searchAppearance"], fetchImpl);
   return { pages, queries, pageQueries, pagesByCountry, pagesByDevice, searchAppearance };
 }
 
@@ -113,6 +113,12 @@ async function collectGa4(accessToken, dateRange, fetchImpl = fetch) {
     rows.push(...batch.map((row) => {
       const dimension = row.dimensionValues || [];
       const metric = row.metricValues || [];
+      const metricNumber = (index) => {
+        const value = metric[index]?.value;
+        if (value === null || value === undefined || value === "") return null;
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : null;
+      };
       const landing = dimension[1]?.value || "/";
       let landingPath = landing;
       try {
@@ -124,10 +130,10 @@ async function collectGa4(accessToken, dateRange, fetchImpl = fetch) {
         date: dimension[0]?.value ?? null,
         landingPage: landingPath,
         channel: dimension[2]?.value ?? "Organic Search",
-        sessions: Number(metric[0]?.value ?? 0),
-        activeUsers: Number(metric[1]?.value ?? 0),
-        engagedSessions: Number(metric[2]?.value ?? 0),
-        keyEvents: Number(metric[3]?.value ?? 0),
+        sessions: metricNumber(0),
+        activeUsers: metricNumber(1),
+        engagedSessions: metricNumber(2),
+        keyEvents: metricNumber(3),
       };
     }));
     if (batch.length < GA4_PAGE_SIZE) break;
@@ -136,7 +142,7 @@ async function collectGa4(accessToken, dateRange, fetchImpl = fetch) {
   return rows;
 }
 
-export async function collect({ dateRange, token, outputDir = OUTPUT_DIR, fetchImpl = fetch } = {}) {
+export async function collect({ dateRange = resolveDateRange(), token, outputDir = OUTPUT_DIR, fetchImpl = fetch } = {}) {
   const accessToken = token || await createAccessToken({ fetchImpl });
   // GSC is Scheduler 1's required evidence source. GA4 is supplementary:
   // a GA4 outage must never discard a successful GSC collection.
@@ -179,7 +185,7 @@ export async function collect({ dateRange, token, outputDir = OUTPUT_DIR, fetchI
  * Collect GSC and GA4 independently for Scheduler 3. One provider outage must
  * not discard the other provider's valid read-only metrics.
  */
-export async function collectPartial({ dateRange, token, outputDir = OUTPUT_DIR, fetchImpl = fetch } = {}) {
+export async function collectPartial({ dateRange = resolveDateRange(), token, outputDir = OUTPUT_DIR, fetchImpl = fetch } = {}) {
   let accessToken = token || null;
   let tokenError = null;
   if (!accessToken) {

@@ -110,7 +110,8 @@ jobs:
             supabase/migrations/20261119124347_seo_ops_content_operation_key_guard.sql \
             supabase/migrations/20261119160000_seo_ops_read_persisted_opportunities.sql \
             supabase/migrations/20261119170000_seo_ops_research_revision_persistence.sql \
-            supabase/migrations/20261119154716_seo_ops_research_readback.sql; do
+            supabase/migrations/20261119154716_seo_ops_research_readback.sql \
+            supabase/migrations/20261120115501_seo_ops_content_revision_immutability.sql; do
             name="$(basename "$migration")"
             docker cp "$migration" "$container_id:/tmp/$name"
             docker exec "$container_id" psql -U postgres -d finflow_seo_ops_test -v ON_ERROR_STOP=1 -f "/tmp/$name"
@@ -305,10 +306,11 @@ jobs:
       - name: Enforce high-severity dependency audit
         run: node scripts/check-npm-audit.mjs
 
+  # PR 120 acceptance writes require the explicit acceptance-write-authorized label.
   genuine-acceptance:
-    name: Genuine GSC to persisted editorial draft acceptance
+    name: Genuine GSC-to-draft and Scheduler 3 persistence acceptance
     needs: validate
-    if: github.event_name == 'pull_request' && github.event.pull_request.number == 119 && needs.validate.result == 'success'
+    if: github.event_name == 'pull_request' && github.event.pull_request.number == 120 && contains(github.event.pull_request.labels.*.name, 'acceptance-write-authorized') && needs.validate.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     permissions:
@@ -321,6 +323,7 @@ jobs:
       PRODUCTION_CONTENT_WRITE_ALLOWED: "false"
       SEO_OPS_ALLOWED_PROJECT_REF: "bufbyfwstdqvwnkhyrea"
       SEO_PERSISTENCE_REQUIRED: "true"
+      SEO_ACCEPTANCE_WRITE_AUTHORIZED: "true"
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
@@ -346,10 +349,15 @@ jobs:
           github-token: ${{ github.token }}
       - name: Run genuine GSC to editorial draft acceptance
         run: node seo-engine/research/acceptance-run.mjs historical-gsc/seo-data-2026-10-19-to-2026-11-15.json
+      - name: Run Scheduler 3 live metrics and acceptance persistence check
+        run: node seo-engine/schedulers/performance-learning.mjs
       - name: Upload genuine acceptance evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: seo-recovery-genuine-acceptance-${{ github.sha }}
-          path: seo-output/acceptance/
-          if-no-files-found: error
+          path: |
+            seo-output/acceptance/
+            seo-output/scheduler-3-performance-report.json
+          if-no-files-found: warn
           retention-days: 14

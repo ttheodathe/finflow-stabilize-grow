@@ -16,7 +16,7 @@ function mockSoftwareSelectionFetch(url) {
  const address=String(url);
  const pages=[
   ["waveapps.com", "<title>Wave Pricing</title><body>STARTER Plan $0 Create unlimited estimates invoices bills and bookkeeping records. Online payments include 2.9% + $0.60 per credit card transaction. Pro plan adds auto-import bank transactions and digitally capture unlimited receipts.</body>"],
-  ["zoho.com", "<title>Zoho Books US Pricing</title><body>FREE $0 create invoices expenses journals P&L Balance Sheet and 50+ Reports. 1 User + 1 Accountant. Free Plan revenue threshold $50,000. Up to 1,000 invoices and 1,000 expenses annually.</body>"],
+  ["zoho.com", "<title>Zoho Books US Pricing</title><body>FREE $0 create invoices expenses journals P&L Balance Sheet and reports. 1 User + 1 Accountant.</body>"],
   ["zipbooks.com", "<title>ZipBooks Pricing</title><body>Starter Free. Send unlimited invoices. Manage unlimited vendors and customers. View Basic Reports. Connect 1 bank account.</body>"],
   ["irs.gov", "<title>What kind of records should I keep</title><body>Keep business records that clearly show income and expenses. Supporting documents include invoices, receipts and bank records.</body>"],
  ];
@@ -112,6 +112,7 @@ test("unresolved cannibalization is not silently converted into a new article",(
 
 test("draft queue persistence is idempotent and requires independent operation, research and revision readback",async()=>{
  const env=await setup(), calls={operations:[],research:[],revisions:[]};
+ const jsonbLike=value=>Array.isArray(value)?value.map(jsonbLike):value&&typeof value==="object"?Object.fromEntries(Object.entries(value).sort(([left],[right])=>left.localeCompare(right)).map(([key,item])=>[key,jsonbLike(item)])):value;
  const operationIds=new Map(),researchIds=new Map(),revisionIds=new Map(),operationPayloads=new Map(),researchClaims=new Map();
  const store={
   recordContentOperation:async input=>{
@@ -126,8 +127,8 @@ test("draft queue persistence is idempotent and requires independent operation, 
    researchClaims.set(key,{supportedClaims:input.supportedClaims,unresolvedClaims:input.unresolvedClaims});
    calls.research=[...researchIds].map(([k,id])=>({
     id,source_url:k.split(":").slice(1).join(":"),opportunity_id:k.split(":")[0],
-    supported_claims:researchClaims.get(k)?.supportedClaims || [],
-    unresolved_claims:researchClaims.get(k)?.unresolvedClaims || [],
+    supported_claims:jsonbLike(researchClaims.get(k)?.supportedClaims || []),
+    unresolved_claims:jsonbLike(researchClaims.get(k)?.unresolvedClaims || []),
    }));
    return researchIds.get(key);
   },
@@ -239,6 +240,25 @@ test("classifies software-selection queries without treating them as generic rec
   assert.equal(classifySearchIntent("unclear business finance question"), "REVIEW_REQUIRED");
 });
 
+test("an exact GSC target with matching editorial intent remains an update despite low lexical overlap", () => {
+  const result = analyzeCannibalization(
+    "free business accounting apps worth considering",
+    [{
+      slug: "free-accounting-software-for-small-business",
+      title: "Free Accounting Software for Small Business",
+      description: "A guide to free accounting software and small-business bookkeeping apps",
+      tags: ["accounting software", "small business"],
+      content: "Compare accounting software options for small businesses.",
+    }],
+    "https://www.finflowtrack.com/blog/free-accounting-software-for-small-business",
+  );
+  assert.equal(result.target.exactTarget, true);
+  assert.equal(result.target.intentMatch, true);
+  assert.equal(result.targetQueryMatch, "EXACT_LANDING_PAGE_INTENT_MATCH");
+  assert.equal(result.editorialDecision, "UPDATE_EXISTING_ARTICLE");
+  assert.equal(result.requiresHumanReview, false);
+});
+
 test("the exact GSC landing page is assessed as an update, not a new article", async () => {
   const env = await setup();
   try {
@@ -252,15 +272,30 @@ test("the exact GSC landing page is assessed as an update, not a new article", a
         metrics: { impressions: 31, clicks: 0, ctr: 0, averagePosition: 9.77 },
         reportingPeriodEnd: "2026-11-15",
         dataSource: "Google Search Console",
-        evidenceMode: "LIVE_OR_PERSISTED",
+        evidenceMode: "HISTORICAL_GSC_ARTIFACT",
+        historicalProvenance: {
+          artifactId: "fixture-artifact",
+          sha256: "b".repeat(64),
+          evidenceMode: "HISTORICAL_GSC_ARTIFACT",
+        },
       }],
       contentDir: env.contentDir, outputDir: env.outputDir, fetchImpl: mockSoftwareSelectionFetch, now, store: null,
     });
     const item = result.results[0];
+    assert.deepEqual(item.candidate.historicalProvenance, {
+      artifactId: "fixture-artifact",
+      sha256: "b".repeat(64),
+      evidenceMode: "HISTORICAL_GSC_ARTIFACT",
+    });
     assert.equal(item.intent, "Software selection");
     assert.equal(item.cannibalization.decision, "UPDATE_EXISTING_ARTICLE");
     assert.equal(item.editorialDecision, "UPDATE_EXISTING_ARTICLE");
     assert.equal(item.status, "DRAFT_GENERATED_NOT_ELIGIBLE", JSON.stringify({reasons:item.rejectionReasons,quality:item.quality,numeric:item.quality?.numericClaims}));
+    assert.deepEqual(item.rejectionReasons, []);
+    assert.deepEqual(item.quality.numericClaims.unsupported, []);
+    assert.equal(item.draft.claims.find(claim => claim.id === "zoho-us-free").verificationStatus, "KEYWORD_RELEVANCE_PASS_HUMAN_REVIEW_REQUIRED");
+    assert.doesNotMatch(item.draft.content, /\$50,000|1,000 invoices|1,000 expenses/);
+    assert.match(item.draft.content, /one-user allowance/i);
     assert.equal(item.sourcePackCompatibility.compatible, true);
     assert.equal(item.sourcePackCompatibility.matchedPackId, "software-selection");
     assert.equal(item.draft.slug, "free-accounting-software-for-small-business");
@@ -314,14 +349,14 @@ test("source retrieval records redirect, HTTP and content-type evidence and reje
 });
 
 test("numeric claims require matching source numbers and claim-source mappings", () => {
-  const source = {url:"https://www.zoho.com/us/books/pricing/",numericTokens:["1 User","1,000 invoices","1,000 expenses","$50,000"]};
+  const source = {url:"https://www.zoho.com/us/books/pricing/",numericTokens:["1 User"]};
   const claims = [{
-    text:"The plan allows 1 user, 1,000 invoices and 1,000 expenses with a $50,000 revenue threshold.",
+    text:"The plan allows 1 user and lists a US$50,000 revenue threshold.",
     sourceUrls:[source.url],
   }];
-  const result = assessNumericClaims("1 user; 1,000 invoices; 1,000 expenses; $50,000.",claims,[source]);
-  assert.equal(result.unsupported.length,0);
-  assert.equal(result.verified.length,2);
+  const result = assessNumericClaims("1 user; $50,000.",claims,[source]);
+  assert.deepEqual(result.verified,["1 user"]);
+  assert.deepEqual(result.unsupported,["$50,000"]);
   const missingMapping = assessNumericClaims("$50,000.",[{text:"Revenue threshold is $50,000.",sourceUrls:[]}],[source]);
   assert.deepEqual(missingMapping.unsupported,["$50,000"]);
 });
