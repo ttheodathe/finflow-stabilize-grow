@@ -73,7 +73,7 @@ test("excludes fixture and incomplete GSC rows from both daily slots", () => {
 
 test("does not turn a competitor domain query into a new article", () => {
   const result = selectDailyContentPortfolio([
-    candidate("brand-domain", "fasttrackaccounting.com", "https://www.finflowtrack.com/guides"),
+    candidate("brand-domain", "fasttrackaccounting.com", "https://www.finflowtrack.com/guides", 2, 0),
   ], inventory);
 
   assert.equal(result.selectedCandidateCount, 0);
