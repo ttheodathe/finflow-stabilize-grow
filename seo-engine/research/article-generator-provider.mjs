@@ -1,5 +1,3 @@
-import { setTimeout as delay } from "node:timers/promises";
-
 const DEFAULT_TIMEOUT_MS = 120_000;
 
 function required(value, name) {
