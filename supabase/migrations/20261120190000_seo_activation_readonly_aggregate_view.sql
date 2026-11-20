@@ -11,8 +11,8 @@ begin
   if not exists (select 1 from pg_roles where rolname = 'seo_activation_reader') then
     create role seo_activation_reader;
   end if;
-end
-$$;
+end;
+$;
 
 alter role seo_activation_aggregator
   nologin nosuperuser nocreatedb nocreaterole noinherit noreplication nobypassrls;
@@ -45,7 +45,7 @@ begin
   ) then
     raise exception 'Stage B2 aggregator must not own any source table';
   end if;
-end
+end;
 $;
 
 do $$
@@ -73,8 +73,8 @@ begin
   if missing_tables is not null then
     raise exception 'Stage B2 requires existing public tables with RLS enabled: %', missing_tables;
   end if;
-end
-$$;
+end;
+$;
 
 create schema if not exists seo_private;
 revoke all on schema seo_private from public;
