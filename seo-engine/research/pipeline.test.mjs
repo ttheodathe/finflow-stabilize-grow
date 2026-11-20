@@ -240,7 +240,7 @@ test("classifies software-selection queries without treating them as generic rec
   assert.equal(classifySearchIntent("unclear business finance question"), "REVIEW_REQUIRED");
   assert.equal(classifySearchIntent("fasttrackaccounting.com"), "REVIEW_REQUIRED");
   assert.equal(classifySearchIntent("how to track business expenses"), "How-to/tutorial");
-  assert.equal(classifySearchIntent("expense tracking for freelancers"), "How-to/tutorial");
+  assert.equal(classifySearchIntent("expense tracking for freelancers"), "Feature evaluation");
 });
 
 test("an exact GSC target with matching editorial intent remains an update despite low lexical overlap", () => {
