@@ -22,6 +22,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
       - name: Gate scheduled execution to 10:00 AM US Eastern (DST-aware)
         id: time-gate
         shell: bash
