@@ -266,6 +266,15 @@ begin
     if sqlerrm = 'approval without an approved byline should have failed' then raise; end if;
   end;
 
+  begin
+    perform public.seo_ops_record_article_approval(
+      v_operation,v_revision3,v_hash3,v_reviewer,v_reviewer::text,'APPROVED','CI unapproved byline','Unapproved Author'
+    );
+    raise exception 'approval with an unapproved byline should have failed';
+  exception when others then
+    if sqlerrm = 'approval with an unapproved byline should have failed' then raise; end if;
+  end;
+
   v_approval := public.seo_ops_record_article_approval(
     v_operation,v_revision3,v_hash3,v_reviewer,v_reviewer::text,'APPROVED','CI synthetic approval','FinFlowTrack Editorial Team'
   );
