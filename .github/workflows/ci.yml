@@ -58,6 +58,8 @@ jobs:
 
       - name: Test SEO pipeline and content-operation safeguards
         run: node --test seo-engine/*.test.mjs seo-engine/content-ops/*.test.mjs seo-engine/persistence/*.test.mjs seo-engine/research/*.test.mjs seo-engine/schedulers/*.test.mjs
+      - name: Syntax-check SEO publishing modules
+        run: find seo-engine/publishing -type f -name '*.mjs' -print0 | xargs -0 -n1 node --check
 
       - name: Verify fixture candidates remain blocked by exact-target intent safeguards
         run: node seo-engine/research/fixture-run.mjs
