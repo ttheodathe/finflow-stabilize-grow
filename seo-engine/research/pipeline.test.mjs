@@ -110,6 +110,32 @@ test("unresolved cannibalization is not silently converted into a new article",(
  assert.equal(result.decision,"UPDATE_EXISTING_ARTICLE");
 });
 
+test("duplicate checker proposes a constructive update for public articles and ignores unpublished drafts",()=>{
+ const publicArticle={
+  slug:"small-business-bookkeeping-records",
+  title:"Small Business Bookkeeping Records",
+  description:"A guide to bookkeeping records for small businesses",
+  tags:["bookkeeping"],
+  content:"Keep clear bookkeeping records for income, expenses, invoices and receipts.",
+  isPubliclyLive:true,
+ };
+ const unpublishedDraft={
+  ...publicArticle,
+  slug:"unpublished-bookkeeping-draft",
+  title:"Small Business Bookkeeping Records Draft",
+  isPubliclyLive:false,
+ };
+ const liveMatch=analyzeCannibalization("small business bookkeeping records",[publicArticle,unpublishedDraft],null);
+ assert.equal(liveMatch.decision,"UPDATE_EXISTING_ARTICLE");
+ assert.equal(liveMatch.target.slug,publicArticle.slug);
+ assert.equal(liveMatch.updateProposal.action,"UPDATE_EXISTING_PUBLIC_ARTICLE");
+ assert.equal(liveMatch.updateProposal.targetUrl,"https://www.finflowtrack.com/blog/small-business-bookkeeping-records");
+ assert.ok(liveMatch.updateProposal.recommendedActions.some(action=>/Keep the existing public URL/.test(action)));
+ const draftOnlyMatch=analyzeCannibalization("small business bookkeeping records",[unpublishedDraft],null);
+ assert.equal(draftOnlyMatch.decision,"NEW_ARTICLE_CANDIDATE");
+ assert.equal(draftOnlyMatch.updateProposal,null);
+});
+
 test("draft queue persistence is idempotent and requires independent operation, research and revision readback",async()=>{
  const env=await setup(), calls={operations:[],research:[],revisions:[]};
  const jsonbLike=value=>Array.isArray(value)?value.map(jsonbLike):value&&typeof value==="object"?Object.fromEntries(Object.entries(value).sort(([left],[right])=>left.localeCompare(right)).map(([key,item])=>[key,jsonbLike(item)])):value;
