@@ -28,9 +28,9 @@ $$;
 alter role seo_activation_aggregator nologin noinherit;
 alter role seo_activation_reader nologin noinherit;
 
--- Dedicated roles must not carry pre-existing role memberships. Membership in
--- either direction could permit role assumption or expose the view owner's
--- source-table privileges to another login.
+-- No application role may inherit from or assume either dedicated role.
+-- Supabase's managed postgres administrator is automatically recorded as a
+-- member of roles it creates; permit only that privileged migration actor.
 do $$
 begin
   if exists (
@@ -38,10 +38,20 @@ begin
     from pg_auth_members am
     join pg_roles granted_role on granted_role.oid = am.roleid
     join pg_roles member_role on member_role.oid = am.member
-    where granted_role.rolname in ('seo_activation_aggregator', 'seo_activation_reader')
-       or member_role.rolname in ('seo_activation_aggregator', 'seo_activation_reader')
+    where (
+      granted_role.rolname in ('seo_activation_aggregator', 'seo_activation_reader')
+      or member_role.rolname in ('seo_activation_aggregator', 'seo_activation_reader')
+    )
+    and not (
+      member_role.rolname = current_user
+      and exists (
+        select 1 from pg_roles actor
+        where actor.rolname = current_user
+          and (actor.rolsuper or actor.rolcreaterole)
+      )
+    )
   ) then
-    raise exception 'Stage B2 dedicated roles must have no role memberships in either direction';
+    raise exception 'Stage B2 dedicated roles must not be shared with any non-admin role';
   end if;
 
   if exists (
