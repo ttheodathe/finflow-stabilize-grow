@@ -7,7 +7,7 @@ function validateEndpoint(value) {
   catch { throw new Error("SEO_ACTIVATION_READER_URL must be a valid HTTPS Supabase Edge Function URL."); }
   if (
     parsed.protocol !== "https:" ||
-    !/^[a-z0-9-]+\.supabase\.co$/i.test(parsed.hostname) ||
+    parsed.hostname !== "zjaamxvqjiymgfujrtjm.supabase.co" ||
     parsed.pathname !== "/functions/v1/seo-activation-reader" ||
     parsed.search || parsed.hash || parsed.username || parsed.password
   ) {
