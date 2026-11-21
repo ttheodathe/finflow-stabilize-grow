@@ -203,7 +203,7 @@ export async function runArticleProduction({
     wordCountPass: words >= minWordCount,
     headingCount: headings.length,
     internalLinkFailures,
-    metadataValid: validation.errors.every(error => !error.startsWith("MISSING_METADATA") && error !== "INVALID_SLUG"),
+    metadataValid: Boolean(metadata.title && metadata.description && metadata.slug) && targetSlugMatches && titleMatches && descriptionMatches && draftStatusValid,
     deterministicValidation: validation,
     semanticAccuracy: "HUMAN_REVIEW_REQUIRED",
     originality,
