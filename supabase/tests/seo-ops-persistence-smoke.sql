@@ -305,11 +305,11 @@ begin
   v_publication_claim := gen_random_uuid();
   v_publication_result := public.seo_ops_claim_next_article_for_publication(v_publication_claim);
   if v_publication_result is null
-     or v_publication_result->>'operationId' <> v_operation::text
-     or v_publication_result->>'revisionId' <> v_revision3::text
-     or v_publication_result->>'contentHash' <> v_hash3
-     or v_publication_result->>'approvedAuthor' <> 'FinFlowTrack Editorial Team'
-     or v_publication_result->>'targetPath' <> 'content/blog/stage-c-smoke.md' then
+     or v_publication_result->>'operationId' is distinct from v_operation::text
+     or v_publication_result->>'revisionId' is distinct from v_revision3::text
+     or v_publication_result->>'contentHash' is distinct from v_hash3
+     or v_publication_result->>'approvedAuthor' is distinct from 'FinFlowTrack Editorial Team'
+     or v_publication_result->>'targetPath' is distinct from 'content/blog/stage-c-smoke.md' then
     raise exception 'publisher claim did not return the exact approved article revision and byline: %',v_publication_result;
   end if;
 
