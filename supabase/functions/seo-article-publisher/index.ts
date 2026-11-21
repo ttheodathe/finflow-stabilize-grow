@@ -22,12 +22,14 @@ async function verifyPublisherIdentity(request: Request) {
   if (!allowedWorkflowRef) throw new Error("Publisher workflow identity is not configured.");
 
   const { payload } = await jwtVerify(token, jwks, { issuer, audience });
+  const allowedEvents = (Deno.env.get("PUBLISHER_ALLOWED_EVENT_NAMES") || "schedule,workflow_dispatch")
+    .split(",").map(value => value.trim()).filter(Boolean);
   if (
     payload.repository !== allowedRepository ||
     String(payload.repository_id || "") !== allowedRepositoryId ||
     payload.ref !== allowedRef ||
     payload.workflow_ref !== allowedWorkflowRef ||
-    !["schedule", "workflow_dispatch"].includes(String(payload.event_name || ""))
+    !allowedEvents.includes(String(payload.event_name || ""))
   ) {
     throw new Error("GitHub Actions identity is not authorized to publish.");
   }
