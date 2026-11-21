@@ -36,7 +36,20 @@ async function getOidcToken({ env, fetchImpl }) {
 }
 
 function parseAggregate(row) {
-  if (!row || typeof row !== "object" || Array.isArray(row)) {
+  const expectedFields = [
+    "source_watermark",
+    "registered_users_all_time",
+    "onboarding_completions_all_time",
+    "activated_users_all_time",
+    "returning_activated_users_all_time",
+    "new_registrations_30d",
+    "new_onboarding_completions_30d",
+    "new_activated_users_30d",
+    "new_returning_activated_users_30d",
+  ];
+  if (!row || typeof row !== "object" || Array.isArray(row) ||
+      Object.keys(row).length !== expectedFields.length ||
+      Object.keys(row).some((key) => !expectedFields.includes(key))) {
     throw new Error("Production activation reader returned an invalid aggregate.");
   }
   const sourceWatermark = new Date(row.source_watermark);
