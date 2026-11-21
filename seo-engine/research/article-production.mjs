@@ -192,7 +192,7 @@ export async function runArticleProduction({
     try {
       const url = new URL(value, "https://www.finflowtrack.com");
       url.hash = "";
-      return url.toString().replace(/\\/$/, "");
+      return url.toString().replace(/\/$/, "");
     } catch {
       return null;
     }
