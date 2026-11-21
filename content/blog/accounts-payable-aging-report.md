@@ -55,13 +55,13 @@ Aged payables reports are used to monitor supplier balances, plan payments, and 
 
 An aging bucket is a date range used to group open invoices. Many businesses use periods such as:
 
-| Aging bucket | What it means |
-| --- | --- |
-| Current / not due | The invoice due date is on or after the report date, depending on the report's convention. |
-| 1–30 days overdue | The invoice is up to 30 days past its due date. |
-| 31–60 days overdue | The invoice is 31 to 60 days past due. |
-| 61–90 days overdue | The invoice is 61 to 90 days past due. |
-| 91+ days overdue | The invoice is more than 90 days past due. |
+| Aging bucket       | What it means                                                                              |
+| ------------------ | ------------------------------------------------------------------------------------------ |
+| Current / not due  | The invoice due date is on or after the report date, depending on the report's convention. |
+| 1–30 days overdue  | The invoice is up to 30 days past its due date.                                            |
+| 31–60 days overdue | The invoice is 31 to 60 days past due.                                                     |
+| 61–90 days overdue | The invoice is 61 to 90 days past due.                                                     |
+| 91+ days overdue   | The invoice is more than 90 days past due.                                                 |
 
 These are common examples, not a universal standard. Some systems use 0–30, 31–60, 61–90 and 91–120 day periods, while others allow a business to configure its own ranges. The important thing is to define the periods, use them consistently, and show whether the report is aging by invoice date or due date.
 
@@ -99,25 +99,25 @@ This formula returns zero for invoices that are not yet due. You can then use co
 
 Assume a business is preparing a report as of October 31, 2026. It has four open supplier invoices:
 
-| Supplier | Open balance | Due date | Days past due | Aging bucket |
-| --- | ---: | --- | ---: | --- |
-| Northstar Supplies | $1,800 | October 10, 2026 | 21 | 1–30 days |
-| Greenline Office | $2,400 | September 10, 2026 | 51 | 31–60 days |
-| Citywide Internet | $900 | November 15, 2026 | 0 | Current / not due |
-| Apex Equipment | $600 | August 1, 2026 | 91 | 91+ days |
+| Supplier           | Open balance | Due date           | Days past due | Aging bucket      |
+| ------------------ | -----------: | ------------------ | ------------: | ----------------- |
+| Northstar Supplies |       $1,800 | October 10, 2026   |            21 | 1–30 days         |
+| Greenline Office   |       $2,400 | September 10, 2026 |            51 | 31–60 days        |
+| Citywide Internet  |         $900 | November 15, 2026  |             0 | Current / not due |
+| Apex Equipment     |         $600 | August 1, 2026     |            91 | 91+ days          |
 
 All names, dates, and amounts in this example are illustrative.
 
 The summary by aging bucket is:
 
-| Aging bucket | Open amount |
-| --- | ---: |
-| Current / not due | $900 |
-| 1–30 days overdue | $1,800 |
-| 31–60 days overdue | $2,400 |
-| 61–90 days overdue | $0 |
-| 91+ days overdue | $600 |
-| **Total open payables** | **$5,700** |
+| Aging bucket            | Open amount |
+| ----------------------- | ----------: |
+| Current / not due       |        $900 |
+| 1–30 days overdue       |      $1,800 |
+| 31–60 days overdue      |      $2,400 |
+| 61–90 days overdue      |          $0 |
+| 91+ days overdue        |        $600 |
+| **Total open payables** |  **$5,700** |
 
 The total is the sum of the remaining balances, not the original invoice amounts if partial payments or credits have already been applied.
 
