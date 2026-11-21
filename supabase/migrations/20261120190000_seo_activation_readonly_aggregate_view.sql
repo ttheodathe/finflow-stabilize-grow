@@ -6,18 +6,27 @@
 do $$
 begin
   if not exists (select 1 from pg_roles where rolname = 'seo_activation_aggregator') then
-    create role seo_activation_aggregator;
+    create role seo_activation_aggregator nologin noinherit;
   end if;
   if not exists (select 1 from pg_roles where rolname = 'seo_activation_reader') then
-    create role seo_activation_reader;
+    create role seo_activation_reader nologin noinherit;
+  end if;
+
+  -- PostgreSQL defaults newly created roles to non-superuser, no database/role
+  -- creation, no replication, and no RLS bypass. Refuse pre-existing roles that
+  -- carry any of those elevated attributes rather than trying to alter them.
+  if exists (
+    select 1 from pg_roles
+    where rolname in ('seo_activation_aggregator', 'seo_activation_reader')
+      and (rolsuper or rolcreatedb or rolcreaterole or rolreplication or rolbypassrls)
+  ) then
+    raise exception 'Stage B2 dedicated roles already exist with elevated privileges';
   end if;
 end;
 $$;
 
-alter role seo_activation_aggregator
-  nologin nosuperuser nocreatedb nocreaterole noinherit noreplication nobypassrls;
-alter role seo_activation_reader
-  nologin nosuperuser nocreatedb nocreaterole noinherit noreplication nobypassrls;
+alter role seo_activation_aggregator nologin noinherit;
+alter role seo_activation_reader nologin noinherit;
 
 -- Dedicated roles must not carry pre-existing role memberships. Membership in
 -- either direction could permit role assumption or expose the view owner's
