@@ -120,10 +120,11 @@ export async function runPerformanceLearning({
   const articlePageMetrics = buildArticlePageMetrics(snapshot);
   let activationAggregate = null;
   let activationCollectionError = null;
-  if (env.SEO_PRODUCTION_READONLY_DATABASE_URL) {
+  if (env.SEO_ACTIVATION_READER_URL) {
     try {
       activationAggregate = await activationCollectorFn({
-        connectionString: env.SEO_PRODUCTION_READONLY_DATABASE_URL,
+        endpoint: env.SEO_ACTIVATION_READER_URL,
+        env,
       });
     } catch (error) {
       activationCollectionError = new Error(String(error.message || error));
@@ -150,7 +151,7 @@ export async function runPerformanceLearning({
     } : {
       status: activationCollectionError ? "FAILED" : "BLOCKED_READ_ONLY_CREDENTIAL",
       registrations: null, onboardingCompletions: null, activatedUsers: null, returningActivatedUsers: null,
-      explanation: activationCollectionError?.message || "A read-only aggregate SQL query exists, but SEO_PRODUCTION_READONLY_DATABASE_URL is not configured. Null means unavailable, not zero.",
+      explanation: activationCollectionError?.message || "A read-only aggregate SQL query exists, but SEO_ACTIVATION_READER_URL is not configured. Null means unavailable, not zero.",
     },
     activationMeasurement: {
       status: activationAggregate ? "AVAILABLE" : activationCollectionError ? "FAILED" : "BLOCKED_READ_ONLY_CREDENTIAL",
@@ -160,8 +161,8 @@ export async function runPerformanceLearning({
       sourceWatermark: activationAggregate?.sourceWatermark || null,
       counts: activationAggregate || null,
       explanation: activationAggregate
-        ? "Production counts were collected through the dedicated PostgreSQL connection and contain aggregate counts only."
-        : activationCollectionError?.message || "The query emits aggregate counts only. Configure the dedicated read-only production connection to collect activation automatically.",
+        ? "Production counts were collected through the OIDC-gated aggregate reader and contain aggregate counts only."
+        : activationCollectionError?.message || "The query emits aggregate counts only. Configure the OIDC-gated production activation reader endpoint to collect activation automatically.",
     },
     contentAttribution: articlePageMetrics.length
       ? { status: "PAGE_LEVEL_METRICS_AVAILABLE", articleCount: new Set(articlePageMetrics.map(item => item.slug)).size,

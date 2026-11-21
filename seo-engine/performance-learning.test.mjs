@@ -319,11 +319,11 @@ test("Scheduler 3 collects and persists production activation aggregates without
     };
     const result = await runPerformanceLearning({
       dateRange, outputDir, env: {
-        SEO_PRODUCTION_READONLY_DATABASE_URL: "postgresql://seo_readonly:masked@db.example.supabase.co:5432/postgres",
+        SEO_ACTIVATION_READER_URL: "https://zjaamxvqjiymgfujrtjm.supabase.co/functions/v1/seo-activation-reader",
         SEO_PERSISTENCE_REQUIRED: "true",
       }, store,
-      activationCollectorFn: async ({ connectionString }) => {
-        assert.match(connectionString, /^postgresql:\/\/seo_readonly:/);
+      activationCollectorFn: async ({ endpoint }) => {
+        assert.equal(endpoint, "https://zjaamxvqjiymgfujrtjm.supabase.co/functions/v1/seo-activation-reader");
         return {
           sourceWatermark: "2026-11-20T18:00:00.000Z",
           registeredUsersAllTime: 36, onboardingCompletionsAllTime: 2,
@@ -370,9 +370,9 @@ test("Scheduler 3 fails the run and records FAILED activation status when the co
     };
     await assert.rejects(runPerformanceLearning({
       dateRange, outputDir,
-      env: { SEO_PRODUCTION_READONLY_DATABASE_URL: "postgresql://seo_readonly:masked@db.example.supabase.co:5432/postgres" },
+      env: { SEO_ACTIVATION_READER_URL: "https://zjaamxvqjiymgfujrtjm.supabase.co/functions/v1/seo-activation-reader" },
       store,
-      activationCollectorFn: async () => { throw new Error("Production read-only activation query failed."); },
+      activationCollectorFn: async () => { throw new Error("Production activation reader request failed."); },
       collectFn: async ({ outputDir: dir }) => {
         const file = path.join(dir, "fixture-activation-failed.json");
         await writeFile(file, JSON.stringify({
@@ -382,7 +382,7 @@ test("Scheduler 3 fails the run and records FAILED activation status when the co
         }));
         return { file };
       },
-    }), /Production read-only activation query failed/);
+    }), /Production activation reader request failed/);
     const report = JSON.parse(await readFile(path.join(outputDir, "scheduler-3-performance-report.json"), "utf8"));
     assert.equal(report.activationMeasurement.status, "FAILED");
     assert.equal(report.productAcquisition.status, "FAILED");

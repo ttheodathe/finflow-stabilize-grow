@@ -145,6 +145,10 @@ jobs:
           docker exec "$container_id" psql -U postgres -d finflow_seo_ops_test -v ON_ERROR_STOP=1 -f /tmp/seo-activation-readonly-aggregate-view.sql
           docker cp supabase/tests/seo-activation-readonly-view-smoke.sql "$container_id:/tmp/seo-activation-readonly-view-smoke.sql"
           docker exec "$container_id" psql -U postgres -d finflow_seo_ops_test -v ON_ERROR_STOP=1 -f /tmp/seo-activation-readonly-view-smoke.sql
+          docker cp supabase/migrations/20261121181000_stage_e_oidc_activation_reader.sql "$container_id:/tmp/stage-e-oidc-activation-reader.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_seo_ops_test -v ON_ERROR_STOP=1 -f /tmp/stage-e-oidc-activation-reader.sql
+          docker cp supabase/tests/seo-activation-oidc-reader-smoke.sql "$container_id:/tmp/seo-activation-oidc-reader-smoke.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_seo_ops_test -v ON_ERROR_STOP=1 -f /tmp/seo-activation-oidc-reader-smoke.sql
 
       - name: Verify SEO operations persistence, RLS and activation aggregation
         run: |

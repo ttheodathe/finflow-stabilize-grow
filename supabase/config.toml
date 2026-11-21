@@ -7,3 +7,7 @@ verify_jwt = false
 [functions.seo-article-publisher-acceptance]
 # Acceptance-only, non-mutating OIDC verifier. Never deploy this function to production.
 verify_jwt = false
+
+[functions.seo-activation-reader]
+# The function validates the dedicated GitHub Actions OIDC identity itself.
+verify_jwt = false
