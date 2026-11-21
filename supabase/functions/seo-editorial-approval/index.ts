@@ -49,11 +49,27 @@ Deno.serve(async (request: Request) => {
     return json({ error: "Invalid JSON body" }, 400);
   }
 
+  const admin = createClient(url, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  if (body.action === "list") {
+    const { data, error } = await admin.rpc("seo_ops_list_pending_editorial_reviews", {
+      p_reviewer_user_id: userData.user.id,
+      p_authenticated_subject: userData.user.id,
+    });
+    if (error) {
+      return json({ error: "Reviewer is not authorized or queue is unavailable" }, 403);
+    }
+    return json({ reviews: data ?? [] });
+  }
+
   const operationId = String(body.operationId || "");
   const revisionId = String(body.revisionId || "");
   const contentHash = String(body.contentHash || "");
   const decision = String(body.decision || "");
-  const reviewNotes = typeof body.reviewNotes === "string" ? body.reviewNotes.slice(0, 4000) : null;
+  const reviewNotes =
+    typeof body.reviewNotes === "string" ? body.reviewNotes.slice(0, 4000) : null;
 
   if (
     !/^[0-9a-f-]{36}$/i.test(operationId) ||
@@ -64,9 +80,6 @@ Deno.serve(async (request: Request) => {
     return json({ error: "Approval payload is invalid" }, 400);
   }
 
-  const admin = createClient(url, serviceRoleKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
   const { data, error } = await admin.rpc("seo_ops_record_article_approval", {
     p_operation_id: operationId,
     p_revision_id: revisionId,
