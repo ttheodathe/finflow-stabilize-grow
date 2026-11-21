@@ -125,7 +125,8 @@ jobs:
             supabase/migrations/20261121040000_stage_c_editorial_review_queue.sql \
             supabase/migrations/20261121130000_stage_c_editorial_update_proposal_queue.sql \
             supabase/migrations/20261121145000_stage_d_approved_author_metadata.sql \
-            supabase/migrations/20261121151000_stage_d_article_publication_queue.sql; do
+            supabase/migrations/20261121151000_stage_d_article_publication_queue.sql \
+            supabase/migrations/20261121152927_stage_d_review_queue_security_invoker.sql; do
             name="$(basename "$migration")"
             docker cp "$migration" "$container_id:/tmp/$name"
             docker exec "$container_id" psql -U postgres -d finflow_seo_ops_test -v ON_ERROR_STOP=1 -f "/tmp/$name"
