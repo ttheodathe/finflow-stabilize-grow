@@ -79,8 +79,9 @@ test("end-to-end duplicate match creates an unpublished update draft for the rea
     assert.ok(parsedDraft.content.includes("The best choice depends on how the business operates."));
     assert.ok(originalBody.includes("Choosing accounting software is not simply about finding the platform with the longest feature list."));
     assert.equal(item.persistence, "LOCAL_DRY_RUN_ONLY");
+    assert.equal(item.status, "DRAFT_GENERATED_NOT_ELIGIBLE");
     assert.equal(result.readyDraftCount, 0, "Synthetic GSC evidence must never become approval-ready.");
-    assert.equal(result.persistedDraftCount, 0);
+    assert.equal(result.pendingReadbackCount, 0, "A local fixture run must not enter persisted readback.");
   } finally {
     await rm(outputDir, { recursive: true, force: true });
   }
