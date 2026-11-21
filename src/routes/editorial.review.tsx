@@ -59,6 +59,7 @@ function EditorialReviewPage() {
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [sendingLink, setSendingLink] = useState(false);
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [approvedAuthors, setApprovedAuthors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState<string | null>(null);
 
   useEffect(() => {
@@ -113,6 +114,13 @@ function EditorialReviewPage() {
     decision: "APPROVED" | "CHANGES_REQUESTED" | "REJECTED",
   ) {
     if (!seoReviewSupabase) return;
+    const approvedAuthor = decision === "APPROVED"
+      ? approvedAuthors[review.revision_id]?.trim() || null
+      : null;
+    if (decision === "APPROVED" && !approvedAuthor) {
+      toast.error("Select an approved byline before approving this draft.");
+      return;
+    }
     setSubmitting(review.revision_id);
     try {
       const { data, error } = await seoReviewSupabase.functions.invoke("seo-editorial-approval", {
@@ -122,11 +130,12 @@ function EditorialReviewPage() {
           contentHash: review.content_hash,
           decision,
           reviewNotes: notes[review.revision_id] ?? "",
+          approvedAuthor,
         },
       });
       if (error) throw new Error(error.message || "Editorial decision failed.");
       if (data?.error) throw new Error(data.error);
-      if (data?.contentHash !== review.content_hash || data?.decision !== decision) {
+      if (data?.contentHash !== review.content_hash || data?.decision !== decision || data?.approvedAuthor !== approvedAuthor) {
         throw new Error("The server did not confirm the exact revision and decision.");
       }
       toast.success(
@@ -210,9 +219,6 @@ function EditorialReviewPage() {
           <h1 className="text-2xl font-semibold">Editorial review</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Review the exact stored article revision before it can move forward.
-          </p>
-          <p className="mt-1 break-all text-xs text-muted-foreground">
-            Acceptance Auth user ID: {user.id}
           </p>
         </div>
         <div className="flex gap-2">
@@ -329,6 +335,26 @@ function EditorialReviewPage() {
                   </pre>
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor={`author-${review.revision_id}`}>Approved byline (required to approve)</Label>
+                  <select
+                    id={`author-${review.revision_id}`}
+                    value={approvedAuthors[review.revision_id] ?? ""}
+                    onChange={(event) =>
+                      setApprovedAuthors((current) => ({
+                        ...current,
+                        [review.revision_id]: event.target.value,
+                      }))
+                    }
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="">Select an approved byline</option>
+                    <option value="FinFlowTrack Editorial Team">FinFlowTrack Editorial Team</option>
+                  </select>
+                  <p className="text-xs text-muted-foreground">
+                    The selected byline is stored with this exact approval. The server checks it against the active author allowlist.
+                  </p>
+                </div>
+                <div className="space-y-2">
                   <label htmlFor={`notes-${review.revision_id}`} className="text-sm font-medium">
                     Editorial notes
                   </label>
@@ -349,7 +375,7 @@ function EditorialReviewPage() {
                 <div className="flex flex-wrap gap-2">
                   <Button
                     onClick={() => void decide(review, "APPROVED")}
-                    disabled={submitting !== null}
+                    disabled={submitting !== null || !approvedAuthors[review.revision_id]?.trim()}
                   >
                     {submitting === review.revision_id ? "Saving..." : "Approve draft"}
                   </Button>
