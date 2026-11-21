@@ -13,6 +13,7 @@ on:
       - feat/stage-c-evidence-citation-gates
       - feat/stage-d-approved-publishing-guardrails
       - feat/stage-d-publish-package-preflight
+      - feat/stage-d-oidc-publisher
 
 permissions:
   contents: read
