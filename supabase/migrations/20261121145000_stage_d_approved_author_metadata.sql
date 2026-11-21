@@ -53,7 +53,7 @@ begin
     raise exception 'Authenticated reviewer identity mismatch';
   end if;
 
-  if p_decision not in ('APPROVED','CHANGES_REQUESTED','REJECTED') then
+  if p_decision is null or p_decision not in ('APPROVED','CHANGES_REQUESTED','REJECTED') then
     raise exception 'Invalid editorial decision';
   end if;
 
