@@ -302,3 +302,92 @@ test("Scheduler 3 maps page-level GSC and GA4 landing-page metrics to article sl
   assert.equal(gsc.revisionAttribution, "UNKNOWN");
   assert.equal(gsc.measurementScope, "PAGE_LEVEL_DIRECT");
 });
+
+test("Scheduler 3 collects and persists production activation aggregates without user-level data", async () => {
+  const outputDir = await mkdtemp(path.join(os.tmpdir(), "seo-performance-activation-"));
+  try {
+    const activationCalls = [];
+    const performanceCalls = [];
+    const runCalls = [];
+    const store = {
+      recordRun: async (args) => {
+        runCalls.push(args);
+        return "00000000-0000-4000-8000-000000000001";
+      },
+      recordPerformanceSnapshot: async (args) => { performanceCalls.push(args); return "00000000-0000-4000-8000-000000000002"; },
+      recordActivationSnapshot: async (args) => { activationCalls.push(args); return "00000000-0000-4000-8000-000000000003"; },
+    };
+    const result = await runPerformanceLearning({
+      dateRange, outputDir, env: {
+        SEO_PRODUCTION_READONLY_DATABASE_URL: "postgresql://seo_readonly:masked@db.example.supabase.co:5432/postgres",
+        SEO_PERSISTENCE_REQUIRED: "true",
+      }, store,
+      activationCollectorFn: async ({ connectionString }) => {
+        assert.match(connectionString, /^postgresql:\/\/seo_readonly:/);
+        return {
+          sourceWatermark: "2026-11-20T18:00:00.000Z",
+          registeredUsersAllTime: 36, onboardingCompletionsAllTime: 2,
+          activatedUsersAllTime: 1, returningActivatedUsersAllTime: 1,
+          newRegistrations30d: 4, newOnboardingCompletions30d: 0,
+          newActivatedUsers30d: 0, newReturningActivatedUsers30d: 0,
+        };
+      },
+      collectFn: async ({ outputDir: dir }) => {
+        const file = path.join(dir, "fixture-activation.json");
+        await writeFile(file, JSON.stringify({
+          sourceStatus: { gsc: "AVAILABLE", ga4: "AVAILABLE" },
+          sourceErrors: { gsc: null, ga4: null },
+          gsc: { pages: [{ clicks: 5, impressions: 20 }] },
+          ga4: [{ sessions: 10, engagedSessions: 5 }],
+        }));
+        return { file };
+      },
+    });
+    const report = JSON.parse(await readFile(result.path, "utf8"));
+    assert.equal(report.activationMeasurement.status, "AVAILABLE");
+    assert.equal(report.productAcquisition.registrations, 36);
+    assert.equal(report.productAcquisition.last30Days.registrations, 4);
+    assert.equal(report.activationMeasurement.counts.activatedUsersAllTime, 1);
+    assert.equal(report.persistence.status, "PERSISTED");
+    assert.equal(activationCalls.length, 1);
+    assert.equal(activationCalls[0].registeredUsers, 36);
+    assert.equal(activationCalls[0].activatedUsers, 1);
+    assert.equal(performanceCalls.some((call) => call.source === "SUPABASE_ACTIVATION"), true);
+    assert.equal(runCalls.at(-1).output.activationMeasurement.status, "AVAILABLE");
+    assert.equal(JSON.stringify(report).includes("masked"), false);
+    assert.equal(JSON.stringify(report).includes("user_id"), false);
+  } finally {
+    await rm(outputDir, { recursive: true, force: true });
+  }
+});
+
+test("Scheduler 3 fails the run and records FAILED activation status when the configured read-only connection fails", async () => {
+  const outputDir = await mkdtemp(path.join(os.tmpdir(), "seo-performance-activation-failed-"));
+  try {
+    const store = {
+      recordRun: async () => "00000000-0000-4000-8000-000000000001",
+      recordPerformanceSnapshot: async () => "00000000-0000-4000-8000-000000000002",
+    };
+    await assert.rejects(runPerformanceLearning({
+      dateRange, outputDir,
+      env: { SEO_PRODUCTION_READONLY_DATABASE_URL: "postgresql://seo_readonly:masked@db.example.supabase.co:5432/postgres" },
+      store,
+      activationCollectorFn: async () => { throw new Error("Production read-only activation query failed."); },
+      collectFn: async ({ outputDir: dir }) => {
+        const file = path.join(dir, "fixture-activation-failed.json");
+        await writeFile(file, JSON.stringify({
+          sourceStatus: { gsc: "AVAILABLE", ga4: "AVAILABLE" },
+          sourceErrors: { gsc: null, ga4: null },
+          gsc: { pages: [] }, ga4: [],
+        }));
+        return { file };
+      },
+    }), /Production read-only activation query failed/);
+    const report = JSON.parse(await readFile(path.join(outputDir, "scheduler-3-performance-report.json"), "utf8"));
+    assert.equal(report.activationMeasurement.status, "FAILED");
+    assert.equal(report.productAcquisition.status, "FAILED");
+    assert.equal(JSON.stringify(report).includes("masked"), false);
+  } finally {
+    await rm(outputDir, { recursive: true, force: true });
+  }
+});
