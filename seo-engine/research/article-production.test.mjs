@@ -41,6 +41,36 @@ const research = {
   },
 };
 
+function validGeneratedMarkdown({ includeSourceCitation = true, title = research.draft.title, description = research.draft.description } = {}) {
+  const body = [
+    "## Understand the cash position",
+    "Review expected receipts and planned payments for the period.",
+    "## Prepare a forecast",
+    "List assumptions, dates and amounts, then compare expected cash movement.",
+    "## Review and update",
+    "Compare actual results with the forecast and explain material differences.",
+    "## Related guide",
+    "[Small Business Accounting Guide](/blog/small-business-accounting-guide)",
+    "## Official sources",
+    includeSourceCitation
+      ? "[US Small Business Administration — Manage your finances](https://www.sba.gov/business-guide/manage-your-business/manage-your-finances)"
+      : "The source was reviewed during research but is not linked in this draft.",
+  ].join("\n\n");
+  return [
+    "---",
+    `title: "${title}"`,
+    `description: "${description}"`,
+    'slug: "small-business-cash-flow-planning"',
+    'status: "draft"',
+    'publicationStatus: "draft"',
+    "---",
+    "",
+    body,
+    "",
+  ].join("\n");
+}
+
+
 test("editorial brief contains search intent, audience, evidence, update plan and human-review policy", () => {
   const updatePlan = {
     action: "UPDATE_EXISTING_PUBLIC_ARTICLE",
@@ -75,28 +105,7 @@ test("article production blocks incomplete evidence before calling generator", a
 test("article production writes a revision-hashed draft package outside the public blog and never publishes", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "stage-c-"));
   try {
-    const body = [
-      "## Understand the cash position",
-      "Review expected receipts and planned payments for the period.",
-      "## Prepare a forecast",
-      "List assumptions, dates and amounts, then compare expected cash movement.",
-      "## Review and update",
-      "Compare actual results with the forecast and explain material differences.",
-      "## Related guide",
-      "[Small Business Accounting Guide](/blog/small-business-accounting-guide)",
-    ].join("\n\n");
-    const markdown = [
-      "---",
-      'title: "Small Business Cash Flow Planning"',
-      'description: "A practical guide to planning and reviewing small-business cash flow."',
-      'slug: "small-business-cash-flow-planning"',
-      'status: "draft"',
-      'publicationStatus: "draft"',
-      "---",
-      "",
-      body,
-      "",
-    ].join("\n");
+    const markdown = validGeneratedMarkdown();
     const result = await runArticleProduction({
       research, outputDir: root, minWordCount: 10,
       generateArticle: async ({ brief }) => {
@@ -113,6 +122,38 @@ test("article production writes a revision-hashed draft package outside the publ
     assert.doesNotMatch(result.articlePath, /content[\/]blog/);
     const saved = await readFile(result.articlePath, "utf8");
     assert.equal(saved, markdown.trim() + "\n");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("article production blocks drafts that omit citations to supplied evidence", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "stage-c-citation-"));
+  try {
+    const result = await runArticleProduction({
+      research, outputDir: root, minWordCount: 10,
+      generateArticle: async () => ({ markdown: validGeneratedMarkdown({ includeSourceCitation: false }) }),
+    });
+    assert.equal(result.status, "BLOCKED_QUALITY_REVIEW");
+    assert.ok(result.blockers.includes("REQUIRED_EVIDENCE_CITATIONS_MISSING"));
+    assert.equal(result.quality.evidenceCitationFailures.length, 1);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("article production blocks metadata that drifts from the approved brief", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "stage-c-metadata-"));
+  try {
+    const result = await runArticleProduction({
+      research, outputDir: root, minWordCount: 10,
+      generateArticle: async () => ({
+        markdown: validGeneratedMarkdown({ title: "A different title", description: "A different description." }),
+      }),
+    });
+    assert.equal(result.status, "BLOCKED_QUALITY_REVIEW");
+    assert.ok(result.blockers.includes("ARTICLE_TITLE_MISMATCH"));
+    assert.ok(result.blockers.includes("ARTICLE_DESCRIPTION_MISMATCH"));
   } finally {
     await rm(root, { recursive: true, force: true });
   }
