@@ -60,6 +60,7 @@ test("collector rejects missing OIDC credentials and unsafe endpoints before mak
     "http://example-project.supabase.co/functions/v1/seo-activation-reader",
     "https://example-project.supabase.co.evil.test/functions/v1/seo-activation-reader",
     "https://example-project.supabase.co/functions/v1/other",
+    "https://another-project.supabase.co/functions/v1/seo-activation-reader",
     "https://user:pass@example-project.supabase.co/functions/v1/seo-activation-reader",
   ]) {
     await assert.rejects(
