@@ -76,6 +76,25 @@ function EditorialReviewPage() {
     retry: false,
   });
 
+  function getReviewRedirectUrl(): string {
+    const redirect = new URL("/editorial/review", window.location.origin);
+    const hostname = redirect.hostname.toLowerCase();
+    const isApprovedHost =
+      hostname === "finflowtrack.com" ||
+      hostname === "www.finflowtrack.com" ||
+      hostname.endsWith(".vercel.app");
+
+    // Never send an auth link from localhost or an unrecognized origin.
+    // Supabase also enforces its own Site URL / Additional Redirect URLs allowlist.
+    if (redirect.protocol !== "https:" || !isApprovedHost) {
+      throw new Error(
+        "Open the deployed FinFlow Track preview URL before requesting a reviewer sign-in link.",
+      );
+    }
+
+    return redirect.toString();
+  }
+
   async function sendMagicLink(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!seoReviewSupabase) return;
@@ -85,7 +104,7 @@ function EditorialReviewPage() {
         email: email.trim(),
         options: {
           shouldCreateUser: false,
-          emailRedirectTo: window.location.href,
+          emailRedirectTo: getReviewRedirectUrl(),
         },
       });
       if (error) throw error;
