@@ -96,8 +96,8 @@ begin
         and not (existing.status = 'CLAIMED' and existing.lease_expires_at < now())
     )
   order by o.created_at asc
-  for update of o skip locked
-  limit 1;
+  limit 1
+  for update of o skip locked;
 
   if not found then
     return null;
@@ -112,7 +112,7 @@ begin
     raise exception 'New article unexpectedly contains an existing public base hash';
   end if;
 
-  insert into seo_ops.article_publications(
+  insert into seo_ops.article_publications as existing(
     claim_id, operation_id, revision_id, content_hash, slug, target_path,
     operation_type, approved_author, target_base_content_hash, status,
     lease_expires_at
@@ -135,9 +135,9 @@ begin
         deployment_url = null,
         error_message = null,
         updated_at = now()
-    where seo_ops.article_publications.status in ('FAILED','STALE')
-       or (seo_ops.article_publications.status = 'CLAIMED'
-           and seo_ops.article_publications.lease_expires_at < now())
+    where existing.status in ('FAILED','STALE')
+       or (existing.status = 'CLAIMED'
+           and existing.lease_expires_at < now())
   returning id into v_publication_id;
 
   if v_publication_id is null then
