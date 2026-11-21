@@ -12,7 +12,7 @@ const json = (body: unknown, status = 200) =>
   });
 
 async function verifyWorkflowIdentity(request: Request) {
-  const token = (request.headers.get("Authorization") || "").replace(/^Bearer\\s+/i, "");
+  const token = (request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
   if (!token) throw new Error("GitHub Actions OIDC token is required.");
   const audience = Deno.env.get("ACTIVATION_READER_OIDC_AUDIENCE") || "finflowtrack-seo-activation";
   const { payload } = await jwtVerify(token, jwks, { issuer, audience });
