@@ -41,7 +41,7 @@ const research = {
   },
 };
 
-function validGeneratedMarkdown({ includeSourceCitation = true, title = research.draft.title, description = research.draft.description } = {}) {
+function validGeneratedMarkdown({ includeSourceCitation = true, includeProductCitation = false, title = research.draft.title, description = research.draft.description } = {}) {
   const body = [
     "## Understand the cash position",
     "Review expected receipts and planned payments for the period.",
@@ -55,6 +55,7 @@ function validGeneratedMarkdown({ includeSourceCitation = true, title = research
     includeSourceCitation
       ? "[US Small Business Administration — Manage your finances](https://www.sba.gov/business-guide/manage-your-business/manage-your-finances)"
       : "The source was reviewed during research but is not linked in this draft.",
+    ...(includeProductCitation ? ["[FinFlow Track pricing and features](https://www.finflowtrack.com/pricing)"] : []),
   ].join("\n\n");
   return [
     "---",
@@ -85,6 +86,44 @@ test("editorial brief contains search intent, audience, evidence, update plan an
   assert.equal(brief.internalLinks[0].slug, "small-business-accounting-guide");
   assert.deepEqual(brief.existingArticleUpdatePlan, updatePlan);
   assert.match(brief.publicationPolicy, /Human review/);
+});
+
+test("editorial brief includes only approved first-party product capabilities and their citation source", () => {
+  const productEvidence = {
+    verifiedAt: "2026-11-19",
+    verifiedCapabilities: [
+      { name: "Invoice creation", plan: "Free", status: "VERIFIED", articleClaimAllowed: true, sourceFile: "src/routes/pricing.tsx", evidence: "Free plan feature list." },
+      { name: "Payroll", plan: "Business", status: "VERIFIED", articleClaimAllowed: false, sourceFile: "src/lib/features/catalog.ts", evidence: "Business plan feature list." },
+    ],
+  };
+  const brief = createEditorialBrief({ ...research, productEvidence });
+  assert.deepEqual(brief.productCapabilities.map(item => item.name), ["Invoice creation"]);
+  assert.equal(brief.evidence.length, 2);
+  assert.equal(brief.evidence[1].url, "https://www.finflowtrack.com/pricing");
+  assert.match(brief.evidence[1].limitations[0], /not a live authenticated account/);
+});
+
+test("product claims require a citation to the first-party pricing evidence", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "stage-c-product-evidence-"));
+  try {
+    const productResearch = {
+      ...research,
+      productEvidence: {
+        verifiedAt: "2026-11-19",
+        verifiedCapabilities: [
+          { name: "Invoice creation", plan: "Free", status: "VERIFIED", articleClaimAllowed: true, sourceFile: "src/routes/pricing.tsx", evidence: "Free plan feature list." },
+        ],
+      },
+    };
+    const result = await runArticleProduction({
+      research: productResearch, outputDir: root, minWordCount: 10,
+      generateArticle: async () => ({ markdown: validGeneratedMarkdown({ includeProductCitation: true }) }),
+    });
+    assert.equal(result.status, "READY_FOR_HUMAN_REVIEW");
+    assert.equal(result.quality.evidenceCitationFailures.length, 0);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test("article generation fails closed when no provider is configured", async () => {
