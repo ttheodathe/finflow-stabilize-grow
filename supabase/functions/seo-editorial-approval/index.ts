@@ -2,8 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.108.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "https://www.finflowtrack.com",
-  "Access-Control-Allow-Headers":
-    "authorization, content-type, apikey, x-client-info",
+  "Access-Control-Allow-Headers": "authorization, content-type, apikey, x-client-info",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -68,8 +67,7 @@ Deno.serve(async (request: Request) => {
   const revisionId = String(body.revisionId || "");
   const contentHash = String(body.contentHash || "");
   const decision = String(body.decision || "");
-  const reviewNotes =
-    typeof body.reviewNotes === "string" ? body.reviewNotes.slice(0, 4000) : null;
+  const reviewNotes = typeof body.reviewNotes === "string" ? body.reviewNotes.slice(0, 4000) : null;
 
   if (
     !/^[0-9a-f-]{36}$/i.test(operationId) ||
