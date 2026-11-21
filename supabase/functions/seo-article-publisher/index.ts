@@ -18,8 +18,8 @@ async function verifyPublisherIdentity(request: Request) {
   const allowedRepository = Deno.env.get("PUBLISHER_ALLOWED_REPOSITORY") || "ttheodathe/finflow-stabilize-grow";
   const allowedRepositoryId = Deno.env.get("PUBLISHER_ALLOWED_REPOSITORY_ID") || "1302272765";
   const allowedRef = Deno.env.get("PUBLISHER_ALLOWED_REF") || "refs/heads/main";
-  const allowedWorkflowRef = Deno.env.get("PUBLISHER_ALLOWED_WORKFLOW_REF");
-  if (!allowedWorkflowRef) throw new Error("Publisher workflow identity is not configured.");
+  const allowedWorkflowRef = Deno.env.get("PUBLISHER_ALLOWED_WORKFLOW_REF") ||
+    "ttheodathe/finflow-stabilize-grow/.github/workflows/seo-publisher.yml@refs/heads/main";
 
   const { payload } = await jwtVerify(token, jwks, { issuer, audience });
   const allowedEvents = (Deno.env.get("PUBLISHER_ALLOWED_EVENT_NAMES") || "schedule,workflow_dispatch")
