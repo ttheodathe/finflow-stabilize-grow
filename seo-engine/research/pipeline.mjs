@@ -6,6 +6,8 @@ import matter from "gray-matter";
 import productCapabilityRecord from "../../content/operations/research/verified-product-capabilities.json" with { type: "json" };
 import editorialBacklog from "./editorial-backlog.json" with { type: "json" };
 import { validateDraft } from "../content-ops/validate-draft.mjs";
+import { runArticleProduction } from "./article-production.mjs";
+import { createArticleGeneratorFromEnv } from "./article-generator-provider.mjs";
 import { createSupabaseSeoStoreFromEnv } from "../persistence/supabase-store.mjs";
 
 const CONTENT_DIR = "content/blog";
@@ -692,6 +694,8 @@ export async function runResearchPipeline({
   opportunities, contentDir = CONTENT_DIR, outputDir = RESEARCH_DIR,
   fetchImpl = fetch, now = new Date(), store = createSupabaseSeoStoreFromEnv(process.env),
   allowFixture = false,
+  articleGenerator = createArticleGeneratorFromEnv(process.env),
+  articleOutputDir = path.join(outputDir, "article-production"),
 } = {}) {
   if (!Array.isArray(opportunities)) throw new Error("Research pipeline requires an opportunities array.");
   const inventory = await loadInventory({ contentDir });
@@ -777,6 +781,12 @@ export async function runResearchPipeline({
       .filter(item => item && item.slug !== target.slug).map(item => ({slug:item.slug,title:item.title}));
     const existingArticle = operationType === "EXISTING_ARTICLE_UPDATE" ? inventory.find(item => item.slug === target.slug) || null : null;
     const draft = buildDraft(candidate,pack,sourceRecords,productEvidence,related,target,now,existingArticle);
+    base.sourceRecords = sourceRecords;
+    base.internalLinks = related;
+    base.audience = pack.audience;
+    base.articleAngle = pack.angle || pack.sections.map(([heading]) => heading).join("; ");
+    base.jurisdiction = pack.jurisdiction;
+    base.productEvidence = productEvidence ? VERIFIED_PRODUCT : null;
     const duplicateSlug = operationType === "NEW_ARTICLE" && inventory.some(item => item.slug === draft.slug);
     const contentText = matter(draft.content);
     const frontmatterValid = contentText.data.status === "draft" && contentText.data.publicationStatus === "draft" &&
@@ -835,6 +845,24 @@ export async function runResearchPipeline({
       originality, numericClaimsVerified: !unsupportedNumericClaims, numericClaimMatches: unsupportedNumericClaimMatches, productCapabilities: productEvidence ? "VERIFIED_FROM_REPOSITORY" : "NOT_VERIFIED",
     };
     base.status = base.rejectionReasons.length ? "REJECTED" : "DRAFT_READY_FOR_HUMAN_REVIEW";
+    if (base.status === "DRAFT_READY_FOR_HUMAN_REVIEW" && typeof articleGenerator === "function") {
+      const articleProduction = await runArticleProduction({
+        research: { ...base, candidate, draft, sourceRecords, internalLinks: related,
+          audience: pack.audience, jurisdiction: pack.jurisdiction,
+          productEvidence: productEvidence ? VERIFIED_PRODUCT : null,
+          outline: pack.sections.map(([heading]) => heading), readerQuestions: pack.readerQuestions || [],
+          existingInventory: inventory },
+        generateArticle: articleGenerator, outputDir: articleOutputDir, now,
+      });
+      if (articleProduction.status === "READY_FOR_HUMAN_REVIEW") {
+        draft.content = articleProduction.articleMarkdown;
+        base.articleProduction = { ...articleProduction, articleMarkdown: undefined };
+      } else {
+        base.rejectionReasons.push(...(articleProduction.blockers || [articleProduction.status]));
+        base.status = "REJECTED";
+        base.articleProduction = { ...articleProduction, articleMarkdown: undefined };
+      }
+    }
     if (base.status === "DRAFT_READY_FOR_HUMAN_REVIEW") {
       const hash = createHash("sha256").update(draft.content).digest("hex");
       const filename = `${candidate.id || draft.slug}-${hash.slice(0,10)}.md`.replace(/[^a-zA-Z0-9._-]/g,"-");
@@ -845,13 +873,13 @@ export async function runResearchPipeline({
       base.contentHash = hash;
       if (store) {
         requireUuid(candidate.persistedOpportunityId, "Persisted Scheduler 1 opportunity");
-        for (const method of ["recordContentOperation","recordResearchRecord","recordContentRevision","getContentOperation","listResearchRecords","listContentRevisions"]) {
+        for (const method of ["recordContentOperation","recordResearchRecord","advanceContentRevision","getContentOperation","listResearchRecords","listContentRevisions"]) {
           if (typeof store[method] !== "function") {
             throw new Error(`Durable draft persistence requires store.${method} for independent readback.`);
           }
         }
         const scheduledFor = now.toISOString().slice(0,10);
-        const operationKey = `research:${candidate.id || draft.slug}:${freshness.reportingPeriodEnd}:${hash.slice(0,16)}`;
+        const operationKey = `research:${candidate.id || draft.slug}:${freshness.reportingPeriodEnd}`;
         const operationInput = {
           operationKey, operationType,
           targetPath:`content/blog/${draft.slug}.md`, slug:draft.slug, status:"PROPOSED",
@@ -902,10 +930,17 @@ export async function runResearchPipeline({
               id:researchRecordId, sourceUrl:source.url, supportedClaims, unresolvedClaims,
             });
           }
-          const revisionId = requireUuid(await store.recordContentRevision({
-            operationId, revisionNumber:1, contentHash:hash,
-            markdown:draft.content, revisionState:"PROPOSED",
-          }), "Content revision persistence");
+          const priorRevisions = await store.listContentRevisions({operationId});
+          const sameRevision = priorRevisions.find(item => item.content_hash === hash);
+          const latestRevision = priorRevisions.reduce((latest,item) =>
+            !latest || item.revision_number > latest.revision_number ? item : latest, null);
+          const revisionNumber = sameRevision?.revision_number
+            || (latestRevision ? latestRevision.revision_number + 1 : 1);
+          const revisionId = requireUuid(await store.advanceContentRevision({
+            operationId, revisionNumber, contentHash:hash, markdown:draft.content,
+            previousContentHash:sameRevision ? null : latestRevision?.content_hash || null,
+            operationPayload:{...operationPayload,workflowState:"PERSISTED_PENDING_READBACK",draftMarkdown:draft.content},
+          }), "Content revision advancement persistence");
 
           const pendingReadbackPayload = {
             ...operationPayload,

@@ -66,6 +66,17 @@ export function createSupabaseSeoStore({ url, serviceRoleKey, fetchImpl = fetch 
         p_period_start: periodStart, p_period_end: periodEnd, p_source: source, p_metrics: metrics,
       }), "Performance snapshot persistence");
     },
+    async recordArticlePerformanceSnapshot({ snapshotKey, operationId = null, revisionId = null, slug, canonicalUrl, source, periodStart, periodEnd, metrics, measurementScope = "PAGE_LEVEL_DIRECT", revisionAttribution = "UNKNOWN" }) {
+      if (operationId != null) requireUuid(operationId, "Article performance operation ID");
+      if (revisionId != null) requireUuid(revisionId, "Article performance revision ID");
+      if (typeof snapshotKey !== "string" || !snapshotKey.trim()) throw new Error("Article performance snapshot key is required.");
+      return requireUuid(await rpc("seo_ops_record_article_performance", {
+        p_snapshot_key: snapshotKey, p_operation_id: operationId, p_revision_id: revisionId,
+        p_slug: slug, p_canonical_url: canonicalUrl, p_source: source,
+        p_period_start: periodStart, p_period_end: periodEnd, p_metrics: metrics,
+        p_measurement_scope: measurementScope, p_revision_attribution: revisionAttribution,
+      }), "Article performance snapshot persistence");
+    },
     async recordActivationSnapshot({ snapshotDate, registeredUsers, onboardingCompletions, activatedUsers, returningActivatedUsers, definitionVersion, sourceWatermark, limitations = [] }) {
       return requireUuid(await rpc("seo_ops_record_activation_snapshot", {
         p_snapshot_date: snapshotDate, p_registered_users: registeredUsers,
@@ -88,6 +99,15 @@ export function createSupabaseSeoStore({ url, serviceRoleKey, fetchImpl = fetch 
         p_source_published_at: sourcePublishedAt, p_retrieved_at: retrievedAt,
         p_supported_claims: supportedClaims, p_unresolved_claims: unresolvedClaims,
       }), "Research record persistence");
+    },
+    async advanceContentRevision({ operationId, revisionNumber, contentHash, markdown, previousContentHash = null, operationPayload }) {
+      requireUuid(operationId, "Content revision operation ID");
+      if (!/^[a-f0-9]{64}$/.test(contentHash || "")) throw new Error("Content revision hash must be a SHA-256 hex digest.");
+      return requireUuid(await rpc("seo_ops_advance_content_revision", {
+        p_operation_id: operationId, p_revision_number: revisionNumber,
+        p_content_hash: contentHash, p_markdown: markdown,
+        p_previous_content_hash: previousContentHash, p_operation_payload: operationPayload,
+      }), "Content revision advancement persistence");
     },
     async recordContentRevision({ operationId, revisionNumber, contentHash, markdown, revisionState = "PROPOSED" }) {
       requireUuid(operationId, "Content revision operation ID");

@@ -175,7 +175,7 @@ begin
     into v_total,v_rls
   from pg_class c join pg_namespace n on n.oid=c.relnamespace
   where n.nspname='seo_ops' and c.relkind='r';
-  if v_total <> 11 or v_rls <> 11 then raise exception 'expected RLS on all 11 SEO tables; total %, enabled %',v_total,v_rls; end if;
+  if v_total <> 14 or v_rls <> 14 then raise exception 'expected RLS on all 14 SEO tables; total %, enabled %',v_total,v_rls; end if;
   if has_schema_privilege('anon','seo_ops','USAGE')
      or has_schema_privilege('authenticated','seo_ops','USAGE')
      or has_table_privilege('anon','seo_ops.scheduler_runs','SELECT')
@@ -211,5 +211,91 @@ begin
      or has_function_privilege('authenticated','public.seo_ops_get_content_revisions(uuid)','EXECUTE')
      or not has_function_privilege('service_role','public.seo_ops_get_content_revisions(uuid)','EXECUTE') then
     raise exception 'SEO RPC execution grants are incorrect';
+  end if;
+end $$;
+
+-- Stage C: authenticated approval is mediated by a verified subject and exact revision hash.
+do $$
+declare
+  v_reviewer uuid := gen_random_uuid();
+  v_operation uuid;
+  v_revision uuid;
+  v_revision2 uuid;
+  v_revision3 uuid;
+  v_approval uuid;
+  v_performance uuid;
+  v_hash text := repeat('c',64);
+  v_hash2 text := repeat('d',64);
+  v_hash3 text := repeat('e',64);
+  v_count integer;
+begin
+  insert into seo_ops.editorial_reviewers(user_id,is_active,reviewer_role)
+    values (v_reviewer,true,'EDITOR');
+  v_operation := public.seo_ops_record_content_operation(
+    'stage-c-smoke-' || gen_random_uuid()::text,'NEW_ARTICLE',
+    'content/blog/stage-c-smoke.md','stage-c-smoke','PROPOSED',
+    '{"workflowState":"READY_FOR_HUMAN_REVIEW"}'::jsonb,v_hash,null
+  );
+  v_revision := public.seo_ops_advance_content_revision(
+    v_operation,1,v_hash,'# Stage C smoke article',null,
+    '{"workflowState":"PERSISTED_PENDING_READBACK","draftMarkdown":"# Stage C smoke article"}'::jsonb
+  );
+  v_revision2 := public.seo_ops_advance_content_revision(
+    v_operation,2,v_hash2,'# Stage C smoke article revised',v_hash,
+    '{"workflowState":"PERSISTED_PENDING_READBACK","draftMarkdown":"# Stage C smoke article revised"}'::jsonb
+  );
+  select count(*) into v_count from seo_ops.content_revisions
+   where operation_id=v_operation and revision_number=1 and revision_state='SUPERSEDED';
+  if v_count <> 1 then raise exception 'previous article revision was not superseded'; end if;
+  v_approval := public.seo_ops_record_article_approval(
+    v_operation,v_revision2,v_hash2,v_reviewer,v_reviewer::text,'CHANGES_REQUESTED','CI synthetic revision request'
+  );
+  v_revision3 := public.seo_ops_advance_content_revision(
+    v_operation,3,v_hash3,'# Stage C smoke article final',v_hash2,
+    '{"workflowState":"PERSISTED_PENDING_READBACK","draftMarkdown":"# Stage C smoke article final"}'::jsonb
+  );
+  select count(*) into v_count from seo_ops.content_revisions
+   where operation_id=v_operation and revision_number=2 and revision_state='SUPERSEDED';
+  if v_count <> 1 then raise exception 'revision after change request did not supersede the prior proposal'; end if;
+  v_approval := public.seo_ops_record_article_approval(
+    v_operation,v_revision3,v_hash3,v_reviewer,v_reviewer::text,'APPROVED','CI synthetic approval'
+  );
+  select count(*) into v_count from public.seo_ops_get_article_approval(v_approval)
+   where id=v_approval and reviewer_user_id=v_reviewer and content_hash=v_hash3 and decision='APPROVED';
+  if v_count <> 1 then raise exception 'authenticated article approval readback failed'; end if;
+  select count(*) into v_count from seo_ops.content_operations
+   where id=v_operation and status='APPROVED' and approved_content_hash=v_hash3;
+  if v_count <> 1 then raise exception 'approved operation did not bind exact revision hash'; end if;
+
+  v_performance := public.seo_ops_record_article_performance(
+    'stage-c-smoke-performance-' || gen_random_uuid()::text,
+    v_operation,v_revision3,'stage-c-smoke',
+    'https://www.finflowtrack.com/blog/stage-c-smoke','GSC',
+    date '2026-11-01',date '2026-11-20',
+    '{"clicks":4,"impressions":100,"ctr":0.04}'::jsonb,
+    'PAGE_LEVEL_DIRECT','UNKNOWN'
+  );
+  select count(*) into v_count from seo_ops.article_performance_snapshots
+   where id=v_performance and slug='stage-c-smoke' and revision_id=v_revision3 and revision_attribution='UNKNOWN';
+  if v_count <> 1 then raise exception 'article performance snapshot persistence failed'; end if;
+
+  if has_function_privilege('anon','public.seo_ops_record_article_approval(uuid,uuid,text,uuid,text,text,text)','EXECUTE')
+     or has_function_privilege('authenticated','public.seo_ops_record_article_approval(uuid,uuid,text,uuid,text,text,text)','EXECUTE')
+     or not has_function_privilege('service_role','public.seo_ops_record_article_approval(uuid,uuid,text,uuid,text,text,text)','EXECUTE') then
+    raise exception 'article approval RPC execution grants are incorrect';
+  end if;
+  if has_table_privilege('anon','seo_ops.article_approvals','SELECT')
+     or has_table_privilege('authenticated','seo_ops.article_approvals','SELECT')
+     or has_table_privilege('service_role','seo_ops.article_approvals','UPDATE')
+     or has_table_privilege('service_role','seo_ops.article_approvals','DELETE') then
+    raise exception 'article approval ledger must be service-role-readable and append-only';
+  end if;
+  if has_function_privilege('anon','public.seo_ops_advance_content_revision(uuid,integer,text,text,text,jsonb)','EXECUTE')
+     or has_function_privilege('authenticated','public.seo_ops_advance_content_revision(uuid,integer,text,text,text,jsonb)','EXECUTE')
+     or not has_function_privilege('service_role','public.seo_ops_advance_content_revision(uuid,integer,text,text,text,jsonb)','EXECUTE')
+     or has_function_privilege('anon','public.seo_ops_get_article_approval(uuid)','EXECUTE')
+     or has_function_privilege('authenticated','public.seo_ops_get_article_approval(uuid)','EXECUTE')
+     or not has_function_privilege('service_role','public.seo_ops_get_article_approval(uuid)','EXECUTE') then
+    raise exception 'Stage C revision or approval readback RPC grants are incorrect';
   end if;
 end $$;
