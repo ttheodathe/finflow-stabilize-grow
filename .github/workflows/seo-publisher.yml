@@ -13,8 +13,6 @@ on:
         required: true
         default: false
         type: boolean
-  schedule:
-    - cron: "17 * * * *"
 
 concurrency:
   group: seo-approved-article-publisher
@@ -70,7 +68,7 @@ jobs:
 
   publish:
     name: Publish one approved article
-    if: vars.ARTICLE_PUBLISHING_ENABLED == 'true' && (github.event_name == 'schedule' || inputs.publish == true)
+    if: github.event_name == 'workflow_dispatch' && inputs.publish == true && vars.ARTICLE_PUBLISHING_ENABLED == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     permissions:
