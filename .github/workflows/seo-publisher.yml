@@ -32,7 +32,7 @@ jobs:
       id-token: write
       contents: read
     env:
-      SEO_PUBLISHER_URL: ${{ github.ref_name == 'feat/stage-d-oidc-publisher' && 'https://bufbyfwstdqvwnkhyrea.supabase.co/functions/v1/seo-article-publisher' || vars.SEO_PUBLISHER_URL }}
+      SEO_PUBLISHER_URL: ${{ github.ref_name == 'feat/stage-d-oidc-publisher' && 'https://bufbyfwstdqvwnkhyrea.supabase.co/functions/v1/seo-article-publisher-acceptance' || vars.SEO_PUBLISHER_URL }}
       SEO_PUBLISHER_AUDIENCE: finflowtrack-seo-publisher
     steps:
       - uses: actions/checkout@v4
