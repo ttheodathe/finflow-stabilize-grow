@@ -31,12 +31,18 @@ jobs:
             echo "run=false" >> "$GITHUB_OUTPUT"
             echo "Ignoring seasonal duplicate UTC cron; target is 10:50 AM America/New_York."
           fi
+      - name: Install PostgreSQL client for read-only activation query
+        if: steps.time-gate.outputs.run == 'true'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install --yes postgresql-client
       - name: Collect independent organic performance report
         if: steps.time-gate.outputs.run == 'true'
         env:
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
           GSC_SITE_URL: ${{ vars.GSC_SITE_URL }}
           GA4_PROPERTY_ID: ${{ vars.GA4_PROPERTY_ID }}
+          SEO_PRODUCTION_READONLY_DATABASE_URL: ${{ secrets.SEO_PRODUCTION_READONLY_DATABASE_URL }}
           SEO_OUTPUT_DIR: seo-output
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
