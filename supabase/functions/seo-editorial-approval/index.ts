@@ -68,7 +68,8 @@ Deno.serve(async (request: Request) => {
   const contentHash = String(body.contentHash || "");
   const decision = String(body.decision || "");
   const reviewNotes = typeof body.reviewNotes === "string" ? body.reviewNotes.slice(0, 4000) : null;
-  const approvedAuthor = typeof body.approvedAuthor === "string" ? body.approvedAuthor.trim() : null;
+  const approvedAuthor =
+    typeof body.approvedAuthor === "string" ? body.approvedAuthor.trim() : null;
 
   if (
     !/^[0-9a-f-]{36}$/i.test(operationId) ||
@@ -78,7 +79,10 @@ Deno.serve(async (request: Request) => {
     (decision === "APPROVED" && (!approvedAuthor || approvedAuthor.length > 120)) ||
     (decision !== "APPROVED" && approvedAuthor !== null)
   ) {
-    return json({ error: "Approval payload is invalid or missing its explicitly selected author" }, 400);
+    return json(
+      { error: "Approval payload is invalid or missing its explicitly selected author" },
+      400,
+    );
   }
 
   const { data, error } = await admin.rpc("seo_ops_record_article_approval", {
