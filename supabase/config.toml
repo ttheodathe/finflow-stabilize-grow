@@ -1,1 +1,5 @@
 project_id = "zjaamxvqjiymgfujrtjm"
+
+[functions.seo-article-publisher]
+# The function validates GitHub Actions OIDC tokens itself.
+verify_jwt = false
