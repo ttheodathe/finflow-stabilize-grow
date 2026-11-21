@@ -14,7 +14,7 @@ test("activation reader verifies exact GitHub OIDC identity before using service
     "ttheodathe/finflow-stabilize-grow",
     "1302272765",
     "refs/heads/main",
-    ".github/workflows/seo-scheduler-3-performance-learning.yml@refs/heads/main",
+    "seo-scheduler-3-performance-learning.yml@refs/heads/main",
     '"schedule", "workflow_dispatch"',
   ]) assert.ok(functionSource.includes(expected), `missing OIDC constraint: ${expected}`);
   assert.ok(functionSource.indexOf("await verifyWorkflowIdentity(request)") < functionSource.indexOf("SUPABASE_SERVICE_ROLE_KEY"));
