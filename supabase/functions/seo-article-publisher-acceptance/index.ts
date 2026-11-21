@@ -20,7 +20,7 @@ const json = (body: unknown, status = 200) =>
 Deno.serve(async (request: Request) => {
   if (request.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
-  const token = (request.headers.get("Authorization") || "").replace(/^Bearer\\s+/i, "");
+  const token = (request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
   if (!token) return json({ error: "GitHub Actions OIDC token is required" }, 401);
 
   try {
