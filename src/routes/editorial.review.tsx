@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { seoReviewSupabase } from "@/integrations/supabase/seo-review-client";
+import { getEditorialReviewRedirectUrl } from "@/lib/editorial-review-origin";
 import type { User } from "@supabase/supabase-js";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -85,25 +86,6 @@ function EditorialReviewPage() {
     retry: false,
   });
 
-  function getReviewRedirectUrl(): string {
-    const redirect = new URL("/editorial/review", window.location.origin);
-    const hostname = redirect.hostname.toLowerCase();
-    const isApprovedHost =
-      hostname === "finflowtrack.com" ||
-      hostname === "www.finflowtrack.com" ||
-      hostname.endsWith(".vercel.app");
-
-    // Never send an auth link from localhost or an unrecognized origin.
-    // Supabase also enforces its own Site URL / Additional Redirect URLs allowlist.
-    if (redirect.protocol !== "https:" || !isApprovedHost) {
-      throw new Error(
-        "Open the deployed FinFlow Track preview URL before requesting a reviewer sign-in link.",
-      );
-    }
-
-    return redirect.toString();
-  }
-
   async function sendMagicLink(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!seoReviewSupabase) return;
@@ -113,7 +95,7 @@ function EditorialReviewPage() {
         email: email.trim(),
         options: {
           shouldCreateUser: false,
-          emailRedirectTo: getReviewRedirectUrl(),
+          emailRedirectTo: getEditorialReviewRedirectUrl(window.location.origin),
         },
       });
       if (error) throw error;
