@@ -2,6 +2,10 @@ import { randomUUID } from "node:crypto";
 import { mkdir, writeFile, appendFile } from "node:fs/promises";
 
 const endpoint = process.env.SEO_PUBLISHER_URL;
+const allowedPublisherEndpoints = new Set([
+  "https://bufbyfwstdqvwnkhyrea.supabase.co/functions/v1/seo-article-publisher-acceptance",
+  "https://zjaamxvqjiymgfujrtjm.supabase.co/functions/v1/seo-article-publisher",
+]);
 const audience = process.env.SEO_PUBLISHER_AUDIENCE || "finflowtrack-seo-publisher";
 const requestUrl = process.env.ACTIONS_ID_TOKEN_REQUEST_URL;
 const requestToken = process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN;
@@ -23,10 +27,10 @@ async function getOidcToken() {
 }
 async function callPublisher(body) {
   if (!endpoint) throw new Error("SEO_PUBLISHER_URL repository variable is not configured.");
-  const url = new URL(endpoint);
-  if (url.protocol !== "https:" || !url.hostname.endsWith(".supabase.co")) {
-    throw new Error("SEO_PUBLISHER_URL must be an HTTPS Supabase Edge Function URL.");
+  if (!allowedPublisherEndpoints.has(endpoint)) {
+    throw new Error("SEO_PUBLISHER_URL must exactly match an approved FinFlow Track publisher endpoint.");
   }
+  const url = new URL(endpoint);
   const token = await getOidcToken();
   const response = await fetch(url, {
     method: "POST",
