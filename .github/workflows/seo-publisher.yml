@@ -1,0 +1,150 @@
+name: SEO approved article publisher
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish one editorially approved article (requires the repository publishing gate to be enabled)"
+        required: true
+        default: false
+        type: boolean
+  schedule:
+    - cron: "17 * * * *"
+  push:
+    branches:
+      - feat/stage-d-oidc-publisher
+
+concurrency:
+  group: seo-approved-article-publisher
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  oidc-preflight:
+    name: Verify publisher identity without touching content
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish != true)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      SEO_PUBLISHER_URL: ${{ github.ref_name == 'feat/stage-d-oidc-publisher' && 'https://bufbyfwstdqvwnkhyrea.supabase.co/functions/v1/seo-article-publisher-acceptance' || vars.SEO_PUBLISHER_URL }}
+      SEO_PUBLISHER_AUDIENCE: finflowtrack-seo-publisher
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify GitHub OIDC identity
+        run: node seo-engine/publishing/publisher-api.mjs ping
+
+  publish:
+    name: Publish one approved article
+    if: vars.ARTICLE_PUBLISHING_ENABLED == 'true' && (github.event_name == 'schedule' || inputs.publish == true)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+      id-token: write
+    env:
+      SEO_PUBLISHER_URL: ${{ vars.SEO_PUBLISHER_URL }}
+      SEO_PUBLISHER_AUDIENCE: finflowtrack-seo-publisher
+      PUBLISH_SITEMAP_URL: https://www.finflowtrack.com/sitemap.xml
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Claim one approved article revision
+        id: claim
+        run: node seo-engine/publishing/publisher-api.mjs claim
+      - name: Prepare publication worktree
+        id: prepare
+        if: steps.claim.outputs.claimed == 'true'
+        run: node seo-engine/publishing/prepare-publication-worktree.mjs
+      - name: Run complete production build with the candidate article
+        if: steps.claim.outputs.claimed == 'true'
+        run: npm run build
+      - name: Commit approved article to main
+        id: commit
+        if: steps.claim.outputs.claimed == 'true'
+        env:
+          TARGET_PATH: ${{ steps.prepare.outputs.target_path }}
+          SLUG: ${{ steps.prepare.outputs.slug }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- "$TARGET_PATH"
+          git commit -m "Publish approved SEO article: $SLUG"
+          git push origin HEAD:main
+          COMMIT_SHA="$(git rev-parse HEAD)"
+          echo "commit_sha=$COMMIT_SHA" >> "$GITHUB_OUTPUT"
+      - name: Record committed article revision
+        if: steps.commit.outcome == 'success'
+        env:
+          PUBLISH_CLAIM_ID: ${{ steps.claim.outputs.claim_id }}
+          PUBLISH_STATUS: MERGED
+          PUBLISH_COMMIT_SHA: ${{ steps.commit.outputs.commit_sha }}
+        run: node seo-engine/publishing/publisher-api.mjs update
+      - name: Wait for successful Vercel production deployment
+        id: deployment
+        if: steps.commit.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMIT_SHA: ${{ steps.commit.outputs.commit_sha }}
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 40); do
+            STATE="$(gh api "repos/$GITHUB_REPOSITORY/commits/$COMMIT_SHA/status" --jq '[.statuses[] | select(.context == "Vercel") | .state] | last // empty')"
+            if [ "$STATE" = "success" ]; then
+              echo "vercel_state=success" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            if [ "$STATE" = "failure" ] || [ "$STATE" = "error" ]; then
+              echo "Vercel production deployment reported $STATE."
+              exit 1
+            fi
+            sleep 30
+          done
+          echo "Vercel production deployment did not reach success before timeout."
+          exit 1
+      - name: Record production deployment readiness
+        if: steps.deployment.outcome == 'success'
+        env:
+          PUBLISH_CLAIM_ID: ${{ steps.claim.outputs.claim_id }}
+          PUBLISH_STATUS: DEPLOYMENT_READY
+          PUBLISH_PUBLISHED_URL: ${{ steps.prepare.outputs.published_url }}
+        run: node seo-engine/publishing/publisher-api.mjs update
+      - name: Verify public URL, canonical, indexability and sitemap
+        if: steps.deployment.outcome == 'success'
+        env:
+          PUBLISHED_URL: ${{ steps.prepare.outputs.published_url }}
+        run: node seo-engine/publishing/verify-publication-url.mjs "$PUBLISHED_URL"
+      - name: Record URL verification
+        if: steps.deployment.outcome == 'success'
+        env:
+          PUBLISH_CLAIM_ID: ${{ steps.claim.outputs.claim_id }}
+          PUBLISH_STATUS: URL_VERIFIED
+          PUBLISH_CONTENT_HASH: ${{ steps.prepare.outputs.published_content_hash }}
+          PUBLISH_PUBLISHED_URL: ${{ steps.prepare.outputs.published_url }}
+        run: node seo-engine/publishing/publisher-api.mjs update
+      - name: Mark failed or blocked publication attempt
+        if: failure() && steps.claim.outputs.claimed == 'true'
+        env:
+          PUBLISH_CLAIM_ID: ${{ steps.claim.outputs.claim_id }}
+          PUBLISH_STATUS: FAILED
+          PUBLISH_ERROR_MESSAGE: "Publisher workflow failed. Inspect the GitHub Actions run before retrying."
+        run: node seo-engine/publishing/publisher-api.mjs update
