@@ -706,8 +706,12 @@ function buildDraft(candidate, pack, sourceRecords, productEvidence, internalLin
     markdown = `---\ntitle: "${pack.title.replace(/"/g, '\\\"')}"\ndescription: "${pack.description.replace(/"/g, '\\\"')}"\nslug: "${target.slug}"\nstatus: "draft"\npublicationStatus: "draft"\ncategory: "small-business-finance"\ntags:\n  - small business\n  - ${pack.id}\ndraft: true\n---\n\n# ${pack.title}\n\nA reliable process is easier to maintain when each step has a clear purpose and an owner. This guide focuses on practical routines rather than promises or one-size-fits-all rules.\n\n${sections}\n${productLine}\n## Related FinFlow Track guides\n\n${links}\n\n## Sources and scope\n\n${sourceLines}\n\nRequirements differ by country, contract and business structure. Government sources cited here are provided for the jurisdiction they cover; they are not a substitute for local professional advice.\n`;
   }
   const generatedMetadata = matter(markdown).data;
+  const targetBaseContentHash = candidate.operationType === "EXISTING_ARTICLE_UPDATE" && existingArticle?.markdown
+    ? createHash("sha256").update(existingArticle.markdown).digest("hex")
+    : null;
   return {
     title: pack.title, description: pack.description, slug: target.slug,
+    targetBaseContentHash,
     category: generatedMetadata.category,
     tags: Array.isArray(generatedMetadata.tags) ? generatedMetadata.tags : [],
     draft: true,
@@ -933,6 +937,7 @@ export async function runResearchPipeline({
           sourcePackContext:base.sourcePackContext,
           sources:sourceRecords, claims:draft.claims, productEvidence:draft.productEvidence,
           quality:base.quality, draftMarkdown:draft.content,
+          targetBaseContentHash: draft.targetBaseContentHash || null,
           publicationStatus:"draft", execution:"DRY_RUN_ONLY",
           createdAt:now.toISOString(), scheduledFor,
         };
