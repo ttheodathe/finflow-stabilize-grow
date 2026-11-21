@@ -382,4 +382,26 @@ begin
      or not has_function_privilege('service_role','public.seo_ops_get_article_approval(uuid)','EXECUTE') then
     raise exception 'Stage C revision or approval readback RPC grants are incorrect';
   end if;
-end $$;
+end $;
+
+ 
+do $
+declare
+  v_security_definer boolean;
+begin
+  select p.prosecdef into v_security_definer
+  from pg_proc p
+  where p.oid = to_regprocedure('public.seo_ops_list_pending_editorial_reviews(uuid,text)');
+
+  if not found then
+    raise exception 'review queue RPC is missing';
+  end if;
+  if v_security_definer is distinct from false then
+    raise exception 'review queue RPC must use SECURITY INVOKER';
+  end if;
+  if has_function_privilege('anon','public.seo_ops_list_pending_editorial_reviews(uuid,text)','EXECUTE')
+     or has_function_privilege('authenticated','public.seo_ops_list_pending_editorial_reviews(uuid,text)','EXECUTE')
+     or not has_function_privilege('service_role','public.seo_ops_list_pending_editorial_reviews(uuid,text)','EXECUTE') then
+    raise exception 'review queue RPC execution grants are incorrect';
+  end if;
+end $;
