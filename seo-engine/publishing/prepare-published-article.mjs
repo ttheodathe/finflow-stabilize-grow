@@ -60,7 +60,8 @@ export function preparePublishedArticle({
   expectedExistingContentHash = null,
   minWordCount = 1200,
 } = {}) {
-  const exactMarkdown = requireText(markdown, "Approved Markdown");
+  if (typeof markdown !== "string" || !markdown.trim()) throw new Error("Approved Markdown is required.");
+  const exactMarkdown = markdown;
   if (!HASH_PATTERN.test(approvedContentHash || "") || sha256(exactMarkdown) !== approvedContentHash) {
     throw new Error("Approved content hash does not match the exact stored Markdown.");
   }
