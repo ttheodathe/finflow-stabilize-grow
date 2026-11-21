@@ -12,6 +12,7 @@ on:
       - fix/editorial-review-public-route
       - feat/stage-c-evidence-citation-gates
       - feat/stage-d-approved-publishing-guardrails
+      - feat/stage-d-publish-package-preflight
 
 permissions:
   contents: read
