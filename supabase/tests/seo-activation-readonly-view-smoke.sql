@@ -1,16 +1,11 @@
--- CI-only security and result assertions for the Stage B2 aggregate view.
+-- CI-only security and result assertions for the Stage E aggregate view.
 do $$
 declare
   v record;
   v_column_count integer;
 begin
-  if not exists (
-    select 1 from pg_roles
-    where rolname='seo_activation_aggregator'
-      and not rolcanlogin and not rolsuper and not rolcreatedb
-      and not rolcreaterole and not rolreplication and not rolbypassrls
-  ) then
-    raise exception 'aggregator role attributes are not least-privilege';
+  if exists (select 1 from pg_roles where rolname='seo_activation_aggregator') then
+    raise exception 'obsolete aggregator role must not be created';
   end if;
 
   if not exists (
@@ -19,12 +14,7 @@ begin
       and not rolcanlogin and not rolsuper and not rolcreatedb
       and not rolcreaterole and not rolreplication and not rolbypassrls
   ) then
-    raise exception 'reader role must remain NOLOGIN until an operator configures its credential';
-  end if;
-
-  if pg_has_role('seo_activation_reader','seo_activation_aggregator','MEMBER')
-     or pg_has_role('seo_activation_aggregator','seo_activation_reader','MEMBER') then
-    raise exception 'reader must not inherit or assume the aggregator role';
+    raise exception 'reader role must remain NOLOGIN and least-privileged';
   end if;
 
   if exists (
@@ -33,8 +23,8 @@ begin
     join pg_roles granted_role on granted_role.oid = am.roleid
     join pg_roles member_role on member_role.oid = am.member
     where (
-      granted_role.rolname in ('seo_activation_aggregator', 'seo_activation_reader')
-      or member_role.rolname in ('seo_activation_aggregator', 'seo_activation_reader')
+      granted_role.rolname = 'seo_activation_reader'
+      or member_role.rolname = 'seo_activation_reader'
     )
     and not (
       member_role.rolname = current_user
@@ -45,18 +35,7 @@ begin
       )
     )
   ) then
-    raise exception 'dedicated roles unexpectedly have non-admin memberships';
-  end if;
-
-  if exists (
-    select 1
-    from pg_class c
-    join pg_namespace n on n.oid = c.relnamespace
-    where n.nspname = 'public'
-      and c.relname in ('profiles', 'onboarding_progress', 'invoices', 'expenses')
-      and c.relowner = 'seo_activation_aggregator'::regrole
-  ) then
-    raise exception 'aggregator unexpectedly owns a source table';
+    raise exception 'reader role unexpectedly has a non-admin membership';
   end if;
 
   if has_table_privilege('seo_activation_reader','public.profiles','SELECT')
@@ -75,18 +54,12 @@ begin
     raise exception 'reader unexpectedly has write privileges';
   end if;
 
-  if not has_column_privilege('seo_activation_aggregator','public.profiles','id','SELECT')
-     or not has_column_privilege('seo_activation_aggregator','public.profiles','created_at','SELECT')
-     or has_column_privilege('seo_activation_aggregator','public.profiles','id','UPDATE')
-     or has_column_privilege('seo_activation_aggregator','public.profiles','created_at','INSERT') then
-    raise exception 'aggregator source-column privileges are incorrect';
-  end if;
-
   if not has_schema_privilege('seo_activation_reader','seo_private','USAGE')
      or has_schema_privilege('seo_activation_reader','seo_private','CREATE')
      or not has_table_privilege('seo_activation_reader','seo_private.activation_aggregate','SELECT') then
     raise exception 'reader view-only schema grants are incorrect';
   end if;
+
   if has_schema_privilege('anon','seo_private','USAGE')
      or has_schema_privilege('authenticated','seo_private','USAGE')
      or has_table_privilege('anon','seo_private.activation_aggregate','SELECT')
@@ -104,8 +77,8 @@ begin
 
   select relowner::regrole::text as owner_name into v
   from pg_class where oid='seo_private.activation_aggregate'::regclass;
-  if v.owner_name <> 'seo_activation_aggregator' then
-    raise exception 'aggregate view owner is not the restricted non-login role';
+  if v.owner_name <> current_user then
+    raise exception 'aggregate view owner must be the trusted migration administrator';
   end if;
 end
 $$;

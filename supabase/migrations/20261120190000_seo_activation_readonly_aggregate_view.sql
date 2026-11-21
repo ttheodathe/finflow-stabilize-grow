@@ -1,36 +1,32 @@
--- Stage B2: expose only aggregate activation metrics to a dedicated login.
--- The reader cannot SELECT from source tables. A non-login view-owner role has
--- column-only source grants and explicit RLS policies; the private view returns
--- aggregate counts only and is not in a Supabase-exposed schema.
+-- Stage E: expose only aggregate activation metrics to a dedicated reader.
+-- The view is owned by the trusted Supabase postgres administrator, but lives
+-- in an unexposed schema and is executable only by a dedicated NOLOGIN reader.
+-- It returns counts and a watermark only; it never exposes user IDs or amounts.
 
 do $$
 begin
-  if not exists (select 1 from pg_roles where rolname = 'seo_activation_aggregator') then
-    create role seo_activation_aggregator nologin noinherit;
-  end if;
   if not exists (select 1 from pg_roles where rolname = 'seo_activation_reader') then
     create role seo_activation_reader nologin noinherit;
   end if;
 
   -- PostgreSQL defaults newly created roles to non-superuser, no database/role
-  -- creation, no replication, and no RLS bypass. Refuse pre-existing roles that
-  -- carry any of those elevated attributes rather than trying to alter them.
+  -- creation, no replication, and no RLS bypass. Refuse pre-existing roles
+  -- carrying any elevated attribute instead of attempting to modify it.
   if exists (
     select 1 from pg_roles
-    where rolname in ('seo_activation_aggregator', 'seo_activation_reader')
+    where rolname = 'seo_activation_reader'
       and (rolsuper or rolcreatedb or rolcreaterole or rolreplication or rolbypassrls)
   ) then
-    raise exception 'Stage B2 dedicated roles already exist with elevated privileges';
+    raise exception 'Stage E reader role already exists with elevated privileges';
   end if;
 end;
 $$;
 
-alter role seo_activation_aggregator nologin noinherit;
 alter role seo_activation_reader nologin noinherit;
 
--- No application role may inherit from or assume either dedicated role.
--- Supabase's managed postgres administrator is automatically recorded as a
--- member of roles it creates; permit only that privileged migration actor.
+-- Supabase automatically records its privileged migration actor as a member
+-- of roles it creates. Permit only that admin membership; reject every other
+-- membership that could let an application role assume the reader role.
 do $$
 begin
   if exists (
@@ -39,8 +35,8 @@ begin
     join pg_roles granted_role on granted_role.oid = am.roleid
     join pg_roles member_role on member_role.oid = am.member
     where (
-      granted_role.rolname in ('seo_activation_aggregator', 'seo_activation_reader')
-      or member_role.rolname in ('seo_activation_aggregator', 'seo_activation_reader')
+      granted_role.rolname = 'seo_activation_reader'
+      or member_role.rolname = 'seo_activation_reader'
     )
     and not (
       member_role.rolname = current_user
@@ -51,18 +47,7 @@ begin
       )
     )
   ) then
-    raise exception 'Stage B2 dedicated roles must not be shared with any non-admin role';
-  end if;
-
-  if exists (
-    select 1
-    from pg_class c
-    join pg_namespace n on n.oid = c.relnamespace
-    where n.nspname = 'public'
-      and c.relname in ('profiles', 'onboarding_progress', 'invoices', 'expenses')
-      and c.relowner = 'seo_activation_aggregator'::regrole
-  ) then
-    raise exception 'Stage B2 aggregator must not own any source table';
+    raise exception 'Stage E reader role must not be shared with any non-admin role';
   end if;
 end;
 $$;
@@ -90,56 +75,39 @@ begin
   );
 
   if missing_tables is not null then
-    raise exception 'Stage B2 requires existing public tables with RLS enabled: %', missing_tables;
+    raise exception 'Stage E requires existing public tables with RLS enabled: %', missing_tables;
+  end if;
+
+  if not exists (
+    select 1 from pg_roles actor
+    where actor.rolname = current_user
+      and (actor.rolsuper or actor.rolbypassrls)
+  ) then
+    raise exception 'Stage E aggregate view must be owned by a trusted database administrator';
   end if;
 end;
 $$;
 
 create schema if not exists seo_private;
-revoke all on schema seo_private from public;
-revoke all on schema seo_private from anon, authenticated;
-grant usage, create on schema seo_private to seo_activation_aggregator;
-grant usage on schema public to seo_activation_aggregator;
+revoke all on schema seo_private from public, anon, authenticated;
+revoke all on schema seo_private from seo_activation_reader;
+grant usage on schema seo_private to seo_activation_reader;
 
-grant select (id, created_at)
-  on public.profiles to seo_activation_aggregator;
-grant select (user_id, completed_at)
-  on public.onboarding_progress to seo_activation_aggregator;
-grant select (user_id, created_at, status)
-  on public.invoices to seo_activation_aggregator;
-grant select (user_id, created_at)
-  on public.expenses to seo_activation_aggregator;
-
-drop policy if exists seo_activation_aggregate_access
-  on public.profiles;
-create policy seo_activation_aggregate_access
-  on public.profiles
-  for select to seo_activation_aggregator
-  using (true);
-
-drop policy if exists seo_activation_aggregate_access
-  on public.onboarding_progress;
-create policy seo_activation_aggregate_access
-  on public.onboarding_progress
-  for select to seo_activation_aggregator
-  using (true);
-
-drop policy if exists seo_activation_aggregate_access
-  on public.invoices;
-create policy seo_activation_aggregate_access
-  on public.invoices
-  for select to seo_activation_aggregator
-  using (true);
-
-drop policy if exists seo_activation_aggregate_access
-  on public.expenses;
-create policy seo_activation_aggregate_access
-  on public.expenses
-  for select to seo_activation_aggregator
-  using (true);
+-- Refuse a pre-existing direct source-table grant; the reader must use only
+-- the fixed aggregate view below.
+do $$
+begin
+  if has_table_privilege('seo_activation_reader','public.profiles','SELECT')
+     or has_table_privilege('seo_activation_reader','public.onboarding_progress','SELECT')
+     or has_table_privilege('seo_activation_reader','public.invoices','SELECT')
+     or has_table_privilege('seo_activation_reader','public.expenses','SELECT') then
+    raise exception 'Stage E reader has unexpected direct source-table access';
+  end if;
+end;
+$$;
 
 create or replace view seo_private.activation_aggregate
-with (security_invoker = false)
+with (security_invoker = false, security_barrier = true)
 as
 with registered as (
   select p.id, p.created_at
@@ -217,13 +185,10 @@ select
   (select count(*) from new_activated) as new_activated_users_30d,
   (select count(*) from new_returning) as new_returning_activated_users_30d;
 
-alter view seo_private.activation_aggregate owner to seo_activation_aggregator;
-revoke create on schema seo_private from seo_activation_aggregator;
-revoke all on schema seo_private from public;
-grant usage on schema seo_private to seo_activation_reader;
-revoke all on seo_private.activation_aggregate from public, anon, authenticated;
+
+revoke all on seo_private.activation_aggregate from public, anon, authenticated, seo_activation_reader;
 grant select on seo_private.activation_aggregate to seo_activation_reader;
 
 -- The login is deliberately left disabled. After review, an operator may set
--- a unique password and LOGIN for seo_activation_reader; do not grant role
--- membership or source-table privileges to that login.
+-- a unique password and LOGIN for seo_activation_reader; do not grant it
+-- source-table privileges or membership in any other role.
