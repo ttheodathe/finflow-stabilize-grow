@@ -145,9 +145,9 @@ function EditorialReviewPage() {
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
           <p>
-            This review page intentionally does not use the production Supabase project.
-            Configure VITE_SEO_REVIEW_SUPABASE_URL and VITE_SEO_REVIEW_SUPABASE_ANON_KEY
-            in the Vercel Preview environment for the isolated acceptance project.
+            This review page intentionally does not use the production Supabase project. Configure
+            VITE_SEO_REVIEW_SUPABASE_URL and VITE_SEO_REVIEW_SUPABASE_ANON_KEY in the Vercel Preview
+            environment for the isolated acceptance project.
           </p>
           <p>No production credentials or publishing permissions are required.</p>
         </CardContent>
@@ -210,10 +210,7 @@ function EditorialReviewPage() {
             <RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
             Refresh queue
           </Button>
-          <Button
-            variant="ghost"
-            onClick={() => void seoReviewSupabase.auth.signOut()}
-          >
+          <Button variant="ghost" onClick={() => void seoReviewSupabase.auth.signOut()}>
             Sign out
           </Button>
         </div>
