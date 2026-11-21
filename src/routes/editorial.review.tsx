@@ -25,6 +25,15 @@ type EditorialReview = {
   markdown: string;
   created_at: string;
   updated_at: string;
+  editorial_update_proposal?: {
+    action: string;
+    targetSlug: string;
+    targetUrl: string;
+    matchType: string;
+    confidence: string;
+    rationale: string;
+    recommendedActions: string[];
+  } | null;
 };
 
 export const Route = createFileRoute("/editorial/review")({
@@ -302,6 +311,30 @@ function EditorialReviewPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
+                {review.editorial_update_proposal?.action === "UPDATE_EXISTING_PUBLIC_ARTICLE" && (
+                  <Alert>
+                    <FileText className="h-4 w-4" />
+                    <AlertTitle>Constructive update recommended — do not create a duplicate URL</AlertTitle>
+                    <AlertDescription className="space-y-2">
+                      <p>
+                        Existing article: <strong>{review.editorial_update_proposal.targetSlug}</strong>
+                      </p>
+                      <p className="break-all">
+                        Keep this URL: {review.editorial_update_proposal.targetUrl}
+                      </p>
+                      <p>
+                        Match: {review.editorial_update_proposal.matchType.replaceAll("_", " ")} ·
+                        Confidence: {review.editorial_update_proposal.confidence.replaceAll("_", " ")}
+                      </p>
+                      <p>{review.editorial_update_proposal.rationale}</p>
+                      <ul className="list-disc space-y-1 pl-5">
+                        {review.editorial_update_proposal.recommendedActions.map((action, index) => (
+                          <li key={index}>{action}</li>
+                        ))}
+                      </ul>
+                    </AlertDescription>
+                  </Alert>
+                )}
                 <div className="max-h-[560px] overflow-auto rounded-md border bg-muted/20 p-4">
                   <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-6">
                     {review.markdown}
