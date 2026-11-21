@@ -76,7 +76,7 @@ Deno.serve(async (request: Request) => {
   const expectedFields = new Set(["source_watermark", ...countFields]);
   const validCount = (value: unknown) => {
     if (typeof value === "number") return Number.isSafeInteger(value) && value >= 0;
-    if (typeof value !== "string" || !/^\\d+$/.test(value)) return false;
+    if (typeof value !== "string" || !/^\d+$/.test(value)) return false;
     return Number.isSafeInteger(Number(value));
   };
   if (
