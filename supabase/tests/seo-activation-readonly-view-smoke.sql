@@ -76,6 +76,12 @@ begin
      or not has_table_privilege('seo_activation_reader','seo_private.activation_aggregate','SELECT') then
     raise exception 'reader view-only schema grants are incorrect';
   end if;
+  if has_schema_privilege('anon','seo_private','USAGE')
+     or has_schema_privilege('authenticated','seo_private','USAGE')
+     or has_table_privilege('anon','seo_private.activation_aggregate','SELECT')
+     or has_table_privilege('authenticated','seo_private.activation_aggregate','SELECT') then
+    raise exception 'browser roles unexpectedly have access to the private activation view';
+  end if;
 
   select count(*) into v_column_count
   from pg_attribute
