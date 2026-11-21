@@ -165,10 +165,39 @@ export async function runArticleProduction({
     !linkTargets.some(target => target.includes(link.slug))
   );
   const targetSlugMatches = metadata.slug === expected.slug;
+  const titleMatches = metadata.title === expected.title;
+  const descriptionMatches = metadata.description === expected.description;
   const draftStatusValid = metadata.status === "draft" && metadata.publicationStatus === "draft";
+  const normalizeUrl = value => {
+    try {
+      const url = new URL(value);
+      url.hash = "";
+      return url.toString().replace(/\\/$/, "");
+    } catch {
+      return null;
+    }
+  };
+  const citedUrls = new Set(linkTargets.map(normalizeUrl).filter(Boolean));
+  const evidenceCitationFailures = brief.evidence.filter(source => {
+    const accepted = [source.url, source.finalUrl].map(normalizeUrl).filter(Boolean);
+    return !accepted.some(url => citedUrls.has(url));
+  }).map(source => ({ url: source.finalUrl || source.url, title: source.title }));
+  const allowedEvidenceUrls = new Set(brief.evidence.flatMap(source => [source.url, source.finalUrl])
+    .map(normalizeUrl).filter(Boolean));
+  const unverifiedExternalLinks = linkTargets.filter(target => {
+    const normalized = normalizeUrl(target);
+    if (!normalized) return false;
+    const url = new URL(normalized);
+    if (url.hostname === "finflowtrack.com" || url.hostname.endsWith(".finflowtrack.com")) return false;
+    return !allowedEvidenceUrls.has(normalized);
+  });
   const quality = {
     targetSlugMatches,
+    titleMatches,
+    descriptionMatches,
     draftStatusValid,
+    evidenceCitationFailures,
+    unverifiedExternalLinks,
     wordCount: words,
     minimumWordCount: minWordCount,
     wordCountPass: words >= minWordCount,
@@ -182,7 +211,11 @@ export async function runArticleProduction({
   const blockers = [
     ...validation.errors,
     ...(!targetSlugMatches ? ["ARTICLE_TARGET_SLUG_MISMATCH"] : []),
+    ...(!titleMatches ? ["ARTICLE_TITLE_MISMATCH"] : []),
+    ...(!descriptionMatches ? ["ARTICLE_DESCRIPTION_MISMATCH"] : []),
     ...(!draftStatusValid ? ["ARTICLE_NOT_MARKED_AS_DRAFT"] : []),
+    ...(evidenceCitationFailures.length ? ["REQUIRED_EVIDENCE_CITATIONS_MISSING"] : []),
+    ...(unverifiedExternalLinks.length ? ["UNVERIFIED_EXTERNAL_SOURCE_LINKS"] : []),
     ...(words < minWordCount ? ["ARTICLE_BELOW_MINIMUM_WORD_COUNT"] : []),
     ...(headings.length < 3 ? ["INSUFFICIENT_ARTICLE_STRUCTURE"] : []),
     ...(internalLinkFailures.length ? ["REQUIRED_INTERNAL_LINKS_MISSING"] : []),
