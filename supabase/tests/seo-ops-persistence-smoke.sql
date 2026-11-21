@@ -257,11 +257,21 @@ begin
   select count(*) into v_count from seo_ops.content_revisions
    where operation_id=v_operation and revision_number=2 and revision_state='SUPERSEDED';
   if v_count <> 1 then raise exception 'revision after change request did not supersede the prior proposal'; end if;
+  begin
+    perform public.seo_ops_record_article_approval(
+      v_operation,v_revision3,v_hash3,v_reviewer,v_reviewer::text,'APPROVED','CI approval without byline',null
+    );
+    raise exception 'approval without an approved byline should have failed';
+  exception when others then
+    if sqlerrm = 'approval without an approved byline should have failed' then raise; end if;
+  end;
+
   v_approval := public.seo_ops_record_article_approval(
-    v_operation,v_revision3,v_hash3,v_reviewer,v_reviewer::text,'APPROVED','CI synthetic approval'
+    v_operation,v_revision3,v_hash3,v_reviewer,v_reviewer::text,'APPROVED','CI synthetic approval','FinFlowTrack Editorial Team'
   );
   select count(*) into v_count from public.seo_ops_get_article_approval(v_approval)
-   where id=v_approval and reviewer_user_id=v_reviewer and content_hash=v_hash3 and decision='APPROVED';
+   where id=v_approval and reviewer_user_id=v_reviewer and content_hash=v_hash3
+     and decision='APPROVED' and approved_author='FinFlowTrack Editorial Team';
   if v_count <> 1 then raise exception 'authenticated article approval readback failed'; end if;
   select count(*) into v_count from seo_ops.content_operations
    where id=v_operation and status='APPROVED' and approved_content_hash=v_hash3;
