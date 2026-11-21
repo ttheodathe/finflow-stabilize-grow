@@ -298,10 +298,18 @@ begin
    where id=v_performance and slug='stage-c-smoke' and revision_id=v_revision3 and revision_attribution='UNKNOWN';
   if v_count <> 1 then raise exception 'article performance snapshot persistence failed'; end if;
 
-  if has_function_privilege('anon','public.seo_ops_record_article_approval(uuid,uuid,text,uuid,text,text,text)','EXECUTE')
-     or has_function_privilege('authenticated','public.seo_ops_record_article_approval(uuid,uuid,text,uuid,text,text,text)','EXECUTE')
-     or not has_function_privilege('service_role','public.seo_ops_record_article_approval(uuid,uuid,text,uuid,text,text,text)','EXECUTE') then
+  if to_regprocedure('public.seo_ops_record_article_approval(uuid,uuid,text,uuid,text,text,text)') is not null then
+    raise exception 'legacy approval RPC signature still permits approvals without an author';
+  end if;
+  if has_function_privilege('anon','public.seo_ops_record_article_approval(uuid,uuid,text,uuid,text,text,text,text)','EXECUTE')
+     or has_function_privilege('authenticated','public.seo_ops_record_article_approval(uuid,uuid,text,uuid,text,text,text,text)','EXECUTE')
+     or not has_function_privilege('service_role','public.seo_ops_record_article_approval(uuid,uuid,text,uuid,text,text,text,text)','EXECUTE') then
     raise exception 'article approval RPC execution grants are incorrect';
+  end if;
+  if has_table_privilege('anon','seo_ops.editorial_authors','SELECT')
+     or has_table_privilege('authenticated','seo_ops.editorial_authors','SELECT')
+     or not has_table_privilege('service_role','seo_ops.editorial_authors','SELECT') then
+    raise exception 'editorial author allowlist grants are incorrect';
   end if;
   if has_table_privilege('anon','seo_ops.article_approvals','SELECT')
      or has_table_privilege('authenticated','seo_ops.article_approvals','SELECT')
