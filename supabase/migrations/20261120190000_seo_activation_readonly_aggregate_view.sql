@@ -78,6 +78,7 @@ $$;
 
 create schema if not exists seo_private;
 revoke all on schema seo_private from public;
+revoke all on schema seo_private from anon, authenticated;
 grant usage, create on schema seo_private to seo_activation_aggregator;
 grant usage on schema public to seo_activation_aggregator;
 
@@ -201,7 +202,7 @@ alter view seo_private.activation_aggregate owner to seo_activation_aggregator;
 revoke create on schema seo_private from seo_activation_aggregator;
 revoke all on schema seo_private from public;
 grant usage on schema seo_private to seo_activation_reader;
-revoke all on seo_private.activation_aggregate from public;
+revoke all on seo_private.activation_aggregate from public, anon, authenticated;
 grant select on seo_private.activation_aggregate to seo_activation_reader;
 
 -- The login is deliberately left disabled. After review, an operator may set
