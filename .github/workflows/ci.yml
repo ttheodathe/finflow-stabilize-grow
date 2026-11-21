@@ -14,6 +14,7 @@ on:
       - feat/stage-d-approved-publishing-guardrails
       - feat/stage-d-publish-package-preflight
       - feat/stage-d-oidc-publisher
+      - feat/stage-e-production-activation-collector
 
 permissions:
   contents: read
@@ -57,7 +58,7 @@ jobs:
         run: npm ci
 
       - name: Test SEO pipeline and content-operation safeguards
-        run: node --test seo-engine/*.test.mjs seo-engine/content-ops/*.test.mjs seo-engine/persistence/*.test.mjs seo-engine/research/*.test.mjs seo-engine/schedulers/*.test.mjs seo-engine/publishing/*.test.mjs
+        run: node --test seo-engine/*.test.mjs seo-engine/activation/*.test.mjs seo-engine/content-ops/*.test.mjs seo-engine/persistence/*.test.mjs seo-engine/research/*.test.mjs seo-engine/schedulers/*.test.mjs seo-engine/publishing/*.test.mjs
       - name: Syntax-check SEO publishing modules
         run: find seo-engine/publishing -type f -name '*.mjs' -print0 | xargs -0 -n1 node --check
 
@@ -133,6 +134,17 @@ jobs:
           done
           docker cp supabase/tests/seo-activation-fixture.sql "$container_id:/tmp/seo-activation-fixture.sql"
           docker exec "$container_id" psql -U postgres -d finflow_seo_ops_test -v ON_ERROR_STOP=1 -f /tmp/seo-activation-fixture.sql
+
+      - name: Verify Stage E restricted production activation view
+        run: |
+          container_id="$(docker ps --filter 'ancestor=postgres:16' --format '{{.ID}}' | head -n 1)"
+          test -n "$container_id"
+          docker cp supabase/tests/seo-activation-readonly-source-fixture.sql "$container_id:/tmp/seo-activation-readonly-source-fixture.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_seo_ops_test -v ON_ERROR_STOP=1 -f /tmp/seo-activation-readonly-source-fixture.sql
+          docker cp supabase/migrations/20261120190000_seo_activation_readonly_aggregate_view.sql "$container_id:/tmp/seo-activation-readonly-aggregate-view.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_seo_ops_test -v ON_ERROR_STOP=1 -f /tmp/seo-activation-readonly-aggregate-view.sql
+          docker cp supabase/tests/seo-activation-readonly-view-smoke.sql "$container_id:/tmp/seo-activation-readonly-view-smoke.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_seo_ops_test -v ON_ERROR_STOP=1 -f /tmp/seo-activation-readonly-view-smoke.sql
 
       - name: Verify SEO operations persistence, RLS and activation aggregation
         run: |
