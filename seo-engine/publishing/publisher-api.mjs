@@ -73,7 +73,7 @@ if (action === "ping") {
     githubPrNumber: process.env.PUBLISH_GITHUB_PR_NUMBER ? Number(process.env.PUBLISH_GITHUB_PR_NUMBER) : null,
     commitSha: process.env.PUBLISH_COMMIT_SHA || null,
     publishedContentHash: process.env.PUBLISH_CONTENT_HASH || null,
-    deploymentUrl: process.env.PUBLISH_DEPLOYMENT_URL || null,
+    publishedUrl: process.env.PUBLISH_PUBLISHED_URL || null,
     errorMessage: process.env.PUBLISH_ERROR_MESSAGE || null,
   });
   if (result.updated !== true) throw new Error("Publisher state update was not confirmed.");
