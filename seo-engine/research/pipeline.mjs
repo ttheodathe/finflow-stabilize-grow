@@ -876,6 +876,7 @@ export async function runResearchPipeline({
         research: { ...base, candidate, draft, sourceRecords, internalLinks: related,
           audience: pack.audience, jurisdiction: pack.jurisdiction,
           productEvidence: productEvidence ? VERIFIED_PRODUCT : null,
+          existingArticleUpdatePlan: base.editorialUpdateProposal || null,
           outline: pack.sections.map(([heading]) => heading), readerQuestions: pack.readerQuestions || [],
           existingInventory: publicInventory, existingArticleUpdatePlan: base.editorialUpdateProposal },
         generateArticle: articleGenerator, outputDir: articleOutputDir, now,
