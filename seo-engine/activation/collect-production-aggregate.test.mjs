@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { collectProductionActivationAggregate } from "./collect-production-aggregate.mjs";
 
-const endpoint = "https://example-project.supabase.co/functions/v1/seo-activation-reader";
+const endpoint = "https://zjaamxvqjiymgfujrtjm.supabase.co/functions/v1/seo-activation-reader";
 const env = {
   ACTIONS_ID_TOKEN_REQUEST_URL: "https://token.actions.githubusercontent.com/token?dummy=1",
   ACTIONS_ID_TOKEN_REQUEST_TOKEN: "github-actions-request-token",
