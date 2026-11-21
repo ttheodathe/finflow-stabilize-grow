@@ -357,10 +357,12 @@ export function classifySearchIntent(query) {
   if (!value) return "REVIEW_REQUIRED";
   if (/login|sign in|website|support contact|customer service/.test(value)) return "Navigational";
   if (/create account|download|sign up|start free|register/.test(value)) return "Transactional";
-  if (/pricing|price|cost|alternatives?|cheaper|free alternative/.test(value)) return "Pricing and alternatives";
+  // Classify broad software-selection pages before pricing language: a guide
+  // can discuss costs without becoming a pricing-only page.
   if (/(free|best|top|which|recommend|compare|worth considering).{0,55}(accounting|bookkeeping).{0,45}(software|app|platform|program|tool)/.test(value)
     || /(accounting|bookkeeping).{0,45}(software|apps?|platforms?|programs?|tools?).{0,45}(best|free|compare|review|recommend|worth)/.test(value)
     || /software selection|accounting software comparison/.test(value)) return "Software selection";
+  if (/pricing|price|cost|alternatives?|cheaper|free alternative/.test(value)) return "Pricing and alternatives";
   if (/reporting features?|track invoices?|track sales|expense tracking|invoice tracking|features? of/.test(value)) return "Feature evaluation";
   if (/\b(?:how to|step[- ]by[- ]step|tutorial|template|checklist|guide|create|build|set up|track(?:ing)?|manage(?:ment|ing)?)\b/.test(value)) return "How-to/tutorial";
   if (/cash.{0,25}accrual|accrual.{0,25}cash|cash method|accrual method/.test(value)) return "Accounting education";
