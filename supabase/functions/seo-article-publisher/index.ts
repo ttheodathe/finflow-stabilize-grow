@@ -16,25 +16,22 @@ async function verifyPublisherIdentity(request: Request) {
   const token = (request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
   if (!token) throw new Error("GitHub Actions OIDC token is required.");
 
-  const audience = Deno.env.get("PUBLISHER_OIDC_AUDIENCE") || "finflowtrack-seo-publisher";
-  const allowedRepository =
-    Deno.env.get("PUBLISHER_ALLOWED_REPOSITORY") || "ttheodathe/finflow-stabilize-grow";
-  const allowedRepositoryId = Deno.env.get("PUBLISHER_ALLOWED_REPOSITORY_ID") || "1302272765";
-  const allowedRef = Deno.env.get("PUBLISHER_ALLOWED_REF") || "refs/heads/main";
+  const audience = "finflowtrack-seo-publisher";
+  const allowedRepository = "ttheodathe/finflow-stabilize-grow";
+  const allowedRepositoryId = "1302272765";
+  const allowedRepositoryOwner = "ttheodathe";
+  const allowedRepositoryOwnerId = "305577581";
+  const allowedRef = "refs/heads/main";
   const allowedWorkflowRef =
-    Deno.env.get("PUBLISHER_ALLOWED_WORKFLOW_REF") ||
     "ttheodathe/finflow-stabilize-grow/.github/workflows/seo-publisher.yml@refs/heads/main";
 
   const { payload } = await jwtVerify(token, jwks, { issuer, audience });
-  const allowedEvents = (
-    Deno.env.get("PUBLISHER_ALLOWED_EVENT_NAMES") || "schedule,workflow_dispatch"
-  )
-    .split(",")
-    .map((value) => value.trim())
-    .filter(Boolean);
+  const allowedEvents = ["schedule", "workflow_dispatch"];
   if (
     payload.repository !== allowedRepository ||
     String(payload.repository_id || "") !== allowedRepositoryId ||
+    payload.repository_owner !== allowedRepositoryOwner ||
+    String(payload.repository_owner_id || "") !== allowedRepositoryOwnerId ||
     payload.ref !== allowedRef ||
     payload.workflow_ref !== allowedWorkflowRef ||
     !allowedEvents.includes(String(payload.event_name || ""))

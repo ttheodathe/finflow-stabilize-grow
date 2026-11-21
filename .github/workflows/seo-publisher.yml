@@ -8,11 +8,13 @@ on:
         required: true
         default: false
         type: boolean
+      verify_production:
+        description: "Run a non-mutating OIDC ping against the production publisher (does not claim or publish an article)"
+        required: true
+        default: false
+        type: boolean
   schedule:
     - cron: "17 * * * *"
-  push:
-    branches:
-      - feat/stage-d-oidc-publisher
 
 concurrency:
   group: seo-approved-article-publisher
@@ -25,14 +27,15 @@ permissions:
 jobs:
   oidc-preflight:
     name: Verify publisher identity without touching content
-    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish != true)
+    if: github.event_name == 'workflow_dispatch' && inputs.publish != true && inputs.verify_production != true
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
       id-token: write
       contents: read
     env:
-      SEO_PUBLISHER_URL: ${{ github.ref_name == 'feat/stage-d-oidc-publisher' && 'https://bufbyfwstdqvwnkhyrea.supabase.co/functions/v1/seo-article-publisher-acceptance' || vars.SEO_PUBLISHER_URL }}
+      # This endpoint is acceptance-only and permits only a non-mutating OIDC ping.
+      SEO_PUBLISHER_URL: https://bufbyfwstdqvwnkhyrea.supabase.co/functions/v1/seo-article-publisher-acceptance
       SEO_PUBLISHER_AUDIENCE: finflowtrack-seo-publisher
     steps:
       - uses: actions/checkout@v4
@@ -42,6 +45,27 @@ jobs:
         with:
           node-version: 22
       - name: Verify GitHub OIDC identity
+        run: node seo-engine/publishing/publisher-api.mjs ping
+
+  production-oidc-preflight:
+    name: Verify production publisher identity without touching content
+    if: github.event_name == 'workflow_dispatch' && inputs.verify_production == true && inputs.publish != true
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      SEO_PUBLISHER_URL: ${{ vars.SEO_PUBLISHER_URL }}
+      SEO_PUBLISHER_AUDIENCE: finflowtrack-seo-publisher
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify production GitHub OIDC identity
         run: node seo-engine/publishing/publisher-api.mjs ping
 
   publish:
