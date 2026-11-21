@@ -126,7 +126,7 @@ jobs:
         env:
           PUBLISH_CLAIM_ID: ${{ steps.claim.outputs.claim_id }}
           PUBLISH_STATUS: DEPLOYMENT_READY
-          PUBLISH_DEPLOYMENT_URL: ${{ steps.prepare.outputs.published_url }}
+          PUBLISH_PUBLISHED_URL: ${{ steps.prepare.outputs.published_url }}
         run: node seo-engine/publishing/publisher-api.mjs update
       - name: Verify public URL, canonical, indexability and sitemap
         if: steps.deployment.outcome == 'success'
@@ -139,7 +139,7 @@ jobs:
           PUBLISH_CLAIM_ID: ${{ steps.claim.outputs.claim_id }}
           PUBLISH_STATUS: URL_VERIFIED
           PUBLISH_CONTENT_HASH: ${{ steps.prepare.outputs.published_content_hash }}
-          PUBLISH_DEPLOYMENT_URL: ${{ steps.prepare.outputs.published_url }}
+          PUBLISH_PUBLISHED_URL: ${{ steps.prepare.outputs.published_url }}
         run: node seo-engine/publishing/publisher-api.mjs update
       - name: Mark failed or blocked publication attempt
         if: failure() && steps.claim.outputs.claimed == 'true'
