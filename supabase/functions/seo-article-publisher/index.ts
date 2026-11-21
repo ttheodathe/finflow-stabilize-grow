@@ -68,17 +68,11 @@ Deno.serve(async (request: Request) => {
     if (error) return json({ error: "Publication claim failed", code: error.code || "CLAIM_FAILED" }, 409);
     if (!data) return json({ claimed: false });
 
-    const { data: authorRows, error: authorError } = await admin
-      .schema("seo_ops")
-      .from("editorial_authors")
-      .select("author_name")
-      .eq("is_active", true);
-    if (authorError) return json({ error: "Active author allowlist could not be read" }, 500);
-
+    // The claim RPC returns only an author already verified against the private active allowlist.
     return json({
       claimed: true,
       claim: data,
-      allowedAuthors: (authorRows || []).map((row: { author_name: string }) => row.author_name),
+      allowedAuthors: [data.approvedAuthor],
     });
   }
 
