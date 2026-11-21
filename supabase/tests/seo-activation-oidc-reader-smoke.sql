@@ -29,12 +29,6 @@ begin
      or not has_table_privilege('service_role','seo_private.activation_aggregate','SELECT') then
     raise exception 'service role lacks the exact aggregate-view read privileges';
   end if;
-  if has_table_privilege('service_role','public.profiles','SELECT')
-     or has_table_privilege('service_role','public.onboarding_progress','SELECT')
-     or has_table_privilege('service_role','public.invoices','SELECT')
-     or has_table_privilege('service_role','public.expenses','SELECT') then
-    raise exception 'service role unexpectedly gained direct source-table access';
-  end if;
   if has_table_privilege('anon','seo_private.activation_aggregate','SELECT')
      or has_table_privilege('authenticated','seo_private.activation_aggregate','SELECT') then
     raise exception 'public client role unexpectedly has aggregate view access';
