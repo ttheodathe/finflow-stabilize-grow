@@ -288,6 +288,7 @@ const UNKNOWN_BACKLOG_PACKS = [...ACTIVE_SOURCE_PACK_IDS].filter(id => !SOURCE_P
 if (UNKNOWN_BACKLOG_PACKS.length) throw new Error(`Editorial backlog references missing source packs: ${UNKNOWN_BACKLOG_PACKS.join(", ")}`);
 
 const VERIFIED_PRODUCT = Object.freeze({
+  verifiedAt: productCapabilityRecord.verifiedAt,
   checkedAtCommit: productCapabilityRecord.verifiedAtCommit,
   sourceFiles: productCapabilityRecord.sourceFiles,
   verifiedCapabilities: productCapabilityRecord.capabilities
