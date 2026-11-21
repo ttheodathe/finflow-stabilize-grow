@@ -13,6 +13,7 @@ on:
       - feat/stage-c-evidence-citation-gates
       - feat/stage-d-approved-publishing-guardrails
       - feat/stage-d-publish-package-preflight
+      - feat/stage-d-oidc-publisher
 
 permissions:
   contents: read
@@ -57,6 +58,8 @@ jobs:
 
       - name: Test SEO pipeline and content-operation safeguards
         run: node --test seo-engine/*.test.mjs seo-engine/content-ops/*.test.mjs seo-engine/persistence/*.test.mjs seo-engine/research/*.test.mjs seo-engine/schedulers/*.test.mjs seo-engine/publishing/*.test.mjs
+      - name: Syntax-check SEO publishing modules
+        run: find seo-engine/publishing -type f -name '*.mjs' -print0 | xargs -0 -n1 node --check
 
       - name: Verify fixture candidates remain blocked by exact-target intent safeguards
         run: node seo-engine/research/fixture-run.mjs
@@ -121,7 +124,8 @@ jobs:
             supabase/migrations/20261120193123_stage_c_editorial_approval_and_attribution.sql \
             supabase/migrations/20261121040000_stage_c_editorial_review_queue.sql \
             supabase/migrations/20261121130000_stage_c_editorial_update_proposal_queue.sql \
-            supabase/migrations/20261121145000_stage_d_approved_author_metadata.sql; do
+            supabase/migrations/20261121145000_stage_d_approved_author_metadata.sql \
+            supabase/migrations/20261121151000_stage_d_article_publication_queue.sql; do
             name="$(basename "$migration")"
             docker cp "$migration" "$container_id:/tmp/$name"
             docker exec "$container_id" psql -U postgres -d finflow_seo_ops_test -v ON_ERROR_STOP=1 -f "/tmp/$name"
