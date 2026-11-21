@@ -175,7 +175,7 @@ begin
     into v_total,v_rls
   from pg_class c join pg_namespace n on n.oid=c.relnamespace
   where n.nspname='seo_ops' and c.relkind='r';
-  if v_total <> 14 or v_rls <> 14 then raise exception 'expected RLS on all 14 SEO tables; total %, enabled %',v_total,v_rls; end if;
+  if v_total <> 15 or v_rls <> 15 then raise exception 'expected RLS on all 15 SEO tables; total %, enabled %',v_total,v_rls; end if;
   if has_schema_privilege('anon','seo_ops','USAGE')
      or has_schema_privilege('authenticated','seo_ops','USAGE')
      or has_table_privilege('anon','seo_ops.scheduler_runs','SELECT')
