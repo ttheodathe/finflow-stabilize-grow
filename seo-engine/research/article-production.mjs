@@ -30,6 +30,35 @@ export function createEditorialBrief(research) {
     source.status === "RETRIEVED_RELEVANT" &&
     source.verificationStatus === "KEYWORD_RELEVANCE_PASS_HUMAN_REVIEW_REQUIRED"
   );
+  const productCapabilities = Array.isArray(research.productEvidence?.verifiedCapabilities)
+    ? research.productEvidence.verifiedCapabilities
+      .filter(item => item.status === "VERIFIED" && item.articleClaimAllowed === true)
+      .map(item => ({ name: item.name, plan: item.plan, sourceFile: item.sourceFile, evidence: item.evidence }))
+    : [];
+  const evidence = verifiedSources.map(source => ({
+    url: source.url,
+    finalUrl: source.finalUrl || source.url,
+    title: source.sourceTitle || source.publisher || source.url,
+    publisher: source.publisher || null,
+    publishedAt: source.publishedAt || null,
+    retrievedAt: source.retrievedAt || null,
+    jurisdiction: source.jurisdiction || null,
+    supportedClaims: source.supportedClaims || [],
+    limitations: source.limitations || [],
+  }));
+  if (productCapabilities.length) {
+    evidence.push({
+      url: "https://www.finflowtrack.com/pricing",
+      finalUrl: "https://www.finflowtrack.com/pricing",
+      title: "FinFlow Track pricing and feature catalog",
+      publisher: "FinFlow Track",
+      publishedAt: null,
+      retrievedAt: research.productEvidence.verifiedAt || null,
+      jurisdiction: "First-party product documentation",
+      supportedClaims: productCapabilities.map(item => `${item.name} is listed for the ${item.plan} plan.`),
+      limitations: ["Verified against repository source files, not a live authenticated account."],
+    });
+  }
   const internalLinks = Array.isArray(research.internalLinks) ? research.internalLinks : [];
   const relatedQueries = Array.isArray(candidate.relatedQueries) ? candidate.relatedQueries : [];
   const intent = requireText(research.intent, "Search intent");
@@ -51,17 +80,8 @@ export function createEditorialBrief(research) {
       : (Array.isArray(draft.content?.match(/^## .+$/gm)) ? draft.content.match(/^## .+$/gm).map(line => line.replace(/^## /, "")) : []),
     internalLinks: internalLinks.map(link => ({ slug: link.slug, title: link.title })),
     existingArticleUpdatePlan: research.existingArticleUpdatePlan || null,
-    evidence: verifiedSources.map(source => ({
-      url: source.url,
-      finalUrl: source.finalUrl || source.url,
-      title: source.sourceTitle || source.publisher || source.url,
-      publisher: source.publisher || null,
-      publishedAt: source.publishedAt || null,
-      retrievedAt: source.retrievedAt || null,
-      jurisdiction: source.jurisdiction || null,
-      supportedClaims: source.supportedClaims || [],
-      limitations: source.limitations || [],
-    })),
+    evidence,
+    productCapabilities,
     evidenceGaps: sourceRecords.filter(source => source.status !== "RETRIEVED_RELEVANT").map(source => ({
       url: source.url, status: source.status, error: source.error || null,
     })),
@@ -170,7 +190,7 @@ export async function runArticleProduction({
   const draftStatusValid = metadata.status === "draft" && metadata.publicationStatus === "draft";
   const normalizeUrl = value => {
     try {
-      const url = new URL(value);
+      const url = new URL(value, "https://www.finflowtrack.com");
       url.hash = "";
       return url.toString().replace(/\\/$/, "");
     } catch {
