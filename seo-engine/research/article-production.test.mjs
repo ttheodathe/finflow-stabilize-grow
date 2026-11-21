@@ -30,6 +30,8 @@ const research = {
     title: "Small Business Cash Flow Planning",
     description: "A practical guide to planning and reviewing small-business cash flow.",
     slug: "small-business-cash-flow-planning",
+    category: "small-business-finance",
+    tags: ["small business", "cash flow"],
     status: "draft", publicationStatus: "draft",
     canonicalUrl: "https://www.finflowtrack.com/blog/small-business-cash-flow-planning",
     operationType: "NEW_ARTICLE",
@@ -41,7 +43,7 @@ const research = {
   },
 };
 
-function validGeneratedMarkdown({ includeSourceCitation = true, includeProductCitation = false, title = research.draft.title, description = research.draft.description } = {}) {
+function validGeneratedMarkdown({ includeSourceCitation = true, includeProductCitation = false, includeDraftFlag = true, title = research.draft.title, description = research.draft.description } = {}) {
   const body = [
     "## Understand the cash position",
     "Review expected receipts and planned payments for the period.",
@@ -85,6 +87,12 @@ test("editorial brief contains search intent, audience, evidence, update plan an
   assert.equal(brief.evidence.length, 1);
   assert.equal(brief.internalLinks[0].slug, "small-business-accounting-guide");
   assert.deepEqual(brief.existingArticleUpdatePlan, updatePlan);
+  assert.deepEqual(brief.publicationMetadata, {
+    category: "small-business-finance", tags: ["small business", "cash flow"], author: null,
+    publishedAt: null, draft: true,
+    authorPolicy: "New articles require an explicit approved byline before publication; do not invent an author.",
+    publicationDatePolicy: "Assign publishedAt at the verified publication step, not during drafting.",
+  });
   assert.match(brief.publicationPolicy, /Human review/);
 });
 
@@ -155,12 +163,31 @@ test("article production writes a revision-hashed draft package outside the publ
     assert.equal(result.status, "READY_FOR_HUMAN_REVIEW");
     assert.equal(result.publication.publishEnabled, false);
     assert.equal(result.publication.productionWriteAllowed, false);
+    assert.equal(result.publicationReadiness.status, "BLOCKED_PENDING_APPROVED_AUTHOR_AND_PUBLICATION_DATE");
+    assert.deepEqual(result.publicationReadiness.missingFields, [
+      "author_requires_explicit_human_approval", "publishedAt_assigned_at_publication",
+    ]);
+    assert.equal(result.quality.draftFlagValid, true);
     assert.equal(result.quality.internalLinkFailures.length, 0);
     assert.equal(result.quality.originality.status, "SCREEN_PASSED_HUMAN_ORIGINALITY_REVIEW_REQUIRED");
     assert.match(result.articlePath, /stage-c-/);
     assert.doesNotMatch(result.articlePath, /content[\/]blog/);
     const saved = await readFile(result.articlePath, "utf8");
     assert.equal(saved, markdown.trim() + "\n");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("article production blocks a missing or false public-blog draft flag", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "stage-c-draft-flag-"));
+  try {
+    const result = await runArticleProduction({
+      research, outputDir: root, minWordCount: 10,
+      generateArticle: async () => ({ markdown: validGeneratedMarkdown({ includeDraftFlag: false }) }),
+    });
+    assert.equal(result.status, "BLOCKED_QUALITY_REVIEW");
+    assert.ok(result.blockers.includes("ARTICLE_DRAFT_FLAG_MISSING_OR_FALSE"));
   } finally {
     await rm(root, { recursive: true, force: true });
   }
