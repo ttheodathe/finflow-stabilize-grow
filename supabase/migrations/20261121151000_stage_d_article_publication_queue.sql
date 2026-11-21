@@ -202,7 +202,7 @@ begin
   end if;
 
   if (p_status = 'PULL_REQUEST_OPEN' and v_publication.status <> 'CLAIMED')
-     or (p_status = 'MERGED' and v_publication.status <> 'PULL_REQUEST_OPEN')
+     or (p_status = 'MERGED' and v_publication.status not in ('CLAIMED','PULL_REQUEST_OPEN'))
      or (p_status = 'DEPLOYMENT_READY' and v_publication.status <> 'MERGED')
      or (p_status = 'URL_VERIFIED' and v_publication.status <> 'DEPLOYMENT_READY')
      or (p_status = 'FAILED' and v_publication.status not in ('CLAIMED','PULL_REQUEST_OPEN','MERGED','DEPLOYMENT_READY'))
