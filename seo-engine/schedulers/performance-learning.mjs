@@ -123,7 +123,8 @@ export async function runPerformanceLearning({
   if (env.SEO_ACTIVATION_READER_URL) {
     try {
       activationAggregate = await activationCollectorFn({
-        endpoint: env.SEO_ACTIVATION_READER_URL,\n        env,
+        endpoint: env.SEO_ACTIVATION_READER_URL,
+        env,
       });
     } catch (error) {
       activationCollectionError = new Error(String(error.message || error));
