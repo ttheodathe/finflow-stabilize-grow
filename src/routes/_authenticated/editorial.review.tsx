@@ -1,13 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { seoReviewSupabase } from "@/integrations/supabase/seo-review-client";
+import type { User } from "@supabase/supabase-js";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ShieldCheck, ShieldAlert, RefreshCw, FileText } from "lucide-react";
 
@@ -30,7 +33,8 @@ export const Route = createFileRoute("/_authenticated/editorial/review")({
 });
 
 async function loadReviewQueue(): Promise<EditorialReview[]> {
-  const { data, error } = await supabase.functions.invoke("seo-editorial-approval", {
+  if (!seoReviewSupabase) throw new Error("Acceptance review environment is not configured.");
+  const { data, error } = await seoReviewSupabase.functions.invoke("seo-editorial-approval", {
     body: { action: "list" },
   });
   if (error) throw new Error(error.message || "Could not load the editorial review queue.");
@@ -40,6 +44,25 @@ async function loadReviewQueue(): Promise<EditorialReview[]> {
 
 function EditorialReviewPage() {
   const queryClient = useQueryClient();
+  const [user, setUser] = useState<User | null>(null);
+  const [email, setEmail] = useState("");
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [sendingLink, setSendingLink] = useState(false);
+  const [notes, setNotes] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!seoReviewSupabase) return;
+    void seoReviewSupabase.auth.getSession().then(({ data }) => {
+      setUser(data.session?.user ?? null);
+    });
+    const { data } = seoReviewSupabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) setMagicLinkSent(false);
+    });
+    return () => data.subscription.unsubscribe();
+  }, []);
+
   const {
     data: reviews = [],
     isLoading,
@@ -47,20 +70,42 @@ function EditorialReviewPage() {
     refetch,
     isFetching,
   } = useQuery({
-    queryKey: ["seo-editorial-review-queue"],
+    queryKey: ["seo-editorial-review-queue", user?.id],
     queryFn: loadReviewQueue,
+    enabled: Boolean(user && seoReviewSupabase),
     retry: false,
   });
-  const [notes, setNotes] = useState<Record<string, string>>({});
-  const [submitting, setSubmitting] = useState<string | null>(null);
+
+  async function sendMagicLink(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!seoReviewSupabase) return;
+    setSendingLink(true);
+    try {
+      const { error } = await seoReviewSupabase.auth.signInWithOtp({
+        email: email.trim(),
+        options: {
+          shouldCreateUser: false,
+          emailRedirectTo: window.location.href,
+        },
+      });
+      if (error) throw error;
+      setMagicLinkSent(true);
+      toast.success("Sign-in link sent. Check your email.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not send sign-in link.");
+    } finally {
+      setSendingLink(false);
+    }
+  }
 
   async function decide(
     review: EditorialReview,
     decision: "APPROVED" | "CHANGES_REQUESTED" | "REJECTED",
   ) {
+    if (!seoReviewSupabase) return;
     setSubmitting(review.revision_id);
     try {
-      const { data, error } = await supabase.functions.invoke("seo-editorial-approval", {
+      const { data, error } = await seoReviewSupabase.functions.invoke("seo-editorial-approval", {
         body: {
           operationId: review.operation_id,
           revisionId: review.revision_id,
@@ -81,12 +126,71 @@ function EditorialReviewPage() {
             ? "Changes requested and decision recorded."
             : "Revision rejected and decision recorded.",
       );
-      await queryClient.invalidateQueries({ queryKey: ["seo-editorial-review-queue"] });
+      await queryClient.invalidateQueries({ queryKey: ["seo-editorial-review-queue", user?.id] });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Editorial decision failed.");
     } finally {
       setSubmitting(null);
     }
+  }
+
+  if (!seoReviewSupabase) {
+    return (
+      <Card className="mx-auto max-w-2xl">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ShieldAlert className="h-5 w-5" />
+            Acceptance environment not configured
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 text-sm text-muted-foreground">
+          <p>
+            This review page intentionally does not use the production Supabase project.
+            Configure VITE_SEO_REVIEW_SUPABASE_URL and VITE_SEO_REVIEW_SUPABASE_ANON_KEY
+            in the Vercel Preview environment for the isolated acceptance project.
+          </p>
+          <p>No production credentials or publishing permissions are required.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Card className="mx-auto max-w-xl">
+        <CardHeader>
+          <CardTitle>Editorial reviewer sign-in</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Sign in to the isolated acceptance project. Only accounts explicitly added to the
+            reviewer allowlist can access article drafts.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={(event) => void sendMagicLink(event)} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="reviewer-email">Acceptance reviewer email</Label>
+              <Input
+                id="reviewer-email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="editor@example.com"
+              />
+            </div>
+            <Button type="submit" disabled={sendingLink || !email.trim()}>
+              {sendingLink ? "Sending..." : "Send secure sign-in link"}
+            </Button>
+            {magicLinkSent && (
+              <p className="text-sm text-muted-foreground">
+                Sign-in link sent. Open it in this browser to continue.
+              </p>
+            )}
+          </form>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
@@ -97,11 +201,22 @@ function EditorialReviewPage() {
           <p className="mt-1 text-sm text-muted-foreground">
             Review the exact stored article revision before it can move forward.
           </p>
+          <p className="mt-1 break-all text-xs text-muted-foreground">
+            Acceptance Auth user ID: {user.id}
+          </p>
         </div>
-        <Button variant="outline" onClick={() => void refetch()} disabled={isFetching}>
-          <RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
-          Refresh queue
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => void refetch()} disabled={isFetching}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+            Refresh queue
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() => void seoReviewSupabase.auth.signOut()}
+          >
+            Sign out
+          </Button>
+        </div>
       </div>
 
       <Alert>
@@ -129,12 +244,12 @@ function EditorialReviewPage() {
           <CardContent className="space-y-3">
             <p className="text-sm text-muted-foreground">
               {error.message.includes("authorized")
-                ? "Your signed-in account is not on the active editorial reviewer allowlist."
+                ? "This account is not on the active editorial reviewer allowlist yet."
                 : error.message}
             </p>
             <p className="text-xs text-muted-foreground">
-              Access is checked by the server for every request. Being signed in to FinFlow Track
-              does not automatically grant editorial privileges.
+              Access is checked by the acceptance server for every request. Signing in does not
+              automatically grant editorial privileges.
             </p>
             <Button variant="outline" onClick={() => void refetch()}>
               Try again
