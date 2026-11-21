@@ -56,7 +56,7 @@ jobs:
         run: npm ci
 
       - name: Test SEO pipeline and content-operation safeguards
-        run: node --test seo-engine/*.test.mjs seo-engine/content-ops/*.test.mjs seo-engine/persistence/*.test.mjs seo-engine/research/*.test.mjs seo-engine/schedulers/*.test.mjs
+        run: node --test seo-engine/*.test.mjs seo-engine/content-ops/*.test.mjs seo-engine/persistence/*.test.mjs seo-engine/research/*.test.mjs seo-engine/schedulers/*.test.mjs seo-engine/publishing/*.test.mjs
 
       - name: Verify fixture candidates remain blocked by exact-target intent safeguards
         run: node seo-engine/research/fixture-run.mjs
