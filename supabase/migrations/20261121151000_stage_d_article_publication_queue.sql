@@ -24,7 +24,7 @@ create table if not exists seo_ops.article_publications (
   published_content_hash text check (
     published_content_hash is null or published_content_hash ~ '^[a-f0-9]{64}$'
   ),
-  deployment_url text,
+  published_url text,
   error_message text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -131,7 +131,7 @@ begin
         github_pr_number = null,
         commit_sha = null,
         published_content_hash = null,
-        deployment_url = null,
+        published_url = null,
         error_message = null,
         updated_at = now()
     where existing.status in ('FAILED','STALE')
@@ -175,7 +175,7 @@ create or replace function public.seo_ops_update_article_publication(
   p_github_pr_number bigint default null,
   p_commit_sha text default null,
   p_published_content_hash text default null,
-  p_deployment_url text default null,
+  p_published_url text default null,
   p_error_message text default null
 ) returns boolean
 language plpgsql security invoker
@@ -218,7 +218,7 @@ begin
     raise exception 'A verified merge commit SHA is required';
   end if;
   if p_status in ('DEPLOYMENT_READY','URL_VERIFIED')
-     and (p_deployment_url is null or p_deployment_url !~ '^https://www\.finflowtrack\.com/') then
+     and (p_published_url is null or p_published_url !~ '^https://www\.finflowtrack\.com/') then
     raise exception 'A verified production deployment URL is required';
   end if;
   if p_status = 'URL_VERIFIED'
@@ -235,7 +235,7 @@ begin
       github_pr_number = coalesce(p_github_pr_number, github_pr_number),
       commit_sha = coalesce(p_commit_sha, commit_sha),
       published_content_hash = coalesce(p_published_content_hash, published_content_hash),
-      deployment_url = coalesce(p_deployment_url, deployment_url),
+      published_url = coalesce(p_published_url, published_url),
       error_message = case when p_status in ('FAILED','STALE') then left(p_error_message, 2000) else null end,
       lease_expires_at = case when p_status = 'CLAIMED' then lease_expires_at else null end,
       updated_at = now()
@@ -259,7 +259,7 @@ begin
           'githubBranch', p_github_branch,
           'githubPrNumber', p_github_pr_number,
           'commitSha', p_commit_sha,
-          'deploymentUrl', p_deployment_url,
+          'publishedUrl', p_published_url,
           'publishedContentHash', p_published_content_hash,
           'publicationError', case when p_status in ('FAILED','STALE') then left(p_error_message,2000) else null end
         )),
@@ -324,7 +324,7 @@ grant execute on function public.seo_ops_update_article_publication(uuid,text,te
         github_pr_number = null,
         commit_sha = null,
         published_content_hash = null,
-        deployment_url = null,
+        published_url = null,
         error_message = null,
         updated_at = now()
     where seo_ops.article_publications.status in ('FAILED','STALE')
@@ -368,7 +368,7 @@ create or replace function public.seo_ops_update_article_publication(
   p_github_pr_number bigint default null,
   p_commit_sha text default null,
   p_published_content_hash text default null,
-  p_deployment_url text default null,
+  p_published_url text default null,
   p_error_message text default null
 ) returns boolean
 language plpgsql security invoker
@@ -411,7 +411,7 @@ begin
     raise exception 'A verified merge commit SHA is required';
   end if;
   if p_status in ('DEPLOYMENT_READY','URL_VERIFIED')
-     and (p_deployment_url is null or p_deployment_url !~ '^https://www\.finflowtrack\.com/') then
+     and (p_published_url is null or p_published_url !~ '^https://www\.finflowtrack\.com/') then
     raise exception 'A verified production deployment URL is required';
   end if;
   if p_status = 'URL_VERIFIED'
@@ -428,7 +428,7 @@ begin
       github_pr_number = coalesce(p_github_pr_number, github_pr_number),
       commit_sha = coalesce(p_commit_sha, commit_sha),
       published_content_hash = coalesce(p_published_content_hash, published_content_hash),
-      deployment_url = coalesce(p_deployment_url, deployment_url),
+      published_url = coalesce(p_published_url, published_url),
       error_message = case when p_status in ('FAILED','STALE') then left(p_error_message, 2000) else null end,
       lease_expires_at = case when p_status = 'CLAIMED' then lease_expires_at else null end,
       updated_at = now()
@@ -452,7 +452,7 @@ begin
           'githubBranch', p_github_branch,
           'githubPrNumber', p_github_pr_number,
           'commitSha', p_commit_sha,
-          'deploymentUrl', p_deployment_url,
+          'publishedUrl', p_published_url,
           'publishedContentHash', p_published_content_hash,
           'publicationError', case when p_status in ('FAILED','STALE') then left(p_error_message,2000) else null end
         )),
@@ -517,7 +517,7 @@ grant execute on function public.seo_ops_update_article_publication(uuid,text,te
         github_pr_number = null,
         commit_sha = null,
         published_content_hash = null,
-        deployment_url = null,
+        published_url = null,
         error_message = null,
         updated_at = now()
     where existing.status in ('FAILED','STALE')
@@ -561,7 +561,7 @@ create or replace function public.seo_ops_update_article_publication(
   p_github_pr_number bigint default null,
   p_commit_sha text default null,
   p_published_content_hash text default null,
-  p_deployment_url text default null,
+  p_published_url text default null,
   p_error_message text default null
 ) returns boolean
 language plpgsql security invoker
@@ -604,7 +604,7 @@ begin
     raise exception 'A verified merge commit SHA is required';
   end if;
   if p_status in ('DEPLOYMENT_READY','URL_VERIFIED')
-     and (p_deployment_url is null or p_deployment_url !~ '^https://www\.finflowtrack\.com/') then
+     and (p_published_url is null or p_published_url !~ '^https://www\.finflowtrack\.com/') then
     raise exception 'A verified production deployment URL is required';
   end if;
   if p_status = 'URL_VERIFIED'
@@ -621,7 +621,7 @@ begin
       github_pr_number = coalesce(p_github_pr_number, github_pr_number),
       commit_sha = coalesce(p_commit_sha, commit_sha),
       published_content_hash = coalesce(p_published_content_hash, published_content_hash),
-      deployment_url = coalesce(p_deployment_url, deployment_url),
+      published_url = coalesce(p_published_url, published_url),
       error_message = case when p_status in ('FAILED','STALE') then left(p_error_message, 2000) else null end,
       lease_expires_at = case when p_status = 'CLAIMED' then lease_expires_at else null end,
       updated_at = now()
@@ -645,7 +645,7 @@ begin
           'githubBranch', p_github_branch,
           'githubPrNumber', p_github_pr_number,
           'commitSha', p_commit_sha,
-          'deploymentUrl', p_deployment_url,
+          'publishedUrl', p_published_url,
           'publishedContentHash', p_published_content_hash,
           'publicationError', case when p_status in ('FAILED','STALE') then left(p_error_message,2000) else null end
         )),
@@ -710,7 +710,7 @@ grant execute on function public.seo_ops_update_article_publication(uuid,text,te
         github_pr_number = null,
         commit_sha = null,
         published_content_hash = null,
-        deployment_url = null,
+        published_url = null,
         error_message = null,
         updated_at = now()
     where seo_ops.article_publications.status in ('FAILED','STALE')
@@ -754,7 +754,7 @@ create or replace function public.seo_ops_update_article_publication(
   p_github_pr_number bigint default null,
   p_commit_sha text default null,
   p_published_content_hash text default null,
-  p_deployment_url text default null,
+  p_published_url text default null,
   p_error_message text default null
 ) returns boolean
 language plpgsql security invoker
@@ -797,7 +797,7 @@ begin
     raise exception 'A verified merge commit SHA is required';
   end if;
   if p_status in ('DEPLOYMENT_READY','URL_VERIFIED')
-     and (p_deployment_url is null or p_deployment_url !~ '^https://www\.finflowtrack\.com/') then
+     and (p_published_url is null or p_published_url !~ '^https://www\.finflowtrack\.com/') then
     raise exception 'A verified production deployment URL is required';
   end if;
   if p_status = 'URL_VERIFIED'
@@ -814,7 +814,7 @@ begin
       github_pr_number = coalesce(p_github_pr_number, github_pr_number),
       commit_sha = coalesce(p_commit_sha, commit_sha),
       published_content_hash = coalesce(p_published_content_hash, published_content_hash),
-      deployment_url = coalesce(p_deployment_url, deployment_url),
+      published_url = coalesce(p_published_url, published_url),
       error_message = case when p_status in ('FAILED','STALE') then left(p_error_message, 2000) else null end,
       lease_expires_at = case when p_status = 'CLAIMED' then lease_expires_at else null end,
       updated_at = now()
@@ -838,7 +838,7 @@ begin
           'githubBranch', p_github_branch,
           'githubPrNumber', p_github_pr_number,
           'commitSha', p_commit_sha,
-          'deploymentUrl', p_deployment_url,
+          'publishedUrl', p_published_url,
           'publishedContentHash', p_published_content_hash,
           'publicationError', case when p_status in ('FAILED','STALE') then left(p_error_message,2000) else null end
         )),
