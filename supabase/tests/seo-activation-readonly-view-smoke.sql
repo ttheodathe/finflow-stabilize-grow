@@ -22,8 +22,9 @@ begin
     raise exception 'reader role must remain NOLOGIN until an operator configures its credential';
   end if;
 
-  if pg_has_role('seo_activation_reader','seo_activation_aggregator','MEMBER') then
-    raise exception 'reader must not inherit or assume aggregator role';
+  if pg_has_role('seo_activation_reader','seo_activation_aggregator','MEMBER')
+     or pg_has_role('seo_activation_aggregator','seo_activation_reader','MEMBER') then
+    raise exception 'reader must not inherit or assume the aggregator role';
   end if;
 
   if exists (
@@ -31,10 +32,20 @@ begin
     from pg_auth_members am
     join pg_roles granted_role on granted_role.oid = am.roleid
     join pg_roles member_role on member_role.oid = am.member
-    where granted_role.rolname in ('seo_activation_aggregator', 'seo_activation_reader')
-       or member_role.rolname in ('seo_activation_aggregator', 'seo_activation_reader')
+    where (
+      granted_role.rolname in ('seo_activation_aggregator', 'seo_activation_reader')
+      or member_role.rolname in ('seo_activation_aggregator', 'seo_activation_reader')
+    )
+    and not (
+      member_role.rolname = current_user
+      and exists (
+        select 1 from pg_roles actor
+        where actor.rolname = current_user
+          and (actor.rolsuper or actor.rolcreaterole)
+      )
+    )
   ) then
-    raise exception 'dedicated roles unexpectedly have role memberships';
+    raise exception 'dedicated roles unexpectedly have non-admin memberships';
   end if;
 
   if exists (
