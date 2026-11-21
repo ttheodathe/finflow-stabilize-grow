@@ -5,8 +5,11 @@ const audience = "finflowtrack-seo-publisher";
 const allowedRepository = "ttheodathe/finflow-stabilize-grow";
 const allowedRepositoryId = "1302272765";
 const allowedRef = "refs/heads/feat/stage-d-oidc-publisher";
-const allowedWorkflowRef = "ttheodathe/finflow-stabilize-grow/.github/workflows/seo-publisher.yml@refs/heads/feat/stage-d-oidc-publisher";
-const jwks = createRemoteJWKSet(new URL("https://token.actions.githubusercontent.com/.well-known/jwks"));
+const allowedWorkflowRef =
+  "ttheodathe/finflow-stabilize-grow/.github/workflows/seo-publisher.yml@refs/heads/feat/stage-d-oidc-publisher";
+const jwks = createRemoteJWKSet(
+  new URL("https://token.actions.githubusercontent.com/.well-known/jwks"),
+);
 
 Deno.serve(async (request: Request) => {
   if (request.method !== "POST") {
@@ -41,24 +44,33 @@ Deno.serve(async (request: Request) => {
 
     const body = await request.json().catch(() => ({}));
     if (body.action !== "ping") {
-      return new Response(JSON.stringify({ error: "Acceptance endpoint is limited to non-mutating OIDC ping" }), {
-        status: 403,
-        headers: { "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "Acceptance endpoint is limited to non-mutating OIDC ping" }),
+        {
+          status: 403,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
     }
 
-    return new Response(JSON.stringify({
-      ok: true,
-      publisherIdentityVerified: true,
-      mode: "acceptance-oidc-ping-only",
-    }), {
-      status: 200,
-      headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
-    });
+    return new Response(
+      JSON.stringify({
+        ok: true,
+        publisherIdentityVerified: true,
+        mode: "acceptance-oidc-ping-only",
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+      },
+    );
   } catch {
-    return new Response(JSON.stringify({ error: "GitHub Actions OIDC token verification failed" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ error: "GitHub Actions OIDC token verification failed" }),
+      {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
   }
 });
