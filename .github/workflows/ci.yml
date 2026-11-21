@@ -286,6 +286,15 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Temporary format acceptance review route
+        run: npx prettier --write src/routes/_authenticated/editorial.review.tsx
+
+      - name: Upload formatted review route
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage-c-review-route-format
+          path: src/routes/_authenticated/editorial.review.tsx
+          retention-days: 1
       - name: Check formatting of changed files
         if: github.event_name == 'pull_request'
         run: |
