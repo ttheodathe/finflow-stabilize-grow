@@ -97,7 +97,7 @@ Deno.serve(async (request: Request) => {
       p_github_pr_number: Number.isInteger(body.githubPrNumber) ? body.githubPrNumber : null,
       p_commit_sha: typeof body.commitSha === "string" ? body.commitSha : null,
       p_published_content_hash: typeof body.publishedContentHash === "string" ? body.publishedContentHash : null,
-      p_deployment_url: typeof body.deploymentUrl === "string" ? body.deploymentUrl : null,
+      p_published_url: typeof body.publishedUrl === "string" ? body.publishedUrl : null,
       p_error_message: typeof body.errorMessage === "string" ? body.errorMessage.slice(0, 2000) : null,
     });
     if (error || data !== true) {
