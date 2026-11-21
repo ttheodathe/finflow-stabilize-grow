@@ -286,6 +286,17 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Temporary Stage C formatter diagnostic
+        run: |
+          npx prettier --write src/routes/_authenticated/editorial.review.tsx supabase/functions/seo-editorial-approval/index.ts
+          echo "STAGE_C_ROUTE_BASE64_START"
+          base64 -w0 src/routes/_authenticated/editorial.review.tsx
+          echo
+          echo "STAGE_C_ROUTE_BASE64_END"
+          echo "STAGE_C_EDGE_BASE64_START"
+          base64 -w0 supabase/functions/seo-editorial-approval/index.ts
+          echo
+          echo "STAGE_C_EDGE_BASE64_END"
       - name: Check formatting of changed files
         if: github.event_name == 'pull_request'
         run: |
