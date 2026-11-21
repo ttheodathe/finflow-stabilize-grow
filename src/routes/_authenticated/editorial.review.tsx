@@ -210,7 +210,7 @@ function EditorialReviewPage() {
             <RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
             Refresh queue
           </Button>
-          <Button variant="ghost" onClick={() => void seoReviewSupabase.auth.signOut()}>
+          <Button variant="ghost" onClick={() => void seoReviewSupabase?.auth.signOut()}>
             Sign out
           </Button>
         </div>
