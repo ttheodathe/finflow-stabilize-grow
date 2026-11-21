@@ -47,14 +47,14 @@ jobs:
 
   production-oidc-preflight:
     name: Verify production publisher identity without touching content
-    if: github.event_name == 'workflow_dispatch' && inputs.verify_production == true && inputs.publish != true
+    if: github.event_name == 'workflow_dispatch' && inputs.verify_production == true
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
       id-token: write
       contents: read
     env:
-      SEO_PUBLISHER_URL: ${{ vars.SEO_PUBLISHER_URL }}
+      SEO_PUBLISHER_URL: https://zjaamxvqjiymgfujrtjm.supabase.co/functions/v1/seo-article-publisher
       SEO_PUBLISHER_AUDIENCE: finflowtrack-seo-publisher
     steps:
       - uses: actions/checkout@v4
@@ -68,14 +68,15 @@ jobs:
 
   publish:
     name: Publish one approved article
-    if: github.event_name == 'workflow_dispatch' && inputs.publish == true && vars.ARTICLE_PUBLISHING_ENABLED == 'true'
+    needs: production-oidc-preflight
+    if: github.event_name == 'workflow_dispatch' && inputs.publish == true && inputs.verify_production == true && needs.production-oidc-preflight.result == 'success' && vars.ARTICLE_PUBLISHING_ENABLED == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     permissions:
       contents: write
       id-token: write
     env:
-      SEO_PUBLISHER_URL: ${{ vars.SEO_PUBLISHER_URL }}
+      SEO_PUBLISHER_URL: https://zjaamxvqjiymgfujrtjm.supabase.co/functions/v1/seo-article-publisher
       SEO_PUBLISHER_AUDIENCE: finflowtrack-seo-publisher
       PUBLISH_SITEMAP_URL: https://www.finflowtrack.com/sitemap.xml
     steps:
