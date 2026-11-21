@@ -11,6 +11,7 @@ on:
       - feat/stage-c-governance-attribution
       - fix/editorial-review-public-route
       - feat/stage-c-evidence-citation-gates
+      - feat/stage-d-approved-publishing-guardrails
 
 permissions:
   contents: read
