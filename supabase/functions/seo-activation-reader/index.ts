@@ -5,6 +5,7 @@ const issuer = "https://token.actions.githubusercontent.com";
 const jwks = createRemoteJWKSet(
   new URL("https://token.actions.githubusercontent.com/.well-known/jwks"),
 );
+
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
@@ -15,8 +16,7 @@ async function verifyWorkflowIdentity(request: Request) {
   const token = (request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
   if (!token) throw new Error("GitHub Actions OIDC token is required.");
 
-  const audience =
-    Deno.env.get("ACTIVATION_READER_OIDC_AUDIENCE") || "finflowtrack-seo-activation";
+  const audience = Deno.env.get("ACTIVATION_READER_OIDC_AUDIENCE") || "finflowtrack-seo-activation";
   const { payload } = await jwtVerify(token, jwks, { issuer, audience });
   const allowedEvents = ["schedule", "workflow_dispatch"];
   const allowedWorkflowRef =
@@ -66,9 +66,7 @@ Deno.serve(async (request: Request) => {
 
   const url = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!url || !serviceRoleKey) {
-    return json({ error: "Activation reader is not configured" }, 503);
-  }
+  if (!url || !serviceRoleKey) return json({ error: "Activation reader is not configured" }, 503);
 
   const admin = createClient(url, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
