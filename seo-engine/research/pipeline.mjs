@@ -703,11 +703,18 @@ function buildDraft(candidate, pack, sourceRecords, productEvidence, internalLin
     markdown = matter.stringify(updatedBody, frontmatter);
   } else {
     const sections = pack.sections.map(([heading, body]) => `## ${heading}\n\n${body}`).join("\n\n");
-    markdown = `---\ntitle: "${pack.title.replace(/"/g, '\\\"')}"\ndescription: "${pack.description.replace(/"/g, '\\\"')}"\nslug: "${target.slug}"\nstatus: "draft"\npublicationStatus: "draft"\ncategory: "small-business-finance"\ntags:\n  - small business\n  - ${pack.id}\n---\n\n# ${pack.title}\n\nA reliable process is easier to maintain when each step has a clear purpose and an owner. This guide focuses on practical routines rather than promises or one-size-fits-all rules.\n\n${sections}\n${productLine}\n## Related FinFlow Track guides\n\n${links}\n\n## Sources and scope\n\n${sourceLines}\n\nRequirements differ by country, contract and business structure. Government sources cited here are provided for the jurisdiction they cover; they are not a substitute for local professional advice.\n`;
+    markdown = `---\ntitle: "${pack.title.replace(/"/g, '\\\"')}"\ndescription: "${pack.description.replace(/"/g, '\\\"')}"\nslug: "${target.slug}"\nstatus: "draft"\npublicationStatus: "draft"\ncategory: "small-business-finance"\ntags:\n  - small business\n  - ${pack.id}\ndraft: true\n---\n\n# ${pack.title}\n\nA reliable process is easier to maintain when each step has a clear purpose and an owner. This guide focuses on practical routines rather than promises or one-size-fits-all rules.\n\n${sections}\n${productLine}\n## Related FinFlow Track guides\n\n${links}\n\n## Sources and scope\n\n${sourceLines}\n\nRequirements differ by country, contract and business structure. Government sources cited here are provided for the jurisdiction they cover; they are not a substitute for local professional advice.\n`;
   }
+  const generatedMetadata = matter(markdown).data;
   return {
     title: pack.title, description: pack.description, slug: target.slug,
-    publicationStatus: "draft", status: "draft", author: null, authorStatus: "NOT_ASSIGNED",
+    category: generatedMetadata.category,
+    tags: Array.isArray(generatedMetadata.tags) ? generatedMetadata.tags : [],
+    draft: true,
+    publishedAt: generatedMetadata.publishedAt || null,
+    publicationStatus: "draft", status: "draft",
+    author: generatedMetadata.author || null,
+    authorStatus: generatedMetadata.author ? "APPROVED" : "NOT_ASSIGNED",
     intent: pack.intent, targetQuery: candidate.targetQuery, relatedQueries: candidate.relatedQueries || [],
     operationType: candidate.operationType || "EXISTING_ARTICLE_UPDATE", targetSlug: target.slug,
     canonicalUrl: `https://www.finflowtrack.com/blog/${target.slug}`,
