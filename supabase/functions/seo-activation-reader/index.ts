@@ -43,7 +43,8 @@ Deno.serve(async (request: Request) => {
   } catch {
     return json({ error: "Invalid JSON body" }, 400);
   }
-  if (Object.keys(body).length !== 1 || !["ping", "read"].includes(String(body.action))) {
+  if (!body || typeof body !== "object" || Array.isArray(body) ||
+      Object.keys(body).length !== 1 || !["ping", "read"].includes(String(body.action))) {
     return json({ error: "Unsupported activation reader action" }, 400);
   }
   if (body.action === "ping") {
@@ -72,10 +73,18 @@ Deno.serve(async (request: Request) => {
     "new_activated_users_30d",
     "new_returning_activated_users_30d",
   ];
+  const expectedFields = new Set(["source_watermark", ...countFields]);
+  const validCount = (value: unknown) => {
+    if (typeof value === "number") return Number.isSafeInteger(value) && value >= 0;
+    if (typeof value !== "string" || !/^\\d+$/.test(value)) return false;
+    return Number.isSafeInteger(Number(value));
+  };
   if (
+    Object.keys(row).length !== expectedFields.size ||
+    Object.keys(row).some((key) => !expectedFields.has(key)) ||
     typeof row.source_watermark !== "string" ||
     !Number.isFinite(Date.parse(row.source_watermark)) ||
-    countFields.some((key) => !Number.isSafeInteger(Number(row[key])) || Number(row[key]) < 0)
+    countFields.some((key) => !validCount(row[key]))
   ) {
     return json({ error: "Activation aggregate returned an invalid shape" }, 503);
   }
