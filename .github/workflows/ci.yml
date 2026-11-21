@@ -11,6 +11,7 @@ on:
       - feat/stage-c-governance-attribution
       - fix/editorial-review-public-route
       - feat/stage-c-evidence-citation-gates
+      - feat/stage-d-approved-publishing-guardrails
 
 permissions:
   contents: read
@@ -118,7 +119,8 @@ jobs:
             supabase/migrations/20261120115501_seo_ops_content_revision_immutability.sql \
             supabase/migrations/20261120193123_stage_c_editorial_approval_and_attribution.sql \
             supabase/migrations/20261121040000_stage_c_editorial_review_queue.sql \
-            supabase/migrations/20261121130000_stage_c_editorial_update_proposal_queue.sql; do
+            supabase/migrations/20261121130000_stage_c_editorial_update_proposal_queue.sql \
+            supabase/migrations/20261121145000_stage_d_approved_author_metadata.sql; do
             name="$(basename "$migration")"
             docker cp "$migration" "$container_id:/tmp/$name"
             docker exec "$container_id" psql -U postgres -d finflow_seo_ops_test -v ON_ERROR_STOP=1 -f "/tmp/$name"
