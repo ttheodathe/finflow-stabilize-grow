@@ -382,10 +382,10 @@ begin
      or not has_function_privilege('service_role','public.seo_ops_get_article_approval(uuid)','EXECUTE') then
     raise exception 'Stage C revision or approval readback RPC grants are incorrect';
   end if;
-end $;
+end $$;
 
  
-do $
+do $$
 declare
   v_security_definer boolean;
 begin
@@ -404,4 +404,4 @@ begin
      or not has_function_privilege('service_role','public.seo_ops_list_pending_editorial_reviews(uuid,text)','EXECUTE') then
     raise exception 'review queue RPC execution grants are incorrect';
   end if;
-end $;
+end $$;
