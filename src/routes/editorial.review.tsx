@@ -314,23 +314,29 @@ function EditorialReviewPage() {
                 {review.editorial_update_proposal?.action === "UPDATE_EXISTING_PUBLIC_ARTICLE" && (
                   <Alert>
                     <FileText className="h-4 w-4" />
-                    <AlertTitle>Constructive update recommended — do not create a duplicate URL</AlertTitle>
+                    <AlertTitle>
+                      Constructive update recommended — do not create a duplicate URL
+                    </AlertTitle>
                     <AlertDescription className="space-y-2">
                       <p>
-                        Existing article: <strong>{review.editorial_update_proposal.targetSlug}</strong>
+                        Existing article:{" "}
+                        <strong>{review.editorial_update_proposal.targetSlug}</strong>
                       </p>
                       <p className="break-all">
                         Keep this URL: {review.editorial_update_proposal.targetUrl}
                       </p>
                       <p>
-                        Match: {review.editorial_update_proposal.matchType.replaceAll("_", " ")} ·
-                        Confidence: {review.editorial_update_proposal.confidence.replaceAll("_", " ")}
+                        Match: {review.editorial_update_proposal.matchType.replaceAll("_", " ")}
+                        {" · "}Confidence:{" "}
+                        {review.editorial_update_proposal.confidence.replaceAll("_", " ")}
                       </p>
                       <p>{review.editorial_update_proposal.rationale}</p>
                       <ul className="list-disc space-y-1 pl-5">
-                        {review.editorial_update_proposal.recommendedActions.map((action, index) => (
-                          <li key={index}>{action}</li>
-                        ))}
+                        {review.editorial_update_proposal.recommendedActions.map(
+                          (action, index) => (
+                            <li key={index}>{action}</li>
+                          ),
+                        )}
                       </ul>
                     </AlertDescription>
                   </Alert>
