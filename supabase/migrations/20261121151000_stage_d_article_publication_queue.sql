@@ -89,6 +89,7 @@ begin
     and o.approved_content_hash = o.proposed_content_hash
     and o.slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'
     and o.target_path = 'content/blog/' || o.slug || '.md'
+    and not exists (
       select 1 from seo_ops.article_publications existing
       where existing.operation_id = o.id
         and existing.revision_id = r.id
