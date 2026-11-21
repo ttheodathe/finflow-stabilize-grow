@@ -114,7 +114,9 @@ jobs:
             supabase/migrations/20261119170000_seo_ops_research_revision_persistence.sql \
             supabase/migrations/20261119154716_seo_ops_research_readback.sql \
             supabase/migrations/20261120115501_seo_ops_content_revision_immutability.sql \
-            supabase/migrations/20261120193123_stage_c_editorial_approval_and_attribution.sql; do
+            supabase/migrations/20261120193123_stage_c_editorial_approval_and_attribution.sql \
+            supabase/migrations/20261121040000_stage_c_editorial_review_queue.sql \
+            supabase/migrations/20261121130000_stage_c_editorial_update_proposal_queue.sql; do
             name="$(basename "$migration")"
             docker cp "$migration" "$container_id:/tmp/$name"
             docker exec "$container_id" psql -U postgres -d finflow_seo_ops_test -v ON_ERROR_STOP=1 -f "/tmp/$name"
@@ -128,6 +130,13 @@ jobs:
           test -n "$container_id"
           docker cp supabase/tests/seo-ops-persistence-smoke.sql "$container_id:/tmp/seo-ops-persistence-smoke.sql"
           docker exec "$container_id" psql -U postgres -d finflow_seo_ops_test -v ON_ERROR_STOP=1 -f /tmp/seo-ops-persistence-smoke.sql
+
+      - name: Verify editorial queue exposes constructive duplicate-update recommendations
+        run: |
+          container_id="$(docker ps --filter 'ancestor=postgres:16' --format '{{.ID}}' | head -n 1)"
+          test -n "$container_id"
+          docker cp supabase/tests/editorial-update-proposal-queue-smoke.sql "$container_id:/tmp/editorial-update-proposal-queue-smoke.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_seo_ops_test -v ON_ERROR_STOP=1 -f /tmp/editorial-update-proposal-queue-smoke.sql
 
       - name: Apply payroll entitlement migration
         run: |
