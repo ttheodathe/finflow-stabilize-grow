@@ -533,16 +533,19 @@ export async function loadInventory({ contentDir = CONTENT_DIR } = {}) {
     const raw = await readFile(path.join(contentDir, file), "utf8");
     const parsed = matter(raw);
     const data = parsed.data || {};
-    items.push({ file, slug: data.slug || file.replace(/\.md$/, ""), title: data.title || file, description: data.description || "", tags: Array.isArray(data.tags) ? data.tags : [], content: parsed.content, markdown: raw });
+    items.push({ file, slug: data.slug || file.replace(/\.md$/, ""), title: data.title || file, description: data.description || "", tags: Array.isArray(data.tags) ? data.tags : [], content: parsed.content, markdown: raw, isPubliclyLive: data.draft !== true });
   }
   return items;
 }
 export function analyzeCannibalization(query, inventory, targetUrl = null) {
+  // Match getAllPosts(): draft:true articles are not publicly live.
+  // Legacy inventory fixtures without this field are treated as public.
+  const publicInventory = inventory.filter(item => item && item.isPubliclyLive !== false);
   let targetSlug = null;
   try { targetSlug = targetUrl ? new URL(targetUrl).pathname.split("/").filter(Boolean).pop() : null; }
   catch { targetSlug = null; }
   const queryIntent = classifySearchIntent(query);
-  const scored = inventory.map(item => {
+  const scored = publicInventory.map(item => {
     const metadataText = [item.title, item.description, item.slug, ...(item.tags || [])].join(" ");
     const fullText = String(item.content || "");
     const metadataScore = similarity(query, metadataText);
@@ -570,9 +573,28 @@ export function analyzeCannibalization(query, inventory, targetUrl = null) {
     : exactTarget ? "EXACT_LANDING_PAGE_INTENT_MATCH"
     : "INFERRED_EXISTING_INTENT_MATCH";
   const decision = conflict ? "UPDATE_EXISTING_ARTICLE" : "NEW_ARTICLE_CANDIDATE";
+  const updateProposal = target ? {
+    action: "UPDATE_EXISTING_PUBLIC_ARTICLE",
+    targetSlug: target.slug,
+    targetUrl: target.url,
+    matchType: exactTarget ? "EXACT_GSC_LANDING_PAGE" : "TOPICAL_OVERLAP_REVIEW",
+    confidence: exactTarget ? "EXACT_URL_MATCH" : "SIMILARITY_SCREEN_REQUIRES_HUMAN_CONFIRMATION",
+    rationale: exactTarget
+      ? "Google Search Console identifies this existing public article as the landing page for the query."
+      : "The query overlaps with an existing public article; consolidate the intent before creating another URL.",
+    recommendedActions: [
+      "Keep the existing public URL and canonical slug; do not create a second article for the same search intent.",
+      "Refresh the title and description only if they no longer represent the query and reader need.",
+      "Add missing, useful sections that answer related reader questions without repeating existing material.",
+      "Replace outdated facts with current primary-source evidence and clearly label jurisdiction-specific guidance.",
+      "Preserve accurate sections, useful backlinks and internal links; update the published date only after a substantive revision.",
+      "Review competing pages and consider consolidation only when their search intent is genuinely the same.",
+    ],
+  } : null;
   return {
     status: conflict ? "EXISTING_INTENT_MATCH" : "NO_STRONG_MATCH",
     decision,
+    updateProposal,
     editorialDecision: targetQueryMatch === "EXACT_LANDING_PAGE_REVIEW_REQUIRED" || Boolean(inferredTarget)
       ? "HUMAN_REVIEW_REQUIRED" : decision,
     requiresHumanReview: targetQueryMatch === "EXACT_LANDING_PAGE_REVIEW_REQUIRED" || Boolean(inferredTarget),
@@ -699,6 +721,7 @@ export async function runResearchPipeline({
 } = {}) {
   if (!Array.isArray(opportunities)) throw new Error("Research pipeline requires an opportunities array.");
   const inventory = await loadInventory({ contentDir });
+  const publicInventory = inventory.filter(item => item.isPubliclyLive);
   await mkdir(outputDir, { recursive: true });
   const results = [];
   for (const raw of opportunities) {
@@ -726,7 +749,7 @@ export async function runResearchPipeline({
     };
     const freshness = freshnessFor(candidate, now);
     const intent = classifySearchIntent(candidate.targetQuery);
-    const cannibalization = analyzeCannibalization(candidate.targetQuery, inventory, candidate.targetUrl);
+    const cannibalization = analyzeCannibalization(candidate.targetQuery, publicInventory, candidate.targetUrl);
     const base = { candidate, intent, freshness, cannibalization, draft: null, quality: null, rejectionReasons: [], editorialReviewQuestions: [] };
     base.editorialDecision = cannibalization.editorialDecision;
     base.humanReviewRequired = cannibalization.requiresHumanReview;
@@ -777,10 +800,11 @@ export async function runResearchPipeline({
     if (sourceFailures.length || unsupported.length) base.rejectionReasons.push("SOURCE_VERIFICATION_INCOMPLETE");
     const productEvidence = Boolean(pack.productMention) && ["Invoice creation","Expense tracking","Customer management","Basic reports"]
       .every(name => VERIFIED_PRODUCT.verifiedCapabilities.some(item => item.name === name && item.articleClaimAllowed));
-    const related = pack.related.map(slug => inventory.find(item => item.slug === slug))
+    const related = pack.related.map(slug => publicInventory.find(item => item.slug === slug))
       .filter(item => item && item.slug !== target.slug).map(item => ({slug:item.slug,title:item.title}));
-    const existingArticle = operationType === "EXISTING_ARTICLE_UPDATE" ? inventory.find(item => item.slug === target.slug) || null : null;
+    const existingArticle = operationType === "EXISTING_ARTICLE_UPDATE" ? publicInventory.find(item => item.slug === target.slug) || null : null;
     const draft = buildDraft(candidate,pack,sourceRecords,productEvidence,related,target,now,existingArticle);
+    base.editorialUpdateProposal = cannibalization.updateProposal;
     base.sourceRecords = sourceRecords;
     base.internalLinks = related;
     base.audience = pack.audience;
@@ -807,7 +831,7 @@ export async function runResearchPipeline({
     const unsupportedNumericClaimMatches = numericClaimAssessment.unsupported;
     const unsupportedNumericClaims = unsupportedNumericClaimMatches.length > 0;
     if (unsupportedNumericClaims) base.rejectionReasons.push("UNSUPPORTED_NUMERIC_CLAIM");
-    const existingComparisons = inventory.filter(item => !(operationType === "EXISTING_ARTICLE_UPDATE" && item.slug === target.slug)).map(item => ({
+    const existingComparisons = publicInventory.filter(item => !(operationType === "EXISTING_ARTICLE_UPDATE" && item.slug === target.slug)).map(item => ({
       slug:item.slug,
       title:item.title,
       titleDescriptionScore:Number(similarity(draft.title + " " + draft.description, [item.title,item.description,item.slug,...(item.tags || [])].join(" ")).toFixed(3)),
@@ -851,7 +875,7 @@ export async function runResearchPipeline({
           audience: pack.audience, jurisdiction: pack.jurisdiction,
           productEvidence: productEvidence ? VERIFIED_PRODUCT : null,
           outline: pack.sections.map(([heading]) => heading), readerQuestions: pack.readerQuestions || [],
-          existingInventory: inventory },
+          existingInventory: publicInventory, existingArticleUpdatePlan: base.editorialUpdateProposal },
         generateArticle: articleGenerator, outputDir: articleOutputDir, now,
       });
       if (articleProduction.status === "READY_FOR_HUMAN_REVIEW") {
@@ -892,6 +916,7 @@ export async function runResearchPipeline({
           persistedOpportunityId:candidate.persistedOpportunityId,
           candidate, intent, freshness, cannibalization, existingContentComparison:existingComparisons,
           editorialDecision:base.editorialDecision,
+          editorialUpdateProposal:base.editorialUpdateProposal,
           editorialReviewQuestions:base.editorialReviewQuestions,
           sourcePackCompatibility:base.sourcePackCompatibility,
           sourcePackContext:base.sourcePackContext,
