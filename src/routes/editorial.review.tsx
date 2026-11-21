@@ -114,9 +114,8 @@ function EditorialReviewPage() {
     decision: "APPROVED" | "CHANGES_REQUESTED" | "REJECTED",
   ) {
     if (!seoReviewSupabase) return;
-    const approvedAuthor = decision === "APPROVED"
-      ? approvedAuthors[review.revision_id]?.trim() || null
-      : null;
+    const approvedAuthor =
+      decision === "APPROVED" ? approvedAuthors[review.revision_id]?.trim() || null : null;
     if (decision === "APPROVED" && !approvedAuthor) {
       toast.error("Select an approved byline before approving this draft.");
       return;
@@ -135,7 +134,11 @@ function EditorialReviewPage() {
       });
       if (error) throw new Error(error.message || "Editorial decision failed.");
       if (data?.error) throw new Error(data.error);
-      if (data?.contentHash !== review.content_hash || data?.decision !== decision || data?.approvedAuthor !== approvedAuthor) {
+      if (
+        data?.contentHash !== review.content_hash ||
+        data?.decision !== decision ||
+        data?.approvedAuthor !== approvedAuthor
+      ) {
         throw new Error("The server did not confirm the exact revision and decision.");
       }
       toast.success(
@@ -335,7 +338,9 @@ function EditorialReviewPage() {
                   </pre>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor={`author-${review.revision_id}`}>Approved byline (required to approve)</Label>
+                  <Label htmlFor={`author-${review.revision_id}`}>
+                    Approved byline (required to approve)
+                  </Label>
                   <select
                     id={`author-${review.revision_id}`}
                     value={approvedAuthors[review.revision_id] ?? ""}
@@ -351,7 +356,8 @@ function EditorialReviewPage() {
                     <option value="FinFlowTrack Editorial Team">FinFlowTrack Editorial Team</option>
                   </select>
                   <p className="text-xs text-muted-foreground">
-                    The selected byline is stored with this exact approval. The server checks it against the active author allowlist.
+                    The selected byline is stored with this exact approval. The server checks it
+                    against the active author allowlist.
                   </p>
                 </div>
                 <div className="space-y-2">
