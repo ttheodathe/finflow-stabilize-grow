@@ -58,6 +58,10 @@ Deno.serve(async (request: Request) => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
+  if (body.action === "ping") {
+    return json({ ok: true, publisherIdentityVerified: true });
+  }
+
   if (body.action === "claim") {
     const claimId = typeof body.claimId === "string" ? body.claimId : "";
     if (!/^[0-9a-f-]{36}$/i.test(claimId)) return json({ error: "Invalid claim id" }, 400);
