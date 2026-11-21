@@ -2,8 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.108.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "https://www.finflowtrack.com",
-  "Access-Control-Allow-Headers":
-    "authorization, content-type, apikey, x-client-info",
+  "Access-Control-Allow-Headers": "authorization, content-type, apikey, x-client-info",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
