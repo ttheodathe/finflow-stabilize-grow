@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, readFile, writeFile, appendFile } from "node:fs/promises";
-import path from "node:path";
+import { mkdir, writeFile, appendFile } from "node:fs/promises";
 
 const endpoint = process.env.SEO_PUBLISHER_URL;
 const audience = process.env.SEO_PUBLISHER_AUDIENCE || "finflowtrack-seo-publisher";
