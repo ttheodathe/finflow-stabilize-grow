@@ -51,6 +51,10 @@ async function setup(){
  for(const [slug,title,description] of articles) await writeFile(path.join(contentDir,slug+".md"),`---\ntitle: "${title}"\ndescription: "${description}"\nslug: "${slug}"\ntags: [small business, bookkeeping]\n---\n\nExisting article body about ${description}.\n`);
  return {root,contentDir,outputDir};
 }
+test("software selection guides remain selection intent when their title mentions costs",()=>{
+ assert.equal(classifySearchIntent("Best Accounting Software for Small Business: Features, Costs and Selection Guide"),"Software selection");
+ assert.equal(classifySearchIntent("accounting software pricing"),"Pricing and alternatives");
+});
 test("freshness preserves unknown and flags stale evidence",()=>{
  assert.equal(freshnessFor({reportingPeriodEnd:null},now).status,"UNKNOWN");
  assert.equal(freshnessFor({reportingPeriodEnd:"2026-11-16"},now).status,"FRESH");
@@ -108,6 +112,32 @@ test("unresolved cannibalization is not silently converted into a new article",(
  const inventory=[{slug:"a",title:"Small business bookkeeping records",description:"bookkeeping records",tags:[]}];
  const result=analyzeCannibalization("small business bookkeeping records",inventory,null);
  assert.equal(result.decision,"UPDATE_EXISTING_ARTICLE");
+});
+
+test("duplicate checker proposes a constructive update for public articles and ignores unpublished drafts",()=>{
+ const publicArticle={
+  slug:"bookkeeping-records",
+  title:"Bookkeeping Records",
+  description:"Bookkeeping records",
+  tags:["bookkeeping","records"],
+  content:"Keep clear bookkeeping records for income, expenses, invoices and receipts.",
+  isPubliclyLive:true,
+ };
+ const unpublishedDraft={
+  ...publicArticle,
+  slug:"unpublished-bookkeeping-draft",
+  title:"Small Business Bookkeeping Records Draft",
+  isPubliclyLive:false,
+ };
+ const liveMatch=analyzeCannibalization("small business bookkeeping records",[publicArticle,unpublishedDraft],null);
+ assert.equal(liveMatch.decision,"UPDATE_EXISTING_ARTICLE");
+ assert.equal(liveMatch.target.slug,publicArticle.slug);
+ assert.equal(liveMatch.updateProposal.action,"UPDATE_EXISTING_PUBLIC_ARTICLE");
+ assert.equal(liveMatch.updateProposal.targetUrl,"https://www.finflowtrack.com/blog/bookkeeping-records");
+ assert.ok(liveMatch.updateProposal.recommendedActions.some(action=>/Keep the existing public URL/.test(action)));
+ const draftOnlyMatch=analyzeCannibalization("small business bookkeeping records",[unpublishedDraft],null);
+ assert.equal(draftOnlyMatch.decision,"NEW_ARTICLE_CANDIDATE");
+ assert.equal(draftOnlyMatch.updateProposal,null);
 });
 
 test("draft queue persistence is idempotent and requires independent operation, research and revision readback",async()=>{

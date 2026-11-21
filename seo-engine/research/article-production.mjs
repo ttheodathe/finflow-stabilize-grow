@@ -50,6 +50,7 @@ export function createEditorialBrief(research) {
       ? research.outline
       : (Array.isArray(draft.content?.match(/^## .+$/gm)) ? draft.content.match(/^## .+$/gm).map(line => line.replace(/^## /, "")) : []),
     internalLinks: internalLinks.map(link => ({ slug: link.slug, title: link.title })),
+    existingArticleUpdatePlan: research.existingArticleUpdatePlan || null,
     evidence: verifiedSources.map(source => ({
       url: source.url,
       finalUrl: source.finalUrl || source.url,

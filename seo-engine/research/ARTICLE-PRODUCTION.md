@@ -22,6 +22,24 @@ This is an internal-inventory text screen, not an external plagiarism database o
 originality guarantee. Every passing draft still requires human originality, attribution and
 quotation review.
 
+## Public-article duplicate guard
+
+The topic/cannibalization check uses the same publication boundary as the public blog:
+articles with frontmatter `draft: true` are excluded; committed Markdown articles without that
+flag are treated as publicly live. Unpublished drafts therefore cannot be mistaken for an
+existing public landing page.
+
+When a query matches an existing public article, the pipeline proposes an
+`UPDATE_EXISTING_PUBLIC_ARTICLE` action, retains the existing slug/canonical URL, and records
+constructive update guidance: refresh intent-aligned metadata, add genuinely missing reader
+answers, replace stale claims with current primary-source evidence, preserve accurate sections
+and useful links, and only update the published date after substantive work. Exact GSC landing
+page matches take precedence; inferred topical overlaps remain human-review decisions.
+
+This is a repository inventory check, not a crawl of every URL on the live domain. Because the
+public blog is built from `content/blog/*.md`, the committed source inventory is the primary
+index. Human review remains required before any update can be approved or published.
+
 ## Authenticated editorial approval
 
 The seo-editorial-approval Supabase Edge Function verifies the caller's bearer token with
