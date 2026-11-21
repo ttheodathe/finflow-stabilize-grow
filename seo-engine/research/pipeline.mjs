@@ -910,7 +910,7 @@ export async function runResearchPipeline({
           proposedContentHash:hash,
         };
         const operationPayload = {
-          pipelineVersion:"b7.2", workflowState:"RESEARCHING",
+          pipelineVersion:"b7.3", workflowState:"RESEARCHING",
           evidenceMode:candidate.evidenceMode,
           sourceCollectionRunId:candidate.sourceCollectionRunId,
           persistedOpportunityId:candidate.persistedOpportunityId,
