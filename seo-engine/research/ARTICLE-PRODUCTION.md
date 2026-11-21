@@ -34,6 +34,11 @@ also requires an approved author and publication date. New articles remain block
 until a reviewer explicitly approves the byline; the publication step assigns the date and runs the
 complete production build before committing any live content.
 
+The editorial approval endpoint requires a byline selected from the private active-author allowlist.
+The selected author is stored in the approval row and returned by an exact readback check; the
+reviewer interface does not display internal reviewer UUIDs. A new article cannot proceed to the
+publisher without this approved author metadata.
+
 ## Public-article duplicate guard
 
 The topic/cannibalization check uses the same publication boundary as the public blog:
