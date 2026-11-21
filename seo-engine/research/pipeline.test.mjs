@@ -51,6 +51,10 @@ async function setup(){
  for(const [slug,title,description] of articles) await writeFile(path.join(contentDir,slug+".md"),`---\ntitle: "${title}"\ndescription: "${description}"\nslug: "${slug}"\ntags: [small business, bookkeeping]\n---\n\nExisting article body about ${description}.\n`);
  return {root,contentDir,outputDir};
 }
+test("software selection guides remain selection intent when their title mentions costs",()=>{
+ assert.equal(classifySearchIntent("Best Accounting Software for Small Business: Features, Costs and Selection Guide"),"Software selection");
+ assert.equal(classifySearchIntent("accounting software pricing"),"Pricing and alternatives");
+});
 test("freshness preserves unknown and flags stale evidence",()=>{
  assert.equal(freshnessFor({reportingPeriodEnd:null},now).status,"UNKNOWN");
  assert.equal(freshnessFor({reportingPeriodEnd:"2026-11-16"},now).status,"FRESH");
