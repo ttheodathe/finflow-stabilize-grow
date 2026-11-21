@@ -175,7 +175,7 @@ begin
     into v_total,v_rls
   from pg_class c join pg_namespace n on n.oid=c.relnamespace
   where n.nspname='seo_ops' and c.relkind='r';
-  if v_total <> 14 or v_rls <> 14 then raise exception 'expected RLS on all 14 SEO tables; total %, enabled %',v_total,v_rls; end if;
+  if v_total <> 16 or v_rls <> 16 then raise exception 'expected RLS on all 16 SEO tables; total %, enabled %',v_total,v_rls; end if;
   if has_schema_privilege('anon','seo_ops','USAGE')
      or has_schema_privilege('authenticated','seo_ops','USAGE')
      or has_table_privilege('anon','seo_ops.scheduler_runs','SELECT')
@@ -224,6 +224,9 @@ declare
   v_revision3 uuid;
   v_approval uuid;
   v_performance uuid;
+  v_publication_claim uuid;
+  v_publication_result jsonb;
+  v_second_claim jsonb;
   v_hash text := repeat('c',64);
   v_hash2 text := repeat('d',64);
   v_hash3 text := repeat('e',64);
@@ -257,11 +260,30 @@ begin
   select count(*) into v_count from seo_ops.content_revisions
    where operation_id=v_operation and revision_number=2 and revision_state='SUPERSEDED';
   if v_count <> 1 then raise exception 'revision after change request did not supersede the prior proposal'; end if;
+  begin
+    perform public.seo_ops_record_article_approval(
+      v_operation,v_revision3,v_hash3,v_reviewer,v_reviewer::text,'APPROVED','CI approval without byline',null
+    );
+    raise exception 'approval without an approved byline should have failed';
+  exception when others then
+    if sqlerrm = 'approval without an approved byline should have failed' then raise; end if;
+  end;
+
+  begin
+    perform public.seo_ops_record_article_approval(
+      v_operation,v_revision3,v_hash3,v_reviewer,v_reviewer::text,'APPROVED','CI unapproved byline','Unapproved Author'
+    );
+    raise exception 'approval with an unapproved byline should have failed';
+  exception when others then
+    if sqlerrm = 'approval with an unapproved byline should have failed' then raise; end if;
+  end;
+
   v_approval := public.seo_ops_record_article_approval(
-    v_operation,v_revision3,v_hash3,v_reviewer,v_reviewer::text,'APPROVED','CI synthetic approval'
+    v_operation,v_revision3,v_hash3,v_reviewer,v_reviewer::text,'APPROVED','CI synthetic approval','FinFlowTrack Editorial Team'
   );
   select count(*) into v_count from public.seo_ops_get_article_approval(v_approval)
-   where id=v_approval and reviewer_user_id=v_reviewer and content_hash=v_hash3 and decision='APPROVED';
+   where id=v_approval and reviewer_user_id=v_reviewer and content_hash=v_hash3
+     and decision='APPROVED' and approved_author='FinFlowTrack Editorial Team';
   if v_count <> 1 then raise exception 'authenticated article approval readback failed'; end if;
   select count(*) into v_count from seo_ops.content_operations
    where id=v_operation and status='APPROVED' and approved_content_hash=v_hash3;
@@ -279,10 +301,72 @@ begin
    where id=v_performance and slug='stage-c-smoke' and revision_id=v_revision3 and revision_attribution='UNKNOWN';
   if v_count <> 1 then raise exception 'article performance snapshot persistence failed'; end if;
 
-  if has_function_privilege('anon','public.seo_ops_record_article_approval(uuid,uuid,text,uuid,text,text,text)','EXECUTE')
-     or has_function_privilege('authenticated','public.seo_ops_record_article_approval(uuid,uuid,text,uuid,text,text,text)','EXECUTE')
-     or not has_function_privilege('service_role','public.seo_ops_record_article_approval(uuid,uuid,text,uuid,text,text,text)','EXECUTE') then
+  -- Stage D: only an exact approved revision with an approved author can be claimed.
+  v_publication_claim := gen_random_uuid();
+  v_publication_result := public.seo_ops_claim_next_article_for_publication(v_publication_claim);
+  if v_publication_result is null
+     or v_publication_result->>'operationId' is distinct from v_operation::text
+     or v_publication_result->>'revisionId' is distinct from v_revision3::text
+     or v_publication_result->>'contentHash' is distinct from v_hash3
+     or v_publication_result->>'approvedAuthor' is distinct from 'FinFlowTrack Editorial Team'
+     or v_publication_result->>'targetPath' is distinct from 'content/blog/stage-c-smoke.md' then
+    raise exception 'publisher claim did not return the exact approved article revision and byline: %',v_publication_result;
+  end if;
+
+  v_second_claim := public.seo_ops_claim_next_article_for_publication(gen_random_uuid());
+  if v_second_claim is not null then
+    raise exception 'publisher queue allowed a concurrent duplicate claim';
+  end if;
+
+  perform public.seo_ops_update_article_publication(
+    v_publication_claim,'PULL_REQUEST_OPEN','seo-publish/stage-c-smoke-12345678',123
+  );
+  perform public.seo_ops_update_article_publication(
+    v_publication_claim,'MERGED',null,null,repeat('a',40)
+  );
+  perform public.seo_ops_update_article_publication(
+    v_publication_claim,'DEPLOYMENT_READY',null,null,null,null,'https://www.finflowtrack.com/blog/stage-c-smoke'
+  );
+  perform public.seo_ops_update_article_publication(
+    v_publication_claim,'URL_VERIFIED',null,null,null,repeat('b',64),'https://www.finflowtrack.com/blog/stage-c-smoke'
+  );
+  select count(*) into v_count
+  from seo_ops.article_publications p
+  join seo_ops.content_operations o on o.id=p.operation_id
+  where p.claim_id=v_publication_claim
+    and p.status='URL_VERIFIED'
+    and p.approved_author='FinFlowTrack Editorial Team'
+    and p.published_content_hash=repeat('b',64)
+    and o.status='URL_VERIFIED';
+  if v_count <> 1 then raise exception 'publisher state transitions were not durably persisted'; end if;
+
+  if to_regprocedure('public.seo_ops_record_article_approval(uuid,uuid,text,uuid,text,text,text)') is not null then
+    raise exception 'legacy approval RPC signature still permits approvals without an author';
+  end if;
+  if has_function_privilege('anon','public.seo_ops_record_article_approval(uuid,uuid,text,uuid,text,text,text,text)','EXECUTE')
+     or has_function_privilege('authenticated','public.seo_ops_record_article_approval(uuid,uuid,text,uuid,text,text,text,text)','EXECUTE')
+     or not has_function_privilege('service_role','public.seo_ops_record_article_approval(uuid,uuid,text,uuid,text,text,text,text)','EXECUTE') then
     raise exception 'article approval RPC execution grants are incorrect';
+  end if;
+  if has_table_privilege('anon','seo_ops.editorial_authors','SELECT')
+     or has_table_privilege('authenticated','seo_ops.editorial_authors','SELECT')
+     or not has_table_privilege('service_role','seo_ops.editorial_authors','SELECT') then
+    raise exception 'editorial author allowlist grants are incorrect';
+  end if;
+  if has_table_privilege('anon','seo_ops.article_publications','SELECT')
+     or has_table_privilege('authenticated','seo_ops.article_publications','SELECT')
+     or not has_table_privilege('service_role','seo_ops.article_publications','SELECT')
+     or has_table_privilege('anon','seo_ops.article_publications','INSERT')
+     or has_table_privilege('authenticated','seo_ops.article_publications','INSERT') then
+    raise exception 'article publication queue grants are incorrect';
+  end if;
+  if has_function_privilege('anon','public.seo_ops_claim_next_article_for_publication(uuid)','EXECUTE')
+     or has_function_privilege('authenticated','public.seo_ops_claim_next_article_for_publication(uuid)','EXECUTE')
+     or not has_function_privilege('service_role','public.seo_ops_claim_next_article_for_publication(uuid)','EXECUTE')
+     or has_function_privilege('anon','public.seo_ops_update_article_publication(uuid,text,text,bigint,text,text,text,text)','EXECUTE')
+     or has_function_privilege('authenticated','public.seo_ops_update_article_publication(uuid,text,text,bigint,text,text,text,text)','EXECUTE')
+     or not has_function_privilege('service_role','public.seo_ops_update_article_publication(uuid,text,text,bigint,text,text,text,text)','EXECUTE') then
+    raise exception 'article publication RPC grants are incorrect';
   end if;
   if has_table_privilege('anon','seo_ops.article_approvals','SELECT')
      or has_table_privilege('authenticated','seo_ops.article_approvals','SELECT')

@@ -22,6 +22,41 @@ This is an internal-inventory text screen, not an external plagiarism database o
 originality guarantee. Every passing draft still requires human originality, attribution and
 quotation review.
 
+Generated drafts must preserve the brief's exact title, description and slug, cite every supplied
+verified evidence source with its supplied URL, and avoid unverified external source links. Missing
+citations or metadata drift blocks the package before it can enter the reviewer queue. These checks
+are deterministic link/metadata checks; they do not prove that each cited source semantically
+supports every sentence. Human fact-checking remains mandatory.
+
+Draft packages also carry the public blog's category and tags and must include `draft: true` in
+frontmatter. Never copy an operations draft directly into `content/blog`: the public blog schema
+also requires an approved author and publication date. New articles remain blocked from publication
+until a reviewer explicitly approves the byline; the publication step assigns the date and runs the
+complete production build before committing any live content.
+
+The editorial approval endpoint requires a byline selected from the private active-author allowlist.
+The selected author is stored in the approval row and returned by an exact readback check; the
+reviewer interface does not display internal reviewer UUIDs. A new article cannot proceed to the
+publisher without this approved author metadata.
+
+## Public-article duplicate guard
+
+The topic/cannibalization check uses the same publication boundary as the public blog:
+articles with frontmatter `draft: true` are excluded; committed Markdown articles without that
+flag are treated as publicly live. Unpublished drafts therefore cannot be mistaken for an
+existing public landing page.
+
+When a query matches an existing public article, the pipeline proposes an
+`UPDATE_EXISTING_PUBLIC_ARTICLE` action, retains the existing slug/canonical URL, and records
+constructive update guidance: refresh intent-aligned metadata, add genuinely missing reader
+answers, replace stale claims with current primary-source evidence, preserve accurate sections
+and useful links, and only update the published date after substantive work. Exact GSC landing
+page matches take precedence; inferred topical overlaps remain human-review decisions.
+
+This is a repository inventory check, not a crawl of every URL on the live domain. Because the
+public blog is built from `content/blog/*.md`, the committed source inventory is the primary
+index. Human review remains required before any update can be approved or published.
+
 ## Authenticated editorial approval
 
 The seo-editorial-approval Supabase Edge Function verifies the caller's bearer token with

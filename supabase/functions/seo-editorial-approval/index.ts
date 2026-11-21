@@ -68,14 +68,21 @@ Deno.serve(async (request: Request) => {
   const contentHash = String(body.contentHash || "");
   const decision = String(body.decision || "");
   const reviewNotes = typeof body.reviewNotes === "string" ? body.reviewNotes.slice(0, 4000) : null;
+  const approvedAuthor =
+    typeof body.approvedAuthor === "string" ? body.approvedAuthor.trim() : null;
 
   if (
     !/^[0-9a-f-]{36}$/i.test(operationId) ||
     !/^[0-9a-f-]{36}$/i.test(revisionId) ||
     !/^[a-f0-9]{64}$/.test(contentHash) ||
-    !["APPROVED", "CHANGES_REQUESTED", "REJECTED"].includes(decision)
+    !["APPROVED", "CHANGES_REQUESTED", "REJECTED"].includes(decision) ||
+    (decision === "APPROVED" && (!approvedAuthor || approvedAuthor.length > 120)) ||
+    (decision !== "APPROVED" && approvedAuthor !== null)
   ) {
-    return json({ error: "Approval payload is invalid" }, 400);
+    return json(
+      { error: "Approval payload is invalid or missing its explicitly selected author" },
+      400,
+    );
   }
 
   const { data, error } = await admin.rpc("seo_ops_record_article_approval", {
@@ -86,6 +93,7 @@ Deno.serve(async (request: Request) => {
     p_authenticated_subject: userData.user.id,
     p_decision: decision,
     p_review_notes: reviewNotes,
+    p_approved_author: approvedAuthor,
   });
   if (error) {
     return json(
@@ -107,7 +115,8 @@ Deno.serve(async (request: Request) => {
     approval.id !== data ||
     approval.reviewer_user_id !== userData.user.id ||
     approval.content_hash !== contentHash ||
-    approval.decision !== decision
+    approval.decision !== decision ||
+    approval.approved_author !== approvedAuthor
   ) {
     return json(
       {
@@ -122,5 +131,6 @@ Deno.serve(async (request: Request) => {
     decision,
     contentHash,
     reviewerUserId: approval.reviewer_user_id,
+    approvedAuthor: approval.approved_author,
   });
 });

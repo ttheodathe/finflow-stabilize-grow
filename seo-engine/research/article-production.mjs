@@ -30,6 +30,35 @@ export function createEditorialBrief(research) {
     source.status === "RETRIEVED_RELEVANT" &&
     source.verificationStatus === "KEYWORD_RELEVANCE_PASS_HUMAN_REVIEW_REQUIRED"
   );
+  const productCapabilities = Array.isArray(research.productEvidence?.verifiedCapabilities)
+    ? research.productEvidence.verifiedCapabilities
+      .filter(item => item.status === "VERIFIED" && item.articleClaimAllowed === true)
+      .map(item => ({ name: item.name, plan: item.plan, sourceFile: item.sourceFile, evidence: item.evidence }))
+    : [];
+  const evidence = verifiedSources.map(source => ({
+    url: source.url,
+    finalUrl: source.finalUrl || source.url,
+    title: source.sourceTitle || source.publisher || source.url,
+    publisher: source.publisher || null,
+    publishedAt: source.publishedAt || null,
+    retrievedAt: source.retrievedAt || null,
+    jurisdiction: source.jurisdiction || null,
+    supportedClaims: source.supportedClaims || [],
+    limitations: source.limitations || [],
+  }));
+  if (productCapabilities.length) {
+    evidence.push({
+      url: "https://www.finflowtrack.com/pricing",
+      finalUrl: "https://www.finflowtrack.com/pricing",
+      title: "FinFlow Track pricing and feature catalog",
+      publisher: "FinFlow Track",
+      publishedAt: null,
+      retrievedAt: research.productEvidence.verifiedAt || null,
+      jurisdiction: "First-party product documentation",
+      supportedClaims: productCapabilities.map(item => `${item.name} is listed for the ${item.plan} plan.`),
+      limitations: ["Verified against repository source files, not a live authenticated account."],
+    });
+  }
   const internalLinks = Array.isArray(research.internalLinks) ? research.internalLinks : [];
   const relatedQueries = Array.isArray(candidate.relatedQueries) ? candidate.relatedQueries : [];
   const intent = requireText(research.intent, "Search intent");
@@ -50,17 +79,18 @@ export function createEditorialBrief(research) {
       ? research.outline
       : (Array.isArray(draft.content?.match(/^## .+$/gm)) ? draft.content.match(/^## .+$/gm).map(line => line.replace(/^## /, "")) : []),
     internalLinks: internalLinks.map(link => ({ slug: link.slug, title: link.title })),
-    evidence: verifiedSources.map(source => ({
-      url: source.url,
-      finalUrl: source.finalUrl || source.url,
-      title: source.sourceTitle || source.publisher || source.url,
-      publisher: source.publisher || null,
-      publishedAt: source.publishedAt || null,
-      retrievedAt: source.retrievedAt || null,
-      jurisdiction: source.jurisdiction || null,
-      supportedClaims: source.supportedClaims || [],
-      limitations: source.limitations || [],
-    })),
+    existingArticleUpdatePlan: research.existingArticleUpdatePlan || null,
+    publicationMetadata: {
+      category: draft.category || null,
+      tags: Array.isArray(draft.tags) ? draft.tags : [],
+      author: draft.author || null,
+      publishedAt: draft.publishedAt || null,
+      draft: true,
+      authorPolicy: "New articles require an explicit approved byline before publication; do not invent an author.",
+      publicationDatePolicy: "Assign publishedAt at the verified publication step, not during drafting.",
+    },
+    evidence,
+    productCapabilities,
     evidenceGaps: sourceRecords.filter(source => source.status !== "RETRIEVED_RELEVANT").map(source => ({
       url: source.url, status: source.status, error: source.error || null,
     })),
@@ -134,9 +164,13 @@ export async function runArticleProduction({
     slug: metadata.slug,
     status: metadata.status,
     publicationStatus: metadata.publicationStatus,
+    category: metadata.category,
+    tags: Array.isArray(metadata.tags) ? metadata.tags : [],
+    draft: metadata.draft,
+    publishedAt: metadata.publishedAt || undefined,
     canonicalUrl: expected.canonicalUrl,
-    author: null,
-    authorStatus: "NOT_ASSIGNED",
+    author: metadata.author || null,
+    authorStatus: metadata.author ? "APPROVED" : "NOT_ASSIGNED",
     editorialReviewed: false,
     internalLinks: brief.internalLinks,
     evidence: brief.evidence.map(item => ({
@@ -164,16 +198,58 @@ export async function runArticleProduction({
     !linkTargets.some(target => target.includes(link.slug))
   );
   const targetSlugMatches = metadata.slug === expected.slug;
-  const draftStatusValid = metadata.status === "draft" && metadata.publicationStatus === "draft";
+  const titleMatches = metadata.title === expected.title;
+  const descriptionMatches = metadata.description === expected.description;
+  const categoryMatches = metadata.category === expected.category;
+  const expectedTags = Array.isArray(expected.tags) ? expected.tags : [];
+  const actualTags = Array.isArray(metadata.tags) ? metadata.tags : [];
+  const tagsMatch = expectedTags.length === actualTags.length &&
+    expectedTags.every((tag, index) => tag === actualTags[index]);
+  const authorPreserved = expected.author ? metadata.author === expected.author : !metadata.author;
+  const publicationDatePreserved = expected.publishedAt ? metadata.publishedAt === expected.publishedAt : !metadata.publishedAt;
+  const draftFlagValid = metadata.draft === true;
+  const draftStatusValid = metadata.status === "draft" && metadata.publicationStatus === "draft" && draftFlagValid;
+  const normalizeUrl = value => {
+    try {
+      const url = new URL(value, "https://www.finflowtrack.com");
+      url.hash = "";
+      return url.toString().replace(/\/$/, "");
+    } catch {
+      return null;
+    }
+  };
+  const citedUrls = new Set(linkTargets.map(normalizeUrl).filter(Boolean));
+  const evidenceCitationFailures = brief.evidence.filter(source => {
+    const accepted = [source.url, source.finalUrl].map(normalizeUrl).filter(Boolean);
+    return !accepted.some(url => citedUrls.has(url));
+  }).map(source => ({ url: source.finalUrl || source.url, title: source.title }));
+  const allowedEvidenceUrls = new Set(brief.evidence.flatMap(source => [source.url, source.finalUrl])
+    .map(normalizeUrl).filter(Boolean));
+  const unverifiedExternalLinks = linkTargets.filter(target => {
+    const normalized = normalizeUrl(target);
+    if (!normalized) return false;
+    const url = new URL(normalized);
+    if (url.hostname === "finflowtrack.com" || url.hostname.endsWith(".finflowtrack.com")) return false;
+    return !allowedEvidenceUrls.has(normalized);
+  });
   const quality = {
     targetSlugMatches,
+    titleMatches,
+    descriptionMatches,
+    categoryMatches,
+    tagsMatch,
+    authorPreserved,
+    publicationDatePreserved,
+    draftFlagValid,
     draftStatusValid,
+    evidenceCitationFailures,
+    unverifiedExternalLinks,
     wordCount: words,
     minimumWordCount: minWordCount,
     wordCountPass: words >= minWordCount,
     headingCount: headings.length,
     internalLinkFailures,
-    metadataValid: validation.errors.every(error => !error.startsWith("MISSING_METADATA") && error !== "INVALID_SLUG"),
+    metadataValid: Boolean(metadata.title && metadata.description && metadata.slug && metadata.category && Array.isArray(metadata.tags)) && targetSlugMatches && titleMatches && descriptionMatches && categoryMatches && tagsMatch && authorPreserved && publicationDatePreserved && draftStatusValid,
     deterministicValidation: validation,
     semanticAccuracy: "HUMAN_REVIEW_REQUIRED",
     originality,
@@ -181,7 +257,16 @@ export async function runArticleProduction({
   const blockers = [
     ...validation.errors,
     ...(!targetSlugMatches ? ["ARTICLE_TARGET_SLUG_MISMATCH"] : []),
+    ...(!titleMatches ? ["ARTICLE_TITLE_MISMATCH"] : []),
+    ...(!descriptionMatches ? ["ARTICLE_DESCRIPTION_MISMATCH"] : []),
+    ...(!categoryMatches ? ["ARTICLE_CATEGORY_MISMATCH"] : []),
+    ...(!tagsMatch ? ["ARTICLE_TAGS_MISMATCH"] : []),
+    ...(!authorPreserved ? ["ARTICLE_AUTHOR_CHANGED_WITHOUT_APPROVED_METADATA"] : []),
+    ...(!publicationDatePreserved ? ["ARTICLE_PUBLICATION_DATE_CHANGED_BEFORE_PUBLISH"] : []),
+    ...(!draftFlagValid ? ["ARTICLE_DRAFT_FLAG_MISSING_OR_FALSE"] : []),
     ...(!draftStatusValid ? ["ARTICLE_NOT_MARKED_AS_DRAFT"] : []),
+    ...(evidenceCitationFailures.length ? ["REQUIRED_EVIDENCE_CITATIONS_MISSING"] : []),
+    ...(unverifiedExternalLinks.length ? ["UNVERIFIED_EXTERNAL_SOURCE_LINKS"] : []),
     ...(words < minWordCount ? ["ARTICLE_BELOW_MINIMUM_WORD_COUNT"] : []),
     ...(headings.length < 3 ? ["INSUFFICIENT_ARTICLE_STRUCTURE"] : []),
     ...(internalLinkFailures.length ? ["REQUIRED_INTERNAL_LINKS_MISSING"] : []),
@@ -204,6 +289,18 @@ export async function runArticleProduction({
     quality,
     blockers: [...new Set(blockers)],
     approval: null,
+    publicationReadiness: {
+      status: !metadata.author || !metadata.publishedAt
+        ? "BLOCKED_PENDING_APPROVED_AUTHOR_AND_PUBLICATION_DATE"
+        : "METADATA_COMPLETE_BUILD_PREFLIGHT_REQUIRED",
+      missingFields: [
+        ...(!metadata.author ? ["author_requires_explicit_human_approval"] : []),
+        ...(!metadata.publishedAt ? ["publishedAt_assigned_at_publication"] : []),
+      ],
+      category: metadata.category || null,
+      tags: actualTags,
+      draftFlag: metadata.draft === true,
+    },
     publication: { status: "DISABLED", productionWriteAllowed: false, publishEnabled: false },
     articlePath: path.join(packageDir, "article.md"),
     articleMarkdown: content,

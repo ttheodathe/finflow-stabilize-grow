@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { seoReviewSupabase } from "@/integrations/supabase/seo-review-client";
+import { getEditorialReviewRedirectUrl } from "@/lib/editorial-review-origin";
 import type { User } from "@supabase/supabase-js";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,9 +26,18 @@ type EditorialReview = {
   markdown: string;
   created_at: string;
   updated_at: string;
+  editorial_update_proposal?: {
+    action: string;
+    targetSlug: string;
+    targetUrl: string;
+    matchType: string;
+    confidence: string;
+    rationale: string;
+    recommendedActions: string[];
+  } | null;
 };
 
-export const Route = createFileRoute("/_authenticated/editorial/review")({
+export const Route = createFileRoute("/editorial/review")({
   head: () => ({ meta: [{ title: "Editorial Review — FinFlow Track" }] }),
   component: EditorialReviewPage,
 });
@@ -49,6 +59,7 @@ function EditorialReviewPage() {
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [sendingLink, setSendingLink] = useState(false);
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [approvedAuthors, setApprovedAuthors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState<string | null>(null);
 
   useEffect(() => {
@@ -85,7 +96,7 @@ function EditorialReviewPage() {
         email: email.trim(),
         options: {
           shouldCreateUser: false,
-          emailRedirectTo: window.location.href,
+          emailRedirectTo: getEditorialReviewRedirectUrl(window.location.origin),
         },
       });
       if (error) throw error;
@@ -103,6 +114,12 @@ function EditorialReviewPage() {
     decision: "APPROVED" | "CHANGES_REQUESTED" | "REJECTED",
   ) {
     if (!seoReviewSupabase) return;
+    const approvedAuthor =
+      decision === "APPROVED" ? approvedAuthors[review.revision_id]?.trim() || null : null;
+    if (decision === "APPROVED" && !approvedAuthor) {
+      toast.error("Select an approved byline before approving this draft.");
+      return;
+    }
     setSubmitting(review.revision_id);
     try {
       const { data, error } = await seoReviewSupabase.functions.invoke("seo-editorial-approval", {
@@ -112,11 +129,16 @@ function EditorialReviewPage() {
           contentHash: review.content_hash,
           decision,
           reviewNotes: notes[review.revision_id] ?? "",
+          approvedAuthor,
         },
       });
       if (error) throw new Error(error.message || "Editorial decision failed.");
       if (data?.error) throw new Error(data.error);
-      if (data?.contentHash !== review.content_hash || data?.decision !== decision) {
+      if (
+        data?.contentHash !== review.content_hash ||
+        data?.decision !== decision ||
+        data?.approvedAuthor !== approvedAuthor
+      ) {
         throw new Error("The server did not confirm the exact revision and decision.");
       }
       toast.success(
@@ -201,9 +223,6 @@ function EditorialReviewPage() {
           <p className="mt-1 text-sm text-muted-foreground">
             Review the exact stored article revision before it can move forward.
           </p>
-          <p className="mt-1 break-all text-xs text-muted-foreground">
-            Acceptance Auth user ID: {user.id}
-          </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => void refetch()} disabled={isFetching}>
@@ -283,10 +302,63 @@ function EditorialReviewPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
+                {review.editorial_update_proposal?.action === "UPDATE_EXISTING_PUBLIC_ARTICLE" && (
+                  <Alert>
+                    <FileText className="h-4 w-4" />
+                    <AlertTitle>
+                      Constructive update recommended — do not create a duplicate URL
+                    </AlertTitle>
+                    <AlertDescription className="space-y-2">
+                      <p>
+                        Existing article:{" "}
+                        <strong>{review.editorial_update_proposal.targetSlug}</strong>
+                      </p>
+                      <p className="break-all">
+                        Keep this URL: {review.editorial_update_proposal.targetUrl}
+                      </p>
+                      <p>
+                        Match: {review.editorial_update_proposal.matchType.replaceAll("_", " ")}
+                        {" · "}Confidence:{" "}
+                        {review.editorial_update_proposal.confidence.replaceAll("_", " ")}
+                      </p>
+                      <p>{review.editorial_update_proposal.rationale}</p>
+                      <ul className="list-disc space-y-1 pl-5">
+                        {review.editorial_update_proposal.recommendedActions.map(
+                          (action, index) => (
+                            <li key={index}>{action}</li>
+                          ),
+                        )}
+                      </ul>
+                    </AlertDescription>
+                  </Alert>
+                )}
                 <div className="max-h-[560px] overflow-auto rounded-md border bg-muted/20 p-4">
                   <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-6">
                     {review.markdown}
                   </pre>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor={`author-${review.revision_id}`}>
+                    Approved byline (required to approve)
+                  </Label>
+                  <select
+                    id={`author-${review.revision_id}`}
+                    value={approvedAuthors[review.revision_id] ?? ""}
+                    onChange={(event) =>
+                      setApprovedAuthors((current) => ({
+                        ...current,
+                        [review.revision_id]: event.target.value,
+                      }))
+                    }
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="">Select an approved byline</option>
+                    <option value="FinFlowTrack Editorial Team">FinFlowTrack Editorial Team</option>
+                  </select>
+                  <p className="text-xs text-muted-foreground">
+                    The selected byline is stored with this exact approval. The server checks it
+                    against the active author allowlist.
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <label htmlFor={`notes-${review.revision_id}`} className="text-sm font-medium">
@@ -309,7 +381,7 @@ function EditorialReviewPage() {
                 <div className="flex flex-wrap gap-2">
                   <Button
                     onClick={() => void decide(review, "APPROVED")}
-                    disabled={submitting !== null}
+                    disabled={submitting !== null || !approvedAuthors[review.revision_id]?.trim()}
                   >
                     {submitting === review.revision_id ? "Saving..." : "Approve draft"}
                   </Button>

@@ -288,6 +288,7 @@ const UNKNOWN_BACKLOG_PACKS = [...ACTIVE_SOURCE_PACK_IDS].filter(id => !SOURCE_P
 if (UNKNOWN_BACKLOG_PACKS.length) throw new Error(`Editorial backlog references missing source packs: ${UNKNOWN_BACKLOG_PACKS.join(", ")}`);
 
 const VERIFIED_PRODUCT = Object.freeze({
+  verifiedAt: productCapabilityRecord.verifiedAt,
   checkedAtCommit: productCapabilityRecord.verifiedAtCommit,
   sourceFiles: productCapabilityRecord.sourceFiles,
   verifiedCapabilities: productCapabilityRecord.capabilities
@@ -357,10 +358,12 @@ export function classifySearchIntent(query) {
   if (!value) return "REVIEW_REQUIRED";
   if (/login|sign in|website|support contact|customer service/.test(value)) return "Navigational";
   if (/create account|download|sign up|start free|register/.test(value)) return "Transactional";
-  if (/pricing|price|cost|alternatives?|cheaper|free alternative/.test(value)) return "Pricing and alternatives";
+  // Classify broad software-selection pages before pricing language: a guide
+  // can discuss costs without becoming a pricing-only page.
   if (/(free|best|top|which|recommend|compare|worth considering).{0,55}(accounting|bookkeeping).{0,45}(software|app|platform|program|tool)/.test(value)
     || /(accounting|bookkeeping).{0,45}(software|apps?|platforms?|programs?|tools?).{0,45}(best|free|compare|review|recommend|worth)/.test(value)
     || /software selection|accounting software comparison/.test(value)) return "Software selection";
+  if (/pricing|price|cost|alternatives?|cheaper|free alternative/.test(value)) return "Pricing and alternatives";
   if (/reporting features?|track invoices?|track sales|expense tracking|invoice tracking|features? of/.test(value)) return "Feature evaluation";
   if (/\b(?:how to|step[- ]by[- ]step|tutorial|template|checklist|guide|create|build|set up|track(?:ing)?|manage(?:ment|ing)?)\b/.test(value)) return "How-to/tutorial";
   if (/cash.{0,25}accrual|accrual.{0,25}cash|cash method|accrual method/.test(value)) return "Accounting education";
@@ -533,16 +536,19 @@ export async function loadInventory({ contentDir = CONTENT_DIR } = {}) {
     const raw = await readFile(path.join(contentDir, file), "utf8");
     const parsed = matter(raw);
     const data = parsed.data || {};
-    items.push({ file, slug: data.slug || file.replace(/\.md$/, ""), title: data.title || file, description: data.description || "", tags: Array.isArray(data.tags) ? data.tags : [], content: parsed.content, markdown: raw });
+    items.push({ file, slug: data.slug || file.replace(/\.md$/, ""), title: data.title || file, description: data.description || "", tags: Array.isArray(data.tags) ? data.tags : [], content: parsed.content, markdown: raw, isPubliclyLive: data.draft !== true });
   }
   return items;
 }
 export function analyzeCannibalization(query, inventory, targetUrl = null) {
+  // Match getAllPosts(): draft:true articles are not publicly live.
+  // Legacy inventory fixtures without this field are treated as public.
+  const publicInventory = inventory.filter(item => item && item.isPubliclyLive !== false);
   let targetSlug = null;
   try { targetSlug = targetUrl ? new URL(targetUrl).pathname.split("/").filter(Boolean).pop() : null; }
   catch { targetSlug = null; }
   const queryIntent = classifySearchIntent(query);
-  const scored = inventory.map(item => {
+  const scored = publicInventory.map(item => {
     const metadataText = [item.title, item.description, item.slug, ...(item.tags || [])].join(" ");
     const fullText = String(item.content || "");
     const metadataScore = similarity(query, metadataText);
@@ -570,9 +576,28 @@ export function analyzeCannibalization(query, inventory, targetUrl = null) {
     : exactTarget ? "EXACT_LANDING_PAGE_INTENT_MATCH"
     : "INFERRED_EXISTING_INTENT_MATCH";
   const decision = conflict ? "UPDATE_EXISTING_ARTICLE" : "NEW_ARTICLE_CANDIDATE";
+  const updateProposal = target ? {
+    action: "UPDATE_EXISTING_PUBLIC_ARTICLE",
+    targetSlug: target.slug,
+    targetUrl: target.url,
+    matchType: exactTarget ? "EXACT_GSC_LANDING_PAGE" : "TOPICAL_OVERLAP_REVIEW",
+    confidence: exactTarget ? "EXACT_URL_MATCH" : "SIMILARITY_SCREEN_REQUIRES_HUMAN_CONFIRMATION",
+    rationale: exactTarget
+      ? "Google Search Console identifies this existing public article as the landing page for the query."
+      : "The query overlaps with an existing public article; consolidate the intent before creating another URL.",
+    recommendedActions: [
+      "Keep the existing public URL and canonical slug; do not create a second article for the same search intent.",
+      "Refresh the title and description only if they no longer represent the query and reader need.",
+      "Add missing, useful sections that answer related reader questions without repeating existing material.",
+      "Replace outdated facts with current primary-source evidence and clearly label jurisdiction-specific guidance.",
+      "Preserve accurate sections, useful backlinks and internal links; update the published date only after a substantive revision.",
+      "Review competing pages and consider consolidation only when their search intent is genuinely the same.",
+    ],
+  } : null;
   return {
     status: conflict ? "EXISTING_INTENT_MATCH" : "NO_STRONG_MATCH",
     decision,
+    updateProposal,
     editorialDecision: targetQueryMatch === "EXACT_LANDING_PAGE_REVIEW_REQUIRED" || Boolean(inferredTarget)
       ? "HUMAN_REVIEW_REQUIRED" : decision,
     requiresHumanReview: targetQueryMatch === "EXACT_LANDING_PAGE_REVIEW_REQUIRED" || Boolean(inferredTarget),
@@ -678,11 +703,22 @@ function buildDraft(candidate, pack, sourceRecords, productEvidence, internalLin
     markdown = matter.stringify(updatedBody, frontmatter);
   } else {
     const sections = pack.sections.map(([heading, body]) => `## ${heading}\n\n${body}`).join("\n\n");
-    markdown = `---\ntitle: "${pack.title.replace(/"/g, '\\\"')}"\ndescription: "${pack.description.replace(/"/g, '\\\"')}"\nslug: "${target.slug}"\nstatus: "draft"\npublicationStatus: "draft"\ncategory: "small-business-finance"\ntags:\n  - small business\n  - ${pack.id}\n---\n\n# ${pack.title}\n\nA reliable process is easier to maintain when each step has a clear purpose and an owner. This guide focuses on practical routines rather than promises or one-size-fits-all rules.\n\n${sections}\n${productLine}\n## Related FinFlow Track guides\n\n${links}\n\n## Sources and scope\n\n${sourceLines}\n\nRequirements differ by country, contract and business structure. Government sources cited here are provided for the jurisdiction they cover; they are not a substitute for local professional advice.\n`;
+    markdown = `---\ntitle: "${pack.title.replace(/"/g, '\\\"')}"\ndescription: "${pack.description.replace(/"/g, '\\\"')}"\nslug: "${target.slug}"\nstatus: "draft"\npublicationStatus: "draft"\ncategory: "small-business-finance"\ntags:\n  - small business\n  - ${pack.id}\ndraft: true\n---\n\n# ${pack.title}\n\nA reliable process is easier to maintain when each step has a clear purpose and an owner. This guide focuses on practical routines rather than promises or one-size-fits-all rules.\n\n${sections}\n${productLine}\n## Related FinFlow Track guides\n\n${links}\n\n## Sources and scope\n\n${sourceLines}\n\nRequirements differ by country, contract and business structure. Government sources cited here are provided for the jurisdiction they cover; they are not a substitute for local professional advice.\n`;
   }
+  const generatedMetadata = matter(markdown).data;
+  const targetBaseContentHash = candidate.operationType === "EXISTING_ARTICLE_UPDATE" && existingArticle?.markdown
+    ? createHash("sha256").update(existingArticle.markdown).digest("hex")
+    : null;
   return {
     title: pack.title, description: pack.description, slug: target.slug,
-    publicationStatus: "draft", status: "draft", author: null, authorStatus: "NOT_ASSIGNED",
+    targetBaseContentHash,
+    category: generatedMetadata.category,
+    tags: Array.isArray(generatedMetadata.tags) ? generatedMetadata.tags : [],
+    draft: true,
+    publishedAt: generatedMetadata.publishedAt || null,
+    publicationStatus: "draft", status: "draft",
+    author: generatedMetadata.author || null,
+    authorStatus: generatedMetadata.author ? "APPROVED" : "NOT_ASSIGNED",
     intent: pack.intent, targetQuery: candidate.targetQuery, relatedQueries: candidate.relatedQueries || [],
     operationType: candidate.operationType || "EXISTING_ARTICLE_UPDATE", targetSlug: target.slug,
     canonicalUrl: `https://www.finflowtrack.com/blog/${target.slug}`,
@@ -699,6 +735,7 @@ export async function runResearchPipeline({
 } = {}) {
   if (!Array.isArray(opportunities)) throw new Error("Research pipeline requires an opportunities array.");
   const inventory = await loadInventory({ contentDir });
+  const publicInventory = inventory.filter(item => item.isPubliclyLive);
   await mkdir(outputDir, { recursive: true });
   const results = [];
   for (const raw of opportunities) {
@@ -726,7 +763,7 @@ export async function runResearchPipeline({
     };
     const freshness = freshnessFor(candidate, now);
     const intent = classifySearchIntent(candidate.targetQuery);
-    const cannibalization = analyzeCannibalization(candidate.targetQuery, inventory, candidate.targetUrl);
+    const cannibalization = analyzeCannibalization(candidate.targetQuery, publicInventory, candidate.targetUrl);
     const base = { candidate, intent, freshness, cannibalization, draft: null, quality: null, rejectionReasons: [], editorialReviewQuestions: [] };
     base.editorialDecision = cannibalization.editorialDecision;
     base.humanReviewRequired = cannibalization.requiresHumanReview;
@@ -777,10 +814,11 @@ export async function runResearchPipeline({
     if (sourceFailures.length || unsupported.length) base.rejectionReasons.push("SOURCE_VERIFICATION_INCOMPLETE");
     const productEvidence = Boolean(pack.productMention) && ["Invoice creation","Expense tracking","Customer management","Basic reports"]
       .every(name => VERIFIED_PRODUCT.verifiedCapabilities.some(item => item.name === name && item.articleClaimAllowed));
-    const related = pack.related.map(slug => inventory.find(item => item.slug === slug))
+    const related = pack.related.map(slug => publicInventory.find(item => item.slug === slug))
       .filter(item => item && item.slug !== target.slug).map(item => ({slug:item.slug,title:item.title}));
-    const existingArticle = operationType === "EXISTING_ARTICLE_UPDATE" ? inventory.find(item => item.slug === target.slug) || null : null;
+    const existingArticle = operationType === "EXISTING_ARTICLE_UPDATE" ? publicInventory.find(item => item.slug === target.slug) || null : null;
     const draft = buildDraft(candidate,pack,sourceRecords,productEvidence,related,target,now,existingArticle);
+    base.editorialUpdateProposal = cannibalization.updateProposal;
     base.sourceRecords = sourceRecords;
     base.internalLinks = related;
     base.audience = pack.audience;
@@ -807,7 +845,7 @@ export async function runResearchPipeline({
     const unsupportedNumericClaimMatches = numericClaimAssessment.unsupported;
     const unsupportedNumericClaims = unsupportedNumericClaimMatches.length > 0;
     if (unsupportedNumericClaims) base.rejectionReasons.push("UNSUPPORTED_NUMERIC_CLAIM");
-    const existingComparisons = inventory.filter(item => !(operationType === "EXISTING_ARTICLE_UPDATE" && item.slug === target.slug)).map(item => ({
+    const existingComparisons = publicInventory.filter(item => !(operationType === "EXISTING_ARTICLE_UPDATE" && item.slug === target.slug)).map(item => ({
       slug:item.slug,
       title:item.title,
       titleDescriptionScore:Number(similarity(draft.title + " " + draft.description, [item.title,item.description,item.slug,...(item.tags || [])].join(" ")).toFixed(3)),
@@ -850,8 +888,9 @@ export async function runResearchPipeline({
         research: { ...base, candidate, draft, sourceRecords, internalLinks: related,
           audience: pack.audience, jurisdiction: pack.jurisdiction,
           productEvidence: productEvidence ? VERIFIED_PRODUCT : null,
+          existingArticleUpdatePlan: base.editorialUpdateProposal || null,
           outline: pack.sections.map(([heading]) => heading), readerQuestions: pack.readerQuestions || [],
-          existingInventory: inventory },
+          existingInventory: publicInventory, existingArticleUpdatePlan: base.editorialUpdateProposal },
         generateArticle: articleGenerator, outputDir: articleOutputDir, now,
       });
       if (articleProduction.status === "READY_FOR_HUMAN_REVIEW") {
@@ -886,17 +925,19 @@ export async function runResearchPipeline({
           proposedContentHash:hash,
         };
         const operationPayload = {
-          pipelineVersion:"b7.2", workflowState:"RESEARCHING",
+          pipelineVersion:"b7.3", workflowState:"RESEARCHING",
           evidenceMode:candidate.evidenceMode,
           sourceCollectionRunId:candidate.sourceCollectionRunId,
           persistedOpportunityId:candidate.persistedOpportunityId,
           candidate, intent, freshness, cannibalization, existingContentComparison:existingComparisons,
           editorialDecision:base.editorialDecision,
+          editorialUpdateProposal:base.editorialUpdateProposal,
           editorialReviewQuestions:base.editorialReviewQuestions,
           sourcePackCompatibility:base.sourcePackCompatibility,
           sourcePackContext:base.sourcePackContext,
           sources:sourceRecords, claims:draft.claims, productEvidence:draft.productEvidence,
           quality:base.quality, draftMarkdown:draft.content,
+          targetBaseContentHash: draft.targetBaseContentHash || null,
           publicationStatus:"draft", execution:"DRY_RUN_ONLY",
           createdAt:now.toISOString(), scheduledFor,
         };
