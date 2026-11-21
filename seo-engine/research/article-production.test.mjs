@@ -41,12 +41,19 @@ const research = {
   },
 };
 
-test("editorial brief contains search intent, audience, evidence, internal links and human-review policy", () => {
-  const brief = createEditorialBrief(research);
+test("editorial brief contains search intent, audience, evidence, update plan and human-review policy", () => {
+  const updatePlan = {
+    action: "UPDATE_EXISTING_PUBLIC_ARTICLE",
+    targetSlug: "small-business-cash-flow-guide",
+    targetUrl: "https://www.finflowtrack.com/blog/small-business-cash-flow-guide",
+    recommendedActions: ["Keep the existing public URL and canonical slug."],
+  };
+  const brief = createEditorialBrief({ ...research, existingArticleUpdatePlan: updatePlan });
   assert.equal(brief.targetQuery, "small business cash flow planning");
   assert.equal(brief.searchIntent, "How-to/tutorial");
   assert.equal(brief.evidence.length, 1);
   assert.equal(brief.internalLinks[0].slug, "small-business-accounting-guide");
+  assert.deepEqual(brief.existingArticleUpdatePlan, updatePlan);
   assert.match(brief.publicationPolicy, /Human review/);
 });
 
