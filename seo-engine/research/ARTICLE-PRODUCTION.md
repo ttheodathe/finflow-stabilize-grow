@@ -22,6 +22,18 @@ This is an internal-inventory text screen, not an external plagiarism database o
 originality guarantee. Every passing draft still requires human originality, attribution and
 quotation review.
 
+Generated drafts must preserve the brief's exact title, description and slug, cite every supplied
+verified evidence source with its supplied URL, and avoid unverified external source links. Missing
+citations or metadata drift blocks the package before it can enter the reviewer queue. These checks
+are deterministic link/metadata checks; they do not prove that each cited source semantically
+supports every sentence. Human fact-checking remains mandatory.
+
+Draft packages also carry the public blog's category and tags and must include `draft: true` in
+frontmatter. Never copy an operations draft directly into `content/blog`: the public blog schema
+also requires an approved author and publication date. New articles remain blocked from publication
+until a reviewer explicitly approves the byline; the publication step assigns the date and runs the
+complete production build before committing any live content.
+
 ## Public-article duplicate guard
 
 The topic/cannibalization check uses the same publication boundary as the public blog:

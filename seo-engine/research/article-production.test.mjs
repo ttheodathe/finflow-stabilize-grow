@@ -30,6 +30,8 @@ const research = {
     title: "Small Business Cash Flow Planning",
     description: "A practical guide to planning and reviewing small-business cash flow.",
     slug: "small-business-cash-flow-planning",
+    category: "small-business-finance",
+    tags: ["small business", "cash flow"],
     status: "draft", publicationStatus: "draft",
     canonicalUrl: "https://www.finflowtrack.com/blog/small-business-cash-flow-planning",
     operationType: "NEW_ARTICLE",
@@ -40,6 +42,42 @@ const research = {
     }],
   },
 };
+
+function validGeneratedMarkdown({ includeSourceCitation = true, includeProductCitation = false, includeDraftFlag = true, title = research.draft.title, description = research.draft.description } = {}) {
+  const body = [
+    "## Understand the cash position",
+    "Review expected receipts and planned payments for the period.",
+    "## Prepare a forecast",
+    "List assumptions, dates and amounts, then compare expected cash movement.",
+    "## Review and update",
+    "Compare actual results with the forecast and explain material differences.",
+    "## Related guide",
+    "[Small Business Accounting Guide](/blog/small-business-accounting-guide)",
+    "## Official sources",
+    includeSourceCitation
+      ? "[US Small Business Administration — Manage your finances](https://www.sba.gov/business-guide/manage-your-business/manage-your-finances)"
+      : "The source was reviewed during research but is not linked in this draft.",
+    ...(includeProductCitation ? ["[FinFlow Track pricing and features](https://www.finflowtrack.com/pricing)"] : []),
+  ].join("\n\n");
+  return [
+    "---",
+    `title: "${title}"`,
+    `description: "${description}"`,
+    'slug: "small-business-cash-flow-planning"',
+    'category: "small-business-finance"',
+    "tags:",
+    "  - small business",
+    "  - cash flow",
+    ...(includeDraftFlag ? ["draft: true"] : []),
+    'status: "draft"',
+    'publicationStatus: "draft"',
+    "---",
+    "",
+    body,
+    "",
+  ].join("\n");
+}
+
 
 test("editorial brief contains search intent, audience, evidence, update plan and human-review policy", () => {
   const updatePlan = {
@@ -54,7 +92,51 @@ test("editorial brief contains search intent, audience, evidence, update plan an
   assert.equal(brief.evidence.length, 1);
   assert.equal(brief.internalLinks[0].slug, "small-business-accounting-guide");
   assert.deepEqual(brief.existingArticleUpdatePlan, updatePlan);
+  assert.deepEqual(brief.publicationMetadata, {
+    category: "small-business-finance", tags: ["small business", "cash flow"], author: null,
+    publishedAt: null, draft: true,
+    authorPolicy: "New articles require an explicit approved byline before publication; do not invent an author.",
+    publicationDatePolicy: "Assign publishedAt at the verified publication step, not during drafting.",
+  });
   assert.match(brief.publicationPolicy, /Human review/);
+});
+
+test("editorial brief includes only approved first-party product capabilities and their citation source", () => {
+  const productEvidence = {
+    verifiedAt: "2026-11-19",
+    verifiedCapabilities: [
+      { name: "Invoice creation", plan: "Free", status: "VERIFIED", articleClaimAllowed: true, sourceFile: "src/routes/pricing.tsx", evidence: "Free plan feature list." },
+      { name: "Payroll", plan: "Business", status: "VERIFIED", articleClaimAllowed: false, sourceFile: "src/lib/features/catalog.ts", evidence: "Business plan feature list." },
+    ],
+  };
+  const brief = createEditorialBrief({ ...research, productEvidence });
+  assert.deepEqual(brief.productCapabilities.map(item => item.name), ["Invoice creation"]);
+  assert.equal(brief.evidence.length, 2);
+  assert.equal(brief.evidence[1].url, "https://www.finflowtrack.com/pricing");
+  assert.match(brief.evidence[1].limitations[0], /not a live authenticated account/);
+});
+
+test("product claims require a citation to the first-party pricing evidence", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "stage-c-product-evidence-"));
+  try {
+    const productResearch = {
+      ...research,
+      productEvidence: {
+        verifiedAt: "2026-11-19",
+        verifiedCapabilities: [
+          { name: "Invoice creation", plan: "Free", status: "VERIFIED", articleClaimAllowed: true, sourceFile: "src/routes/pricing.tsx", evidence: "Free plan feature list." },
+        ],
+      },
+    };
+    const result = await runArticleProduction({
+      research: productResearch, outputDir: root, minWordCount: 10,
+      generateArticle: async () => ({ markdown: validGeneratedMarkdown({ includeProductCitation: true }) }),
+    });
+    assert.equal(result.status, "READY_FOR_HUMAN_REVIEW");
+    assert.equal(result.quality.evidenceCitationFailures.length, 0);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test("article generation fails closed when no provider is configured", async () => {
@@ -75,28 +157,7 @@ test("article production blocks incomplete evidence before calling generator", a
 test("article production writes a revision-hashed draft package outside the public blog and never publishes", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "stage-c-"));
   try {
-    const body = [
-      "## Understand the cash position",
-      "Review expected receipts and planned payments for the period.",
-      "## Prepare a forecast",
-      "List assumptions, dates and amounts, then compare expected cash movement.",
-      "## Review and update",
-      "Compare actual results with the forecast and explain material differences.",
-      "## Related guide",
-      "[Small Business Accounting Guide](/blog/small-business-accounting-guide)",
-    ].join("\n\n");
-    const markdown = [
-      "---",
-      'title: "Small Business Cash Flow Planning"',
-      'description: "A practical guide to planning and reviewing small-business cash flow."',
-      'slug: "small-business-cash-flow-planning"',
-      'status: "draft"',
-      'publicationStatus: "draft"',
-      "---",
-      "",
-      body,
-      "",
-    ].join("\n");
+    const markdown = validGeneratedMarkdown();
     const result = await runArticleProduction({
       research, outputDir: root, minWordCount: 10,
       generateArticle: async ({ brief }) => {
@@ -107,12 +168,63 @@ test("article production writes a revision-hashed draft package outside the publ
     assert.equal(result.status, "READY_FOR_HUMAN_REVIEW");
     assert.equal(result.publication.publishEnabled, false);
     assert.equal(result.publication.productionWriteAllowed, false);
+    assert.equal(result.publicationReadiness.status, "BLOCKED_PENDING_APPROVED_AUTHOR_AND_PUBLICATION_DATE");
+    assert.deepEqual(result.publicationReadiness.missingFields, [
+      "author_requires_explicit_human_approval", "publishedAt_assigned_at_publication",
+    ]);
+    assert.equal(result.quality.draftFlagValid, true);
     assert.equal(result.quality.internalLinkFailures.length, 0);
     assert.equal(result.quality.originality.status, "SCREEN_PASSED_HUMAN_ORIGINALITY_REVIEW_REQUIRED");
     assert.match(result.articlePath, /stage-c-/);
     assert.doesNotMatch(result.articlePath, /content[\/]blog/);
     const saved = await readFile(result.articlePath, "utf8");
     assert.equal(saved, markdown.trim() + "\n");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("article production blocks a missing or false public-blog draft flag", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "stage-c-draft-flag-"));
+  try {
+    const result = await runArticleProduction({
+      research, outputDir: root, minWordCount: 10,
+      generateArticle: async () => ({ markdown: validGeneratedMarkdown({ includeDraftFlag: false }) }),
+    });
+    assert.equal(result.status, "BLOCKED_QUALITY_REVIEW");
+    assert.ok(result.blockers.includes("ARTICLE_DRAFT_FLAG_MISSING_OR_FALSE"));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("article production blocks drafts that omit citations to supplied evidence", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "stage-c-citation-"));
+  try {
+    const result = await runArticleProduction({
+      research, outputDir: root, minWordCount: 10,
+      generateArticle: async () => ({ markdown: validGeneratedMarkdown({ includeSourceCitation: false }) }),
+    });
+    assert.equal(result.status, "BLOCKED_QUALITY_REVIEW");
+    assert.ok(result.blockers.includes("REQUIRED_EVIDENCE_CITATIONS_MISSING"));
+    assert.equal(result.quality.evidenceCitationFailures.length, 1);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("article production blocks metadata that drifts from the approved brief", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "stage-c-metadata-"));
+  try {
+    const result = await runArticleProduction({
+      research, outputDir: root, minWordCount: 10,
+      generateArticle: async () => ({
+        markdown: validGeneratedMarkdown({ title: "A different title", description: "A different description." }),
+      }),
+    });
+    assert.equal(result.status, "BLOCKED_QUALITY_REVIEW");
+    assert.ok(result.blockers.includes("ARTICLE_TITLE_MISMATCH"));
+    assert.ok(result.blockers.includes("ARTICLE_DESCRIPTION_MISMATCH"));
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -141,6 +253,11 @@ test("generated article is blocked when it substantially overlaps an existing in
       'title: "Small Business Cash Flow Planning"',
       'description: "A practical guide to planning and reviewing small-business cash flow."',
       'slug: "small-business-cash-flow-planning"',
+      'category: "small-business-finance"',
+      "tags:",
+      "  - small business",
+      "  - cash flow",
+      "draft: true",
       'status: "draft"',
       'publicationStatus: "draft"',
       "---",

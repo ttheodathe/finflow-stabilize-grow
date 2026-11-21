@@ -10,6 +10,7 @@ on:
       - feat/stage-c-article-production-engine
       - feat/stage-c-governance-attribution
       - fix/editorial-review-public-route
+      - feat/stage-c-evidence-citation-gates
 
 permissions:
   contents: read
