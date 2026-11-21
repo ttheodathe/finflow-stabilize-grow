@@ -26,7 +26,7 @@ async function verifyPublisherIdentity(request: Request) {
     "ttheodathe/finflow-stabilize-grow/.github/workflows/seo-publisher.yml@refs/heads/main";
 
   const { payload } = await jwtVerify(token, jwks, { issuer, audience });
-  const allowedEvents = ["schedule", "workflow_dispatch"];
+  const allowedEvents = ["workflow_dispatch"];
   if (
     payload.repository !== allowedRepository ||
     String(payload.repository_id || "") !== allowedRepositoryId ||
