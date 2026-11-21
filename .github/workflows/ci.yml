@@ -2,13 +2,14 @@ name: CI
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, feat/stage-c-article-production-engine]
   push:
     branches:
       - main
       - feat/three-scheduler-organic-growth-ops
       - feat/stage-c-article-production-engine
       - feat/stage-c-governance-attribution
+      - fix/editorial-review-public-route
 
 permissions:
   contents: read
