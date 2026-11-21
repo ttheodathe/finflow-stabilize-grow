@@ -1,0 +1,40 @@
+## 2026-11-21 follow-up checkpoint — Stage D and Stage E
+
+**Decision remains: NOT READY FOR PRODUCTION.** This checkpoint records the state after Stage D publisher integration and the current-main Stage E activation collector work.
+
+### Verified repository and acceptance state
+
+- Main now includes PR #131, merged as `def3b216c3b407810a5ac3123f2d9e8913ba9c29`. The reviewer-queue RPC is `SECURITY INVOKER`, and execution remains limited to `service_role`.
+- The follow-up migration was applied only to acceptance project `bufbyfwstdqvwnkhyrea`. Catalog readback confirmed `prosecdef=false`, `anon_execute=false`, `authenticated_execute=false`, and `service_role_execute=true`. A transaction-scoped `SET ROLE service_role` test reached the expected reviewer authorization rejection, confirming the function could read its protected reviewer table without SECURITY DEFINER.
+- PR #132 ports the production activation collector onto current main. The push and pull-request CI runs #44924328061 and #44924386549 passed, including the isolated PostgreSQL migration, aggregate-view/RLS/privilege smoke test, collector tests, typecheck, build and dependency audit. PR #132 remains draft pending review.
+- PR #123 is an older draft based on `ff0163d`, diverged from current main and is not mergeable. PR #132 is the current-main replacement; do not merge the stale branch.
+
+### Scheduler evidence — manual, not cron proof
+
+- Scheduler 1 run [#44921737443](https://github.com/ttheodathe/finflow-stabilize-grow/actions/runs/44921737443) succeeded and persisted 50 search opportunities.
+- Scheduler 2 run [#44922098962](https://github.com/ttheodathe/finflow-stabilize-grow/actions/runs/44922098962) succeeded, consumed the exact Scheduler 1 run, persisted its dry-run content queue, and reported one ready draft.
+- Scheduler 3 run [#44922224200](https://github.com/ttheodathe/finflow-stabilize-grow/actions/runs/44922224200) succeeded and persisted its GSC/GA4 report.
+- All three run events were `workflow_dispatch`. Their success does not prove GitHub scheduled cron execution. No article was published; `DRY_RUN=true`, `PUBLISH_ENABLED=false`, `CONTENT_UPDATE_ENABLED=false`, and `PRODUCTION_CONTENT_WRITE_ALLOWED=false` remained in force.
+
+### Production state and blockers
+
+1. Production Supabase project `zjaamxvqjiymgfujrtjm` still has no SEO operations tables and no SEO Edge Functions. The SEO migrations and publisher functions are acceptance/repository work only. No production migration, function deployment, or content write has been performed.
+2. Production source tables `profiles`, `onboarding_progress`, `invoices`, and `expenses` were inspected read-only. Required columns exist and RLS is enabled. The proposed Stage E migration is still repository code; it creates a private aggregate-only view and leaves `seo_activation_reader` NOLOGIN. Production rollout still requires a separately reviewed migration plan, an operator-configured unique credential, and a protected GitHub secret. Never put the connection URI or password in chat or logs.
+3. Scheduler 3 currently has no production activation connection configured. Product acquisition remains unavailable until the production aggregate view and dedicated reader are safely provisioned.
+4. Latest Vercel production deployment is still based on commit `ff0163dacacc3beacd2b57158f75452157c6039f`. Vercel reported `Deployment rate limited — retry in 24 hours` for commits `fce394e` and `def3b21`. Do not bypass the free-tier limit or upgrade without explicit agreement; retry a normal deployment after the limit resets and verify the exact production commit.
+5. The latest S1–S3 success evidence is manual. Verify at least one genuine `schedule` event for each scheduler, confirm S2 consumes the correct S1 run, and add actionable failure notification/recovery ownership.
+6. Page-level article performance can be mapped to slugs, but revision attribution remains `UNKNOWN`; do not claim that a particular article revision caused traffic or signup changes.
+7. The publisher workflow still requires production Supabase schema/functions, a valid production OIDC endpoint, Vercel deployment success, and a tested main-branch publishing path. Review branch-protection compatibility and the publisher's direct-push behavior before enabling its gate.
+
+### Release acceptance criteria
+
+- Current-main CI and isolated database security tests pass.
+- Stage E PR is reviewed and merged; stale PR #123 is closed as superseded.
+- Production migrations, grants, RLS, rollback plan, and publisher Edge Functions are independently reviewed before any production application.
+- The dedicated activation reader is NOLOGIN until a controlled operator sets its unique credential and GitHub secret; test aggregate-only read access and explicit denial of source-table access.
+- A production Scheduler 3 run persists aggregate activation counts without identifiers or financial values; failures are explicit and sanitized.
+- Genuine scheduled S1 → S2 → S3 runs and actionable failure recovery are verified.
+- Vercel production deployment is READY on the intended main commit, and the published URL passes canonical, indexability, sitemap and content-hash checks.
+- A human explicitly approves the exact article revision and byline. No auto-approval, automatic live updates, or publishing gate activation before all preceding criteria pass.
+
+Until every release criterion is evidenced, keep production publishing and content writes disabled.
