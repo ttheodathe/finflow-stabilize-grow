@@ -40,7 +40,13 @@ async function loadReviewQueue(): Promise<EditorialReview[]> {
 
 function EditorialReviewPage() {
   const queryClient = useQueryClient();
-  const { data: reviews = [], isLoading, error, refetch, isFetching } = useQuery({
+  const {
+    data: reviews = [],
+    isLoading,
+    error,
+    refetch,
+    isFetching,
+  } = useQuery({
     queryKey: ["seo-editorial-review-queue"],
     queryFn: loadReviewQueue,
     retry: false,
@@ -48,7 +54,10 @@ function EditorialReviewPage() {
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState<string | null>(null);
 
-  async function decide(review: EditorialReview, decision: "APPROVED" | "CHANGES_REQUESTED" | "REJECTED") {
+  async function decide(
+    review: EditorialReview,
+    decision: "APPROVED" | "CHANGES_REQUESTED" | "REJECTED",
+  ) {
     setSubmitting(review.revision_id);
     try {
       const { data, error } = await supabase.functions.invoke("seo-editorial-approval", {
