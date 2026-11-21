@@ -45,7 +45,7 @@ function parseAggregate(row) {
   }
   const count = (key, label) => {
     const value = row[key];
-    if (!(typeof value === "number" || (typeof value === "string" && /^\\d+$/.test(value)))) {
+    if (!(typeof value === "number" || (typeof value === "string" && /^\d+$/.test(value)))) {
       throw new Error(`Production activation reader returned an invalid ${label} count.`);
     }
     const parsed = Number(value);
