@@ -44,17 +44,17 @@ A short label such as "Net 30" can be useful, but a specific due date is easier 
 
 The right term depends on the work, customer relationship, project risk, industry practice, and the amount of time your business can wait for payment. The following are common commercial examples, not rules that every business must use.
 
-| Payment term | Typical meaning | Where it may be considered |
-| --- | --- | --- |
-| Due upon receipt | Payment is expected when the customer receives the invoice | Small one-off jobs or agreed immediate-payment transactions |
-| Net 7 | Payment is due within 7 days of the agreed starting date | Short projects or customers who accept a short payment cycle |
-| Net 15 | Payment is due within 15 days | Freelancers and service providers who want a shorter collection window |
-| Net 30 | Payment is due within 30 days | Business-to-business work where the parties agree to a monthly payment window |
-| Net 60 / Net 90 | Payment is due within 60 or 90 days | Larger procurement processes or negotiated customer arrangements |
-| 2/10 Net 30 | A 2% discount is available if the customer pays within 10 days; otherwise the full amount is due in 30 days | Businesses that have assessed whether an early-payment discount makes commercial sense |
-| Deposit and balance | Part is paid before work starts and the remainder at an agreed milestone or completion point | Projects with setup costs, materials, or staged delivery |
-| Milestone payments | Payment is split across named project stages | Longer assignments with several deliverables |
-| End of month (EOM) | Payment is due at an agreed month-end date | Customers that use scheduled monthly payment runs |
+| Payment term        | Typical meaning                                                                                             | Where it may be considered                                                             |
+| ------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Due upon receipt    | Payment is expected when the customer receives the invoice                                                  | Small one-off jobs or agreed immediate-payment transactions                            |
+| Net 7               | Payment is due within 7 days of the agreed starting date                                                    | Short projects or customers who accept a short payment cycle                           |
+| Net 15              | Payment is due within 15 days                                                                               | Freelancers and service providers who want a shorter collection window                 |
+| Net 30              | Payment is due within 30 days                                                                               | Business-to-business work where the parties agree to a monthly payment window          |
+| Net 60 / Net 90     | Payment is due within 60 or 90 days                                                                         | Larger procurement processes or negotiated customer arrangements                       |
+| 2/10 Net 30         | A 2% discount is available if the customer pays within 10 days; otherwise the full amount is due in 30 days | Businesses that have assessed whether an early-payment discount makes commercial sense |
+| Deposit and balance | Part is paid before work starts and the remainder at an agreed milestone or completion point                | Projects with setup costs, materials, or staged delivery                               |
+| Milestone payments  | Payment is split across named project stages                                                                | Longer assignments with several deliverables                                           |
+| End of month (EOM)  | Payment is due at an agreed month-end date                                                                  | Customers that use scheduled monthly payment runs                                      |
 
 Terms such as EOM can be interpreted differently across agreements. Do not rely on an acronym alone: write the actual date or explain exactly how the date is determined.
 
@@ -130,11 +130,11 @@ Start with the date or event specified in the written agreement. If the agreemen
 For a simple illustration, assume an invoice is issued on November 22, 2026:
 
 | Agreed term | Illustrative due date |
-| --- | --- |
-| Net 7 | November 29, 2026 |
-| Net 15 | December 7, 2026 |
-| Net 30 | December 22, 2026 |
-| Net 60 | January 21, 2027 |
+| ----------- | --------------------- |
+| Net 7       | November 29, 2026     |
+| Net 15      | December 7, 2026      |
+| Net 30      | December 22, 2026     |
+| Net 60      | January 21, 2027      |
 
 These dates assume calendar-day counting from the invoice date and no special weekend, holiday, receipt, or contract rule. Your agreement and applicable requirements may define a different calculation. If the date falls on a weekend or holiday, do not assume it automatically moves: check the agreed wording and confirm with the customer.
 
