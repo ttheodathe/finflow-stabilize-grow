@@ -1,6 +1,6 @@
 ---
 title: "Cash Flow Forecasting for Small Business: A Step-by-Step Guide"
-description: "Learn how far ahead to forecast small-business cash flow, build a rolling 13-week cash forecast, and use a practical spreadsheet template to spot cash gaps early."
+description: "Build a rolling 13-week cash flow forecast for a small business, estimate inflows and outflows, and spot cash gaps early."
 slug: "cash-flow-forecasting-small-business"
 author: "FinFlowTrack Editorial Team"
 publishedAt: "2026-09-02"
