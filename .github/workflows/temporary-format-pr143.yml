@@ -1,0 +1,36 @@
+name: Temporary PR 143 formatter
+on:
+  push:
+    branches:
+      - seo/fix-blog-headings-and-pricing-meta-2026-11-23
+    paths:
+      - .github/workflows/temporary-format-pr143.yml
+      - src/routes/compare.index.tsx
+permissions:
+  contents: write
+jobs:
+  format:
+    if: "!startsWith(github.event.head_commit.message, 'chore: apply Prettier formatting')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: seo/fix-blog-headings-and-pricing-meta-2026-11-23
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx prettier --write src/routes/compare.index.tsx
+      - name: Commit formatted file
+        run: |
+          if git diff --quiet -- src/routes/compare.index.tsx; then
+            echo "No formatting changes required."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routes/compare.index.tsx
+          git commit -m "chore: apply Prettier formatting to compare route"
+          git push origin HEAD:seo/fix-blog-headings-and-pricing-meta-2026-11-23
