@@ -26,9 +26,10 @@ export const Route = createFileRoute("/pricing")({
       {
         name: "description",
         content:
-          "Compare FinFlow Track plans for service businesses. Start with invoicing, expense tracking and basic reports, then add team, reconciliation and advanced reporting features as your business needs grow.",
+          "Compare FinFlow Track's Free, Professional, and Business plans. Review invoicing, expense tracking, reports, and paid features before choosing.",
       },
     ],
+    links: [{ rel: "canonical", href: "https://www.finflowtrack.com/pricing" }],
   }),
 });
 
