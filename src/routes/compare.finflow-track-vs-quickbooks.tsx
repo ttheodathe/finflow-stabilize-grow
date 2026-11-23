@@ -24,7 +24,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 
-const SITE_URL = "https://www.finflowtrack.com";
+const SITE_URL = "https://finflowtrack.com";
 const PAGE_URL = `${SITE_URL}/compare/finflow-track-vs-quickbooks`;
 const PUBLISHED_DATE = "2026-08-13";
 const REVIEWED_DATE = "2026-11-16";
