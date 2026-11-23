@@ -1,6 +1,6 @@
 ---
 title: "How to Keep Track of Business Expenses: A Simple System for Small Businesses"
-description: "Learn a simple way to record business expenses, organize receipts, categorize costs, reconcile accounts, and review spending."
+description: "Learn a simple system to record business expenses, organize receipts, and review costs."
 slug: "how-to-keep-track-of-business-expenses"
 author: "FinFlowTrack Editorial Team"
 publishedAt: "2026-08-23"
