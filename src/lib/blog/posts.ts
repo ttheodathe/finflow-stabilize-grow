@@ -54,14 +54,31 @@ function renderMarkdown(markdown: string): { html: string; headings: TocHeading[
     const inline = this.parser.parseInline(token.tokens);
     const plainText = stripTags(inline);
     const id = slugify(plainText);
-    if (token.depth === 2 || token.depth === 3) {
-      headings.push({ depth: token.depth, text: plainText, id });
+    // The article template already renders the article title as the page's H1.
+    // Demote Markdown H1s to H2 so every article has one clear top-level heading.
+    const depth = token.depth === 1 ? 2 : token.depth;
+    if (depth === 2 || depth === 3) {
+      headings.push({ depth, text: plainText, id });
     }
-    return `<h${token.depth} id="${id}">${inline}</h${token.depth}>\n`;
+    return `<h${depth} id="${id}">${inline}</h${depth}>\n`;
   };
 
   const html = marked.parse(markdown, { renderer, gfm: true, breaks: false }) as string;
   return { html, headings };
+}
+
+function removeDuplicateLeadingTitleHeading(markdown: string, title: string): string {
+  const lines = markdown.split(/\r?\n/);
+  const firstContentLine = lines.findIndex((line) => line.trim() !== "");
+  if (firstContentLine < 0) return markdown;
+
+  const heading = /^#\s+(.+?)\s*$/.exec(lines[firstContentLine].trim());
+  if (!heading || heading[1].trim().toLowerCase() !== title.trim().toLowerCase()) {
+    return markdown;
+  }
+
+  lines.splice(firstContentLine, 1);
+  return lines.join("\n");
 }
 
 function buildPost(filepath: string, raw: string): BlogPost {
@@ -85,7 +102,8 @@ function buildPost(filepath: string, raw: string): BlogPost {
     );
   }
 
-  const { html, headings } = renderMarkdown(content);
+  const articleBody = removeDuplicateLeadingTitleHeading(content, frontmatter.title);
+  const { html, headings } = renderMarkdown(articleBody);
   const readingTime = frontmatter.readingTime ?? calculateReadingTime(content);
   const updatedAt = frontmatter.updatedAt ?? frontmatter.publishedAt;
   const url = frontmatter.canonicalUrl ?? `${SITE_URL}/blog/${frontmatter.slug}`;
