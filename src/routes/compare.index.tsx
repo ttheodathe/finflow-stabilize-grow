@@ -7,7 +7,16 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { ArrowRight, Check, Minus, Users, Building2, Package, Globe, Wallet } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  Minus,
+  Users,
+  Building2,
+  Package,
+  Globe,
+  Wallet,
+} from "lucide-react";
 
 const SITE_URL = "https://www.finflowtrack.com";
 const PAGE_URL = `${SITE_URL}/compare`;
