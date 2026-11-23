@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/accordion";
 import { ArrowRight, Check, Minus, Users, Building2, Package, Globe, Wallet } from "lucide-react";
 
-const SITE_URL = "https://finflowtrack.com";
+const SITE_URL = "https://www.finflowtrack.com";
 const PAGE_URL = `${SITE_URL}/compare`;
 const REVIEWED_DATE = "2026-08-14";
 const REVIEWED_DATE_LABEL = "August 14, 2026";
