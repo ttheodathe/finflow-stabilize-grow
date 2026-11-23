@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/accordion";
 import { ArrowRight, Check, Minus, Users, Building2, Package, Globe, Wallet } from "lucide-react";
 
-const SITE_URL = "https://finflowtrack.com";
+const SITE_URL = "https://www.finflowtrack.com";
 const PAGE_URL = `${SITE_URL}/compare`;
 const REVIEWED_DATE = "2026-08-14";
 const REVIEWED_DATE_LABEL = "August 14, 2026";
@@ -99,25 +99,31 @@ const comparisonCards: {
 }[] = [
   {
     name: "QuickBooks",
-    description: "The best-known small-business accounting platform in the US, with a large accountant network.",
+    description:
+      "The best-known small-business accounting platform in the US, with a large accountant network.",
     bestFor: "Businesses whose accountant already works in QuickBooks",
-    keyDifference: "QuickBooks has a much larger ecosystem; FinFlow Track includes multi-currency at every tier.",
+    keyDifference:
+      "QuickBooks has a much larger ecosystem; FinFlow Track includes multi-currency at every tier.",
     status: "live",
     href: "/compare/finflow-track-vs-quickbooks",
   },
   {
     name: "Xero",
-    description: "An established accounting platform with live bank feeds and a large app marketplace.",
+    description:
+      "An established accounting platform with live bank feeds and a large app marketplace.",
     bestFor: "Businesses that want live bank feed connections and auto-reconciliation",
-    keyDifference: "Xero gates multi-currency and project tracking to its top-tier plan; FinFlow Track includes multi-currency on every plan.",
+    keyDifference:
+      "Xero gates multi-currency and project tracking to its top-tier plan; FinFlow Track includes multi-currency on every plan.",
     status: "live",
     href: "/compare/finflow-track-vs-xero",
   },
   {
     name: "Wave",
-    description: "A free-to-start platform with built-in payment processing, currently limited to the US and Canada.",
+    description:
+      "A free-to-start platform with built-in payment processing, currently limited to the US and Canada.",
     bestFor: "US/Canada freelancers who want integrated online invoice payments",
-    keyDifference: "Wave restricts new signups to the US and Canada and locks your base currency to USD or CAD.",
+    keyDifference:
+      "Wave restricts new signups to the US and Canada and locks your base currency to USD or CAD.",
     status: "live",
     href: "/compare/finflow-track-vs-wave",
   },
@@ -125,7 +131,8 @@ const comparisonCards: {
     name: "Zoho Books",
     description: "A mature accounting platform with six pricing tiers and deep inventory tools.",
     bestFor: "Businesses that will grow into deeper accounting, inventory, or Zoho-ecosystem needs",
-    keyDifference: "Zoho Books' free plan is revenue-capped at $50K/year; FinFlow Track's free plan has no revenue cap.",
+    keyDifference:
+      "Zoho Books' free plan is revenue-capped at $50K/year; FinFlow Track's free plan has no revenue cap.",
     status: "live",
     href: "/compare/finflow-track-vs-zoho-books",
   },
@@ -138,29 +145,34 @@ const comparisonCards: {
   },
   {
     name: "Sage",
-    description: "A long-established accounting brand spanning small-business and enterprise products.",
+    description:
+      "A long-established accounting brand spanning small-business and enterprise products.",
     bestFor: "Businesses wanting a legacy accounting brand with broad product tiers",
     keyDifference: "Comparison in progress.",
     status: "soon",
   },
   {
     name: "Odoo",
-    description: "An open-source business suite covering accounting alongside CRM, inventory, and more.",
+    description:
+      "An open-source business suite covering accounting alongside CRM, inventory, and more.",
     bestFor: "Businesses wanting accounting bundled with broader operations software",
     keyDifference: "Comparison in progress.",
     status: "soon",
   },
   {
     name: "Excel",
-    description: "General-purpose spreadsheet software many small businesses start with before adopting dedicated accounting software.",
+    description:
+      "General-purpose spreadsheet software many small businesses start with before adopting dedicated accounting software.",
     bestFor: "Very early-stage businesses tracking a handful of transactions manually",
     keyDifference: "Comparison in progress.",
     status: "soon",
   },
   {
     name: "Google Sheets",
-    description: "Free, collaborative spreadsheet software commonly used as an early, manual bookkeeping stand-in.",
-    bestFor: "Solo founders wanting free, flexible manual tracking before adopting dedicated software",
+    description:
+      "Free, collaborative spreadsheet software commonly used as an early, manual bookkeeping stand-in.",
+    bestFor:
+      "Solo founders wanting free, flexible manual tracking before adopting dedicated software",
     keyDifference: "Comparison in progress.",
     status: "soon",
   },
@@ -311,10 +323,7 @@ const useCases: {
   {
     title: "Best for Inventory-Heavy Businesses",
     icon: Package,
-    items: [
-      { name: "Zoho Books", href: "/compare/finflow-track-vs-zoho-books" },
-      { name: "Odoo" },
-    ],
+    items: [{ name: "Zoho Books", href: "/compare/finflow-track-vs-zoho-books" }, { name: "Odoo" }],
   },
   {
     title: "Best Free Accounting Software",
@@ -474,8 +483,8 @@ function CompareHubPage() {
         <div className="container mx-auto max-w-6xl px-6 py-16">
           <h2 className="text-3xl font-bold">Feature Comparison Matrix</h2>
           <p className="mt-3 max-w-3xl text-muted-foreground">
-            A high-level snapshot across all five platforms. See each individual comparison page
-            for plan-by-plan detail, pricing, and sourcing.
+            A high-level snapshot across all five platforms. See each individual comparison page for
+            plan-by-plan detail, pricing, and sourcing.
           </p>
 
           <div className="mt-8 overflow-x-auto rounded-2xl border bg-background">
@@ -532,8 +541,8 @@ function CompareHubPage() {
             </table>
           </div>
           <p className="mt-4 text-sm text-muted-foreground">
-            "Plan dependent" or partial markers indicate the feature varies by plan, region, or
-            has usage limits — see the individual comparison pages for exact plan requirements and
+            "Plan dependent" or partial markers indicate the feature varies by plan, region, or has
+            usage limits — see the individual comparison pages for exact plan requirements and
             sourcing, and confirm current details on each provider's official site before deciding.
           </p>
         </div>
@@ -597,12 +606,12 @@ function CompareHubPage() {
           Every comparison on FinFlow Track is written by our team using our own product's actual,
           plan-gated functionality alongside each competitor's official documentation and pricing
           pages. We consider pricing, free-plan limitations, core accounting functionality,
-          invoicing, expenses, reports, inventory, multi-currency support, automation,
-          integrations, usability, and target audience. As the maker of FinFlow Track, we are not
-          an independent reviewer — we aim to describe competitors fairly, including features they
-          offer that we currently don't, rather than only listing our own strengths. We do not
-          conduct hands-on testing of competitor products; all competitor claims are sourced from
-          public documentation and linked on each comparison page. Where we can't verify a detail
+          invoicing, expenses, reports, inventory, multi-currency support, automation, integrations,
+          usability, and target audience. As the maker of FinFlow Track, we are not an independent
+          reviewer — we aim to describe competitors fairly, including features they offer that we
+          currently don't, rather than only listing our own strengths. We do not conduct hands-on
+          testing of competitor products; all competitor claims are sourced from public
+          documentation and linked on each comparison page. Where we can't verify a detail
           confidently, we say so rather than guessing. Individual comparison pages are reviewed and
           dated — check each page for when it was last checked.
         </p>
