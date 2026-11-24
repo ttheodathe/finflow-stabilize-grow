@@ -1,6 +1,6 @@
 ---
-title: "How to Create a Business Budget: A Practical Guide for Small Businesses"
-description: "Learn how to create a business budget with a practical step-by-step process for forecasting revenue, planning expenses, managing cash flow, and reviewing actual results."
+title: "How to Create a Small Business Budget: Step by Step"
+description: "Build a small-business budget with steps for forecasting revenue, planning expenses, managing cash flow, and reviewing actual results."
 slug: "how-to-create-a-business-budget"
 author: "FinFlowTrack Editorial Team"
 publishedAt: "2026-08-27"
