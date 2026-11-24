@@ -50,7 +50,7 @@ function CompletePaymentPage() {
     }
     setLoading("pay");
     try {
-      await startPolarCheckout({ productId, companyId: pending.companyId });
+      await startPolarCheckout({ productId, companyId: pending.companyId, plan: plan as "pro" | "business", cycle });
     } catch (e) {
       setLoading(null);
       toast.error(e instanceof Error ? e.message : "Checkout could not be started");
