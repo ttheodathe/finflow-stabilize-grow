@@ -17,11 +17,11 @@ export const Route = createFileRoute("/testimonials")({
 
   head: () => ({
     meta: [
-      { title: "Customer Reviews | FinFlowTrack" },
+      { title: "Customer Reviews for FinFlow Track" },
       {
         name: "description",
         content:
-          "See what freelancers, startups, and small businesses say about FinFlowTrack, and leave your own review.",
+          "Share your experience using FinFlow Track. Reviews are checked before publication; describe the workflows you personally used.",
       },
     ],
   }),
@@ -93,6 +93,47 @@ function TestimonialsPage() {
             Used it yourself? We'd love to hear from you.
           </p>
         </div>
+      </section>
+
+      <section className="container mx-auto max-w-5xl px-6 py-12">
+        <h2 className="text-2xl font-semibold">How customer reviews work</h2>
+        <p className="mt-3 max-w-3xl leading-7 text-muted-foreground">
+          This page is a place for people who have used FinFlow Track to share their own experience.
+          Reviews are checked before publication, so a submission will not appear immediately.
+          We aim to give visitors useful feedback rather than manufacture ratings or publish
+          promotional claims as customer experiences.
+        </p>
+        <div className="mt-8 grid gap-6 md:grid-cols-3">
+          <div className="rounded-xl border p-6">
+            <h3 className="font-semibold">Describe a real workflow</h3>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              Explain which parts of the product you have used, such as creating invoices,
+              recording expenses, managing customer records, or reviewing financial reports.
+              Share what was clear, useful, or difficult in your own experience.
+            </p>
+          </div>
+          <div className="rounded-xl border p-6">
+            <h3 className="font-semibold">Protect private information</h3>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              Do not include passwords, account numbers, customer names, invoice contents, or
+              confidential financial details in a public review. General feedback is more helpful
+              and safer for everyone.
+            </p>
+          </div>
+          <div className="rounded-xl border p-6">
+            <h3 className="font-semibold">Keep feedback independent</h3>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              Write in your own words and describe only features you personally tried. Clear,
+              specific feedback helps other business owners decide whether the product fits
+              their workflow.
+            </p>
+          </div>
+        </div>
+        <p className="mt-6 text-sm text-muted-foreground">
+          Need product details first? Explore the <a className="underline underline-offset-2" href="/features">features</a>,
+          compare <a className="underline underline-offset-2" href="/pricing">plans</a>, or visit the
+          <a className="underline underline-offset-2" href="/help"> Help Center</a>.
+        </p>
       </section>
 
       <section className="container mx-auto max-w-5xl px-6 py-16">
