@@ -267,7 +267,10 @@ export function FinFlowGuide({ pathname }: { pathname: string }) {
               </div>
             )}
             {asked.length > 0 && !latestAnswer && (
-              <p className="text-xs text-muted-foreground">Answers are based on published FinFlow Track information. The guide may not cover every question yet.</p>
+              <p className="text-xs text-muted-foreground">
+                Answers are based on published FinFlow Track information. The guide may not cover
+                every question yet.
+              </p>
             )}
             {asked.length > 0 && (
               <button
@@ -289,13 +292,15 @@ export function FinFlowGuide({ pathname }: { pathname: string }) {
                   onClick={() => ask(item.title)}
                   className="block w-full rounded-xl border px-3 py-2 text-left text-sm hover:bg-muted"
                 >
-                {item.title}
-              </button>
-            ))}
+                  {item.title}
+                </button>
+              ))}
           </div>
 
           <form onSubmit={submit} className="flex items-center gap-2 border-t p-3">
-            <label htmlFor="finflow-guide-question" className="sr-only">\n              Ask FinFlow Guide a question\n            </label>
+            <label htmlFor="finflow-guide-question" className="sr-only">
+              Ask FinFlow Guide a question
+            </label>
             <input
               id="finflow-guide-question"
               value={question}
@@ -304,7 +309,12 @@ export function FinFlowGuide({ pathname }: { pathname: string }) {
               className="min-w-0 flex-1 rounded-xl border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
               maxLength={240}
             />
-            <button\n              type="submit"\n              disabled={!question.trim()}\n              aria-label="Send question"\n              className="rounded-xl bg-primary p-2 text-primary-foreground disabled:opacity-40"\n            >
+            <button
+              type="submit"
+              disabled={!question.trim()}
+              aria-label="Send question"
+              className="rounded-xl bg-primary p-2 text-primary-foreground disabled:opacity-40"
+            >
               <Send className="h-4 w-4" />
             </button>
           </form>
