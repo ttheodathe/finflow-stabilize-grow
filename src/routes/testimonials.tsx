@@ -87,8 +87,7 @@ function TestimonialsPage() {
           </Badge>
           <h1 className="text-4xl font-bold tracking-tight md:text-5xl">What our customers say</h1>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
-            Have you used FinFlow Track? Share your honest experience.
-            We check each submission before publication.
+            Used FinFlow Track? Share your honest experience.
           </p>
         </div>
       </section>
