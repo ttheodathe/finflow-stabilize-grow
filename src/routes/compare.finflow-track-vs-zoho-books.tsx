@@ -27,18 +27,18 @@ import {
   ExternalLink,
 } from "lucide-react";
 
-const SITE_URL = "https://finflowtrack.com";
+const SITE_URL = "https://www.finflowtrack.com";
 const PAGE_URL = `${SITE_URL}/compare/finflow-track-vs-zoho-books`;
 const PUBLISHED_DATE = "2026-08-14";
-const REVIEWED_DATE = "2026-11-16";
-const REVIEWED_DATE_LABEL = "November 16, 2026";
+const REVIEWED_DATE = "2026-11-24";
+const REVIEWED_DATE_LABEL = "November 24, 2026";
 
 export const Route = createFileRoute("/compare/finflow-track-vs-zoho-books")({
   component: ComparePage,
   head: () => {
-    const title = "FinFlow Track vs Zoho Books: Free Plan, Pricing & Features Compared";
+    const title = "FinFlow Track vs Zoho Books: Free Plan Compared";
     const description =
-      "Compare FinFlow Track plans with Zoho Books U.S. pricing, its $50,000 Free-plan revenue threshold, invoice limits, accounting features, and multi-currency availability.";
+      "Compare FinFlow Track with Zoho Books' U.S. Free plan, including the revenue cap, invoice limits, users, expenses, reports, and features.";
 
     return {
       meta: [
