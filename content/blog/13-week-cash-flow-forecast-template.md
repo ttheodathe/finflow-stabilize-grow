@@ -1,10 +1,10 @@
 ---
-title: "13-Week Cash Flow Forecast for Small Business: Template and Worked Example"
-description: "Build a 13-week cash flow forecast with a practical template, worked example, weekly formulas, and steps for spotting a cash shortage before it happens."
+title: "13-Week Cash Flow Forecast Template: Example & Guide"
+description: "Use a 13-week cash flow forecast template with weekly formulas, a worked example, and steps to identify possible cash shortages."
 slug: "13-week-cash-flow-forecast-template"
 author: "FinFlowTrack Editorial Team"
 publishedAt: "2026-10-27"
-updatedAt: "2026-10-27"
+updatedAt: "2026-11-24"
 category: "small-business-finance"
 tags:
   - 13-week cash flow forecast
@@ -23,7 +23,7 @@ A business can look profitable on paper and still struggle to pay a supplier, co
 
 A **13-week cash flow forecast** helps you look ahead one week at a time. It estimates the cash your business will receive, the payments it expects to make, and the balance likely to remain at the end of each week.
 
-This guide gives you a practical template, a worked example, formulas you can use in a spreadsheet, and a weekly routine for keeping the forecast useful. The figures are illustrative examples, not financial projections for any particular business.
+This guide gives you a practical template, a worked example, formulas you can use in a spreadsheet, and a weekly routine for keeping the forecast useful. The figures are illustrative examples, not financial projections for any particular business. For the broader process of choosing a forecasting horizon and updating projections, read [Cash Flow Forecasting for Small Business](/blog/cash-flow-forecasting-small-business).
 
 ## What Is a 13-Week Cash Flow Forecast?
 
