@@ -4,11 +4,11 @@ FinFlow Track uses the existing GA4 web stream `G-XKQYZKSJ08` on
 `https://www.finflowtrack.com`. The following event names match the three
 key events configured on the GA4 property as of 2026-11-24:
 
-| GA4 key event | FinFlow Track definition | Emission point |
-| --- | --- | --- |
-| `qualify_lead` | An authenticated user has selected a paid plan and the Polar checkout session was created successfully. | The shared checkout client, after the server returns a valid Polar checkout URL. Deduplicated locally per account. |
-| `close_convert_lead` | A qualified workspace has become a paying customer. | After the Polar webhook has made the subscription active and the browser can verify its first paid order with `billing_reason=subscription_create`. |
-| `purchase` | A real, positive-value Polar order was paid. | Billing Settings after the user returns from Polar, the active subscription is confirmed, and the corresponding paid order is available from Polar. |
+| GA4 key event        | FinFlow Track definition                                                                                | Emission point                                                                                                                                      |
+| -------------------- | ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `qualify_lead`       | An authenticated user has selected a paid plan and the Polar checkout session was created successfully. | The shared checkout client, after the server returns a valid Polar checkout URL. Deduplicated locally per account.                                  |
+| `close_convert_lead` | A qualified workspace has become a paying customer.                                                     | After the Polar webhook has made the subscription active and the browser can verify its first paid order with `billing_reason=subscription_create`. |
+| `purchase`           | A real, positive-value Polar order was paid.                                                            | Billing Settings after the user returns from Polar, the active subscription is confirmed, and the corresponding paid order is available from Polar. |
 
 ## Supporting events
 

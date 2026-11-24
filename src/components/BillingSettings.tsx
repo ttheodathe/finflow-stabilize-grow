@@ -45,17 +45,11 @@ export function BillingSettings() {
     enabled: Boolean(companyId) && hasBillingProvider,
     // A checkout return can race the provider webhook by a few seconds.
     // Poll briefly while the browser-local checkout marker is still fresh.
-    refetchInterval: () =>
-      hasPendingPolarCheckout() ? POLAR_CHECKOUT_POLL_INTERVAL_MS : false,
+    refetchInterval: () => (hasPendingPolarCheckout() ? POLAR_CHECKOUT_POLL_INTERVAL_MS : false),
   });
 
   useEffect(() => {
-    if (
-      typeof window === "undefined" ||
-      !companyId ||
-      !subQuery.data ||
-      !invoicesQuery.isSuccess
-    ) {
+    if (typeof window === "undefined" || !companyId || !subQuery.data || !invoicesQuery.isSuccess) {
       return;
     }
 
@@ -103,25 +97,21 @@ export function BillingSettings() {
       const itemId =
         attributedOrder.productId ?? `finflow-${sub.plan}-${sub.billing_cycle ?? "monthly"}`;
 
-      const purchaseTracked = trackEventOnce(
-        "purchase",
-        `polar-order:${attributedOrder.orderId}`,
-        {
-          transaction_id: attributedOrder.orderId,
-          currency: attributedOrder.currency,
-          value: attributedOrder.value,
-          tax: attributedOrder.tax,
-          items: [
-            {
-              item_id: itemId,
-              item_name: `FinFlow Track ${planName} ${cycleName} subscription`,
-              item_category: "subscription",
-              price: attributedOrder.value,
-              quantity: 1,
-            },
-          ],
-        },
-      );
+      const purchaseTracked = trackEventOnce("purchase", `polar-order:${attributedOrder.orderId}`, {
+        transaction_id: attributedOrder.orderId,
+        currency: attributedOrder.currency,
+        value: attributedOrder.value,
+        tax: attributedOrder.tax,
+        items: [
+          {
+            item_id: itemId,
+            item_name: `FinFlow Track ${planName} ${cycleName} subscription`,
+            item_category: "subscription",
+            price: attributedOrder.value,
+            quantity: 1,
+          },
+        ],
+      });
       if (!purchaseTracked) return;
 
       if (attributedOrder.billingReason === "subscription_create") {
@@ -154,9 +144,7 @@ export function BillingSettings() {
 
   if (!companyId) {
     return (
-      <div className="text-sm text-gray-500">
-        Select a company to view billing information.
-      </div>
+      <div className="text-sm text-gray-500">Select a company to view billing information.</div>
     );
   }
 
@@ -208,9 +196,7 @@ export function BillingSettings() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-sm font-medium text-gray-500">Current plan</h2>
-            <p className="mt-1 text-lg font-semibold text-gray-900">
-              {currentCfg.name}
-            </p>
+            <p className="mt-1 text-lg font-semibold text-gray-900">{currentCfg.name}</p>
             <p className="mt-1 text-xs text-gray-500">{currentCfg.description}</p>
           </div>
           <span
@@ -229,9 +215,7 @@ export function BillingSettings() {
           {sub?.billing_cycle && (
             <div>
               <dt className="text-gray-500">Billing cycle</dt>
-              <dd className="mt-0.5 font-medium text-gray-900 capitalize">
-                {sub.billing_cycle}
-              </dd>
+              <dd className="mt-0.5 font-medium text-gray-900 capitalize">{sub.billing_cycle}</dd>
             </div>
           )}
           {sub?.current_period_end && (
@@ -251,9 +235,7 @@ export function BillingSettings() {
           {customerId && (
             <div>
               <dt className="text-gray-500">Customer ID</dt>
-              <dd className="mt-0.5 font-mono text-[11px] text-gray-700 break-all">
-                {customerId}
-              </dd>
+              <dd className="mt-0.5 font-mono text-[11px] text-gray-700 break-all">{customerId}</dd>
             </div>
           )}
           {subscriptionId && (
@@ -384,8 +366,7 @@ export function BillingSettings() {
                   // Polar orders: { id, created_at, amount, currency, status }
                   // Paddle transactions: { id, billed_at, details: { totals }, status, invoice_id }
                   const details = tx.details as
-                    | { totals?: { total?: string; currency_code?: string } }
-                    | undefined;
+                    { totals?: { total?: string; currency_code?: string } } | undefined;
                   const date = (tx.billed_at ?? tx.created_at) as string | undefined;
                   const amount = isPolar
                     ? tx.amount != null

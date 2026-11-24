@@ -72,9 +72,7 @@ export const getMySubscription = createServerFn({ method: "POST" })
           .limit(1);
       const ownerFilter = `owner_id.eq.${company.user_id},user_id.eq.${company.user_id}`;
 
-      const companyRow = await adminBase()
-        .eq("company_id", data.companyId)
-        .or(ownerFilter);
+      const companyRow = await adminBase().eq("company_id", data.companyId).or(ownerFilter);
       if (companyRow.error) throw new Error(companyRow.error.message);
       row = companyRow.data?.[0] ?? null;
 
@@ -168,14 +166,15 @@ export const createFreeSubscription = createServerFn({ method: "POST" })
  */
 export const createPendingSubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((input: { companyId: string; plan: "pro" | "business"; cycle: "monthly" | "yearly" }) =>
-    z
-      .object({
-        companyId: z.string().uuid(),
-        plan: z.enum(["pro", "business"]),
-        cycle: z.enum(["monthly", "yearly"]),
-      })
-      .parse(input),
+  .validator(
+    (input: { companyId: string; plan: "pro" | "business"; cycle: "monthly" | "yearly" }) =>
+      z
+        .object({
+          companyId: z.string().uuid(),
+          plan: z.enum(["pro", "business"]),
+          cycle: z.enum(["monthly", "yearly"]),
+        })
+        .parse(input),
   )
   .handler(async ({ data, context }) => {
     // biome-ignore lint/suspicious/noExplicitAny: dynamic schema
@@ -255,8 +254,7 @@ export const cancelSubscription = createServerFn({ method: "POST" })
     const env = process.env.PADDLE_ENV ?? "sandbox";
     if (!apiKey) throw new Error("PADDLE_API_KEY not configured");
 
-    const base =
-      env === "sandbox" ? "https://sandbox-api.paddle.com" : "https://api.paddle.com";
+    const base = env === "sandbox" ? "https://sandbox-api.paddle.com" : "https://api.paddle.com";
 
     const resp = await fetch(`${base}/subscriptions/${data.subscriptionId}/cancel`, {
       method: "POST",
@@ -319,8 +317,7 @@ export const listInvoices = createServerFn({ method: "POST" })
 
     if (sub?.polar_customer_id) {
       const env = process.env.POLAR_SERVER ?? "sandbox";
-      const base =
-        env === "sandbox" ? "https://sandbox-api.polar.sh" : "https://api.polar.sh";
+      const base = env === "sandbox" ? "https://sandbox-api.polar.sh" : "https://api.polar.sh";
       const resp = await fetch(
         `${base}/v1/orders?customer_id=${encodeURIComponent(sub.polar_customer_id)}&limit=25`,
         { headers: { Authorization: `Bearer ${process.env.POLAR_ACCESS_TOKEN}` } },
@@ -331,7 +328,9 @@ export const listInvoices = createServerFn({ method: "POST" })
       const orderIds = new Set(
         orders
           .map((order) =>
-            order && typeof order === "object" && typeof (order as Record<string, unknown>).id === "string"
+            order &&
+            typeof order === "object" &&
+            typeof (order as Record<string, unknown>).id === "string"
               ? ((order as Record<string, unknown>).id as string)
               : null,
           )
@@ -357,8 +356,7 @@ export const listInvoices = createServerFn({ method: "POST" })
 
           for (const event of paidEvents ?? []) {
             const eventData = event.payload?.data as
-              | { id?: unknown; billing_reason?: unknown }
-              | undefined;
+              { id?: unknown; billing_reason?: unknown } | undefined;
             if (
               typeof eventData?.id === "string" &&
               orderIds.has(eventData.id) &&
@@ -375,9 +373,10 @@ export const listInvoices = createServerFn({ method: "POST" })
       const enrichedOrders = orders.map((order) => {
         if (!order || typeof order !== "object") return order;
         const record = order as Record<string, unknown>;
-        const reason = typeof record.billing_reason === "string"
-          ? record.billing_reason
-          : billingReasons.get(String(record.id ?? ""));
+        const reason =
+          typeof record.billing_reason === "string"
+            ? record.billing_reason
+            : billingReasons.get(String(record.id ?? ""));
         return reason ? { ...record, billing_reason: reason } : record;
       });
       return { transactionsJson: JSON.stringify(enrichedOrders) };
@@ -389,8 +388,7 @@ export const listInvoices = createServerFn({ method: "POST" })
     const apiKey = process.env.PADDLE_API_KEY;
     const env = process.env.PADDLE_ENV ?? "sandbox";
     if (!apiKey) return { transactionsJson: "[]" };
-    const base =
-      env === "sandbox" ? "https://sandbox-api.paddle.com" : "https://api.paddle.com";
+    const base = env === "sandbox" ? "https://sandbox-api.paddle.com" : "https://api.paddle.com";
 
     const resp = await fetch(
       `${base}/transactions?customer_id=${encodeURIComponent(customerId)}&per_page=25`,

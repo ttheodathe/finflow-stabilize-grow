@@ -1,10 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 type AnalyticsValue = string | number | boolean;
-type AnalyticsParams = Record<
-  string,
-  AnalyticsValue | Array<Record<string, AnalyticsValue>>
->;
+type AnalyticsParams = Record<string, AnalyticsValue | Array<Record<string, AnalyticsValue>>>;
 
 declare global {
   interface Window {
@@ -55,10 +52,7 @@ export function trackEventOnce(
  * accounting action for a company. Counts are queried after the write succeeds;
  * only the action type is sent to analytics, never financial record data.
  */
-export async function trackAccountingAction(
-  companyId: string,
-  action: "invoice" | "expense",
-) {
+export async function trackAccountingAction(companyId: string, action: "invoice" | "expense") {
   trackEvent(action === "invoice" ? "invoice_created" : "expense_created");
 
   try {

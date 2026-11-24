@@ -84,12 +84,7 @@ export function PlanCheckoutButton({
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      disabled={loading}
-      className={className}
-    >
+    <button type="button" onClick={handleClick} disabled={loading} className={className}>
       {loading ? "Loading…" : children}
     </button>
   );

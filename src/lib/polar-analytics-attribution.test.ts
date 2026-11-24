@@ -36,10 +36,7 @@ test("ignores invalid, future-dated, and expired checkout markers", () => {
     getPendingPolarCheckoutStartedAt(JSON.stringify({ startedAt: NOW + 120_000 }), NOW),
     null,
   );
-  assert.equal(
-    hasRecentPolarCheckout(JSON.stringify({ startedAt: NOW - 180_000 }), NOW),
-    false,
-  );
+  assert.equal(hasRecentPolarCheckout(JSON.stringify({ startedAt: NOW - 180_000 }), NOW), false);
   assert.equal(
     getPendingPolarCheckoutStartedAt(JSON.stringify({ startedAt: NOW - 90_000_000 }), NOW),
     null,
@@ -85,8 +82,14 @@ test("rejects unpaid or unrelated orders", () => {
     now: NOW,
   };
 
-  assert.equal(getAttributedPolarPurchase(validOrder({ paid: false, status: "pending" }), options), null);
-  assert.equal(getAttributedPolarPurchase(validOrder({ subscription_id: "sub_other" }), options), null);
+  assert.equal(
+    getAttributedPolarPurchase(validOrder({ paid: false, status: "pending" }), options),
+    null,
+  );
+  assert.equal(
+    getAttributedPolarPurchase(validOrder({ subscription_id: "sub_other" }), options),
+    null,
+  );
   assert.equal(getAttributedPolarPurchase(validOrder({ currency: "US" }), options), null);
   assert.equal(getAttributedPolarPurchase(validOrder({ net_amount: 0 }), options), null);
   assert.equal(getAttributedPolarPurchase(validOrder({ net_amount: -100 }), options), null);

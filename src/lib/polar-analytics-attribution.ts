@@ -46,10 +46,7 @@ export function getPendingPolarCheckoutStartedAt(
   }
 }
 
-export function hasRecentPolarCheckout(
-  rawMarker: string | null,
-  now = Date.now(),
-): boolean {
+export function hasRecentPolarCheckout(rawMarker: string | null, now = Date.now()): boolean {
   const startedAt = getPendingPolarCheckoutStartedAt(rawMarker, now);
   if (startedAt === null) return false;
   const age = now - startedAt;
@@ -104,8 +101,7 @@ export function getAttributedPolarPurchase(
     currency,
     value: netAmountCents / 100,
     tax: taxAmountCents / 100,
-    billingReason:
-      typeof order.billing_reason === "string" ? order.billing_reason : null,
+    billingReason: typeof order.billing_reason === "string" ? order.billing_reason : null,
     productId: typeof order.product_id === "string" ? order.product_id : null,
   };
 }
