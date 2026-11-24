@@ -1,10 +1,10 @@
 ---
-title: "Cash Flow Forecasting for Small Business: A Step-by-Step Guide"
-description: "Learn how far ahead to forecast small-business cash flow, build a rolling 13-week cash forecast, and use a practical spreadsheet template to spot cash gaps early."
+title: "Cash Flow Forecasting for Small Business: 13-Week Guide"
+description: "Learn how far ahead to forecast cash flow, build a rolling 13-week forecast, and spot small-business cash gaps with a practical weekly process."
 slug: "cash-flow-forecasting-small-business"
 author: "FinFlowTrack Editorial Team"
 publishedAt: "2026-09-02"
-updatedAt: "2026-11-16"
+updatedAt: "2026-11-24"
 category: "small-business-finance"
 tags:
   - cash flow forecasting
@@ -181,7 +181,9 @@ A business can therefore have:
 
 For more on budgeting, see [How to Create a Business Budget](/blog/how-to-create-a-business-budget).
 
-## How Far Ahead Should a Small Business Forecast?
+## How Far Ahead Should a Small Business Forecast Cash Flow?
+
+**Quick answer:** Use a rolling 4–13-week forecast when the immediate concern is upcoming cash receipts and payments. A 13-week view gives many small businesses a practical weekly planning horizon; add a 6–12-month view when planning for seasonality, hiring, expansion, or larger commitments. Choose the horizon that fits your business's operating cycle.
 
 There is no single forecasting period that works for every business.
 
@@ -191,7 +193,7 @@ The appropriate horizon depends on transaction volume, cash-flow volatility, sea
 
 A short-term forecast is useful when the main concern is liquidity and upcoming payments.
 
-A **13-week cash flow forecast** is commonly used because it provides visibility over approximately one quarter while remaining detailed enough for weekly planning.
+A **13-week cash flow forecast** is commonly used because it provides visibility over approximately one quarter while remaining detailed enough for weekly planning. For a spreadsheet layout, formulas, and a worked example, see the [13-week cash flow forecast template](/blog/13-week-cash-flow-forecast-template).
 
 ### Medium-term: 6 months
 
