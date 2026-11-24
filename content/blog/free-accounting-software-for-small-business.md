@@ -1,5 +1,5 @@
 ---
-title: "Free Accounting Software for Small Business: 4 Plans Compared"
+title: "Free Accounting Software for Small Business Compared"
 description: "Compare 4 free accounting plans for invoicing, expenses and reports. See plan limits, bank feeds and country availability."
 slug: "free-accounting-software-for-small-business"
 author: "FinFlowTrack Editorial Team"
