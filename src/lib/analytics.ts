@@ -1,6 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 
-type AnalyticsParams = Record<string, string | number | boolean>;
+type AnalyticsValue = string | number | boolean;
+type AnalyticsParams = Record<
+  string,
+  AnalyticsValue | Array<Record<string, AnalyticsValue>>
+>;
 
 declare global {
   interface Window {
