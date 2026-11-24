@@ -1,6 +1,6 @@
 ---
-title: "Break-Even Analysis for Small Business: How to Calculate Your Break-Even Point"
-description: "Calculate small-business break-even units, revenue, contribution margin, target profit, and margin of safety with an interactive calculator and worked examples."
+title: "Break-Even Analysis for Small Business: A Guide"
+description: "Calculate break-even units and revenue, contribution margin, target profit, and margin of safety with worked examples and a calculator."
 slug: "break-even-analysis-small-business"
 author: "FinFlowTrack Editorial Team"
 publishedAt: "2026-08-28"
