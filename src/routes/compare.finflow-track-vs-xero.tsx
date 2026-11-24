@@ -4,10 +4,10 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ArrowRight, Check, Minus } from "lucide-react";
 
-const SITE_URL = "https://finflowtrack.com";
+const SITE_URL = "https://www.finflowtrack.com";
 const PAGE_URL = `${SITE_URL}/compare/finflow-track-vs-xero`;
 const PUBLISHED_DATE = "2026-08-14";
-const REVIEWED_DATE = "2026-11-16";
+const REVIEWED_DATE = "2026-11-24";
 
 type Status = "yes" | "no" | "partial";
 function Mark({ status, children }: { status: Status; children: string }) {
@@ -44,8 +44,8 @@ const faqs = [
 export const Route = createFileRoute("/compare/finflow-track-vs-xero")({
   component: ComparePage,
   head: () => {
-    const title = "FinFlow Track vs Xero: Free Plan, Pricing & Features Compared";
-    const description = "Compare FinFlow Track Free with Xero's paid U.S. plans, including invoice and bill limits, reporting, cash-flow forecasting, and multi-currency features.";
+    const title = "FinFlow Track vs Xero: Plans & Features Compared";
+    const description = "Compare FinFlow Track Free with Xero's paid U.S. plans, including invoices, bills, reports, bank reconciliation, and multi-currency features.";
     return {
       meta: [
         { title }, { name: "description", content: description }, { name: "robots", content: "index, follow" },
