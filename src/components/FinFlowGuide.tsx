@@ -196,7 +196,9 @@ export function FinFlowGuide({ pathname }: { pathname: string }) {
           aria-label="FinFlow Guide chat"
           className="mb-3 flex h-[min(620px,calc(100dvh-110px))] w-[min(calc(100vw-2rem),390px)] flex-col overflow-hidden rounded-2xl border bg-background shadow-2xl"
         >
-          <header className="flex items-center justify-between bg-primary px-4 py-3 text-primary-foreground">
+          <header
+            className="flex items-center justify-between bg-primary px-4 py-3 text-primary-foreground"
+          >
             <div>
               <p className="font-semibold">FinFlow Guide</p>
               <p className="text-xs text-primary-foreground/80">
@@ -223,7 +225,9 @@ export function FinFlowGuide({ pathname }: { pathname: string }) {
               const answer = findAnswer(item);
               return (
                 <div key={index} className="space-y-2">
-                  <div className="ml-auto max-w-[90%] rounded-2xl rounded-tr-sm bg-primary px-3 py-2 text-sm text-primary-foreground">
+                  <div
+                    className="ml-auto max-w-[90%] rounded-2xl rounded-tr-sm bg-primary px-3 py-2 text-sm text-primary-foreground"
+                  >
                     {item}
                   </div>
                   <div className="max-w-[95%] rounded-2xl rounded-tl-sm bg-muted p-3 text-sm">
