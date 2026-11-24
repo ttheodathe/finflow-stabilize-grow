@@ -17,6 +17,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { captureReferralFromUrl } from "@/lib/referral";
 import { trackEvent } from "@/lib/analytics";
+import { FinFlowGuide } from "@/components/FinFlowGuide";
 
 // Not needed for first paint: loaded after the page is interactive so they stay
 // out of the initial JavaScript that every visitor downloads.
@@ -190,6 +191,7 @@ function RootComponent() {
   const speedRoute = useRouterState({
     select: (s) => s.matches[s.matches.length - 1]?.routeId,
   });
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   const [deferredReady, setDeferredReady] = useState(false);
   useEffect(() => {
@@ -232,6 +234,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      <FinFlowGuide pathname={pathname} />
       {/* Toaster stays eager so a toast fired right after load is never dropped. */}
       <Toaster />
       {deferredReady && (
