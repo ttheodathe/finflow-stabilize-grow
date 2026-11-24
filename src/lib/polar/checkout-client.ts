@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { PENDING_POLAR_CHECKOUT_KEY, trackEvent } from "@/lib/analytics";
 
 /**
  * Starts a Polar checkout for the signed-in user and redirects the browser to it.
@@ -19,6 +20,15 @@ export async function startPolarCheckout(opts: { productId: string; companyId: s
   if (!res.ok || typeof json?.url !== "string") {
     throw new Error(json?.error ?? "Checkout could not be started");
   }
+  // Remember when this checkout started so the return page only counts
+  // genuinely new, paid Polar orders — never historical orders or checkout clicks.
+  try {
+    localStorage.setItem(PENDING_POLAR_CHECKOUT_KEY, JSON.stringify({ startedAt: Date.now() }));
+  } catch {
+    // Analytics is best-effort and must never block a valid checkout.
+  }
+  trackEvent("begin_checkout", { checkout_provider: "polar" });
+
   // Full navigation: leaves the app for the Polar-hosted checkout page.
   window.location.href = json.url;
 }
