@@ -15,16 +15,33 @@ const ANSWERS: Answer[] = [
   {
     id: "overview",
     title: "What is FinFlow Track?",
-    keywords: ["what is finflow", "about finflow", "what does finflow do", "accounting software", "overview"],
-    response: "FinFlow Track helps freelancers and businesses organize everyday finances with invoicing, expense tracking, customer management and financial reports.",
+    keywords: [
+      "what is finflow",
+      "about finflow",
+      "what does finflow do",
+      "accounting software",
+      "overview",
+    ],
+    response:
+      "FinFlow Track helps freelancers and businesses organize everyday finances with invoicing, expense tracking, customer management and financial reports.",
     href: "/features",
     linkLabel: "Explore features",
   },
   {
     id: "free",
     title: "What can I do on the Free plan?",
-    keywords: ["free plan", "free version", "free account", "cost", "price", "pricing", "how much", "credit card"],
-    response: "The Free plan includes basic accounting, invoice creation, expense tracking, customer management and basic reports. You can review the current plan details on our pricing page.",
+    keywords: [
+      "free plan",
+      "free version",
+      "free account",
+      "cost",
+      "price",
+      "pricing",
+      "how much",
+      "credit card",
+    ],
+    response:
+      "The Free plan includes basic accounting, invoice creation, expense tracking, customer management and basic reports. You can review the current plan details on our pricing page.",
     href: "/pricing",
     linkLabel: "Compare plans",
   },
@@ -32,7 +49,8 @@ const ANSWERS: Answer[] = [
     id: "invoice",
     title: "How do I create an invoice?",
     keywords: ["invoice", "invoicing", "bill a client", "send invoice", "pdf", "payment link"],
-    response: "Create an invoice from your FinFlow Track account, add the relevant customer and invoice details, then use the available PDF export or sharing options to send it to your customer.",
+    response:
+      "Create an invoice from your FinFlow Track account, add the relevant customer and invoice details, then use the available PDF export or sharing options to send it to your customer.",
     href: "/guides",
     linkLabel: "View getting-started guides",
   },
@@ -48,7 +66,8 @@ const ANSWERS: Answer[] = [
     id: "reports",
     title: "What financial reports are available?",
     keywords: ["report", "reports", "profit", "loss", "balance sheet", "cash flow", "receivables", "payables"],
-    response: "FinFlow Track provides financial reporting such as profit and loss, balance sheet, cash flow and aging reports. The reports available to you depend on your plan.",
+    response:
+      "FinFlow Track provides financial reporting such as profit and loss, balance sheet, cash flow and aging reports. The reports available to you depend on your plan.",
     href: "/features",
     linkLabel: "Explore reporting features",
   },
@@ -56,7 +75,8 @@ const ANSWERS: Answer[] = [
     id: "ai",
     title: "Is AI Bookkeeper included?",
     keywords: ["ai", "bookkeeper", "artificial intelligence", "automatically bookkeep"],
-    response: "AI Bookkeeper is a paid-plan feature. It is separate from FinFlow Guide, this website assistant, which only answers public product and getting-started questions.",
+    response:
+      "AI Bookkeeper is a paid-plan feature. It is separate from FinFlow Guide, this website assistant, which only answers public product and getting-started questions.",
     href: "/pricing",
     linkLabel: "See plan details",
   },
@@ -64,7 +84,8 @@ const ANSWERS: Answer[] = [
     id: "teams",
     title: "Can I work with a team?",
     keywords: ["team", "teams", "staff", "employees", "permissions", "roles", "multiple users"],
-    response: "FinFlow Track supports team members and role-based permissions on eligible plans. Check the pricing page for the current plan limits.",
+    response:
+      "FinFlow Track supports team members and role-based permissions on eligible plans. Check the pricing page for the current plan limits.",
     href: "/pricing",
     linkLabel: "Compare plans",
   },
@@ -72,7 +93,8 @@ const ANSWERS: Answer[] = [
     id: "currency",
     title: "Does FinFlow Track support multiple currencies?",
     keywords: ["currency", "currencies", "exchange rate", "multi currency", "foreign currency"],
-    response: "FinFlow Track supports recording transactions in multiple currencies and locks the exchange rate when a transaction is recorded.",
+    response:
+      "FinFlow Track supports recording transactions in multiple currencies and locks the exchange rate when a transaction is recorded.",
     href: "/features",
     linkLabel: "Explore features",
   },
@@ -80,7 +102,8 @@ const ANSWERS: Answer[] = [
     id: "start",
     title: "How do I get started?",
     keywords: ["get started", "sign up", "signup", "create account", "register", "begin"],
-    response: "You can create an account from the signup page. After signing in, follow the in-app steps to set up your business and begin using the available finance tools.",
+    response:
+      "You can create an account from the signup page. After signing in, follow the in-app steps to set up your business and begin using the available finance tools.",
     href: "/auth?mode=signup",
     linkLabel: "Create your account",
   },
@@ -88,7 +111,8 @@ const ANSWERS: Answer[] = [
     id: "help",
     title: "Where can I get more help?",
     keywords: ["help", "support", "contact", "problem", "issue", "talk to someone"],
-    response: "Visit the Help Center for answers to common account, invoicing, expense and reporting questions. If you need personal assistance, use the contact page.",
+    response:
+      "Visit the Help Center for answers to common account, invoicing, expense and reporting questions. If you need personal assistance, use the contact page.",
     href: "/help",
     linkLabel: "Open Help Center",
   },
@@ -161,7 +185,12 @@ export function FinFlowGuide({ pathname }: { pathname: string }) {
               <p className="font-semibold">FinFlow Guide</p>
               <p className="text-xs text-primary-foreground/80">Product and getting-started help</p>
             </div>
-            <button type="button" onClick={() => setOpen(false)} aria-label="Close chat" className="rounded-full p-2 hover:bg-white/15">
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              aria-label="Close chat"
+              className="rounded-full p-2 hover:bg-white/15"
+            >
               <X className="h-5 w-5" />
             </button>
           </header>
@@ -183,7 +212,10 @@ export function FinFlowGuide({ pathname }: { pathname: string }) {
                       <>
                         <p>{answer.response}</p>
                         {answer.href && (
-                          <Link to={answer.href as never} className="mt-2 inline-flex font-medium text-primary underline underline-offset-4">
+                          <Link
+                          to={answer.href as never}
+                          className="mt-2 inline-flex font-medium text-primary underline underline-offset-4"
+                        >
                             {answer.linkLabel}
                           </Link>
                         )}
@@ -192,8 +224,18 @@ export function FinFlowGuide({ pathname }: { pathname: string }) {
                       <>
                         I don’t have a verified answer to that yet. I don’t want to guess about product features or plan limits. Try the Help Center or contact our team.
                         <div className="mt-2 flex flex-wrap gap-3">
-                          <Link to="/help" className="font-medium text-primary underline underline-offset-4">Help Center</Link>
-                          <Link to="/contact" className="font-medium text-primary underline underline-offset-4">Contact</Link>
+                          <Link
+                            to="/help"
+                            className="font-medium text-primary underline underline-offset-4"
+                          >
+                            Help Center
+                          </Link>
+                          <Link
+                            to="/contact"
+                            className="font-medium text-primary underline underline-offset-4"
+                          >
+                            Contact
+                          </Link>
                         </div>
                       </>
                     )}
@@ -206,11 +248,20 @@ export function FinFlowGuide({ pathname }: { pathname: string }) {
               <div className="space-y-2">
                 <p className="text-xs font-medium text-muted-foreground">POPULAR QUESTIONS</p>
                 {SUGGESTIONS.map((item) => (
-                  <button key={item} type="button" onClick={() => ask(item)} className="block w-full rounded-xl border px-3 py-2 text-left text-sm transition-colors hover:bg-muted">
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => ask(item)}
+                    className="block w-full rounded-xl border px-3 py-2 text-left text-sm transition-colors hover:bg-muted"
+                  >
                     {item}
                   </button>
                 ))}
-                <button type="button" onClick={() => setShowAll((value) => !value)} className="pt-1 text-xs font-medium text-primary underline underline-offset-4">
+                <button
+                  type="button"
+                  onClick={() => setShowAll((value) => !value)}
+                  className="pt-1 text-xs font-medium text-primary underline underline-offset-4"
+                >
                   {showAll ? "Hide all questions" : "Browse all questions"}
                 </button>
               </div>
@@ -219,19 +270,32 @@ export function FinFlowGuide({ pathname }: { pathname: string }) {
               <p className="text-xs text-muted-foreground">Answers are based on published FinFlow Track information. The guide may not cover every question yet.</p>
             )}
             {asked.length > 0 && (
-              <button type="button" onClick={() => { setAsked([]); setShowAll(false); }} className="text-xs text-muted-foreground underline underline-offset-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setAsked([]);
+                  setShowAll(false);
+                }}
+                className="text-xs text-muted-foreground underline underline-offset-4"
+              >
                 Start a new conversation
               </button>
             )}
-            {showAll && ANSWERS.map((item) => (
-              <button key={item.id} type="button" onClick={() => ask(item.title)} className="block w-full rounded-xl border px-3 py-2 text-left text-sm hover:bg-muted">
+            {showAll &&
+              ANSWERS.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => ask(item.title)}
+                  className="block w-full rounded-xl border px-3 py-2 text-left text-sm hover:bg-muted"
+                >
                 {item.title}
               </button>
             ))}
           </div>
 
           <form onSubmit={submit} className="flex items-center gap-2 border-t p-3">
-            <label htmlFor="finflow-guide-question" className="sr-only">Ask FinFlow Guide a question</label>
+            <label htmlFor="finflow-guide-question" className="sr-only">\n              Ask FinFlow Guide a question\n            </label>
             <input
               id="finflow-guide-question"
               value={question}
@@ -240,7 +304,7 @@ export function FinFlowGuide({ pathname }: { pathname: string }) {
               className="min-w-0 flex-1 rounded-xl border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
               maxLength={240}
             />
-            <button type="submit" disabled={!question.trim()} aria-label="Send question" className="rounded-xl bg-primary p-2 text-primary-foreground disabled:opacity-40">
+            <button\n              type="submit"\n              disabled={!question.trim()}\n              aria-label="Send question"\n              className="rounded-xl bg-primary p-2 text-primary-foreground disabled:opacity-40"\n            >
               <Send className="h-4 w-4" />
             </button>
           </form>
