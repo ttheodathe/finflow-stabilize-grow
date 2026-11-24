@@ -1,6 +1,6 @@
 ---
-title: "Accounts Receivable Management: How Small Businesses Can Get Paid Faster"
-description: "Learn how to manage accounts receivable, reduce overdue invoices, improve collections, and build a reliable process for getting customers to pay on time."
+title: "Accounts Receivable Management for Small Business"
+description: "Learn how to manage accounts receivable, track overdue invoices, improve collections, and build a consistent small-business payment process."
 slug: "accounts-receivable-management"
 author: "FinFlowTrack Editorial Team"
 publishedAt: "2026-08-19"
