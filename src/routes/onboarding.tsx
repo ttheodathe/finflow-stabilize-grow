@@ -203,7 +203,7 @@ function OnboardingPage() {
         toast.error(e instanceof Error ? e.message : "Failed to save plan selection");
         return;
       }
-      await supabase.from("onboarding_progress").upsert(
+      const { error: progressError } = await supabase.from("onboarding_progress").upsert(
         {
           user_id: user.id,
           financial_completed: true,
@@ -216,10 +216,12 @@ function OnboardingPage() {
         },
         { onConflict: "user_id" },
       );
-      trackEventOnce("qualify_lead", "workspace_setup_completed", {
-        qualification_stage: "workspace_setup_completed",
-        plan,
-      });
+      if (!progressError) {
+        trackEventOnce("qualify_lead", "workspace_setup_completed", {
+          qualification_stage: "workspace_setup_completed",
+          plan,
+        });
+      }
       if (typeof window !== "undefined") localStorage.removeItem("pendingPlan");
       // Leaves the SPA for the Polar-hosted checkout page and returns to
       // /settings?tab=billing. The server takes the payer from the session.
