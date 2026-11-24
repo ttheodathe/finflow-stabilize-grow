@@ -6,13 +6,14 @@ key events configured on the GA4 property as of 2026-11-24:
 
 | GA4 key event | FinFlow Track definition | Emission point |
 | --- | --- | --- |
-| `qualify_lead` | A visitor has created and saved a usable workspace and selected a plan. | After successful free-plan onboarding persistence, or after paid-plan workspace setup is persisted before checkout. |
+| `qualify_lead` | An authenticated user has selected a paid plan and the Polar checkout session was created successfully. | The shared checkout client, after the server returns a valid Polar checkout URL. Deduplicated locally per account. |
 | `close_convert_lead` | A qualified workspace has become a paying customer. | After the Polar webhook has made the subscription active and the browser can verify its first paid order with `billing_reason=subscription_create`. |
 | `purchase` | A real, positive-value Polar order was paid. | Billing Settings after the user returns from Polar, the active subscription is confirmed, and the corresponding paid order is available from Polar. |
 
 ## Supporting events
 
 - `begin_checkout`: emitted when the Polar checkout URL has been created successfully. Includes the displayed plan value, currency, and one subscription item.
+- `onboarding_completed`: emitted separately for successful free or paid workspace setup; free signups are not automatically counted as qualified sales leads.
 - `auth_started` / `auth_completed`: sign-in and account creation flow.
 - `onboarding_completed`: successful onboarding completion.
 - `invoice_created` / `expense_created`: successful creation of the first-party accounting records.
