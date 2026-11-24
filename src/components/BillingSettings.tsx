@@ -90,6 +90,7 @@ export function BillingSettings() {
     }
 
     let processedPaidOrder = false;
+    let billingReasonPending = false;
     for (const order of orders) {
       const attributedOrder = getAttributedPolarPurchase(order, {
         subscriptionId: sub.polar_subscription_id,
@@ -134,6 +135,10 @@ export function BillingSettings() {
           },
         );
         if (!leadTracked) return;
+      } else if (attributedOrder.billingReason === null) {
+        // Keep the checkout marker alive briefly until the processed webhook
+        // supplies billing_reason, so the initial conversion isn't lost to a race.
+        billingReasonPending = true;
       }
 
       processedPaidOrder = true;
@@ -142,7 +147,7 @@ export function BillingSettings() {
     // Clear the marker only after a real paid order was queued or had already
     // been recorded. If the webhook is still pending, the short polling window
     // or a later Billing Settings visit can still pick it up.
-    if (processedPaidOrder) {
+    if (processedPaidOrder && !billingReasonPending) {
       window.localStorage.removeItem(PENDING_POLAR_CHECKOUT_KEY);
     }
   }, [companyId, subQuery.data, invoicesQuery.isSuccess, invoicesQuery.data]);
