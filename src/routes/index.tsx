@@ -21,9 +21,9 @@ import { Badge } from "@/components/ui/badge";
 import { PLANS, type PlanKey } from "@/lib/paddle/config";
 
 const SITE_URL = "https://www.finflowtrack.com/";
-const PAGE_TITLE = "FinFlow Track — Invoicing, Payments & Cash Flow for Service Businesses";
+const PAGE_TITLE = "Accounting Software for Small Businesses | FinFlow Track";
 const PAGE_DESC =
-  "Create client invoices, record payments and expenses, and see what customers still owe. Financial management for owner-led service businesses and small teams.";
+  "Create invoices, track expenses, manage customers, and review financial reports. Start on the Free plan with FinFlow Track.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
