@@ -1,6 +1,6 @@
 ---
 title: "The Complete Guide to Small Business Accounting"
-description: "Learn small-business accounting basics, organize income and expenses, understand financial statements, manage invoices, and build a reliable bookkeeping routine."
+description: "Learn small-business accounting basics, organize records, manage invoices, and understand core financial statements."
 slug: "complete-guide-to-small-business-accounting"
 author: "FinFlowTrack Editorial Team"
 publishedAt: "2026-07-01"
