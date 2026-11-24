@@ -24,7 +24,7 @@ export const Route = createFileRoute("/security")({
       {
         name: "description",
         content:
-          "Learn how FinFlowTrack protects business and financial information using secure authentication, role-based permissions, encrypted communications, managed cloud infrastructure, and continuous security improvements.",
+          "Learn how FinFlow Track protects business data with secure sign-in, role-based access, encrypted connections, and managed cloud infrastructure.",
       },
     ],
   }),
