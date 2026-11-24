@@ -1,6 +1,6 @@
 ---
-title: "Financial Ratios for Small Business: 10 Key Metrics Every Owner Should Know"
-description: "Learn the most useful financial ratios for small businesses, including profitability, liquidity, efficiency, and leverage ratios, with formulas and practical examples."
+title: "Financial Ratios for Small Business: 10 Key Metrics"
+description: "Learn key small-business financial ratios for profitability, liquidity, efficiency, and leverage, with formulas and practical examples."
 slug: "financial-ratios-for-small-business"
 author: "FinFlowTrack Editorial Team"
 publishedAt: "2026-08-28"
