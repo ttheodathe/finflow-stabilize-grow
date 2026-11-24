@@ -85,12 +85,10 @@ function TestimonialsPage() {
           <Badge variant="secondary" className="mb-4">
             Customer Reviews
           </Badge>
-          <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
-            What our customers say
-          </h1>
+          <h1 className="text-4xl font-bold tracking-tight md:text-5xl">What our customers say</h1>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
-            Real feedback from freelancers, startups, and small businesses using FinFlowTrack.
-            Used it yourself? We'd love to hear from you.
+            Real feedback from freelancers, startups, and small businesses using FinFlowTrack. Used
+            it yourself? We'd love to hear from you.
           </p>
         </div>
       </section>
@@ -99,17 +97,17 @@ function TestimonialsPage() {
         <h2 className="text-2xl font-semibold">How customer reviews work</h2>
         <p className="mt-3 max-w-3xl leading-7 text-muted-foreground">
           This page is a place for people who have used FinFlow Track to share their own experience.
-          Reviews are checked before publication, so a submission will not appear immediately.
-          We aim to give visitors useful feedback rather than manufacture ratings or publish
+          Reviews are checked before publication, so a submission will not appear immediately. We
+          aim to give visitors useful feedback rather than manufacture ratings or publish
           promotional claims as customer experiences.
         </p>
         <div className="mt-8 grid gap-6 md:grid-cols-3">
           <div className="rounded-xl border p-6">
             <h3 className="font-semibold">Describe a real workflow</h3>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Explain which parts of the product you have used, such as creating invoices,
-              recording expenses, managing customer records, or reviewing financial reports.
-              Share what was clear, useful, or difficult in your own experience.
+              Explain which parts of the product you have used, such as creating invoices, recording
+              expenses, managing customer records, or reviewing financial reports. Share what was
+              clear, useful, or difficult in your own experience.
             </p>
           </div>
           <div className="rounded-xl border p-6">
@@ -124,15 +122,26 @@ function TestimonialsPage() {
             <h3 className="font-semibold">Keep feedback independent</h3>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
               Write in your own words and describe only features you personally tried. Clear,
-              specific feedback helps other business owners decide whether the product fits
-              their workflow.
+              specific feedback helps other business owners decide whether the product fits their
+              workflow.
             </p>
           </div>
         </div>
         <p className="mt-6 text-sm text-muted-foreground">
-          Need product details first? Explore the <a className="underline underline-offset-2" href="/features">features</a>,
-          compare <a className="underline underline-offset-2" href="/pricing">plans</a>, or visit the
-          <a className="underline underline-offset-2" href="/help"> Help Center</a>.
+          Need product details first? Explore the{" "}
+          <a className="underline underline-offset-2" href="/features">
+            features
+          </a>
+          , compare{" "}
+          <a className="underline underline-offset-2" href="/pricing">
+            plans
+          </a>
+          , or visit the
+          <a className="underline underline-offset-2" href="/help">
+            {" "}
+            Help Center
+          </a>
+          .
         </p>
       </section>
 
@@ -149,7 +158,9 @@ function TestimonialsPage() {
       <section className="border-t bg-muted/30">
         <div className="container mx-auto max-w-5xl px-6 py-16">
           <h2 className="text-2xl font-semibold">
-            {loading ? "Loading reviews…" : `${testimonials.length} review${testimonials.length === 1 ? "" : "s"}`}
+            {loading
+              ? "Loading reviews…"
+              : `${testimonials.length} review${testimonials.length === 1 ? "" : "s"}`}
           </h2>
 
           {loading ? (
@@ -185,9 +196,7 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
             <Star
               key={i}
               className={`h-4 w-4 ${
-                i < testimonial.rating
-                  ? "fill-primary text-primary"
-                  : "fill-muted text-muted"
+                i < testimonial.rating ? "fill-primary text-primary" : "fill-muted text-muted"
               }`}
             />
           ))}
@@ -307,7 +316,11 @@ function TestimonialForm() {
         />
       </div>
 
-      <Button type="submit" disabled={submitting} className="bg-gradient-hero shadow-glow hover:opacity-95">
+      <Button
+        type="submit"
+        disabled={submitting}
+        className="bg-gradient-hero shadow-glow hover:opacity-95"
+      >
         {submitting ? "Submitting…" : "Submit review"}
       </Button>
     </form>

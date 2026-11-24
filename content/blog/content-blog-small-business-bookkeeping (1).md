@@ -94,16 +94,16 @@ Organized records make financial reviews and tax-related preparation easier. Exa
 
 The exact bookkeeping system depends on the business, but most small businesses need to monitor several core financial areas.
 
-| Financial area | What it means | Examples |
-| --- | --- | --- |
-| Revenue | Money earned from business activities | Service income, product sales |
-| Expenses | Costs incurred to operate the business | Software, advertising, rent, supplies |
-| Accounts receivable | Money customers owe the business | Unpaid invoices |
-| Accounts payable | Money the business owes others | Supplier bills, contractor invoices |
-| Cash and bank balances | Money currently held by the business | Business bank accounts, cash |
-| Assets | Resources owned by the business | Equipment, inventory, computers |
-| Liabilities | Amounts the business owes | Loans, unpaid bills |
-| Owner's equity | The owner's financial interest in the business | Contributions and retained value |
+| Financial area         | What it means                                  | Examples                              |
+| ---------------------- | ---------------------------------------------- | ------------------------------------- |
+| Revenue                | Money earned from business activities          | Service income, product sales         |
+| Expenses               | Costs incurred to operate the business         | Software, advertising, rent, supplies |
+| Accounts receivable    | Money customers owe the business               | Unpaid invoices                       |
+| Accounts payable       | Money the business owes others                 | Supplier bills, contractor invoices   |
+| Cash and bank balances | Money currently held by the business           | Business bank accounts, cash          |
+| Assets                 | Resources owned by the business                | Equipment, inventory, computers       |
+| Liabilities            | Amounts the business owes                      | Loans, unpaid bills                   |
+| Owner's equity         | The owner's financial interest in the business | Contributions and retained value      |
 
 Not every business will use every category in the same way. The objective is to create a structure that reflects the business's actual activities and reporting needs.
 
@@ -299,13 +299,13 @@ There is no single schedule that works for every business. Transaction volume, p
 
 A practical schedule is:
 
-| Frequency | Recommended activities |
-| --- | --- |
-| Daily or as transactions occur | Record sales, expenses, invoices, and payments |
-| Weekly | Review transactions, unpaid invoices, and unusual expenses |
-| Monthly | Reconcile accounts and review financial reports |
-| Quarterly | Analyze trends and review major expenses |
-| Annually | Organize records and prepare year-end information |
+| Frequency                      | Recommended activities                                     |
+| ------------------------------ | ---------------------------------------------------------- |
+| Daily or as transactions occur | Record sales, expenses, invoices, and payments             |
+| Weekly                         | Review transactions, unpaid invoices, and unusual expenses |
+| Monthly                        | Reconcile accounts and review financial reports            |
+| Quarterly                      | Analyze trends and review major expenses                   |
+| Annually                       | Organize records and prepare year-end information          |
 
 The most important principle is consistency.
 
@@ -389,12 +389,12 @@ Good bookkeeping connects the two.
 
 Bookkeeping and accounting are closely related, but they are not identical.
 
-| Bookkeeping | Accounting |
-| --- | --- |
-| Records financial transactions | Interprets and analyzes financial information |
-| Organizes financial data | Uses financial data for analysis and reporting |
-| Tracks income and expenses | Evaluates financial performance |
-| Maintains transaction records | Supports financial planning and decisions |
+| Bookkeeping                    | Accounting                                     |
+| ------------------------------ | ---------------------------------------------- |
+| Records financial transactions | Interprets and analyzes financial information  |
+| Organizes financial data       | Uses financial data for analysis and reporting |
+| Tracks income and expenses     | Evaluates financial performance                |
+| Maintains transaction records  | Supports financial planning and decisions      |
 | Produces organized source data | Uses that data to produce insights and reports |
 
 In a small business, the same person may perform both bookkeeping and accounting-related tasks.

@@ -70,18 +70,18 @@ The U.S. Small Business Administration also describes trend analysis as comparat
 
 # The 10 Financial Ratios Covered in This Guide
 
-| Ratio | What it helps measure |
-| --- | --- |
-| Gross profit margin | Profit remaining after direct costs |
-| Operating profit margin | Profit from core operations |
-| Net profit margin | Profit remaining after relevant expenses |
-| Current ratio | Short-term liquidity |
-| Quick ratio | More immediate short-term liquidity |
-| Working capital | Short-term financial cushion |
-| Debt-to-equity ratio | Debt relative to equity |
-| Debt ratio | Liabilities relative to assets |
-| Receivables turnover | How efficiently receivables are collected |
-| Return on assets | Profit relative to assets |
+| Ratio                   | What it helps measure                     |
+| ----------------------- | ----------------------------------------- |
+| Gross profit margin     | Profit remaining after direct costs       |
+| Operating profit margin | Profit from core operations               |
+| Net profit margin       | Profit remaining after relevant expenses  |
+| Current ratio           | Short-term liquidity                      |
+| Quick ratio             | More immediate short-term liquidity       |
+| Working capital         | Short-term financial cushion              |
+| Debt-to-equity ratio    | Debt relative to equity                   |
+| Debt ratio              | Liabilities relative to assets            |
+| Receivables turnover    | How efficiently receivables are collected |
+| Return on assets        | Profit relative to assets                 |
 
 Some businesses may need additional ratios depending on their industry and goals.
 
@@ -525,13 +525,13 @@ One of the best uses of ratios is trend analysis.
 
 For example:
 
-| Ratio | January | February | March |
-| --- | ---: | ---: | ---: |
-| Gross margin | 58% | 57% | 54% |
-| Net margin | 14% | 12% | 9% |
-| Current ratio | 1.9 | 1.7 | 1.5 |
-| Debt-to-equity | 0.40 | 0.48 | 0.62 |
-| Receivables turnover | 7.0 | 6.4 | 5.8 |
+| Ratio                | January | February | March |
+| -------------------- | ------: | -------: | ----: |
+| Gross margin         |     58% |      57% |   54% |
+| Net margin           |     14% |      12% |    9% |
+| Current ratio        |     1.9 |      1.7 |   1.5 |
+| Debt-to-equity       |    0.40 |     0.48 |  0.62 |
+| Receivables turnover |     7.0 |      6.4 |   5.8 |
 
 There are several trends worth investigating:
 
@@ -659,12 +659,12 @@ A spreadsheet can be enough for a small business.
 
 A simple ratio sheet might contain:
 
-| Metric | Formula | Current | Previous |
-| --- | --- | ---: | ---: |
-| Gross margin | Gross profit / Revenue | 60% | 58% |
-| Net margin | Net profit / Revenue | 12% | 10% |
-| Current ratio | Current assets / Current liabilities | 1.8 | 1.6 |
-| Debt-to-equity | Debt / Equity | 0.6 | 0.5 |
+| Metric         | Formula                              | Current | Previous |
+| -------------- | ------------------------------------ | ------: | -------: |
+| Gross margin   | Gross profit / Revenue               |     60% |      58% |
+| Net margin     | Net profit / Revenue                 |     12% |      10% |
+| Current ratio  | Current assets / Current liabilities |     1.8 |      1.6 |
+| Debt-to-equity | Debt / Equity                        |     0.6 |      0.5 |
 
 Use formulas rather than manually entering calculated values.
 

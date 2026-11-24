@@ -170,9 +170,9 @@ Explain what the customer is being charged for.
 
 A useful invoice line might look like:
 
-| Description | Quantity | Unit price | Total |
-| --- | ---: | ---: | ---: |
-| Financial reporting service | 1 | $1,500 | $1,500 |
+| Description                 | Quantity | Unit price |  Total |
+| --------------------------- | -------: | ---------: | -----: |
+| Financial reporting service |        1 |     $1,500 | $1,500 |
 
 Descriptions should be specific enough for the customer to understand the charge.
 
@@ -320,25 +320,25 @@ A missing purchase order reference can cause an otherwise correct invoice to be 
 
 A practical invoice checklist is:
 
-| Invoice element | Usually useful? |
-| --- | --- |
-| Business name | Yes |
-| Customer name | Yes |
-| Invoice number | Yes |
-| Invoice date | Yes |
-| Due date | Yes |
-| Product/service description | Yes |
-| Quantity | Where applicable |
-| Unit price | Where applicable |
-| Subtotal | Usually |
-| Tax | Where applicable |
-| Discount/adjustment | Where applicable |
-| Total due | Yes |
-| Currency | Especially for international sales |
-| Payment instructions | Yes |
-| Payment terms | Yes |
-| Purchase order/reference | Where required |
-| Tax or registration information | Where applicable |
+| Invoice element                 | Usually useful?                    |
+| ------------------------------- | ---------------------------------- |
+| Business name                   | Yes                                |
+| Customer name                   | Yes                                |
+| Invoice number                  | Yes                                |
+| Invoice date                    | Yes                                |
+| Due date                        | Yes                                |
+| Product/service description     | Yes                                |
+| Quantity                        | Where applicable                   |
+| Unit price                      | Where applicable                   |
+| Subtotal                        | Usually                            |
+| Tax                             | Where applicable                   |
+| Discount/adjustment             | Where applicable                   |
+| Total due                       | Yes                                |
+| Currency                        | Especially for international sales |
+| Payment instructions            | Yes                                |
+| Payment terms                   | Yes                                |
+| Purchase order/reference        | Where required                     |
+| Tax or registration information | Where applicable                   |
 
 Legal and tax requirements vary by jurisdiction.
 
@@ -423,11 +423,11 @@ A freelance invoice may include:
 
 Example:
 
-| Service | Hours | Rate | Total |
-| --- | ---: | ---: | ---: |
-| Excel consulting | 8 | $60 | $480 |
-| Financial analysis | 5 | $75 | $375 |
-| **Subtotal** | | | **$855** |
+| Service            | Hours | Rate |    Total |
+| ------------------ | ----: | ---: | -------: |
+| Excel consulting   |     8 |  $60 |     $480 |
+| Financial analysis |     5 |  $75 |     $375 |
+| **Subtotal**       |       |      | **$855** |
 
 If taxes or other applicable charges apply, show them separately.
 
@@ -679,11 +679,11 @@ Excel can work for businesses with a small number of invoices and straightforwar
 
 A simple spreadsheet can contain:
 
-| Invoice | Customer | Date | Due date | Amount | Status |
-| --- | --- | --- | --- | ---: | --- |
-| INV-001 | Client A | Aug. 1 | Aug. 31 | $1,500 | Paid |
-| INV-002 | Client B | Aug. 5 | Sept. 4 | $2,200 | Due |
-| INV-003 | Client C | Aug. 8 | Sept. 7 | $900 | Overdue |
+| Invoice | Customer | Date   | Due date | Amount | Status  |
+| ------- | -------- | ------ | -------- | -----: | ------- |
+| INV-001 | Client A | Aug. 1 | Aug. 31  | $1,500 | Paid    |
+| INV-002 | Client B | Aug. 5 | Sept. 4  | $2,200 | Due     |
+| INV-003 | Client C | Aug. 8 | Sept. 7  |   $900 | Overdue |
 
 As invoice volume increases, manually maintaining invoice records can become harder.
 

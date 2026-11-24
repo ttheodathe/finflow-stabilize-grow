@@ -32,14 +32,14 @@ The simplest distinction is:
 
 > **Bookkeeping records the financial activity. Accounting uses that financial information to understand and evaluate the business.**
 
-| Bookkeeping | Accounting |
-| --- | --- |
-| Records financial transactions | Interprets financial information |
-| Organizes financial data | Analyzes financial performance |
-| Tracks income and expenses | Prepares and reviews financial reports |
-| Records invoices and payments | Uses reports to support decisions |
-| Reconciles financial accounts | Helps explain financial results |
-| Maintains supporting records | May support planning, forecasting, and tax work |
+| Bookkeeping                    | Accounting                                      |
+| ------------------------------ | ----------------------------------------------- |
+| Records financial transactions | Interprets financial information                |
+| Organizes financial data       | Analyzes financial performance                  |
+| Tracks income and expenses     | Prepares and reviews financial reports          |
+| Records invoices and payments  | Uses reports to support decisions               |
+| Reconciles financial accounts  | Helps explain financial results                 |
+| Maintains supporting records   | May support planning, forecasting, and tax work |
 
 The two functions overlap, and the exact responsibilities can vary depending on the business, professional, country, and accounting system.
 
@@ -206,17 +206,17 @@ Neither function should be viewed as unimportant. Poor bookkeeping can make acco
 
 ## Bookkeeper vs accountant: key differences
 
-| Area | Bookkeeper | Accountant |
-| --- | --- | --- |
-| Main focus | Recording and organizing transactions | Analysis, reporting, interpretation |
-| Typical work | Income, expenses, invoices, reconciliation | Financial statements, analysis, planning |
-| Data entry | Often significant | Usually less focused on routine entry |
-| Transaction tracking | Core responsibility | Uses the resulting records |
-| Financial analysis | Limited or role-dependent | Common responsibility |
-| Reporting | Maintains data used for reports | Often prepares or analyzes reports |
-| Tax work | May organize records | May provide tax services depending on qualifications |
-| Business advice | Usually limited | May provide advisory services |
-| Best fit | Routine financial recordkeeping | Complex reporting and financial decisions |
+| Area                 | Bookkeeper                                 | Accountant                                           |
+| -------------------- | ------------------------------------------ | ---------------------------------------------------- |
+| Main focus           | Recording and organizing transactions      | Analysis, reporting, interpretation                  |
+| Typical work         | Income, expenses, invoices, reconciliation | Financial statements, analysis, planning             |
+| Data entry           | Often significant                          | Usually less focused on routine entry                |
+| Transaction tracking | Core responsibility                        | Uses the resulting records                           |
+| Financial analysis   | Limited or role-dependent                  | Common responsibility                                |
+| Reporting            | Maintains data used for reports            | Often prepares or analyzes reports                   |
+| Tax work             | May organize records                       | May provide tax services depending on qualifications |
+| Business advice      | Usually limited                            | May provide advisory services                        |
+| Best fit             | Routine financial recordkeeping            | Complex reporting and financial decisions            |
 
 These are general distinctions. In practice, roles can overlap, particularly in small businesses.
 
@@ -477,14 +477,14 @@ Rather than choosing solely on price, compare the cost against the time saved, q
 
 A simple decision framework can help.
 
-| Business situation | Possible approach |
-| --- | --- |
-| Very low transaction volume | Owner-managed bookkeeping |
-| Simple finances and moderate transactions | Bookkeeping software |
-| Growing transaction volume | Software + bookkeeping support |
-| Complex financial reporting | Accountant |
-| Significant tax or regulatory complexity | Qualified professional |
-| Large or multi-entity business | Combination of software, bookkeeping, and accounting support |
+| Business situation                        | Possible approach                                            |
+| ----------------------------------------- | ------------------------------------------------------------ |
+| Very low transaction volume               | Owner-managed bookkeeping                                    |
+| Simple finances and moderate transactions | Bookkeeping software                                         |
+| Growing transaction volume                | Software + bookkeeping support                               |
+| Complex financial reporting               | Accountant                                                   |
+| Significant tax or regulatory complexity  | Qualified professional                                       |
+| Large or multi-entity business            | Combination of software, bookkeeping, and accounting support |
 
 This is not a strict rule. Your industry's requirements, jurisdiction, business structure, and financial complexity should determine the final decision.
 

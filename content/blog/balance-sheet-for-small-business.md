@@ -58,11 +58,11 @@ Unlike a profit and loss statement, which covers a period such as a month or yea
 
 A simplified example might look like this:
 
-| Balance sheet item | Amount |
-| --- | ---: |
-| Total assets | $100,000 |
-| Total liabilities | $40,000 |
-| Owner's equity | $60,000 |
+| Balance sheet item |   Amount |
+| ------------------ | -------: |
+| Total assets       | $100,000 |
+| Total liabilities  |  $40,000 |
+| Owner's equity     |  $60,000 |
 
 The accounting equation is:
 
@@ -248,33 +248,33 @@ The following fictional consulting business example shows how a small business c
 
 ### Assets
 
-| Assets | Amount |
-| --- | ---: |
-| **Current assets** | |
-| Cash | $35,000 |
-| Accounts receivable | $20,000 |
-| Prepaid expenses | $5,000 |
-| **Total current assets** | **$60,000** |
-| **Non-current assets** | |
-| Equipment, net of accumulated depreciation | $25,000 |
-| **Total non-current assets** | **$25,000** |
-| **Total assets** | **$85,000** |
+| Assets                                     |      Amount |
+| ------------------------------------------ | ----------: |
+| **Current assets**                         |             |
+| Cash                                       |     $35,000 |
+| Accounts receivable                        |     $20,000 |
+| Prepaid expenses                           |      $5,000 |
+| **Total current assets**                   | **$60,000** |
+| **Non-current assets**                     |             |
+| Equipment, net of accumulated depreciation |     $25,000 |
+| **Total non-current assets**               | **$25,000** |
+| **Total assets**                           | **$85,000** |
 
 ### Liabilities and owner's equity
 
-| Liabilities and equity | Amount |
-| --- | ---: |
-| **Current liabilities** | |
-| Accounts payable | $10,000 |
-| Accrued expenses | $5,000 |
-| Current portion of business loan | $5,000 |
-| **Total current liabilities** | **$20,000** |
-| **Non-current liabilities** | |
-| Remaining long-term business loan | $15,000 |
+| Liabilities and equity            |      Amount |
+| --------------------------------- | ----------: |
+| **Current liabilities**           |             |
+| Accounts payable                  |     $10,000 |
+| Accrued expenses                  |      $5,000 |
+| Current portion of business loan  |      $5,000 |
+| **Total current liabilities**     | **$20,000** |
+| **Non-current liabilities**       |             |
+| Remaining long-term business loan |     $15,000 |
 | **Total non-current liabilities** | **$15,000** |
-| **Total liabilities** | **$35,000** |
-| Owner's equity | $50,000 |
-| **Total liabilities and equity** | **$85,000** |
+| **Total liabilities**             | **$35,000** |
+| Owner's equity                    |     $50,000 |
+| **Total liabilities and equity**  | **$85,000** |
 
 The loan is split between a $5,000 portion assumed due within the next 12 months and a $15,000 portion assumed due later. The classification of real loan balances depends on the contractual repayment schedule and applicable accounting framework.
 
@@ -390,12 +390,12 @@ The exact mechanics depend on the business structure.
 
 These statements answer different questions.
 
-| Balance Sheet | Profit & Loss Statement |
-| --- | --- |
-| Shows financial position | Shows financial performance |
-| Snapshot at a specific date | Covers a period |
-| Assets, liabilities and equity | Revenue, expenses and profit/loss |
-| Helps assess financial position | Helps assess profitability |
+| Balance Sheet                   | Profit & Loss Statement           |
+| ------------------------------- | --------------------------------- |
+| Shows financial position        | Shows financial performance       |
+| Snapshot at a specific date     | Covers a period                   |
+| Assets, liabilities and equity  | Revenue, expenses and profit/loss |
+| Helps assess financial position | Helps assess profitability        |
 
 A useful way to remember the difference is:
 
@@ -815,13 +815,13 @@ Inventory accounting should follow the applicable accounting requirements.
 
 Suppose a business reports:
 
-| Metric | June | July | August |
-| --- | ---: | ---: | ---: |
-| Cash | $30,000 | $35,000 | $42,000 |
-| Receivables | $18,000 | $25,000 | $31,000 |
-| Total assets | $80,000 | $90,000 | $105,000 |
-| Total liabilities | $35,000 | $43,000 | $52,000 |
-| Equity | $45,000 | $47,000 | $53,000 |
+| Metric            |    June |    July |   August |
+| ----------------- | ------: | ------: | -------: |
+| Cash              | $30,000 | $35,000 |  $42,000 |
+| Receivables       | $18,000 | $25,000 |  $31,000 |
+| Total assets      | $80,000 | $90,000 | $105,000 |
+| Total liabilities | $35,000 | $43,000 |  $52,000 |
+| Equity            | $45,000 | $47,000 |  $53,000 |
 
 At first glance, assets increased.
 

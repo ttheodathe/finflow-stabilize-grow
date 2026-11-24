@@ -71,10 +71,10 @@ Money **your business owes suppliers and other parties**.
 
 A simple way to remember it:
 
-| Term | Meaning |
-| --- | --- |
+| Term                | Meaning                    |
+| ------------------- | -------------------------- |
 | Accounts receivable | Money owed to the business |
-| Accounts payable | Money the business owes |
+| Accounts payable    | Money the business owes    |
 
 Managing both sides helps a business understand its short-term financial obligations and liquidity.
 
@@ -230,11 +230,11 @@ Do not rely on memory.
 
 Maintain a receivables register containing information such as:
 
-| Invoice | Customer | Amount | Issue date | Due date | Status |
-| --- | --- | ---: | --- | --- | --- |
-| INV-001 | Client A | $2,000 | Aug. 1 | Aug. 15 | Paid |
-| INV-002 | Client B | $4,500 | Aug. 5 | Aug. 19 | Due |
-| INV-003 | Client C | $3,200 | Aug. 8 | Aug. 18 | Overdue |
+| Invoice | Customer | Amount | Issue date | Due date | Status  |
+| ------- | -------- | -----: | ---------- | -------- | ------- |
+| INV-001 | Client A | $2,000 | Aug. 1     | Aug. 15  | Paid    |
+| INV-002 | Client B | $4,500 | Aug. 5     | Aug. 19  | Due     |
+| INV-003 | Client C | $3,200 | Aug. 8     | Aug. 18  | Overdue |
 
 This immediately shows which invoices need attention.
 
@@ -244,13 +244,13 @@ Invoice aging groups receivables according to how long they have remained outsta
 
 A simple aging report may contain:
 
-| Aging category | Amount |
-| --- | ---: |
-| Current | $12,000 |
-| 1–30 days overdue | $4,000 |
-| 31–60 days overdue | $2,000 |
-| 61–90 days overdue | $1,000 |
-| 90+ days overdue | $500 |
+| Aging category     |  Amount |
+| ------------------ | ------: |
+| Current            | $12,000 |
+| 1–30 days overdue  |  $4,000 |
+| 31–60 days overdue |  $2,000 |
+| 61–90 days overdue |  $1,000 |
+| 90+ days overdue   |    $500 |
 
 The older an invoice becomes, the more closely it may need to be reviewed.
 
@@ -428,11 +428,11 @@ An AR aging report shows how long outstanding customer balances have remained un
 Example:
 
 | Customer | Current | 1–30 days | 31–60 days | 61–90 days | 90+ days |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| Client A | $3,000 | $0 | $0 | $0 | $0 |
-| Client B | $0 | $2,000 | $0 | $0 | $0 |
-| Client C | $0 | $0 | $1,500 | $0 | $0 |
-| Client D | $0 | $0 | $0 | $800 | $1,200 |
+| -------- | ------: | --------: | ---------: | ---------: | -------: |
+| Client A |  $3,000 |        $0 |         $0 |         $0 |       $0 |
+| Client B |      $0 |    $2,000 |         $0 |         $0 |       $0 |
+| Client C |      $0 |        $0 |     $1,500 |         $0 |       $0 |
+| Client D |      $0 |        $0 |         $0 |       $800 |   $1,200 |
 
 An aging report helps management identify where attention may be needed.
 

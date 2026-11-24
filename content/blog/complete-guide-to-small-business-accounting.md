@@ -60,11 +60,11 @@ For a step-by-step routine, see the [small business bookkeeping checklist](/blog
 
 Financial reports answer different questions. No single report tells the complete story.
 
-| Report | What it shows | The question it helps answer |
-| --- | --- | --- |
-| Profit and loss statement | Revenue, costs, and profit or loss over a period | Did the business make a profit during this period? |
-| Balance sheet | Assets, liabilities, and equity at a particular date | What does the business own and owe? |
-| Cash flow statement | Cash received and cash paid over a period | Where did cash come from and where did it go? |
+| Report                    | What it shows                                        | The question it helps answer                       |
+| ------------------------- | ---------------------------------------------------- | -------------------------------------------------- |
+| Profit and loss statement | Revenue, costs, and profit or loss over a period     | Did the business make a profit during this period? |
+| Balance sheet             | Assets, liabilities, and equity at a particular date | What does the business own and owe?                |
+| Cash flow statement       | Cash received and cash paid over a period            | Where did cash come from and where did it go?      |
 
 ### Profit and loss statement
 
@@ -90,13 +90,13 @@ Start with [understanding cash flow](/blog/understanding-cash-flow-basics), then
 
 A calendar-based process makes accounting less dependent on memory. Adapt the timing to the volume and complexity of your transactions.
 
-| Frequency | Practical task | Why it matters |
-| --- | --- | --- |
-| As transactions happen | Record sales, expenses, invoices, and bills | Reduces missing or forgotten entries |
-| Weekly | Review unpaid invoices and upcoming bills | Makes collection and payment follow-up visible |
-| Monthly | Reconcile accounts and review reports | Helps identify errors and changing trends |
-| Quarterly | Review budget assumptions and cash needs | Helps prepare for seasonal changes and larger costs |
-| Year-end | Organize records and confirm reporting requirements | Makes year-end preparation more orderly |
+| Frequency              | Practical task                                      | Why it matters                                      |
+| ---------------------- | --------------------------------------------------- | --------------------------------------------------- |
+| As transactions happen | Record sales, expenses, invoices, and bills         | Reduces missing or forgotten entries                |
+| Weekly                 | Review unpaid invoices and upcoming bills           | Makes collection and payment follow-up visible      |
+| Monthly                | Reconcile accounts and review reports               | Helps identify errors and changing trends           |
+| Quarterly              | Review budget assumptions and cash needs            | Helps prepare for seasonal changes and larger costs |
+| Year-end               | Organize records and confirm reporting requirements | Makes year-end preparation more orderly             |
 
 A useful monthly close does not need to be elaborate. Confirm that transactions are recorded, check that bank and payment balances reconcile, review unpaid invoices and bills, and compare actual results with the budget.
 

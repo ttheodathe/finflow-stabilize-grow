@@ -62,18 +62,18 @@ Do not assume the bank statement is a complete expense record. It may show the d
 
 For each transaction, record enough information to understand what happened later. A useful expense log includes:
 
-| Field | What to enter |
-| --- | --- |
-| Date | The transaction or purchase date |
-| Supplier | The person or business paid |
-| Description | What was purchased |
-| Category | The type of cost |
-| Amount and currency | The amount actually recorded |
-| Payment method | The account, card, service, or cash used |
-| Business purpose | Why the cost relates to the work |
-| Receipt reference | A filename, document link, or attachment |
-| Client or project | Optional, when the cost relates to a specific job |
-| Review status | For example, checked or needs clarification |
+| Field               | What to enter                                     |
+| ------------------- | ------------------------------------------------- |
+| Date                | The transaction or purchase date                  |
+| Supplier            | The person or business paid                       |
+| Description         | What was purchased                                |
+| Category            | The type of cost                                  |
+| Amount and currency | The amount actually recorded                      |
+| Payment method      | The account, card, service, or cash used          |
+| Business purpose    | Why the cost relates to the work                  |
+| Receipt reference   | A filename, document link, or attachment          |
+| Client or project   | Optional, when the cost relates to a specific job |
+| Review status       | For example, checked or needs clarification       |
 
 Record transactions as close to the purchase date as practical. The U.S. Internal Revenue Service recommends maintaining records that clearly summarize business transactions and keeping supporting documents. Its rules apply to U.S. federal tax matters; other countries may have different requirements. See the [IRS guide to recording business transactions](https://www.irs.gov/businesses/small-businesses-self-employed/how-should-i-record-my-business-transactions).
 
@@ -81,19 +81,19 @@ Record transactions as close to the purchase date as practical. The U.S. Interna
 
 Categories help you see where money is going. Start with a manageable list and add more only when a real reporting need justifies it.
 
-| Category | Examples |
-| --- | --- |
-| Software and online services | Design tools, accounting software, project-management subscriptions |
-| Internet and communications | Business internet, phone service, work-related data |
-| Marketing | Advertising, website promotion, design services |
-| Office and supplies | Paper, stationery, small office consumables |
-| Equipment | Computer accessories, monitor, work equipment |
-| Contractor and professional services | Freelancers, bookkeeping, legal or consulting services |
-| Travel and transport | Work-related transport, eligible business travel |
-| Payment and bank fees | Payment processing, account fees |
-| Workspace | Coworking fees, rent, utilities where relevant |
-| Inventory or direct project costs | Materials or items purchased for resale or client delivery |
-| Other — review required | Temporary category for items that need clarification |
+| Category                             | Examples                                                            |
+| ------------------------------------ | ------------------------------------------------------------------- |
+| Software and online services         | Design tools, accounting software, project-management subscriptions |
+| Internet and communications          | Business internet, phone service, work-related data                 |
+| Marketing                            | Advertising, website promotion, design services                     |
+| Office and supplies                  | Paper, stationery, small office consumables                         |
+| Equipment                            | Computer accessories, monitor, work equipment                       |
+| Contractor and professional services | Freelancers, bookkeeping, legal or consulting services              |
+| Travel and transport                 | Work-related transport, eligible business travel                    |
+| Payment and bank fees                | Payment processing, account fees                                    |
+| Workspace                            | Coworking fees, rent, utilities where relevant                      |
+| Inventory or direct project costs    | Materials or items purchased for resale or client delivery          |
+| Other — review required              | Temporary category for items that need clarification                |
 
 These are bookkeeping categories, not a promise that every item is tax-deductible. Tax treatment depends on the applicable country, business structure, purpose of the expense, and local rules. For U.S. federal tax guidance, the IRS explains that business expenses generally need to be ordinary and necessary for the trade or business, but that standard should not be applied automatically to another jurisdiction. See [IRS Publication 583](https://www.irs.gov/publications/p583).
 
@@ -172,14 +172,14 @@ This short summary turns a list of transactions into a useful management habit. 
 
 Imagine a freelance designer records the following illustrative expenses in one week. The amounts below are examples, not benchmarks or tax advice.
 
-| Date | Description | Category | Amount | Receipt | Review |
-| --- | --- | --- | ---: | --- | --- |
-| Oct 20 | Design software subscription | Software | $24.00 | Saved | Checked |
-| Oct 21 | Work-related internet share | Internet and communications | $18.00 | Bill saved | Confirm business portion |
-| Oct 22 | Client project stock assets | Direct project costs | $32.00 | Saved | Checked |
-| Oct 23 | Taxi to client meeting | Travel and transport | $15.00 | Missing | Request receipt or document details |
-| Oct 24 | Payment platform fee | Payment and bank fees | $6.50 | Statement | Checked |
-|  | **Total recorded** |  | **$95.50** |  |  |
+| Date   | Description                  | Category                    |     Amount | Receipt    | Review                              |
+| ------ | ---------------------------- | --------------------------- | ---------: | ---------- | ----------------------------------- |
+| Oct 20 | Design software subscription | Software                    |     $24.00 | Saved      | Checked                             |
+| Oct 21 | Work-related internet share  | Internet and communications |     $18.00 | Bill saved | Confirm business portion            |
+| Oct 22 | Client project stock assets  | Direct project costs        |     $32.00 | Saved      | Checked                             |
+| Oct 23 | Taxi to client meeting       | Travel and transport        |     $15.00 | Missing    | Request receipt or document details |
+| Oct 24 | Payment platform fee         | Payment and bank fees       |      $6.50 | Statement  | Checked                             |
+|        | **Total recorded**           |                             | **$95.50** |            |                                     |
 
 The total is calculated as $24.00 + $18.00 + $32.00 + $15.00 + $6.50 = **$95.50**.
 
@@ -191,13 +191,13 @@ The business owner should not assume every line qualifies for a tax deduction. F
 
 A weekly review is a practical starting point for many freelancers, but frequency should reflect the amount and complexity of activity.
 
-| Situation | Suggested routine |
-| --- | --- |
-| A few transactions each month | Record transactions as they happen and review them weekly or monthly |
-| Regular client work and subscriptions | Capture transactions promptly and perform a weekly review |
-| High transaction volume or several payment accounts | Capture daily where practical, then reconcile at least weekly |
-| Employees or frequent reimbursements | Define a consistent submission, review, and approval process |
-| Tax or reporting deadline approaching | Review completeness early; do not wait until the final day |
+| Situation                                           | Suggested routine                                                    |
+| --------------------------------------------------- | -------------------------------------------------------------------- |
+| A few transactions each month                       | Record transactions as they happen and review them weekly or monthly |
+| Regular client work and subscriptions               | Capture transactions promptly and perform a weekly review            |
+| High transaction volume or several payment accounts | Capture daily where practical, then reconcile at least weekly        |
+| Employees or frequent reimbursements                | Define a consistent submission, review, and approval process         |
+| Tax or reporting deadline approaching               | Review completeness early; do not wait until the final day           |
 
 This is a workflow recommendation, not a legal timetable. Follow the recordkeeping, reporting, and retention requirements that apply to your location and business.
 

@@ -210,14 +210,14 @@ Examples may include:
 
 For example:
 
-| Fixed expense | Monthly budget |
-| --- | ---: |
-| Rent | $1,200 |
-| Software | $300 |
-| Insurance | $150 |
-| Professional services | $350 |
-| Other fixed costs | $200 |
-| **Total** | **$2,200** |
+| Fixed expense         | Monthly budget |
+| --------------------- | -------------: |
+| Rent                  |         $1,200 |
+| Software              |           $300 |
+| Insurance             |           $150 |
+| Professional services |           $350 |
+| Other fixed costs     |           $200 |
+| **Total**             |     **$2,200** |
 
 Actual costs can still change even when an expense is generally classified as fixed.
 
@@ -237,13 +237,13 @@ Examples can include:
 
 For example:
 
-| Variable expense | Budget |
-| --- | ---: |
-| Materials | $2,000 |
-| Payment fees | $300 |
-| Contractors | $2,500 |
-| Shipping | $500 |
-| **Total** | **$5,300** |
+| Variable expense |     Budget |
+| ---------------- | ---------: |
+| Materials        |     $2,000 |
+| Payment fees     |       $300 |
+| Contractors      |     $2,500 |
+| Shipping         |       $500 |
+| **Total**        | **$5,300** |
 
 The classification depends on the business model.
 
@@ -365,27 +365,27 @@ Consider a fictional consulting business.
 
 ### Monthly revenue
 
-| Revenue source | Amount |
-| --- | ---: |
-| Existing clients | $14,000 |
-| New projects | $6,000 |
-| Other revenue | $1,000 |
+| Revenue source    |      Amount |
+| ----------------- | ----------: |
+| Existing clients  |     $14,000 |
+| New projects      |      $6,000 |
+| Other revenue     |      $1,000 |
 | **Total revenue** | **$21,000** |
 
 ### Monthly expenses
 
-| Expense | Amount |
-| --- | ---: |
-| Contractors | $4,000 |
-| Payroll-related costs | $5,000 |
-| Software | $600 |
-| Marketing | $1,500 |
-| Rent | $1,000 |
-| Professional services | $500 |
-| Internet and utilities | $300 |
-| Bank and payment fees | $250 |
-| Other operating costs | $350 |
-| **Total expenses** | **$13,500** |
+| Expense                |      Amount |
+| ---------------------- | ----------: |
+| Contractors            |      $4,000 |
+| Payroll-related costs  |      $5,000 |
+| Software               |        $600 |
+| Marketing              |      $1,500 |
+| Rent                   |      $1,000 |
+| Professional services  |        $500 |
+| Internet and utilities |        $300 |
+| Bank and payment fees  |        $250 |
+| Other operating costs  |        $350 |
+| **Total expenses**     | **$13,500** |
 
 ### Budgeted result
 
@@ -400,15 +400,15 @@ Budgeted result:  $7,500
 
 A monthly budget becomes much more useful when you compare it with actual performance.
 
-| Category | Budget | Actual | Difference |
-| --- | ---: | ---: | ---: |
-| Revenue | $21,000 | $20,000 | -$1,000 |
-| Contractors | $4,000 | $4,500 | +$500 |
-| Payroll | $5,000 | $5,000 | $0 |
-| Software | $600 | $650 | +$50 |
-| Marketing | $1,500 | $1,100 | -$400 |
-| Rent | $1,000 | $1,000 | $0 |
-| Other expenses | $1,400 | $1,600 | +$200 |
+| Category       |  Budget |  Actual | Difference |
+| -------------- | ------: | ------: | ---------: |
+| Revenue        | $21,000 | $20,000 |    -$1,000 |
+| Contractors    |  $4,000 |  $4,500 |      +$500 |
+| Payroll        |  $5,000 |  $5,000 |         $0 |
+| Software       |    $600 |    $650 |       +$50 |
+| Marketing      |  $1,500 |  $1,100 |      -$400 |
+| Rent           |  $1,000 |  $1,000 |         $0 |
+| Other expenses |  $1,400 |  $1,600 |      +$200 |
 
 The difference tells you where to investigate.
 
@@ -547,15 +547,15 @@ Expense structures vary by industry and business model.
 
 Software costs are easy to underestimate because each subscription may look small.
 
-| Subscription | Monthly cost |
-| --- | ---: |
-| Accounting | $50 |
-| CRM | $80 |
-| Design | $40 |
-| Email | $30 |
-| Hosting | $50 |
-| Project management | $40 |
-| **Total** | **$290** |
+| Subscription       | Monthly cost |
+| ------------------ | -----------: |
+| Accounting         |          $50 |
+| CRM                |          $80 |
+| Design             |          $40 |
+| Email              |          $30 |
+| Hosting            |          $50 |
+| Project management |          $40 |
+| **Total**          |     **$290** |
 
 Annualized:
 
@@ -773,15 +773,15 @@ FinFlowTrack is designed around small-business finance workflows including invoi
 
 A practical budget can use these columns:
 
-| Category | Budget | Actual | Variance | Notes |
-| --- | ---: | ---: | ---: | --- |
-| Revenue | $20,000 | $18,500 | -$1,500 | Lower sales |
-| Payroll | $5,000 | $5,000 | $0 | On plan |
-| Marketing | $1,500 | $1,800 | +$300 | Campaign |
-| Software | $600 | $550 | -$50 | Savings |
-| Contractors | $2,000 | $2,400 | +$400 | Extra project |
-| Rent | $1,000 | $1,000 | $0 | On plan |
-| Other | $500 | $650 | +$150 | Repairs |
+| Category    |  Budget |  Actual | Variance | Notes         |
+| ----------- | ------: | ------: | -------: | ------------- |
+| Revenue     | $20,000 | $18,500 |  -$1,500 | Lower sales   |
+| Payroll     |  $5,000 |  $5,000 |       $0 | On plan       |
+| Marketing   |  $1,500 |  $1,800 |    +$300 | Campaign      |
+| Software    |    $600 |    $550 |     -$50 | Savings       |
+| Contractors |  $2,000 |  $2,400 |    +$400 | Extra project |
+| Rent        |  $1,000 |  $1,000 |       $0 | On plan       |
+| Other       |    $500 |    $650 |    +$150 | Repairs       |
 
 The notes column helps explain why a variance occurred.
 
