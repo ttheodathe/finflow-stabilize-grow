@@ -5,6 +5,17 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export const Route = createFileRoute("/refund")({
   component: RefundPolicyPage,
+  head: () => ({
+    meta: [
+      { title: "Refund Policy | FinFlow Track" },
+      {
+        name: "description",
+        content:
+          "Review FinFlow Track's subscription refund policy, eligibility details, and how to contact the team about a refund request.",
+      },
+    ],
+    links: [{ rel: "canonical", href: "https://www.finflowtrack.com/refund" }],
+  }),
 });
 
 function RefundPolicyPage() {
