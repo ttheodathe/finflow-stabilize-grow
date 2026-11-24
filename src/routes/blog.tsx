@@ -26,21 +26,21 @@ export const Route = createFileRoute("/blog")({
   head: () => ({
     meta: [
       {
-        title: "FinFlowTrack Blog | Accounting & Small Business Finance Insights",
+        title: "Small Business Accounting Blog | FinFlow Track",
       },
       {
         name: "description",
         content:
-          "Explore accounting guides, business finance strategies, invoicing tips, and small business growth insights from FinFlowTrack experts.",
+          "Explore practical small-business accounting guides, invoicing advice, expense tracking tips, cash-flow education, and finance workflows.",
       },
       {
         property: "og:title",
-        content: "FinFlowTrack Blog | Accounting & Small Business Finance Insights",
+        content: "Small Business Accounting Blog | FinFlow Track",
       },
       {
         property: "og:description",
         content:
-          "Explore accounting guides, business finance strategies, invoicing tips, and small business growth insights from FinFlowTrack experts.",
+          "Explore practical small-business accounting guides, invoicing advice, expense tracking tips, cash-flow education, and finance workflows.",
       },
       {
         property: "og:type",
