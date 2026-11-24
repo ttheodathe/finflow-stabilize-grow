@@ -304,7 +304,7 @@ function FeaturesPage() {
           {trust.map((t) => (
             <div key={t.title} className="rounded-xl border p-8">
               <t.icon className="mb-4 h-10 w-10 text-primary" />
-              <h3 className="text-xl font-semibold">{t.title}</h3>
+              <h2 className="text-xl font-semibold">{t.title}</h2>
               <p className="mt-4 text-muted-foreground">{t.desc}</p>
             </div>
           ))}
