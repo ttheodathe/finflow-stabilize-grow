@@ -154,7 +154,7 @@ export function FinFlowGuide({ pathname }: { pathname: string }) {
       {open && (
         <section
           aria-label="FinFlow Guide chat"
-          className="mb-3 flex h-[min( min(620px, calc(100dvh-110px)), 620px)] w-[min( calc(100vw-2rem), 390px)] flex-col overflow-hidden rounded-2xl border bg-background shadow-2xl"
+          className="mb-3 flex h-[min(620px,calc(100dvh-110px))] w-[min(calc(100vw-2rem),390px)] flex-col overflow-hidden rounded-2xl border bg-background shadow-2xl"
         >
           <header className="flex items-center justify-between bg-primary px-4 py-3 text-primary-foreground">
             <div>
@@ -210,6 +210,9 @@ export function FinFlowGuide({ pathname }: { pathname: string }) {
                     {item}
                   </button>
                 ))}
+                <button type="button" onClick={() => setShowAll((value) => !value)} className="pt-1 text-xs font-medium text-primary underline underline-offset-4">
+                  {showAll ? "Hide all questions" : "Browse all questions"}
+                </button>
               </div>
             )}
             {asked.length > 0 && !latestAnswer && (
