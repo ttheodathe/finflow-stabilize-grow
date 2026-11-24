@@ -221,9 +221,9 @@ export function FinFlowGuide({ pathname }: { pathname: string }) {
                         <p>{answer.response}</p>
                         {answer.href && (
                           <Link
-                          to={answer.href as never}
-                          className="mt-2 inline-flex font-medium text-primary underline underline-offset-4"
-                        >
+                            to={answer.href as never}
+                            className="mt-2 inline-flex font-medium text-primary underline underline-offset-4"
+                          >
                             {answer.linkLabel}
                           </Link>
                         )}
