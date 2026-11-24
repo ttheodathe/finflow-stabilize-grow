@@ -321,6 +321,43 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Temporary Prettier pass for SEO PR 147
+        if: github.event_name == 'pull_request'
+        run: |
+          npx prettier --write \
+            .github/workflows/ci.yml \
+            content/blog/13-week-cash-flow-forecast-template.md \
+            content/blog/cash-flow-forecasting-small-business.md \
+            content/blog/free-accounting-software-for-small-business.md \
+            content/blog/how-to-keep-track-of-business-expenses.md \
+            content/blog/profit-and-loss-statement-small-business.md \
+            content/blog/small-business-accounting-software.md \
+            src/routes/compare.finflow-track-vs-quickbooks.tsx \
+            src/routes/compare.finflow-track-vs-wave.tsx \
+            src/routes/compare.finflow-track-vs-xero.tsx \
+            src/routes/compare.finflow-track-vs-zoho-books.tsx
+          mkdir -p /tmp/seo-pr-147-formatted
+          cp --parents \
+            content/blog/13-week-cash-flow-forecast-template.md \
+            content/blog/cash-flow-forecasting-small-business.md \
+            content/blog/free-accounting-software-for-small-business.md \
+            content/blog/how-to-keep-track-of-business-expenses.md \
+            content/blog/profit-and-loss-statement-small-business.md \
+            content/blog/small-business-accounting-software.md \
+            src/routes/compare.finflow-track-vs-quickbooks.tsx \
+            src/routes/compare.finflow-track-vs-wave.tsx \
+            src/routes/compare.finflow-track-vs-xero.tsx \
+            src/routes/compare.finflow-track-vs-zoho-books.tsx \
+            /tmp/seo-pr-147-formatted/
+
+      - name: Upload formatted SEO PR files
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: seo-pr-147-prettier-output
+          path: /tmp/seo-pr-147-formatted/
+          retention-days: 1
+
       - name: Check formatting of changed files
         if: github.event_name == 'pull_request'
         run: |
