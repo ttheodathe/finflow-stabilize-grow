@@ -41,20 +41,20 @@ export const Route = createFileRoute("/about")({
   component: AboutPage,
   head: () => ({
     meta: [
-      { title: "About FinFlowTrack | Cloud Accounting Software Built by 2005CLG Ltd" },
+      { title: "About FinFlow Track | Company & Product" },
       {
         name: "description",
         content:
-          "Learn about FinFlowTrack, a cloud accounting platform developed by 2005CLG Ltd, a legally registered company in Rwanda, helping businesses worldwide simplify accounting, invoicing, reporting, inventory, and financial management.",
+          "Meet FinFlow Track, the accounting and financial management platform developed by 2005CLG Ltd in Rwanda for businesses worldwide.",
       },
       {
         property: "og:title",
-        content: "About FinFlowTrack | Cloud Accounting Software Built by 2005CLG Ltd",
+        content: "About FinFlow Track | Company & Product",
       },
       {
         property: "og:description",
         content:
-          "Learn about FinFlowTrack, a cloud accounting platform developed by 2005CLG Ltd, a legally registered company in Rwanda, helping businesses worldwide simplify accounting, invoicing, reporting, inventory, and financial management.",
+          "Meet FinFlow Track, the accounting and financial management platform developed by 2005CLG Ltd in Rwanda for businesses worldwide.",
       },
     ],
   }),
