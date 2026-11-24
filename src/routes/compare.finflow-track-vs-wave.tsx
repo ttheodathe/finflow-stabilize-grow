@@ -29,15 +29,15 @@ import {
 
 const SITE_URL = "https://www.finflowtrack.com";
 const PAGE_URL = `${SITE_URL}/compare/finflow-track-vs-wave`;
-const REVIEWED_DATE = "2026-11-16";
-const REVIEWED_DATE_LABEL = "November 16, 2026";
+const REVIEWED_DATE = "2026-11-24";
+const REVIEWED_DATE_LABEL = "November 24, 2026";
 
 export const Route = createFileRoute("/compare/finflow-track-vs-wave")({
   component: ComparePage,
   head: () => {
-    const title = "FinFlow Track vs Wave: Expenses, Features & Pricing Compared";
+    const title = "FinFlow Track vs Wave: Free Plans & Features";
     const description =
-      "Compare FinFlow Track vs Wave for expense tracking, accounting reports, invoicing, bank feeds, multi-currency, pricing, and availability.";
+      "Compare FinFlow Track and Wave on free-plan features, invoicing, expenses, bank feeds, payment fees, multi-currency, and regional availability.";
 
     return {
       meta: [
@@ -146,7 +146,10 @@ const atAGlanceRows: {
 }[] = [
   {
     category: "Free plan (ongoing, not a trial)",
-    finflow: { status: "yes", label: "Basic accounting, invoicing, expenses, customers, basic reports" },
+    finflow: {
+      status: "yes",
+      label: "Basic accounting, invoicing, expenses, customers, basic reports",
+    },
     wave: { status: "yes", label: "Starter plan, unlimited invoicing" },
   },
   {
@@ -192,7 +195,10 @@ const atAGlanceRows: {
   {
     category: "Multi-currency transaction handling",
     finflow: { status: "yes", label: "Supported; rate locked when recorded" },
-    wave: { status: "partial", label: "Foreign-currency invoices and bills; base currency USD or CAD" },
+    wave: {
+      status: "partial",
+      label: "Foreign-currency invoices and bills; base currency USD or CAD",
+    },
   },
   {
     category: "Foreign-currency invoicing",
@@ -405,7 +411,13 @@ function ComparePage() {
           </h1>
 
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            Both FinFlow Track and Wave offer a free starting plan, but the included workflows differ. Wave is available to businesses in the US and Canada, offers a free Starter plan, and provides optional online payments subject to eligibility and fees. Its business currency is selected during setup and cannot be changed later. FinFlow Track is built for global use, with multi-currency support and exchange rates locked when transactions are recorded. This guide compares their invoicing, expenses, reports, pricing, and plan limits.
+            Both FinFlow Track and Wave offer a free starting plan, but the included workflows
+            differ. Wave is available to businesses in the US and Canada, offers a free Starter
+            plan, and provides optional online payments subject to eligibility and fees. Its
+            business currency is selected during setup and cannot be changed later. FinFlow Track is
+            built for global use, with multi-currency support and exchange rates locked when
+            transactions are recorded. This guide compares their invoicing, expenses, reports,
+            pricing, and plan limits.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-4">
@@ -441,17 +453,24 @@ function ComparePage() {
         <h2 className="text-3xl font-bold">FinFlow Track vs Wave: Quick Answer</h2>
         <div className="mt-6 space-y-4 text-lg leading-8 text-muted-foreground">
           <p>
-            <strong className="text-foreground">FinFlow Track</strong> offers basic accounting, invoicing, expense tracking, customer management, and basic reports on its Free plan. Paid plans add recurring invoices and the AI Bookkeeper, with company and team limits varying by plan.
+            <strong className="text-foreground">FinFlow Track</strong> offers basic accounting,
+            invoicing, expense tracking, customer management, and basic reports on its Free plan.
+            Paid plans add recurring invoices and the AI Bookkeeper, with company and team limits
+            varying by plan.
           </p>
           <p>
-            <strong className="text-foreground">Wave</strong> is an established accounting
-            platform with a genuinely free Starter plan for unlimited invoicing and bookkeeping,
-            plus an optional online-payments feature that can let eligible customers pay invoices electronically, subject to processing fees. As of {REVIEWED_DATE_LABEL}, new Wave signups are limited
-            to businesses in the US and Canada, and a business's base currency is fixed to USD or
-            CAD when the account is created.
+            <strong className="text-foreground">Wave</strong> is an established accounting platform
+            with a genuinely free Starter plan for unlimited invoicing and bookkeeping, plus an
+            optional online-payments feature that can let eligible customers pay invoices
+            electronically, subject to processing fees. As of {REVIEWED_DATE_LABEL}, new Wave
+            signups are limited to businesses in the US and Canada, and a business's base currency
+            is fixed to USD or CAD when the account is created.
           </p>
           <p>
-            FinFlow Track may be the better fit if you're outside the US/Canada, need multi-currency transaction handling, or want the AI Bookkeeper on a paid plan. Wave may be the better fit if you're a US or Canadian business that wants an established free accounting and invoicing plan, with optional online payments and Pro bank-feed automation.
+            FinFlow Track may be the better fit if you're outside the US/Canada, need multi-currency
+            transaction handling, or want the AI Bookkeeper on a paid plan. Wave may be the better
+            fit if you're a US or Canadian business that wants an established free accounting and
+            invoicing plan, with optional online payments and Pro bank-feed automation.
           </p>
         </div>
       </section>
@@ -511,9 +530,9 @@ function ComparePage() {
         <h2 className="text-3xl font-bold">FinFlow Track vs Wave Free Plans</h2>
         <p className="mt-4 max-w-3xl text-muted-foreground">
           Both platforms genuinely offer a $0 plan — this isn't a case of one being "really" free
-          and the other not. But free doesn't mean identical, and it doesn't mean unlimited in
-          every dimension. The table below breaks down what you actually get without paying
-          anything, checked on {REVIEWED_DATE_LABEL}.
+          and the other not. But free doesn't mean identical, and it doesn't mean unlimited in every
+          dimension. The table below breaks down what you actually get without paying anything,
+          checked on {REVIEWED_DATE_LABEL}.
         </p>
 
         <div className="mt-8 overflow-x-auto rounded-2xl border bg-background">
@@ -534,7 +553,10 @@ function ComparePage() {
             <tbody>
               {freePlanRows.map((row) => (
                 <tr key={row.feature} className="border-t">
-                  <th scope="row" className="px-5 py-4 text-left text-sm font-medium text-foreground">
+                  <th
+                    scope="row"
+                    className="px-5 py-4 text-left text-sm font-medium text-foreground"
+                  >
                     {row.feature}
                   </th>
                   <td className="px-5 py-4 text-center">
@@ -550,10 +572,17 @@ function ComparePage() {
         </div>
         <div className="mt-6 space-y-3 max-w-3xl text-muted-foreground leading-7">
           <p>
-            <strong className="text-foreground">FinFlow Track Free</strong> includes basic accounting, invoice creation, expense tracking, customer management, and basic reports. The AI Bookkeeper and recurring invoices are paid-plan features; company and user limits vary by plan.
+            <strong className="text-foreground">FinFlow Track Free</strong> includes basic
+            accounting, invoice creation, expense tracking, customer management, and basic reports.
+            The AI Bookkeeper and recurring invoices are paid-plan features; company and user limits
+            vary by plan.
           </p>
           <p>
-            <strong className="text-foreground">Wave Starter</strong> includes unlimited invoices, estimates, bills, and bookkeeping records. Online payments are optional and subject to eligibility and processing fees. Automatic bank feeds and categorization require Pro; receipt scanning is included on Pro or available as a paid Starter add-on. New signups are limited to the US and Canada.
+            <strong className="text-foreground">Wave Starter</strong> includes unlimited invoices,
+            estimates, bills, and bookkeeping records. Online payments are optional and subject to
+            eligibility and processing fees. Automatic bank feeds and categorization require Pro;
+            receipt scanning is included on Pro or available as a paid Starter add-on. New signups
+            are limited to the US and Canada.
           </p>
         </div>
       </section>
@@ -607,11 +636,17 @@ function ComparePage() {
                 </li>
                 <li className="flex items-center justify-between">
                   <span>Pro</span>
-                  <span className="font-semibold">$19 USD/month or $190 USD/year; $25 CAD/month or $250 CAD/year</span>
+                  <span className="font-semibold">
+                    $19 USD/month or $190 USD/year; $25 CAD/month or $250 CAD/year
+                  </span>
                 </li>
               </ul>
               <p className="mt-4 text-sm text-muted-foreground leading-7">
-                Wave's Pro subscription is $19 USD/month or $190 USD/year, and $25 CAD/month or $250 CAD/year. Online payments are optional and carry transaction fees when enabled. Receipt scanning is included with Pro or available as a paid Starter add-on; payroll and Wave Advisors are separate paid services. Check the live pricing page for current rates, add-ons, and eligibility.
+                Wave's Pro subscription is $19 USD/month or $190 USD/year, and $25 CAD/month or $250
+                CAD/year. Online payments are optional and carry transaction fees when enabled.
+                Receipt scanning is included with Pro or available as a paid Starter add-on; payroll
+                and Wave Advisors are separate paid services. Check the live pricing page for
+                current rates, add-ons, and eligibility.
               </p>
               <a
                 href="https://www.waveapps.com/pricing"
@@ -652,8 +687,8 @@ function ComparePage() {
         <div className="mt-12 space-y-14">
           <FeatureBlock icon={Wallet} title="Accounting and Bookkeeping">
             <p>
-              <strong>FinFlow Track</strong> provides basic accounting workflows and records that support
-              invoicing, expense tracking, and reporting. It is a self-service financial
+              <strong>FinFlow Track</strong> provides basic accounting workflows and records that
+              support invoicing, expense tracking, and reporting. It is a self-service financial
               record-keeping and reporting tool rather than a licensed accounting or tax-filing
               service.
             </p>
@@ -668,7 +703,9 @@ function ComparePage() {
 
           <FeatureBlock icon={FileText} title="Invoicing">
             <p>
-              <strong>FinFlow Track</strong> supports invoice creation and delivery through PDF export, email, or a secure link, alongside customer management. Recurring invoices are available on paid plans.
+              <strong>FinFlow Track</strong> supports invoice creation and delivery through PDF
+              export, email, or a secure link, alongside customer management. Recurring invoices are
+              available on paid plans.
             </p>
             <p>
               <strong>Wave</strong> also includes unlimited invoices and estimates on every plan,
@@ -682,19 +719,22 @@ function ComparePage() {
 
           <FeatureBlock icon={Receipt} title="Expense Tracking">
             <p>
-              <strong>FinFlow Track</strong> supports expense tracking. This comparison does not claim automated receipt OCR or AI receipt scanning as a FinFlow Track feature.
+              <strong>FinFlow Track</strong> supports expense tracking. This comparison does not
+              claim automated receipt OCR or AI receipt scanning as a FinFlow Track feature.
             </p>
             <p>
               <strong>Wave</strong> supports manual expense entry on every plan. Automatic
               transaction categorization from a connected bank feed requires Pro. Unlimited
-              OCR-based receipt scanning is included on Pro; on Starter, it's available as a separate
-              add-on ($8 USD/month or $72 USD/year; Canadian pricing is $11 CAD/month or $96 CAD/year).
+              OCR-based receipt scanning is included on Pro; on Starter, it's available as a
+              separate add-on ($8 USD/month or $72 USD/year; Canadian pricing is $11 CAD/month or
+              $96 CAD/year).
             </p>
           </FeatureBlock>
 
           <FeatureBlock icon={Receipt} title="Receipt Management">
             <p>
-              <strong>FinFlow Track</strong> does not currently advertise an AI receipt-scanning feature in its confirmed product scope. Do not assume receipt OCR is included.
+              <strong>FinFlow Track</strong> does not currently advertise an AI receipt-scanning
+              feature in its confirmed product scope. Do not assume receipt OCR is included.
             </p>
             <p>
               <strong>Wave</strong> supports receipt capture via its mobile app, desktop, or email,
@@ -706,61 +746,78 @@ function ComparePage() {
 
           <FeatureBlock icon={Landmark} title="Bank Connections and Transaction Import">
             <p>
-              <strong>FinFlow Track</strong> does not currently advertise a live bank-feed connection. Do not assume automatic bank transaction imports from connected accounts.
+              <strong>FinFlow Track</strong> does not currently advertise a live bank-feed
+              connection. Do not assume automatic bank transaction imports from connected accounts.
             </p>
             <p>
               <strong>Wave</strong> requires the Pro plan for automatic bank feed connections and
               transaction imports, facilitated through Plaid; Starter users import transactions
-              manually. Even on Pro, Wave notes that not every financial institution is supported and
-              connectivity can't be guaranteed for every bank.
+              manually. Even on Pro, Wave notes that not every financial institution is supported
+              and connectivity can't be guaranteed for every bank.
             </p>
           </FeatureBlock>
 
           <FeatureBlock icon={BarChart3} title="Cash-Flow Management">
             <p>
-              <strong>FinFlow Track</strong> provides cash-flow reporting. Its AI Bookkeeper is a paid-plan feature; it should not be described as a formal cash-flow forecasting tool.
+              <strong>FinFlow Track</strong> provides cash-flow reporting. Its AI Bookkeeper is a
+              paid-plan feature; it should not be described as a formal cash-flow forecasting tool.
             </p>
             <p>
-              <strong>Wave</strong> provides a cash-flow dashboard. Its current plan comparison distinguishes Starter and Pro reporting access; check Wave's live pricing page for the exact report availability before relying on a specific statement or report.
+              <strong>Wave</strong> provides a cash-flow dashboard. Its current plan comparison
+              distinguishes Starter and Pro reporting access; check Wave's live pricing page for the
+              exact report availability before relying on a specific statement or report.
             </p>
           </FeatureBlock>
 
           <FeatureBlock icon={BarChart3} title="Financial Reporting">
             <p>
-              <strong>FinFlow Track</strong> provides financial reports including profit and loss, balance sheet, cash flow, and aging reports for receivables and payables, with CSV export. Check the current plan details for report availability.
+              <strong>FinFlow Track</strong> provides financial reports including profit and loss,
+              balance sheet, cash flow, and aging reports for receivables and payables, with CSV
+              export. Check the current plan details for report availability.
             </p>
             <p>
-              <strong>Wave</strong> provides core financial statements, including profit and loss, balance sheet, and cash flow reports. The exact dashboard and reporting access can depend on plan and account; check Wave's current plan comparison and Help Center before relying on a specific report.
+              <strong>Wave</strong> provides core financial statements, including profit and loss,
+              balance sheet, and cash flow reports. The exact dashboard and reporting access can
+              depend on plan and account; check Wave's current plan comparison and Help Center
+              before relying on a specific report.
             </p>
           </FeatureBlock>
 
           <FeatureBlock icon={Globe} title="Multi-Currency Support">
             <p>
-              <strong>FinFlow Track</strong> supports multi-currency transactions. The exchange rate is locked when a transaction is recorded; this comparison does not claim a specific currency count or that every currency feature is available on every plan.
+              <strong>FinFlow Track</strong> supports multi-currency transactions. The exchange rate
+              is locked when a transaction is recorded; this comparison does not claim a specific
+              currency count or that every currency feature is available on every plan.
             </p>
             <p>
-              <strong>Wave</strong> allows foreign-currency invoicing, but the business's base currency is selected during setup and cannot be changed later. Wave currently offers USD and CAD as business-currency options. Check Wave's official documentation for the latest details on foreign-currency transactions and conversion treatment.
+              <strong>Wave</strong> allows foreign-currency invoicing, but the business's base
+              currency is selected during setup and cannot be changed later. Wave currently offers
+              USD and CAD as business-currency options. Check Wave's official documentation for the
+              latest details on foreign-currency transactions and conversion treatment.
             </p>
           </FeatureBlock>
 
           <FeatureBlock icon={Sparkles} title="AI and Automation">
             <p>
-              <strong>FinFlow Track's AI Bookkeeper</strong> is available on paid plans. It is a separate feature from basic accounting and invoicing; this comparison does not claim AI receipt scanning or automatic transaction posting.
+              <strong>FinFlow Track's AI Bookkeeper</strong> is available on paid plans. It is a
+              separate feature from basic accounting and invoicing; this comparison does not claim
+              AI receipt scanning or automatic transaction posting.
             </p>
             <p>
               <strong>Wave's</strong> automation centers on its Pro-plan bank-feed pipeline: once a
               bank account is connected, Wave auto-imports transactions and auto-merges/categorizes
-              them based on your prior categorization patterns. Pro users can also automate late-payment
-              reminders when online payments are enabled. Wave uses an automated support chatbot
-              ("Mave") for help-center questions.
-              Wave does not currently publish a conversational AI assistant for querying your
-              financial data the way FinFlow Track's AI Bookkeeper does.
+              them based on your prior categorization patterns. Pro users can also automate
+              late-payment reminders when online payments are enabled. Wave uses an automated
+              support chatbot ("Mave") for help-center questions. Wave does not currently publish a
+              conversational AI assistant for querying your financial data the way FinFlow Track's
+              AI Bookkeeper does.
             </p>
           </FeatureBlock>
 
           <FeatureBlock icon={Users} title="Customer Management">
             <p>
-              <strong>FinFlow Track</strong> includes customer management alongside its invoicing and accounting workflows.
+              <strong>FinFlow Track</strong> includes customer management alongside its invoicing
+              and accounting workflows.
             </p>
             <p>
               <strong>Wave</strong> similarly maintains customer records linked to invoices and
@@ -771,26 +828,35 @@ function ComparePage() {
 
           <FeatureBlock icon={Building2} title="Multiple Companies and Users">
             <p>
-              <strong>FinFlow Track</strong> supports multiple companies and team members, with limits that vary by plan. Check the current pricing page for the applicable company and user limits.
+              <strong>FinFlow Track</strong> supports multiple companies and team members, with
+              limits that vary by plan. Check the current pricing page for the applicable company
+              and user limits.
             </p>
             <p>
-              <strong>Wave</strong> lets one login manage multiple separate business profiles, but each business is billed independently. Its free tier provides limited collaborator roles; broader team permissions are available on Pro. Check Wave's current plan comparison for exact role availability.
+              <strong>Wave</strong> lets one login manage multiple separate business profiles, but
+              each business is billed independently. Its free tier provides limited collaborator
+              roles; broader team permissions are available on Pro. Check Wave's current plan
+              comparison for exact role availability.
             </p>
           </FeatureBlock>
 
           <FeatureBlock icon={Plug} title="Integrations">
             <p>
-              <strong>FinFlow Track's</strong> integration marketplace is still in development. As of{" "}
-              {REVIEWED_DATE_LABEL}, the product does not have a public catalog of live third-party
-              integrations; planned categories (payments, banking, productivity, CRM, e-commerce, and
-              automation) are listed on the{" "}
+              <strong>FinFlow Track's</strong> integration marketplace is still in development. As
+              of {REVIEWED_DATE_LABEL}, the product does not have a public catalog of live
+              third-party integrations; planned categories (payments, banking, productivity, CRM,
+              e-commerce, and automation) are listed on the{" "}
               <Link to="/integrations" className="underline hover:text-foreground">
                 integrations page
               </Link>{" "}
-              as future connections rather than currently available ones. Do not assume integrations or API access are included.
+              as future connections rather than currently available ones. Do not assume integrations
+              or API access are included.
             </p>
             <p>
-              <strong>Wave</strong> offers some integrations on all plans, including Google Sheets, while a broader catalog of integrations is available on Pro. Availability can differ by app and region, so consult Wave's current integration directory before relying on a specific connection or automation workflow.
+              <strong>Wave</strong> offers some integrations on all plans, including Google Sheets,
+              while a broader catalog of integrations is available on Pro. Availability can differ
+              by app and region, so consult Wave's current integration directory before relying on a
+              specific connection or automation workflow.
             </p>
           </FeatureBlock>
 
@@ -798,12 +864,17 @@ function ComparePage() {
             <p>
               <strong>FinFlow Track</strong> tracks invoice status (draft, sent, paid, overdue)
               manually — it does not currently include a built-in payment gateway that lets your
-              customers pay an invoice online directly through FinFlow Track. Marking an invoice paid
-              is a manual step once you've been paid through whatever method you and your customer
-              use.
+              customers pay an invoice online directly through FinFlow Track. Marking an invoice
+              paid is a manual step once you've been paid through whatever method you and your
+              customer use.
             </p>
             <p>
-              <strong>Wave</strong> offers optional online payments for eligible US and Canadian businesses. Customers can pay an invoice through supported payment methods after the business applies and receives approval. Processing fees apply, and the fee structure differs between Starter and Pro. This is a meaningful difference: Wave offers optional online payments, while FinFlow Track currently provides invoicing without an integrated payment gateway.
+              <strong>Wave</strong> offers optional online payments for eligible US and Canadian
+              businesses. Customers can pay an invoice through supported payment methods after the
+              business applies and receives approval. Processing fees apply, and the fee structure
+              differs between Starter and Pro. This is a meaningful difference: Wave offers optional
+              online payments, while FinFlow Track currently provides invoicing without an
+              integrated payment gateway.
             </p>
           </FeatureBlock>
         </div>
@@ -829,8 +900,8 @@ function ComparePage() {
               business's base currency is limited to USD or CAD.
             </p>
             <p>
-              FinFlow Track is built for a global audience: signup, the Free plan, and multi-currency
-              support are available regardless of where your business is based.
+              FinFlow Track is built for a global audience: signup, the Free plan, and
+              multi-currency support are available regardless of where your business is based.
             </p>
             <p className="text-sm">
               Sources: Wave's official Help Center article on{" "}
@@ -863,9 +934,9 @@ function ComparePage() {
         <div className="mt-6 space-y-4 text-lg leading-8 text-muted-foreground">
           <p>
             Ease of use is subjective and depends on prior experience. Wave has a long track record
-            with non-accountants specifically, and its dashboard is generally regarded as approachable
-            for someone with no bookkeeping background — invoice creation, in particular, is quick to
-            set up on Starter.
+            with non-accountants specifically, and its dashboard is generally regarded as
+            approachable for someone with no bookkeeping background — invoice creation, in
+            particular, is quick to set up on Starter.
           </p>
           <p>
             FinFlow Track's smaller, more focused feature set — invoices, expenses, reports,
@@ -891,9 +962,9 @@ function ComparePage() {
               <h3 className="font-semibold">FinFlow Track</h3>
               <p className="mt-3 text-sm leading-7 text-muted-foreground">
                 FinFlow Track uses encrypted (HTTPS) communication, authenticated user sessions, and
-                role-based permissions to control what each team member can access. Data is stored on
-                managed cloud infrastructure with row-level access controls. FinFlow Track does not
-                claim regulatory certifications it has not obtained — see the{" "}
+                role-based permissions to control what each team member can access. Data is stored
+                on managed cloud infrastructure with row-level access controls. FinFlow Track does
+                not claim regulatory certifications it has not obtained — see the{" "}
                 <Link to="/security" className="underline hover:text-foreground">
                   security page
                 </Link>{" "}
@@ -910,8 +981,8 @@ function ComparePage() {
               <p className="mt-3 text-sm leading-7 text-muted-foreground">
                 Wave states that it encrypts data in transit and stores it on servers with physical
                 and technical access controls, and that it is a PCI-DSS Level 1 certified service
-                provider — the highest tier of that payment-card security standard — with third-party
-                audits performed annually. Review Wave's{" "}
+                provider — the highest tier of that payment-card security standard — with
+                third-party audits performed annually. Review Wave's{" "}
                 <a
                   href="https://www.waveapps.com/legal/security-and-privacy"
                   target="_blank"
@@ -955,10 +1026,10 @@ function ComparePage() {
           <div>
             <h3 className="font-semibold text-foreground">Wave</h3>
             <p className="mt-3 text-sm">
-              Wave lists live-person chat and email support Monday to Friday, 9 AM–4:45 PM Eastern. Pro
-              includes this support; Starter access is listed for customers with an optional add-on.
-              Wave also runs an automated chatbot ("Mave") in its help center for self-serve answers
-              outside those hours.
+              Wave lists live-person chat and email support Monday to Friday, 9 AM–4:45 PM Eastern.
+              Pro includes this support; Starter access is listed for customers with an optional
+              add-on. Wave also runs an automated chatbot ("Mave") in its help center for self-serve
+              answers outside those hours.
             </p>
           </div>
         </div>
@@ -973,7 +1044,7 @@ function ComparePage() {
               <ul className="mt-6 space-y-3 text-sm text-muted-foreground">
                 {[
                   "Available globally, with no regional signup restriction",
-                   "Free starting plan for basic accounting, invoicing, expenses, customers, and basic reports",
+                  "Free starting plan for basic accounting, invoicing, expenses, customers, and basic reports",
                   "Multi-currency support with exchange rates locked when recorded",
                   "AI Bookkeeper available on paid plans",
                   "Simpler, more focused feature set for small teams getting started",
@@ -1079,7 +1150,8 @@ function ComparePage() {
                 </li>
                 <li>
                   <strong className="text-foreground">Freelancers and startups</strong> who want
-                  basic accounting, invoice creation, expenses, customer management, and basic reports on a Free plan.
+                  basic accounting, invoice creation, expenses, customer management, and basic
+                  reports on a Free plan.
                 </li>
                 <li>
                   <strong className="text-foreground">
@@ -1100,7 +1172,9 @@ function ComparePage() {
                   want an optional online-payment feature and meet Wave's eligibility requirements.
                 </li>
                 <li>
-                  <strong className="text-foreground">Freelancers who don't need multi-currency</strong>{" "}
+                  <strong className="text-foreground">
+                    Freelancers who don't need multi-currency
+                  </strong>{" "}
                   and want a well-established, widely reviewed free tool.
                 </li>
                 <li>
@@ -1113,7 +1187,8 @@ function ComparePage() {
                   <strong className="text-foreground">
                     Sellers on platforms like Etsy or PayPal
                   </strong>{" "}
-                  who should check Wave's current Pro-plan integration directory for supported connections.
+                  who should check Wave's current Pro-plan integration directory for supported
+                  connections.
                 </li>
               </ul>
             </div>
@@ -1197,7 +1272,9 @@ function ComparePage() {
               <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
                 <li>· You're based outside the US and Canada</li>
                 <li>· You need multi-currency transaction handling</li>
-                <li>· You need multi-currency workflows and may want the AI Bookkeeper on a paid plan</li>
+                <li>
+                  · You need multi-currency workflows and may want the AI Bookkeeper on a paid plan
+                </li>
                 <li>· You don't need built-in online payment processing on invoices</li>
               </ul>
             </div>
@@ -1205,8 +1282,13 @@ function ComparePage() {
               <h3 className="font-semibold">Choose Wave if:</h3>
               <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
                 <li>· You're a US or Canadian business</li>
-                <li>· You want optional online invoice payments and meet Wave's eligibility requirements</li>
-                <li>· You're comfortable selecting USD or CAD as your business currency at setup</li>
+                <li>
+                  · You want optional online invoice payments and meet Wave's eligibility
+                  requirements
+                </li>
+                <li>
+                  · You're comfortable selecting USD or CAD as your business currency at setup
+                </li>
                 <li>
                   · You want automated bank feeds and receipt scanning and are willing to pay for
                   Pro

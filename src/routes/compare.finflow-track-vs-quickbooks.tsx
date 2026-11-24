@@ -24,18 +24,18 @@ import {
   ExternalLink,
 } from "lucide-react";
 
-const SITE_URL = "https://finflowtrack.com";
+const SITE_URL = "https://www.finflowtrack.com";
 const PAGE_URL = `${SITE_URL}/compare/finflow-track-vs-quickbooks`;
 const PUBLISHED_DATE = "2026-08-13";
-const REVIEWED_DATE = "2026-11-16";
-const REVIEWED_DATE_LABEL = "November 16, 2026";
+const REVIEWED_DATE = "2026-11-24";
+const REVIEWED_DATE_LABEL = "November 24, 2026";
 
 export const Route = createFileRoute("/compare/finflow-track-vs-quickbooks")({
   component: ComparePage,
   head: () => {
-    const title = "FinFlow Track vs QuickBooks: Free Plans, Features & Pricing Compared";
+    const title = "FinFlow Track vs QuickBooks: Free Plan Compared";
     const description =
-      "Compare FinFlow Track and QuickBooks Free on plan limits, invoicing, expense tracking, reports, multi-currency support, and paid features.";
+      "Compare the free plans, invoicing, expenses, financial reports, multi-currency support, and plan limits of FinFlow Track and QuickBooks.";
 
     return {
       meta: [
@@ -364,9 +364,9 @@ function ComparePage() {
           <p>
             <strong className="text-foreground">FinFlow Track</strong> is designed for freelancers,
             startups, and small businesses that want a straightforward way to manage invoicing,
-            expenses, multi-currency transactions, and financial reporting — with a Free plan.
-            Paid tiers expand company and team limits and add features such as recurring invoices
-            and the AI Bookkeeper.
+            expenses, multi-currency transactions, and financial reporting — with a Free plan. Paid
+            tiers expand company and team limits and add features such as recurring invoices and the
+            AI Bookkeeper.
           </p>
           <p>
             <strong className="text-foreground">QuickBooks</strong> offers a mature accounting
@@ -446,39 +446,65 @@ function ComparePage() {
           <table className="min-w-full">
             <thead className="bg-muted">
               <tr>
-                <th scope="col" className="px-5 py-4 text-left text-sm font-semibold">Free-plan detail</th>
-                <th scope="col" className="px-5 py-4 text-center text-sm font-semibold">FinFlow Track Free</th>
-                <th scope="col" className="px-5 py-4 text-center text-sm font-semibold">QuickBooks Free (U.S.)</th>
+                <th scope="col" className="px-5 py-4 text-left text-sm font-semibold">
+                  Free-plan detail
+                </th>
+                <th scope="col" className="px-5 py-4 text-center text-sm font-semibold">
+                  FinFlow Track Free
+                </th>
+                <th scope="col" className="px-5 py-4 text-center text-sm font-semibold">
+                  QuickBooks Free (U.S.)
+                </th>
               </tr>
             </thead>
             <tbody>
               <tr className="border-t">
-                <th scope="row" className="px-5 py-4 text-left text-sm font-medium">Price</th>
+                <th scope="row" className="px-5 py-4 text-left text-sm font-medium">
+                  Price
+                </th>
                 <td className="px-5 py-4 text-center">$0/month</td>
                 <td className="px-5 py-4 text-center">$0/month</td>
               </tr>
               <tr className="border-t">
-                <th scope="row" className="px-5 py-4 text-left text-sm font-medium">Core workflows</th>
-                <td className="px-5 py-4 text-center">Basic accounting, invoices, expenses, customer records, and basic reports</td>
-                <td className="px-5 py-4 text-center">Income and expense tracking, invoicing, and core reports</td>
+                <th scope="row" className="px-5 py-4 text-left text-sm font-medium">
+                  Core workflows
+                </th>
+                <td className="px-5 py-4 text-center">
+                  Basic accounting, invoices, expenses, customer records, and basic reports
+                </td>
+                <td className="px-5 py-4 text-center">
+                  Income and expense tracking, invoicing, and core reports
+                </td>
               </tr>
               <tr className="border-t">
-                <th scope="row" className="px-5 py-4 text-left text-sm font-medium">Users</th>
+                <th scope="row" className="px-5 py-4 text-left text-sm font-medium">
+                  Users
+                </th>
                 <td className="px-5 py-4 text-center">Plan limits apply</td>
                 <td className="px-5 py-4 text-center">1 user; no accountant access</td>
               </tr>
               <tr className="border-t">
-                <th scope="row" className="px-5 py-4 text-left text-sm font-medium">Invoices</th>
+                <th scope="row" className="px-5 py-4 text-left text-sm font-medium">
+                  Invoices
+                </th>
                 <td className="px-5 py-4 text-center">Invoice creation included</td>
-                <td className="px-5 py-4 text-center">2 per month by default; eligible QuickBooks Payments users may send more</td>
+                <td className="px-5 py-4 text-center">
+                  2 per month by default; eligible QuickBooks Payments users may send more
+                </td>
               </tr>
               <tr className="border-t">
-                <th scope="row" className="px-5 py-4 text-left text-sm font-medium">Bank connection</th>
-                <td className="px-5 py-4 text-center">Automatic bank feeds are not a listed feature</td>
+                <th scope="row" className="px-5 py-4 text-left text-sm font-medium">
+                  Bank connection
+                </th>
+                <td className="px-5 py-4 text-center">
+                  Automatic bank feeds are not a listed feature
+                </td>
                 <td className="px-5 py-4 text-center">1 connected bank account</td>
               </tr>
               <tr className="border-t">
-                <th scope="row" className="px-5 py-4 text-left text-sm font-medium">Recurring invoices and AI Bookkeeper</th>
+                <th scope="row" className="px-5 py-4 text-left text-sm font-medium">
+                  Recurring invoices and AI Bookkeeper
+                </th>
                 <td className="px-5 py-4 text-center">Paid-plan features</td>
                 <td className="px-5 py-4 text-center">Check the current paid-plan feature list</td>
               </tr>
@@ -495,8 +521,8 @@ function ComparePage() {
             className="underline hover:text-foreground"
           >
             official QuickBooks pricing page
-          </a>
-          {" "}for current details.
+          </a>{" "}
+          for current details.
         </p>
       </section>
 
@@ -505,9 +531,10 @@ function ComparePage() {
         <h2 className="text-3xl font-bold">FinFlow Track vs QuickBooks Pricing</h2>
         <p className="mt-4 max-w-3xl text-muted-foreground">
           Pricing shown in USD, billed monthly. FinFlow Track pricing below reflects our current
-          published plans as of {REVIEWED_DATE_LABEL}. QuickBooks pricing varies by market and promotion. Its U.S. pricing page currently lists
-          a $0 Free plan with limits on users, invoices, and bank connections; paid-plan prices and
-          promotional offers should be checked on the official page before purchase.
+          published plans as of {REVIEWED_DATE_LABEL}. QuickBooks pricing varies by market and
+          promotion. Its U.S. pricing page currently lists a $0 Free plan with limits on users,
+          invoices, and bank connections; paid-plan prices and promotional offers should be checked
+          on the official page before purchase.
         </p>
 
         <div className="mt-10 grid gap-6 md:grid-cols-2">
@@ -549,9 +576,9 @@ function ComparePage() {
             <p className="mt-6 text-sm text-muted-foreground leading-7">
               QuickBooks’ U.S. pricing page currently lists a Free plan at $0/month, followed by
               paid tiers such as Simple Start, Essentials, Plus, and Advanced. The Free plan is
-              limited to one user, does not include accountant access, allows up to two invoices
-              per month, and connects one bank account. Paid-plan pricing and introductory offers
-              vary by market and change over time.
+              limited to one user, does not include accountant access, allows up to two invoices per
+              month, and connects one bank account. Paid-plan pricing and introductory offers vary
+              by market and change over time.
             </p>
             <p className="mt-4 text-sm text-muted-foreground leading-7">
               Payroll and payment processing have separate eligibility, plan, or transaction-fee
@@ -651,8 +678,8 @@ function ComparePage() {
             <FeatureBlock icon={BarChart3} title="Financial Reporting">
               <p>
                 <strong>FinFlow Track</strong> currently provides Profit &amp; Loss and Balance
-                Sheet, cash flow, and receivables/payables aging. CSV exports are available;
-                report access and limits depend on the subscription plan.
+                Sheet, cash flow, and receivables/payables aging. CSV exports are available; report
+                access and limits depend on the subscription plan.
               </p>
               <p>
                 <strong>QuickBooks</strong> offers a broader library of standard and customizable
@@ -696,7 +723,8 @@ function ComparePage() {
               <p>
                 <strong>FinFlow Track's</strong> integration marketplace is still in development. As
                 of {REVIEWED_DATE_LABEL}, the product does not have a public catalog of live
-                third-party integrations; planned categories (payments, banking, productivity, and automation) are listed on the{" "}
+                third-party integrations; planned categories (payments, banking, productivity, and
+                automation) are listed on the{" "}
                 <Link to="/integrations" className="underline hover:text-foreground">
                   integrations page
                 </Link>{" "}
@@ -938,8 +966,8 @@ function ComparePage() {
                 </li>
                 <li>
                   <strong className="text-foreground">Startups and small businesses</strong> that
-                  want to start on a free plan and add company workspaces or team members as
-                  their needs grow, subject to plan limits.
+                  want to start on a free plan and add company workspaces or team members as their
+                  needs grow, subject to plan limits.
                 </li>
                 <li>
                   <strong className="text-foreground">
