@@ -4,7 +4,7 @@ description: "Compare four free accounting plans for small businesses. Check inv
 slug: "free-accounting-software-for-small-business"
 author: "FinFlowTrack Editorial Team"
 publishedAt: "2026-09-23"
-updatedAt: "2026-11-16"
+updatedAt: "2026-11-24"
 category: "accounting-software"
 tags:
   - free accounting software
@@ -37,7 +37,7 @@ This guide explains what to look for in free accounting software, which features
 
 ## Free Accounting Software Options: A Practical Comparison
 
-The right choice depends on where your business operates, how it invoices, whether it needs cloud access, and which limits matter most. The table below compares selected products using their publicly available plan information checked on **November 16, 2026**. It is not a ranking, and it does not imply that every provider is available in every country.
+The right choice depends on where your business operates, how it invoices, whether it needs cloud access, and which limits matter most. The table below compares selected products using their publicly available plan information checked on **November 24, 2026**. It is not a ranking, and it does not imply that every provider is available in every country.
 
 | Product | What its $0 option currently highlights | Important limitation to check | Best fit to investigate |
 | --- | --- | --- | --- |
