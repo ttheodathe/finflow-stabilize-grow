@@ -50,15 +50,15 @@ It is also commonly called an:
 
 A simple P&L can look like this:
 
-| P&L item | Amount |
-| --- | ---: |
-| Revenue | $50,000 |
-| Cost of goods sold | $20,000 |
-| **Gross profit** | **$30,000** |
-| Operating expenses | $22,000 |
-| **Operating profit** | **$8,000** |
-| Other expenses | $1,000 |
-| **Net profit** | **$7,000** |
+| P&L item             |      Amount |
+| -------------------- | ----------: |
+| Revenue              |     $50,000 |
+| Cost of goods sold   |     $20,000 |
+| **Gross profit**     | **$30,000** |
+| Operating expenses   |     $22,000 |
+| **Operating profit** |  **$8,000** |
+| Other expenses       |      $1,000 |
+| **Net profit**       |  **$7,000** |
 
 The exact presentation depends on the accounting method, business type, reporting requirements, and accounting system.
 
@@ -306,21 +306,21 @@ There is no universal ideal margin for every industry.
 
 Here is a simplified monthly P&L:
 
-| Category | Amount |
-| --- | ---: |
-| Revenue | $80,000 |
-| COGS | $32,000 |
-| **Gross profit** | **$48,000** |
-| Payroll | $18,000 |
-| Rent | $5,000 |
-| Software | $2,000 |
-| Marketing | $4,000 |
-| Insurance | $1,500 |
-| Other operating expenses | $3,500 |
+| Category                     |      Amount |
+| ---------------------------- | ----------: |
+| Revenue                      |     $80,000 |
+| COGS                         |     $32,000 |
+| **Gross profit**             | **$48,000** |
+| Payroll                      |     $18,000 |
+| Rent                         |      $5,000 |
+| Software                     |      $2,000 |
+| Marketing                    |      $4,000 |
+| Insurance                    |      $1,500 |
+| Other operating expenses     |      $3,500 |
 | **Total operating expenses** | **$34,000** |
-| **Operating profit** | **$14,000** |
-| Other expenses | $2,000 |
-| **Net profit** | **$12,000** |
+| **Operating profit**         | **$14,000** |
+| Other expenses               |      $2,000 |
+| **Net profit**               | **$12,000** |
 
 The business generated $80,000 in revenue and $12,000 in net profit in this simplified example.
 
@@ -403,12 +403,12 @@ Then compare the result with previous periods and expectations.
 
 These reports are related but different.
 
-| P&L | Cash flow statement |
-| --- | --- |
-| Measures financial performance | Measures movement of cash |
-| Includes recognized revenue and expenses | Focuses on cash inflows and outflows |
-| Helps assess profitability | Helps assess liquidity |
-| Covers a defined accounting period | Shows how cash changed during a period |
+| P&L                                      | Cash flow statement                    |
+| ---------------------------------------- | -------------------------------------- |
+| Measures financial performance           | Measures movement of cash              |
+| Includes recognized revenue and expenses | Focuses on cash inflows and outflows   |
+| Helps assess profitability               | Helps assess liquidity                 |
+| Covers a defined accounting period       | Shows how cash changed during a period |
 
 A business can show a profit on its P&L while experiencing cash-flow pressure.
 
@@ -673,15 +673,15 @@ Freelancers often have relatively simple income and expense structures, but a P&
 
 For example:
 
-| Category | Monthly amount |
-| --- | ---: |
-| Consulting revenue | $8,000 |
-| Software | $300 |
-| Internet | $100 |
-| Professional services | $200 |
-| Marketing | $400 |
-| Other business expenses | $500 |
-| **Estimated operating profit before other items** | **$6,500** |
+| Category                                          | Monthly amount |
+| ------------------------------------------------- | -------------: |
+| Consulting revenue                                |         $8,000 |
+| Software                                          |           $300 |
+| Internet                                          |           $100 |
+| Professional services                             |           $200 |
+| Marketing                                         |           $400 |
+| Other business expenses                           |           $500 |
+| **Estimated operating profit before other items** |     **$6,500** |
 
 This helps a freelancer see the relationship between billings and business costs.
 
@@ -745,12 +745,12 @@ Inventory accounting can significantly affect reported profit, so appropriate ac
 
 Comparing periods is often more useful than looking at one report in isolation.
 
-| Metric | July | August | Change |
-| --- | ---: | ---: | ---: |
-| Revenue | $45,000 | $50,000 | +$5,000 |
-| Gross profit | $25,000 | $27,000 | +$2,000 |
+| Metric             |    July |  August |  Change |
+| ------------------ | ------: | ------: | ------: |
+| Revenue            | $45,000 | $50,000 | +$5,000 |
+| Gross profit       | $25,000 | $27,000 | +$2,000 |
 | Operating expenses | $19,000 | $22,000 | +$3,000 |
-| Net profit | $6,000 | $5,000 | -$1,000 |
+| Net profit         |  $6,000 |  $5,000 | -$1,000 |
 
 Revenue and gross profit increased, but operating expenses increased by more, causing net profit to fall.
 

@@ -62,20 +62,20 @@ A 13-week forecast can be especially useful when a monthly forecast hides import
 You can build this template in a spreadsheet. Use one row per week and enter expected cash movements in the week you realistically expect the money to arrive or leave your account.
 
 | Week | Opening cash | Expected inflows | Expected outflows | Net cash flow | Closing cash |
-|---|---:|---:|---:|---:|---:|
-| 1 | | | | | |
-| 2 | | | | | |
-| 3 | | | | | |
-| 4 | | | | | |
-| 5 | | | | | |
-| 6 | | | | | |
-| 7 | | | | | |
-| 8 | | | | | |
-| 9 | | | | | |
-| 10 | | | | | |
-| 11 | | | | | |
-| 12 | | | | | |
-| 13 | | | | | |
+| ---- | -----------: | ---------------: | ----------------: | ------------: | -----------: |
+| 1    |              |                  |                   |               |              |
+| 2    |              |                  |                   |               |              |
+| 3    |              |                  |                   |               |              |
+| 4    |              |                  |                   |               |              |
+| 5    |              |                  |                   |               |              |
+| 6    |              |                  |                   |               |              |
+| 7    |              |                  |                   |               |              |
+| 8    |              |                  |                   |               |              |
+| 9    |              |                  |                   |               |              |
+| 10   |              |                  |                   |               |              |
+| 11   |              |                  |                   |               |              |
+| 12   |              |                  |                   |               |              |
+| 13   |              |                  |                   |               |              |
 
 ### What belongs in each column?
 
@@ -92,22 +92,22 @@ Keep a supporting list of individual receipts and payments behind the weekly tot
 Imagine a small business starts with **$25,000 in available cash**. The following table uses sample amounts to show how weekly cash movements affect the closing balance.
 
 | Week | Opening cash | Inflows | Outflows | Net cash flow | Closing cash |
-|---|---:|---:|---:|---:|---:|
-| 1 | $25,000 | $12,000 | $9,000 | $3,000 | $28,000 |
-| 2 | $28,000 | $8,000 | $11,000 | -$3,000 | $25,000 |
-| 3 | $25,000 | $15,000 | $10,000 | $5,000 | $30,000 |
-| 4 | $30,000 | $6,000 | $12,000 | -$6,000 | $24,000 |
-| 5 | $24,000 | $9,000 | $13,000 | -$4,000 | $20,000 |
-| 6 | $20,000 | $18,000 | $11,000 | $7,000 | $27,000 |
-| 7 | $27,000 | $7,000 | $14,000 | -$7,000 | $20,000 |
-| 8 | $20,000 | $10,000 | $12,000 | -$2,000 | $18,000 |
-| 9 | $18,000 | $16,000 | $10,000 | $6,000 | $24,000 |
-| 10 | $24,000 | $8,000 | $15,000 | -$7,000 | $17,000 |
-| 11 | $17,000 | $12,000 | $11,000 | $1,000 | $18,000 |
-| 12 | $18,000 | $9,000 | $13,000 | -$4,000 | $14,000 |
-| 13 | $14,000 | $20,000 | $14,000 | $6,000 | $20,000 |
+| ---- | -----------: | ------: | -------: | ------------: | -----------: |
+| 1    |      $25,000 | $12,000 |   $9,000 |        $3,000 |      $28,000 |
+| 2    |      $28,000 |  $8,000 |  $11,000 |       -$3,000 |      $25,000 |
+| 3    |      $25,000 | $15,000 |  $10,000 |        $5,000 |      $30,000 |
+| 4    |      $30,000 |  $6,000 |  $12,000 |       -$6,000 |      $24,000 |
+| 5    |      $24,000 |  $9,000 |  $13,000 |       -$4,000 |      $20,000 |
+| 6    |      $20,000 | $18,000 |  $11,000 |        $7,000 |      $27,000 |
+| 7    |      $27,000 |  $7,000 |  $14,000 |       -$7,000 |      $20,000 |
+| 8    |      $20,000 | $10,000 |  $12,000 |       -$2,000 |      $18,000 |
+| 9    |      $18,000 | $16,000 |  $10,000 |        $6,000 |      $24,000 |
+| 10   |      $24,000 |  $8,000 |  $15,000 |       -$7,000 |      $17,000 |
+| 11   |      $17,000 | $12,000 |  $11,000 |        $1,000 |      $18,000 |
+| 12   |      $18,000 |  $9,000 |  $13,000 |       -$4,000 |      $14,000 |
+| 13   |      $14,000 | $20,000 |  $14,000 |        $6,000 |      $20,000 |
 
-*Illustrative example only. Your results will depend on actual balances, payment dates, and business conditions.*
+_Illustrative example only. Your results will depend on actual balances, payment dates, and business conditions._
 
 The example shows why net cash flow and cash balance are different. Week 10 has a negative net cash flow of $7,000, but the business still ends the week with $17,000. A negative week is not automatically a crisis; the important questions are whether the remaining balance is enough to meet upcoming obligations and whether it stays above the business's minimum cash threshold.
 
@@ -164,6 +164,7 @@ Use the forecast to evaluate options, such as following up on overdue invoices, 
 At the end of each week, replace estimates for the completed week with actual cash movements. Compare actual inflows and outflows with what you expected.
 
 Ask:
+
 - Which customers paid later or earlier than expected?
 - Which costs were missing or higher than estimated?
 - Did the timing of supplier or payroll payments change?
@@ -183,13 +184,13 @@ Suppose your spreadsheet uses these columns:
 
 If the first weekly row is row 2, use these formulas:
 
-| Cell | Formula | Purpose |
-|---|---|---|
-| E2 | `=C2-D2` | Calculate net cash flow for Week 1 |
-| F2 | `=B2+E2` | Calculate closing cash for Week 1 |
-| B3 | `=F2` | Carry Week 1 closing cash into Week 2 |
-| E3 | `=C3-D3` | Calculate Week 2 net cash flow |
-| F3 | `=B3+E3` | Calculate Week 2 closing cash |
+| Cell | Formula  | Purpose                               |
+| ---- | -------- | ------------------------------------- |
+| E2   | `=C2-D2` | Calculate net cash flow for Week 1    |
+| F2   | `=B2+E2` | Calculate closing cash for Week 1     |
+| B3   | `=F2`    | Carry Week 1 closing cash into Week 2 |
+| E3   | `=C3-D3` | Calculate Week 2 net cash flow        |
+| F3   | `=B3+E3` | Calculate Week 2 closing cash         |
 
 Copy the formulas down through Week 13. Confirm that your spreadsheet uses the same column layout before copying them.
 

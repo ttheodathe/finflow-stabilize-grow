@@ -143,18 +143,18 @@ The question is not whether spreadsheets are bad. The question is whether your c
 
 Both approaches can work.
 
-| Area | Spreadsheet | Accounting software |
-| --- | --- | --- |
-| Basic transaction tracking | Often suitable | Suitable |
-| Invoicing workflow | Usually manual | Often integrated |
-| Expense categorization | Manual | Often structured |
-| Payment status | Manual updates | Often tracked in the system |
-| Financial reports | Requires setup | Usually built in |
-| Multiple users | File-sharing required | User access can be built in |
-| Audit trail | Depends on process | Often stronger |
-| Multi-currency | Can require complex formulas | Often supported directly |
-| Reconciliation | Manual | May be integrated |
-| Scalability | Depends heavily on design | Usually designed for growing transaction volume |
+| Area                       | Spreadsheet                  | Accounting software                             |
+| -------------------------- | ---------------------------- | ----------------------------------------------- |
+| Basic transaction tracking | Often suitable               | Suitable                                        |
+| Invoicing workflow         | Usually manual               | Often integrated                                |
+| Expense categorization     | Manual                       | Often structured                                |
+| Payment status             | Manual updates               | Often tracked in the system                     |
+| Financial reports          | Requires setup               | Usually built in                                |
+| Multiple users             | File-sharing required        | User access can be built in                     |
+| Audit trail                | Depends on process           | Often stronger                                  |
+| Multi-currency             | Can require complex formulas | Often supported directly                        |
+| Reconciliation             | Manual                       | May be integrated                               |
+| Scalability                | Depends heavily on design    | Usually designed for growing transaction volume |
 
 A spreadsheet can remain appropriate for a simple business.
 
@@ -695,19 +695,19 @@ Because requirements differ, the most useful way to evaluate FinFlowTrack is to 
 
 You can use this table when comparing providers.
 
-| Requirement | Essential? | Provider A | Provider B | Provider C |
-| --- | --- | --- | --- | --- |
-| Invoicing | Yes/No |  |  |  |
-| Expense tracking | Yes/No |  |  |  |
-| Financial reports | Yes/No |  |  |  |
-| Bank reconciliation | Yes/No |  |  |  |
-| Multi-currency | Yes/No |  |  |  |
-| Multiple users | Yes/No |  |  |  |
-| User permissions | Yes/No |  |  |  |
-| Inventory | Yes/No |  |  |  |
-| Multiple companies | Yes/No |  |  |  |
-| Data export | Yes/No |  |  |  |
-| Total monthly cost | Yes/No |  |  |  |
+| Requirement         | Essential? | Provider A | Provider B | Provider C |
+| ------------------- | ---------- | ---------- | ---------- | ---------- |
+| Invoicing           | Yes/No     |            |            |            |
+| Expense tracking    | Yes/No     |            |            |            |
+| Financial reports   | Yes/No     |            |            |            |
+| Bank reconciliation | Yes/No     |            |            |            |
+| Multi-currency      | Yes/No     |            |            |            |
+| Multiple users      | Yes/No     |            |            |            |
+| User permissions    | Yes/No     |            |            |            |
+| Inventory           | Yes/No     |            |            |            |
+| Multiple companies  | Yes/No     |            |            |            |
+| Data export         | Yes/No     |            |            |            |
+| Total monthly cost  | Yes/No     |            |            |            |
 
 The purpose is not to find the platform with the most "yes" answers.
 

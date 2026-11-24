@@ -54,16 +54,16 @@ Business expense tracking is the process of recording and organizing money spent
 
 A useful expense record can include:
 
-| Field | Example |
-| --- | --- |
-| Date | August 18 |
-| Supplier | Software provider |
-| Description | Monthly subscription |
-| Category | Software |
-| Amount | $49 |
-| Payment method | Business card |
-| Receipt | Attached |
-| Project | Internal operations |
+| Field          | Example              |
+| -------------- | -------------------- |
+| Date           | August 18            |
+| Supplier       | Software provider    |
+| Description    | Monthly subscription |
+| Category       | Software             |
+| Amount         | $49                  |
+| Payment method | Business card        |
+| Receipt        | Attached             |
+| Project        | Internal operations  |
 
 Not every business needs every field. The important principle is **consistency**.
 
@@ -301,12 +301,12 @@ Examples include:
 
 Create a recurring-cost list:
 
-| Expense | Frequency | Amount |
-| --- | --- | ---: |
-| Software | Monthly | $49 |
-| Hosting | Monthly | $30 |
-| Insurance | Annual | $600 |
-| Internet | Monthly | $80 |
+| Expense   | Frequency | Amount |
+| --------- | --------- | -----: |
+| Software  | Monthly   |    $49 |
+| Hosting   | Monthly   |    $30 |
+| Insurance | Annual    |   $600 |
+| Internet  | Monthly   |    $80 |
 
 Review these costs periodically.
 
@@ -335,12 +335,12 @@ A monthly review should include:
 
 For example:
 
-| Category | June | July | August |
-| --- | ---: | ---: | ---: |
-| Software | $400 | $450 | $525 |
-| Marketing | $1,000 | $1,200 | $1,800 |
+| Category    |   June |   July | August |
+| ----------- | -----: | -----: | -----: |
+| Software    |   $400 |   $450 |   $525 |
+| Marketing   | $1,000 | $1,200 | $1,800 |
 | Contractors | $4,000 | $4,600 | $5,100 |
-| Travel | $250 | $300 | $900 |
+| Travel      |   $250 |   $300 |   $900 |
 
 The figures do not automatically tell you whether the changes are good or bad. They show you where to investigate.
 
@@ -384,11 +384,11 @@ A spreadsheet can be a good starting point for a small business with simple fina
 
 A basic sheet might contain:
 
-| Date | Supplier | Description | Category | Amount | Payment Method | Receipt |
-| --- | --- | --- | --- | ---: | --- | --- |
-| Aug. 2 | Software Co. | Subscription | Software | $49 | Card | Yes |
-| Aug. 5 | Ad Platform | Campaign | Marketing | $250 | Card | Yes |
-| Aug. 8 | Office Store | Supplies | Office | $75 | Bank | Yes |
+| Date   | Supplier     | Description  | Category  | Amount | Payment Method | Receipt |
+| ------ | ------------ | ------------ | --------- | -----: | -------------- | ------- |
+| Aug. 2 | Software Co. | Subscription | Software  |    $49 | Card           | Yes     |
+| Aug. 5 | Ad Platform  | Campaign     | Marketing |   $250 | Card           | Yes     |
+| Aug. 8 | Office Store | Supplies     | Office    |    $75 | Bank           | Yes     |
 
 ### Advantages
 

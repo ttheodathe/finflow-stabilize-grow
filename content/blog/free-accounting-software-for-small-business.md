@@ -39,16 +39,17 @@ This guide explains what to look for in free accounting software, which features
 
 The right choice depends on where your business operates, how it invoices, whether it needs cloud access, and which limits matter most. The table below compares selected products using their publicly available plan information checked on **November 24, 2026**. It is not a ranking, and it does not imply that every provider is available in every country.
 
-| Product | What its $0 option currently highlights | Important limitation to check | Best fit to investigate |
-| --- | --- | --- | --- |
-| **FinFlow Track** | Basic accounting, invoice creation, expense tracking, customer management, and basic reports | Confirm current company and user limits, country suitability, and whether the required workflow is included in the Free plan | Small businesses that want invoicing, expenses, customers, and basic reports in one place |
-| **Wave Starter** | Unlimited estimates, invoices, bills, and bookkeeping records | Automatic bank imports, automatic transaction categorization, and some receipt features are in the paid Pro plan; payment processing fees may apply | Businesses whose main need is straightforward invoicing and basic bookkeeping |
-| **Zoho Books Free (US)** | Invoices, quotes, expenses, journals, vendor management, bank reconciliation, recurring invoices, and 50+ reports | One user plus one accountant; up to 1,000 invoices and 1,000 expenses per year; available while annual revenue stays within the US $50,000 threshold | US solopreneurs and microbusinesses that fit its eligibility and usage limits |
-| **ZipBooks Starter** | Unlimited invoices, unlimited vendors and customers, basic reports, and one connected bank account | Team members, multiple bank accounts, recurring invoices, and more advanced reporting are in paid tiers | Very small businesses wanting basic cloud bookkeeping and invoicing |
+| Product                  | What its $0 option currently highlights                                                                           | Important limitation to check                                                                                                                        | Best fit to investigate                                                                   |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| **FinFlow Track**        | Basic accounting, invoice creation, expense tracking, customer management, and basic reports                      | Confirm current company and user limits, country suitability, and whether the required workflow is included in the Free plan                         | Small businesses that want invoicing, expenses, customers, and basic reports in one place |
+| **Wave Starter**         | Unlimited estimates, invoices, bills, and bookkeeping records                                                     | Automatic bank imports, automatic transaction categorization, and some receipt features are in the paid Pro plan; payment processing fees may apply  | Businesses whose main need is straightforward invoicing and basic bookkeeping             |
+| **Zoho Books Free (US)** | Invoices, quotes, expenses, journals, vendor management, bank reconciliation, recurring invoices, and 50+ reports | One user plus one accountant; up to 1,000 invoices and 1,000 expenses per year; available while annual revenue stays within the US $50,000 threshold | US solopreneurs and microbusinesses that fit its eligibility and usage limits             |
+| **ZipBooks Starter**     | Unlimited invoices, unlimited vendors and customers, basic reports, and one connected bank account                | Team members, multiple bank accounts, recurring invoices, and more advanced reporting are in paid tiers                                              | Very small businesses wanting basic cloud bookkeeping and invoicing                       |
 
 **Important regional note:** Zoho Books publishes different plan details by country. The US free plan should not be assumed to apply in the UK, South Africa, Rwanda, or another market. Wave's availability and banking features also depend on location and supported financial institutions. Check each provider's local pricing and eligibility before signing up.
 
 Official plan references:
+
 - [FinFlow Track pricing](/pricing)
 - [Wave pricing](https://www.waveapps.com/pricing)
 - [Zoho Books US pricing](https://www.zoho.com/us/books/pricing/)
@@ -194,13 +195,13 @@ Check help documentation, knowledge bases, email or chat support, response expec
 
 ## Free Accounting Software vs. Free Trial
 
-| Question | Free plan | Free trial |
-| --- | --- | --- |
-| Intended duration | Ongoing, subject to terms | Temporary |
-| Payment required to continue full access | Usually no | Usually yes |
-| Feature access | Often limited | May include paid features |
-| Good for long-term use | Potentially | Usually not |
-| Main purpose | Ongoing free usage | Testing paid software |
+| Question                                 | Free plan                 | Free trial                |
+| ---------------------------------------- | ------------------------- | ------------------------- |
+| Intended duration                        | Ongoing, subject to terms | Temporary                 |
+| Payment required to continue full access | Usually no                | Usually yes               |
+| Feature access                           | Often limited             | May include paid features |
+| Good for long-term use                   | Potentially               | Usually not               |
+| Main purpose                             | Ongoing free usage        | Testing paid software     |
 
 If your goal is to avoid a recurring software subscription, look specifically for an ongoing free plan.
 

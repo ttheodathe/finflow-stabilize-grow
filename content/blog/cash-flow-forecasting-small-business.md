@@ -327,11 +327,11 @@ Not all expected cash receipts have the same level of confidence.
 
 You can classify them as:
 
-| Confidence | Example |
-| --- | --- |
-| High | Contracted payment with established collection history |
-| Medium | Expected customer payment with some uncertainty |
-| Low | Potential sale not yet completed |
+| Confidence | Example                                                |
+| ---------- | ------------------------------------------------------ |
+| High       | Contracted payment with established collection history |
+| Medium     | Expected customer payment with some uncertainty        |
+| Low        | Potential sale not yet completed                       |
 
 This makes the forecast more useful.
 
@@ -495,11 +495,11 @@ Repeat this calculation for every forecast period.
 ### Example: Four-Week Forecast
 
 | Week | Beginning Cash | Inflows | Outflows | Net Cash Flow | Ending Cash |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| 1 | $20,000 | $8,000 | $6,000 | $2,000 | $22,000 |
-| 2 | $22,000 | $4,000 | $9,000 | -$5,000 | $17,000 |
-| 3 | $17,000 | $3,000 | $8,000 | -$5,000 | $12,000 |
-| 4 | $12,000 | $10,000 | $7,000 | $3,000 | $15,000 |
+| ---- | -------------: | ------: | -------: | ------------: | ----------: |
+| 1    |        $20,000 |  $8,000 |   $6,000 |        $2,000 |     $22,000 |
+| 2    |        $22,000 |  $4,000 |   $9,000 |       -$5,000 |     $17,000 |
+| 3    |        $17,000 |  $3,000 |   $8,000 |       -$5,000 |     $12,000 |
+| 4    |        $12,000 | $10,000 |   $7,000 |        $3,000 |     $15,000 |
 
 The business does not necessarily have a problem simply because weeks 2 and 3 show negative net cash flow.
 
@@ -563,11 +563,11 @@ Customers pay later, sales are weaker, or an unexpected expense occurs.
 
 Example:
 
-| Scenario | Ending Cash |
-| --- | ---: |
-| Best case | $32,000 |
-| Base case | $18,000 |
-| Worst case | $4,000 |
+| Scenario   | Ending Cash |
+| ---------- | ----------: |
+| Best case  |     $32,000 |
+| Base case  |     $18,000 |
+| Worst case |      $4,000 |
 
 This shows management how sensitive the cash position is to changing assumptions.
 
@@ -678,20 +678,20 @@ A rolling 13-week forecast should use the **direct cash method**: record receipt
 
 Use one column for each of the next 13 weeks and keep the rows consistent:
 
-| Forecast line | What to enter |
-| --- | --- |
-| Opening cash | Cleared, usable cash at the start of the first week; later weeks begin with the previous week's closing cash |
-| Customer collections on existing invoices | Amounts expected to arrive, assigned to realistic collection weeks |
-| Customer receipts from new work | Only include work with a reasonable basis for expecting collection during the forecast period; mark uncertain assumptions |
-| Other confirmed receipts | Refunds, grants, owner contributions, or financing only when sufficiently confirmed |
-| Supplier and inventory payments | Payments in the week they are expected to leave the account |
-| Payroll and related payments | Actual pay dates and related obligations |
-| Rent, utilities, and subscriptions | Expected payment dates, including annual renewals |
-| Taxes and statutory payments | Expected due dates based on the business's jurisdiction and records |
-| Debt service and capital purchases | Scheduled repayments and committed purchases |
-| Other payments | Known one-off or irregular cash outflows |
-| Closing cash | Opening cash plus receipts minus payments |
-| Minimum cash buffer | A management-set operating floor, not a universal benchmark |
+| Forecast line                             | What to enter                                                                                                             |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Opening cash                              | Cleared, usable cash at the start of the first week; later weeks begin with the previous week's closing cash              |
+| Customer collections on existing invoices | Amounts expected to arrive, assigned to realistic collection weeks                                                        |
+| Customer receipts from new work           | Only include work with a reasonable basis for expecting collection during the forecast period; mark uncertain assumptions |
+| Other confirmed receipts                  | Refunds, grants, owner contributions, or financing only when sufficiently confirmed                                       |
+| Supplier and inventory payments           | Payments in the week they are expected to leave the account                                                               |
+| Payroll and related payments              | Actual pay dates and related obligations                                                                                  |
+| Rent, utilities, and subscriptions        | Expected payment dates, including annual renewals                                                                         |
+| Taxes and statutory payments              | Expected due dates based on the business's jurisdiction and records                                                       |
+| Debt service and capital purchases        | Scheduled repayments and committed purchases                                                                              |
+| Other payments                            | Known one-off or irregular cash outflows                                                                                  |
+| Closing cash                              | Opening cash plus receipts minus payments                                                                                 |
+| Minimum cash buffer                       | A management-set operating floor, not a universal benchmark                                                               |
 
 The downloadable spreadsheet below contains these rows, formulas to carry closing cash into the next week, and a line showing headroom above or below the minimum cash buffer.
 
@@ -733,25 +733,23 @@ If a customer payment repeatedly arrives later than expected, revise the collect
 
 The forecast is a working management document. A forecast created once and never updated quickly becomes stale.
 
-
-
 A practical weekly forecast could look like this:
 
 | Week | Starting Cash | Expected Inflows | Expected Outflows | Net Cash Flow | Ending Cash |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| 1 | $25,000 | $10,000 | $12,000 | -$2,000 | $23,000 |
-| 2 | $23,000 | $14,000 | $9,000 | $5,000 | $28,000 |
-| 3 | $28,000 | $7,000 | $13,000 | -$6,000 | $22,000 |
-| 4 | $22,000 | $9,000 | $15,000 | -$6,000 | $16,000 |
-| 5 | $16,000 | $12,000 | $8,000 | $4,000 | $20,000 |
-| 6 | $20,000 | $5,000 | $11,000 | -$6,000 | $14,000 |
-| 7 | $14,000 | $18,000 | $10,000 | $8,000 | $22,000 |
-| 8 | $22,000 | $11,000 | $9,000 | $2,000 | $24,000 |
-| 9 | $24,000 | $8,000 | $16,000 | -$8,000 | $16,000 |
-| 10 | $16,000 | $6,000 | $12,000 | -$6,000 | $10,000 |
-| 11 | $10,000 | $15,000 | $9,000 | $6,000 | $16,000 |
-| 12 | $16,000 | $9,000 | $10,000 | -$1,000 | $15,000 |
-| 13 | $15,000 | $14,000 | $11,000 | $3,000 | $18,000 |
+| ---- | ------------: | ---------------: | ----------------: | ------------: | ----------: |
+| 1    |       $25,000 |          $10,000 |           $12,000 |       -$2,000 |     $23,000 |
+| 2    |       $23,000 |          $14,000 |            $9,000 |        $5,000 |     $28,000 |
+| 3    |       $28,000 |           $7,000 |           $13,000 |       -$6,000 |     $22,000 |
+| 4    |       $22,000 |           $9,000 |           $15,000 |       -$6,000 |     $16,000 |
+| 5    |       $16,000 |          $12,000 |            $8,000 |        $4,000 |     $20,000 |
+| 6    |       $20,000 |           $5,000 |           $11,000 |       -$6,000 |     $14,000 |
+| 7    |       $14,000 |          $18,000 |           $10,000 |        $8,000 |     $22,000 |
+| 8    |       $22,000 |          $11,000 |            $9,000 |        $2,000 |     $24,000 |
+| 9    |       $24,000 |           $8,000 |           $16,000 |       -$8,000 |     $16,000 |
+| 10   |       $16,000 |           $6,000 |           $12,000 |       -$6,000 |     $10,000 |
+| 11   |       $10,000 |          $15,000 |            $9,000 |        $6,000 |     $16,000 |
+| 12   |       $16,000 |           $9,000 |           $10,000 |       -$1,000 |     $15,000 |
+| 13   |       $15,000 |          $14,000 |           $11,000 |        $3,000 |     $18,000 |
 
 This example shows why weekly forecasting can be powerful.
 
@@ -1234,4 +1232,4 @@ For related guidance, read:
 - [Profit and Loss Statement for Small Business](/blog/profit-and-loss-statement-small-business)
 - [Balance Sheet for Small Business](/blog/balance-sheet-for-small-business)
 
-*This article provides general educational information and is not accounting, tax, legal, or financial advice. Forecasting assumptions should be adapted to the specific circumstances of the business and reviewed regularly.*
+_This article provides general educational information and is not accounting, tax, legal, or financial advice. Forecasting assumptions should be adapted to the specific circumstances of the business and reviewed regularly._
