@@ -35,9 +35,8 @@ export async function startPolarCheckout(opts: {
     // Analytics is best-effort and must never block a valid checkout.
   }
   const planConfig = PLANS[opts.plan];
-  const checkoutValue = opts.cycle === "yearly"
-    ? planConfig.priceYearly
-    : planConfig.priceMonthly;
+  const checkoutValue =
+    (opts.cycle === "yearly" ? planConfig.priceYearly : planConfig.priceMonthly) ?? 0;
 
   trackEvent("begin_checkout", {
     checkout_provider: "polar",
