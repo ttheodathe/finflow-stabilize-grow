@@ -213,7 +213,10 @@ function RootComponent() {
       if (event === "SIGNED_IN" && window.location.pathname === "/auth") {
         const provider = session?.user?.app_metadata?.provider;
         if (typeof provider === "string" && provider !== "email") {
-          const mode = new URLSearchParams(window.location.search).get("mode") === "signup" ? "signup" : "login";
+          const mode =
+            new URLSearchParams(window.location.search).get("mode") === "signup"
+              ? "signup"
+              : "login";
           trackEvent("auth_completed", { method: provider, mode });
         }
       }
