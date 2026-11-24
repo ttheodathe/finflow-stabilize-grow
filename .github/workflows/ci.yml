@@ -321,10 +321,6 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Diagnose FinFlow Guide Prettier output
-        if: github.event_name == 'pull_request'
-        run: npx prettier src/components/FinFlowGuide.tsx | diff -u src/components/FinFlowGuide.tsx - || true
-
       - name: Check formatting of changed files
         if: github.event_name == 'pull_request'
         run: |
