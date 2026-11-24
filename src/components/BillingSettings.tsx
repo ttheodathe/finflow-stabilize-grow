@@ -3,8 +3,9 @@ import { getMySubscription, listInvoices, cancelSubscription } from "@/lib/billi
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 import { PLANS, PLAN_ORDER, type PlanKey } from "@/lib/paddle/config";
 import { PlanCheckoutButton } from "./PlanCheckoutButton";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { PENDING_POLAR_CHECKOUT_KEY, trackEventOnce } from "@/lib/analytics";
 import { Loader2 } from "lucide-react";
 
 export function BillingSettings() {
@@ -25,7 +26,147 @@ export function BillingSettings() {
     queryKey: ["billing-invoices", companyId],
     queryFn: () => listInvoices({ data: { companyId: companyId! } }),
     enabled: Boolean(companyId) && hasBillingProvider,
+    // A checkout return can race the provider webhook by a few seconds.
+    // Poll briefly while the browser-local checkout marker is still fresh.
+    refetchInterval: () => {
+      if (typeof window === "undefined") return false;
+      try {
+        const pending = JSON.parse(
+          window.localStorage.getItem(PENDING_POLAR_CHECKOUT_KEY) ?? "null",
+        ) as { startedAt?: number } | null;
+        const startedAt = Number(pending?.startedAt);
+        const age = Date.now() - startedAt;
+        return Number.isFinite(startedAt) && age >= 0 && age < 120_000 ? 5_000 : false;
+      } catch {
+        return false;
+      }
+    },
   });
+
+  useEffect(() => {
+    if (
+      typeof window === "undefined" ||
+      !companyId ||
+      !subQuery.data ||
+      !invoicesQuery.isSuccess
+    ) {
+      return;
+    }
+
+    let startedAt = 0;
+    try {
+      const pending = JSON.parse(
+        window.localStorage.getItem(PENDING_POLAR_CHECKOUT_KEY) ?? "null",
+      ) as { startedAt?: number } | null;
+      startedAt = Number(pending?.startedAt);
+    } catch {
+      return;
+    }
+
+    if (!Number.isFinite(startedAt) || startedAt <= 0) return;
+    if (Date.now() - startedAt > 24 * 60 * 60 * 1000) {
+      window.localStorage.removeItem(PENDING_POLAR_CHECKOUT_KEY);
+      return;
+    }
+
+    const sub = subQuery.data;
+    if (
+      sub.status !== "active" ||
+      (sub.plan !== "pro" && sub.plan !== "business") ||
+      !sub.polar_subscription_id
+    ) {
+      return;
+    }
+
+    let orders: Array<Record<string, unknown>> = [];
+    try {
+      const parsed = JSON.parse(invoicesQuery.data?.transactionsJson ?? "[]");
+      if (!Array.isArray(parsed)) return;
+      orders = parsed as Array<Record<string, unknown>>;
+    } catch {
+      return;
+    }
+
+    let processedPaidOrder = false;
+    for (const order of orders) {
+      const orderId = typeof order.id === "string" ? order.id : "";
+      const createdAt = Date.parse(String(order.created_at ?? ""));
+      const sameSubscription = order.subscription_id === sub.polar_subscription_id;
+      const paid = order.paid === true || order.status === "paid";
+      const currency = String(order.currency ?? "").toUpperCase();
+      const netAmountCents = Number(
+        order.net_amount ??
+          (Number(order.total_amount) - Number(order.tax_amount ?? 0)),
+      );
+      const taxAmountCents = Number(order.tax_amount ?? 0);
+
+      // Only accept a provider-confirmed, positive payment created after this
+      // browser started checkout and belonging to the currently active plan.
+      if (
+        !orderId ||
+        !sameSubscription ||
+        !paid ||
+        !Number.isFinite(createdAt) ||
+        createdAt < startedAt - 60_000 ||
+        createdAt > Date.now() + 60_000 ||
+        !/^[A-Z]{3}$/.test(currency) ||
+        !Number.isFinite(netAmountCents) ||
+        netAmountCents <= 0
+      ) {
+        continue;
+      }
+
+      const value = Math.round((netAmountCents / 100) * 100) / 100;
+      const tax = Number.isFinite(taxAmountCents) && taxAmountCents > 0
+        ? Math.round((taxAmountCents / 100) * 100) / 100
+        : 0;
+      const planName = sub.plan === "business" ? PLANS.business.name : PLANS.pro.name;
+      const cycleName = sub.billing_cycle === "yearly" ? "Yearly" : "Monthly";
+      const itemId =
+        typeof order.product_id === "string"
+          ? order.product_id
+          : `finflow-${sub.plan}-${sub.billing_cycle ?? "monthly"}`;
+
+      const purchaseTracked = trackEventOnce("purchase", `polar-order:${orderId}`, {
+        transaction_id: orderId,
+        currency,
+        value,
+        tax,
+        items: [
+          {
+            item_id: itemId,
+            item_name: `FinFlow Track ${planName} ${cycleName} subscription`,
+            item_category: "subscription",
+            price: value,
+            quantity: 1,
+          },
+        ],
+      });
+      if (!purchaseTracked) return;
+
+      if (order.billing_reason === "subscription_create") {
+        const leadTracked = trackEventOnce(
+          "close_convert_lead",
+          `polar-subscription:${sub.polar_subscription_id}`,
+          {
+            transaction_id: orderId,
+            currency,
+            value,
+          },
+        );
+        if (!leadTracked) return;
+      }
+
+      processedPaidOrder = true;
+    }
+
+    // Clear the marker only after a real paid order was queued or had already
+    // been recorded. If the webhook is still pending, the short polling window
+    // or a later Billing Settings visit can still pick it up.
+    if (processedPaidOrder) {
+      window.localStorage.removeItem(PENDING_POLAR_CHECKOUT_KEY);
+    }
+  }, [companyId, subQuery.data, invoicesQuery.isSuccess, invoicesQuery.data]);
 
   if (!companyId) {
     return (
