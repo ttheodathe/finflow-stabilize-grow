@@ -1,6 +1,6 @@
 ---
-title: "Balance Sheet for Small Business: How to Read Assets, Liabilities and Equity"
-description: "See a worked small-business balance sheet example, understand assets, liabilities and owner’s equity, and calculate working capital and liquidity ratios."
+title: "Small Business Balance Sheet: Assets, Liabilities & Equity"
+description: "Understand a small-business balance sheet with a worked example of assets, liabilities, equity, and key liquidity measures."
 slug: "balance-sheet-for-small-business"
 author: "FinFlowTrack Editorial Team"
 publishedAt: "2026-08-20"
