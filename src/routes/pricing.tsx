@@ -80,7 +80,7 @@ function PricingPage() {
           <div className="rounded-xl border p-8">
             <ShieldCheck className="mb-5 h-10 w-10 text-primary" />
 
-            <h3 className="text-xl font-semibold">Plan options</h3>
+            <h2 className="text-xl font-semibold">Plan options</h2>
 
             <p className="mt-4 text-muted-foreground">
               Choose a plan based on the companies, team members and financial tools your business
@@ -91,7 +91,7 @@ function PricingPage() {
           <div className="rounded-xl border p-8">
             <Sparkles className="mb-5 h-10 w-10 text-primary" />
 
-            <h3 className="text-xl font-semibold">Flexible Plans</h3>
+            <h2 className="text-xl font-semibold">Flexible Plans</h2>
 
             <p className="mt-4 text-muted-foreground">
               Select a plan based on your business size, users, companies, and required features.
@@ -101,7 +101,7 @@ function PricingPage() {
           <div className="rounded-xl border p-8">
             <Users className="mb-5 h-10 w-10 text-primary" />
 
-            <h3 className="text-xl font-semibold">Team Ready</h3>
+            <h2 className="text-xl font-semibold">Team Ready</h2>
 
             <p className="mt-4 text-muted-foreground">
               Invite team members and control access using permissions.
@@ -111,7 +111,7 @@ function PricingPage() {
           <div className="rounded-xl border p-8">
             <Lock className="mb-5 h-10 w-10 text-primary" />
 
-            <h3 className="text-xl font-semibold">Compare before upgrading</h3>
+            <h2 className="text-xl font-semibold">Compare before upgrading</h2>
 
             <p className="mt-4 text-muted-foreground">
               Review the listed plan price and included limits before choosing.
