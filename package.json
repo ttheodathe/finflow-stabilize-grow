@@ -13,6 +13,7 @@
     "postinstall": "node scripts/patch-picomatch-redos.mjs",
     "test:security": "node scripts/check-picomatch-redos.mjs",
     "test:unit": "node --experimental-strip-types --test src/lib/*.test.ts",
+    "test:seo:public": "node scripts/verify-public-seo-endpoints.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

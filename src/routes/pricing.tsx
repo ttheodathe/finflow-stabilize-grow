@@ -261,7 +261,6 @@ function PricingPage() {
                   "Projects",
                   "Audit Logs",
                   "Advanced Analytics",
-                  "API Access",
                   "Priority Support",
                 ].map((item) => (
                   <li key={item} className="flex items-center">
@@ -363,7 +362,6 @@ function PricingPage() {
                 ["Projects", "—", "—", "✓", "✓"],
                 ["AI Bookkeeper", "—", "✓", "✓", "✓"],
                 ["Financial Reports", "Basic", "Advanced", "Advanced", "Enterprise"],
-                ["API Access", "—", "—", "✓", "✓"],
                 ["Support level", "Standard", "Priority email", "Priority", "Enterprise support"],
               ].map((row) => (
                 <tr key={row[0]} className="border-t">

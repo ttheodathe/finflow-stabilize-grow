@@ -1,0 +1,29 @@
+name: SEO Public Endpoint Verification
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Canonical site URL to verify"
+        required: false
+        default: "https://www.finflowtrack.com"
+
+permissions:
+  contents: read
+
+jobs:
+  verify-public-seo-endpoints:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Verify sitemap.xml and robots.txt
+        env:
+          SEO_BASE_URL: ${{ inputs.base_url }}
+        run: node scripts/verify-public-seo-endpoints.mjs
