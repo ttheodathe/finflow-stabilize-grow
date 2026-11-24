@@ -222,7 +222,7 @@ const SUGGESTIONS = [
 const STOP_WORDS = new Set(["a","an","and","are","can","do","does","for","how","i","in","is","it","me","my","of","on","or","the","to","what","when","where","which","with","you","your"]);
 
 function normalizeQuestion(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9\\s]/g, " ").replace(/\\s+/g, " ").trim();
+  return value.toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
 }
 
 function findAnswer(question: string): Answer | undefined {
