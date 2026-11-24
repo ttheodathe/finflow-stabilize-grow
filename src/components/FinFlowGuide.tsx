@@ -58,14 +58,24 @@ const ANSWERS: Answer[] = [
     id: "expenses",
     title: "Can I track expenses?",
     keywords: ["expense", "expenses", "spending", "costs", "record a purchase"],
-    response: "Yes. FinFlow Track includes expense tracking so you can record and review business expenses alongside your other financial activity.",
+    response:
+      "Yes. FinFlow Track includes expense tracking so you can record and review business expenses alongside your other financial activity.",
     href: "/guides",
     linkLabel: "Explore the guides",
   },
   {
     id: "reports",
     title: "What financial reports are available?",
-    keywords: ["report", "reports", "profit", "loss", "balance sheet", "cash flow", "receivables", "payables"],
+    keywords: [
+      "report",
+      "reports",
+      "profit",
+      "loss",
+      "balance sheet",
+      "cash flow",
+      "receivables",
+      "payables",
+    ],
     response:
       "FinFlow Track provides financial reporting such as profit and loss, balance sheet, cash flow and aging reports. The reports available to you depend on your plan.",
     href: "/features",
@@ -205,7 +215,8 @@ export function FinFlowGuide({ pathname }: { pathname: string }) {
 
           <div className="flex-1 space-y-4 overflow-y-auto p-4" aria-live="polite">
             <div className="max-w-[92%] rounded-2xl rounded-tl-sm bg-muted p-3 text-sm">
-              Hi! I’m FinFlow Guide. I can help you understand FinFlow Track, compare plans and find setup instructions. What would you like to know?
+              Hi! I’m FinFlow Guide. I can help you understand FinFlow Track, compare plans and find
+              setup instructions. What would you like to know?
             </div>
 
             {asked.map((item, index) => {
