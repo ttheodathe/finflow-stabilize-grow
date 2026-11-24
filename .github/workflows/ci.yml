@@ -15,10 +15,9 @@ on:
       - feat/stage-d-publish-package-preflight
       - feat/stage-d-oidc-publisher
       - feat/stage-e-production-activation-collector
-      - seo/gsc-engagement-improvements-2026-11-24
 
 permissions:
-  contents: write
+  contents: read
   actions: read
 
 concurrency:
@@ -321,63 +320,6 @@ jobs:
 
       - name: Lint
         run: npm run lint
-
-      - name: Temporary Prettier pass for SEO PR 147
-        run: |
-          npx prettier --write \
-            .github/workflows/ci.yml \
-            content/blog/13-week-cash-flow-forecast-template.md \
-            content/blog/cash-flow-forecasting-small-business.md \
-            content/blog/free-accounting-software-for-small-business.md \
-            content/blog/how-to-keep-track-of-business-expenses.md \
-            content/blog/profit-and-loss-statement-small-business.md \
-            content/blog/small-business-accounting-software.md \
-            src/routes/compare.finflow-track-vs-quickbooks.tsx \
-            src/routes/compare.finflow-track-vs-wave.tsx \
-            src/routes/compare.finflow-track-vs-xero.tsx \
-            src/routes/compare.finflow-track-vs-zoho-books.tsx
-          mkdir -p /tmp/seo-pr-147-formatted
-          cp --parents \
-            content/blog/13-week-cash-flow-forecast-template.md \
-            content/blog/cash-flow-forecasting-small-business.md \
-            content/blog/free-accounting-software-for-small-business.md \
-            content/blog/how-to-keep-track-of-business-expenses.md \
-            content/blog/profit-and-loss-statement-small-business.md \
-            content/blog/small-business-accounting-software.md \
-            src/routes/compare.finflow-track-vs-quickbooks.tsx \
-            src/routes/compare.finflow-track-vs-wave.tsx \
-            src/routes/compare.finflow-track-vs-xero.tsx \
-            src/routes/compare.finflow-track-vs-zoho-books.tsx \
-            /tmp/seo-pr-147-formatted/
-
-      - name: Commit Prettier output to SEO branch
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- \
-            content/blog/13-week-cash-flow-forecast-template.md \
-            content/blog/cash-flow-forecasting-small-business.md \
-            content/blog/free-accounting-software-for-small-business.md \
-            content/blog/how-to-keep-track-of-business-expenses.md \
-            content/blog/profit-and-loss-statement-small-business.md \
-            content/blog/small-business-accounting-software.md \
-            src/routes/compare.finflow-track-vs-quickbooks.tsx \
-            src/routes/compare.finflow-track-vs-wave.tsx \
-            src/routes/compare.finflow-track-vs-xero.tsx \
-            src/routes/compare.finflow-track-vs-zoho-books.tsx
-          if git diff --cached --quiet; then
-            echo "No formatter changes to commit."
-            exit 0
-          fi
-          git commit -m "style: Prettier format SEO PR 147"
-          git push origin "HEAD:seo/gsc-engagement-improvements-2026-11-24"
-
-      - name: Upload formatted SEO PR files
-        uses: actions/upload-artifact@v4
-        with:
-          name: seo-pr-147-prettier-output
-          path: /tmp/seo-pr-147-formatted/
-          retention-days: 1
 
       - name: Check formatting of changed files
         if: github.event_name == 'pull_request'
