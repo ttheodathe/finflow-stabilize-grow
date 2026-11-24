@@ -1,6 +1,6 @@
 ---
-title: "Small Business Bookkeeping Checklist: Daily, Weekly, Monthly & Year-End Tasks"
-description: "Use this small business bookkeeping checklist to stay organized. Learn the daily, weekly, monthly, quarterly, and year-end bookkeeping tasks that keep financial records accurate."
+title: "Small Business Bookkeeping Checklist"
+description: "Use this small-business bookkeeping checklist to organize daily, weekly, monthly, quarterly, and year-end financial tasks."
 slug: "small-business-bookkeeping-checklist"
 author: "FinFlowTrack Editorial Team"
 publishedAt: "2026-08-15"
