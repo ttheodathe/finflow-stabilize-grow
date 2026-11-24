@@ -1,6 +1,6 @@
 ---
-title: "Small Business Bookkeeping: The Complete Guide to Managing Your Business Finances"
-description: "Learn how small business bookkeeping works, what to track, how often to update your records, and how to build a reliable bookkeeping system."
+title: "Small Business Bookkeeping: A Practical Guide"
+description: "Learn what small-business bookkeeping involves, which records to keep, how often to update them, and how to build a reliable routine."
 slug: "small-business-bookkeeping"
 author: "FinFlowTrack Editorial Team"
 publishedAt: "2026-08-15"
