@@ -11,15 +11,15 @@ import { ArrowRight, Check, Minus, Users, Building2, Package, Globe, Wallet } fr
 
 const SITE_URL = "https://www.finflowtrack.com";
 const PAGE_URL = `${SITE_URL}/compare`;
-const REVIEWED_DATE = "2026-08-14";
-const REVIEWED_DATE_LABEL = "August 14, 2026";
+const REVIEWED_DATE = "2026-11-24";
+const REVIEWED_DATE_LABEL = "November 24, 2026";
 
 export const Route = createFileRoute("/compare/")({
   component: CompareHubPage,
   head: () => {
-    const title = "Accounting Software Comparisons: FinFlow Track vs QuickBooks, Xero, Wave & More";
+    const title = "Accounting Software Comparisons | FinFlow Track";
     const description =
-      "Compare FinFlow Track with leading accounting software including QuickBooks, Xero, Wave, Zoho Books and more.";
+      "Compare FinFlow Track with QuickBooks, Xero, Wave, and Zoho Books. Review plans, pricing, features, and product limitations.";
 
     return {
       meta: [
