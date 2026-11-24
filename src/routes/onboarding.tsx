@@ -217,7 +217,7 @@ function OnboardingPage() {
         { onConflict: "user_id" },
       );
       if (!progressError) {
-        trackEventOnce("qualify_lead", "workspace_setup_completed", {
+        trackEventOnce("qualify_lead", `workspace_setup_completed:${user.id}`, {
           qualification_stage: "workspace_setup_completed",
           plan,
         });
