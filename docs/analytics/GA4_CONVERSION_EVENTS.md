@@ -15,8 +15,7 @@ key events configured on the GA4 property as of 2026-11-24:
 - `begin_checkout`: emitted when the Polar checkout URL has been created successfully. Includes the displayed plan value, currency, and one subscription item.
 - `onboarding_completed`: emitted separately for successful free or paid workspace setup; free signups are not automatically counted as qualified sales leads.
 - `auth_started` / `auth_completed`: sign-in and account creation flow.
-- `onboarding_completed`: successful onboarding completion.
-- `invoice_created` / `expense_created`: successful creation of the first-party accounting records.
+- `invoice_created` / `expense_created`: successful creation of first-party accounting records.
 - `first_value_action_completed`: the first invoice or expense recorded for a company.
 
 ## Purchase payload rules
@@ -30,9 +29,12 @@ the browser's checkout marker, and the order has a valid currency and positive
 net amount.
 
 The browser-local checkout marker contains only a timestamp. Deduplication
-keys are stored locally and are not sent to GA4. Event payloads must not include
-names, email addresses, company names, account IDs, customer IDs, or financial
-record details.
+keys are stored locally and are not sent to GA4. This prevents repeats in one
+browser profile, but clearing storage or using another device can allow a
+lifecycle event to fire again; GA4's purchase `transaction_id` remains the
+transaction-level deduplication key. Event payloads must not include names,
+email addresses, company names, account IDs, customer IDs, or financial-record
+details.
 
 ## Current limitation
 
