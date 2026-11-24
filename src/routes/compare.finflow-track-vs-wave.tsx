@@ -29,15 +29,15 @@ import {
 
 const SITE_URL = "https://www.finflowtrack.com";
 const PAGE_URL = `${SITE_URL}/compare/finflow-track-vs-wave`;
-const REVIEWED_DATE = "2026-11-16";
-const REVIEWED_DATE_LABEL = "November 16, 2026";
+const REVIEWED_DATE = "2026-11-24";
+const REVIEWED_DATE_LABEL = "November 24, 2026";
 
 export const Route = createFileRoute("/compare/finflow-track-vs-wave")({
   component: ComparePage,
   head: () => {
-    const title = "FinFlow Track vs Wave: Expenses, Features & Pricing Compared";
+    const title = "FinFlow Track vs Wave: Free Plans & Features";
     const description =
-      "Compare FinFlow Track vs Wave for expense tracking, accounting reports, invoicing, bank feeds, multi-currency, pricing, and availability.";
+      "Compare FinFlow Track and Wave on free-plan features, invoicing, expenses, bank feeds, payment fees, multi-currency, and regional availability.";
 
     return {
       meta: [
