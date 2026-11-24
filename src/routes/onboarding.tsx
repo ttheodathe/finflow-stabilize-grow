@@ -224,7 +224,7 @@ function OnboardingPage() {
       // Leaves the SPA for the Polar-hosted checkout page and returns to
       // /settings?tab=billing. The server takes the payer from the session.
       try {
-        await startPolarCheckout({ productId, companyId });
+        await startPolarCheckout({ productId, companyId, plan, cycle: "monthly" });
       } catch (e) {
         setSaving(false);
         toast.error(e instanceof Error ? e.message : "Checkout could not be started");
