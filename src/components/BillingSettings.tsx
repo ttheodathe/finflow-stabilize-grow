@@ -3,9 +3,26 @@ import { getMySubscription, listInvoices, cancelSubscription } from "@/lib/billi
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 import { PLANS, PLAN_ORDER, type PlanKey } from "@/lib/paddle/config";
 import { PlanCheckoutButton } from "./PlanCheckoutButton";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { trackEventOnce } from "@/lib/analytics";
+import {
+  getAttributedPolarPurchase,
+  getPendingPolarCheckoutStartedAt,
+  hasRecentPolarCheckout,
+  PENDING_POLAR_CHECKOUT_KEY,
+  POLAR_CHECKOUT_POLL_INTERVAL_MS,
+} from "@/lib/polar-analytics-attribution";
 import { Loader2 } from "lucide-react";
+
+function hasPendingPolarCheckout() {
+  if (typeof window === "undefined") return false;
+  try {
+    return hasRecentPolarCheckout(window.localStorage.getItem(PENDING_POLAR_CHECKOUT_KEY));
+  } catch {
+    return false;
+  }
+}
 
 export function BillingSettings() {
   const companyId = useActiveCompanyId();
@@ -16,6 +33,7 @@ export function BillingSettings() {
     queryKey: ["subscription", companyId],
     queryFn: () => getMySubscription({ data: { companyId } }),
     enabled: Boolean(companyId),
+    refetchInterval: () => (hasPendingPolarCheckout() ? POLAR_CHECKOUT_POLL_INTERVAL_MS : false),
   });
 
   const sub = subQuery.data;
@@ -25,13 +43,108 @@ export function BillingSettings() {
     queryKey: ["billing-invoices", companyId],
     queryFn: () => listInvoices({ data: { companyId: companyId! } }),
     enabled: Boolean(companyId) && hasBillingProvider,
+    // A checkout return can race the provider webhook by a few seconds.
+    // Poll briefly while the browser-local checkout marker is still fresh.
+    refetchInterval: () => (hasPendingPolarCheckout() ? POLAR_CHECKOUT_POLL_INTERVAL_MS : false),
   });
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !companyId || !subQuery.data || !invoicesQuery.isSuccess) {
+      return;
+    }
+
+    let rawMarker: string | null = null;
+    try {
+      rawMarker = window.localStorage.getItem(PENDING_POLAR_CHECKOUT_KEY);
+    } catch {
+      return;
+    }
+    const startedAt = getPendingPolarCheckoutStartedAt(rawMarker);
+    if (startedAt === null) {
+      if (rawMarker) window.localStorage.removeItem(PENDING_POLAR_CHECKOUT_KEY);
+      return;
+    }
+
+    const sub = subQuery.data;
+    if (
+      sub.status !== "active" ||
+      (sub.plan !== "pro" && sub.plan !== "business") ||
+      !sub.polar_subscription_id
+    ) {
+      return;
+    }
+
+    let orders: Array<Record<string, unknown>> = [];
+    try {
+      const parsed = JSON.parse(invoicesQuery.data?.transactionsJson ?? "[]");
+      if (!Array.isArray(parsed)) return;
+      orders = parsed as Array<Record<string, unknown>>;
+    } catch {
+      return;
+    }
+
+    let processedPaidOrder = false;
+    let billingReasonPending = false;
+    for (const order of orders) {
+      const attributedOrder = getAttributedPolarPurchase(order, {
+        subscriptionId: sub.polar_subscription_id,
+        checkoutStartedAt: startedAt,
+      });
+      if (!attributedOrder) continue;
+
+      const planName = sub.plan === "business" ? PLANS.business.name : PLANS.pro.name;
+      const cycleName = sub.billing_cycle === "yearly" ? "Yearly" : "Monthly";
+      const itemId =
+        attributedOrder.productId ?? `finflow-${sub.plan}-${sub.billing_cycle ?? "monthly"}`;
+
+      const purchaseTracked = trackEventOnce("purchase", `polar-order:${attributedOrder.orderId}`, {
+        transaction_id: attributedOrder.orderId,
+        currency: attributedOrder.currency,
+        value: attributedOrder.value,
+        tax: attributedOrder.tax,
+        items: [
+          {
+            item_id: itemId,
+            item_name: `FinFlow Track ${planName} ${cycleName} subscription`,
+            item_category: "subscription",
+            price: attributedOrder.value,
+            quantity: 1,
+          },
+        ],
+      });
+      if (!purchaseTracked) return;
+
+      if (attributedOrder.billingReason === "subscription_create") {
+        const leadTracked = trackEventOnce(
+          "close_convert_lead",
+          `polar-subscription:${sub.polar_subscription_id}`,
+          {
+            transaction_id: attributedOrder.orderId,
+            currency: attributedOrder.currency,
+            value: attributedOrder.value,
+          },
+        );
+        if (!leadTracked) return;
+      } else if (attributedOrder.billingReason === null) {
+        // Keep the checkout marker alive briefly until the processed webhook
+        // supplies billing_reason, so the initial conversion isn't lost to a race.
+        billingReasonPending = true;
+      }
+
+      processedPaidOrder = true;
+    }
+
+    // Clear the marker only after a real paid order was queued or had already
+    // been recorded. If the webhook is still pending, the short polling window
+    // or a later Billing Settings visit can still pick it up.
+    if (processedPaidOrder && !billingReasonPending) {
+      window.localStorage.removeItem(PENDING_POLAR_CHECKOUT_KEY);
+    }
+  }, [companyId, subQuery.data, invoicesQuery.isSuccess, invoicesQuery.data]);
 
   if (!companyId) {
     return (
-      <div className="text-sm text-gray-500">
-        Select a company to view billing information.
-      </div>
+      <div className="text-sm text-gray-500">Select a company to view billing information.</div>
     );
   }
 
@@ -83,9 +196,7 @@ export function BillingSettings() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-sm font-medium text-gray-500">Current plan</h2>
-            <p className="mt-1 text-lg font-semibold text-gray-900">
-              {currentCfg.name}
-            </p>
+            <p className="mt-1 text-lg font-semibold text-gray-900">{currentCfg.name}</p>
             <p className="mt-1 text-xs text-gray-500">{currentCfg.description}</p>
           </div>
           <span
@@ -104,9 +215,7 @@ export function BillingSettings() {
           {sub?.billing_cycle && (
             <div>
               <dt className="text-gray-500">Billing cycle</dt>
-              <dd className="mt-0.5 font-medium text-gray-900 capitalize">
-                {sub.billing_cycle}
-              </dd>
+              <dd className="mt-0.5 font-medium text-gray-900 capitalize">{sub.billing_cycle}</dd>
             </div>
           )}
           {sub?.current_period_end && (
@@ -126,9 +235,7 @@ export function BillingSettings() {
           {customerId && (
             <div>
               <dt className="text-gray-500">Customer ID</dt>
-              <dd className="mt-0.5 font-mono text-[11px] text-gray-700 break-all">
-                {customerId}
-              </dd>
+              <dd className="mt-0.5 font-mono text-[11px] text-gray-700 break-all">{customerId}</dd>
             </div>
           )}
           {subscriptionId && (
@@ -259,8 +366,7 @@ export function BillingSettings() {
                   // Polar orders: { id, created_at, amount, currency, status }
                   // Paddle transactions: { id, billed_at, details: { totals }, status, invoice_id }
                   const details = tx.details as
-                    | { totals?: { total?: string; currency_code?: string } }
-                    | undefined;
+                    { totals?: { total?: string; currency_code?: string } } | undefined;
                   const date = (tx.billed_at ?? tx.created_at) as string | undefined;
                   const amount = isPolar
                     ? tx.amount != null

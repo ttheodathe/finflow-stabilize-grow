@@ -75,7 +75,7 @@ export function PlanCheckoutButton({
         return;
       }
 
-      await startPolarCheckout({ productId, companyId });
+      await startPolarCheckout({ productId, companyId, plan, cycle });
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       toast.error(`Checkout failed: ${msg}`);
@@ -84,12 +84,7 @@ export function PlanCheckoutButton({
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      disabled={loading}
-      className={className}
-    >
+    <button type="button" onClick={handleClick} disabled={loading} className={className}>
       {loading ? "Loading…" : children}
     </button>
   );

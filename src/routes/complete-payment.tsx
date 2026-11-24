@@ -50,7 +50,12 @@ function CompletePaymentPage() {
     }
     setLoading("pay");
     try {
-      await startPolarCheckout({ productId, companyId: pending.companyId });
+      await startPolarCheckout({
+        productId,
+        companyId: pending.companyId,
+        plan: plan as "pro" | "business",
+        cycle,
+      });
     } catch (e) {
       setLoading(null);
       toast.error(e instanceof Error ? e.message : "Checkout could not be started");
@@ -83,8 +88,8 @@ function CompletePaymentPage() {
           <h1 className="text-2xl font-bold mb-1">Complete your payment</h1>
           <p className="text-sm text-muted-foreground mb-6">
             You selected the <span className="font-medium">{cfg.name}</span> plan (
-            {formatPlanPrice(cfg)}), but checkout wasn't finished. Your workspace is ready — it
-            just needs an active plan before you can get in.
+            {formatPlanPrice(cfg)}), but checkout wasn't finished. Your workspace is ready — it just
+            needs an active plan before you can get in.
           </p>
           <div className="flex flex-col gap-2">
             <Button onClick={payNow} disabled={loading !== null} className="w-full">
