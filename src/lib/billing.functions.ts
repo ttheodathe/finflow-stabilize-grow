@@ -327,7 +327,60 @@ export const listInvoices = createServerFn({ method: "POST" })
       );
       if (!resp.ok) return { transactionsJson: "[]" };
       const json = (await resp.json()) as { items?: unknown[] };
-      return { transactionsJson: JSON.stringify(json.items ?? []) };
+      const orders = Array.isArray(json.items) ? json.items : [];
+      const orderIds = new Set(
+        orders
+          .map((order) =>
+            order && typeof order === "object" && typeof (order as Record<string, unknown>).id === "string"
+              ? ((order as Record<string, unknown>).id as string)
+              : null,
+          )
+          .filter((id): id is string => Boolean(id)),
+      );
+
+      // The list endpoint does not consistently expose billing_reason. Enrich
+      // orders from the signed, processed order.paid webhook inbox instead.
+      // Scope the server-only lookup to this authenticated company's Polar customer.
+      const billingReasons = new Map<string, string>();
+      if (orderIds.size > 0) {
+        try {
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const { data: paidEvents } = await (supabaseAdmin as any)
+            .from("billing_events")
+            .select("payload")
+            .eq("source", "polar")
+            .eq("event_type", "order.paid")
+            .eq("processed", true)
+            .filter("payload->data->>customer_id", "eq", sub.polar_customer_id)
+            .order("created_at", { ascending: false })
+            .limit(25);
+
+          for (const event of paidEvents ?? []) {
+            const eventData = event.payload?.data as
+              | { id?: unknown; billing_reason?: unknown }
+              | undefined;
+            if (
+              typeof eventData?.id === "string" &&
+              orderIds.has(eventData.id) &&
+              typeof eventData.billing_reason === "string"
+            ) {
+              billingReasons.set(eventData.id, eventData.billing_reason);
+            }
+          }
+        } catch (error) {
+          console.warn("[billing] Could not enrich Polar order reasons:", error);
+        }
+      }
+
+      const enrichedOrders = orders.map((order) => {
+        if (!order || typeof order !== "object") return order;
+        const record = order as Record<string, unknown>;
+        const reason = typeof record.billing_reason === "string"
+          ? record.billing_reason
+          : billingReasons.get(String(record.id ?? ""));
+        return reason ? { ...record, billing_reason: reason } : record;
+      });
+      return { transactionsJson: JSON.stringify(enrichedOrders) };
     }
 
     const customerId = sub?.paddle_customer_id as string | undefined;
