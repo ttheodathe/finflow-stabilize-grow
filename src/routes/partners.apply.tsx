@@ -33,7 +33,7 @@ export const Route = createFileRoute("/partners/apply")({
       {
         name: "description",
         content:
-          "Join the FinFlowTrack Partner Program and earn tiered commissions of 20%, 35% or 50% on qualified referrals, with eligible commissions continuing for up to 15 months. Open to affiliates, firms, accountants, consultants, educators, and resellers.",
+          "Apply to FinFlow Track's partner program for affiliates, accountants, consultants, educators, firms, and resellers. Review commission tiers and program terms.",
       },
     ],
   }),
