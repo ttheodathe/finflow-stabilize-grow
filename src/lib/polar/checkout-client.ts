@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { trackEvent } from "@/lib/analytics";
+import { trackEvent, trackEventOnce } from "@/lib/analytics";
 import { PENDING_POLAR_CHECKOUT_KEY } from "@/lib/polar-analytics-attribution";
 import { PLANS, type BillingCycle } from "@/lib/paddle/config";
 
@@ -37,6 +37,14 @@ export async function startPolarCheckout(opts: {
   const planConfig = PLANS[opts.plan];
   const checkoutValue =
     (opts.cycle === "yearly" ? planConfig.priceYearly : planConfig.priceMonthly) ?? 0;
+
+  const userId = data.session?.user?.id;
+  if (userId) {
+    trackEventOnce("qualify_lead", `paid_plan_selected:${userId}`, {
+      qualification_stage: "paid_plan_selected",
+      plan: opts.plan,
+    });
+  }
 
   trackEvent("begin_checkout", {
     checkout_provider: "polar",
