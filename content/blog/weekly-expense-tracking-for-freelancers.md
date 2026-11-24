@@ -1,6 +1,6 @@
 ---
-title: "Weekly Expense Tracking for Freelancers: A Practical 20-Minute Routine"
-description: "Build a weekly expense-tracking routine for freelancers: log purchases, organize receipts, categorize costs, check statements, and spot spending changes."
+title: "Weekly Expense Tracking for Freelancers"
+description: "Create a weekly expense-tracking routine for freelancers: record purchases, organize receipts, review categories, and check spending."
 slug: "weekly-expense-tracking-for-freelancers"
 author: "FinFlowTrack Editorial Team"
 publishedAt: "2026-10-27"
