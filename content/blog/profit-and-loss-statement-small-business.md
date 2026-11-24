@@ -1,10 +1,10 @@
 ---
-title: "Profit and Loss Statement for Small Business: How to Read and Understand Your P&L"
-description: "Learn how to read a profit and loss statement for a small business, understand revenue, gross profit, operating expenses, net profit, and key P&L metrics."
+title: "Profit and Loss Statement for Small Business: P&L Guide"
+description: "Understand a small business profit and loss (P&L) statement with a worked example of revenue, gross profit, expenses, margins, and net income."
 slug: "profit-and-loss-statement-small-business"
 author: "FinFlowTrack Editorial Team"
 publishedAt: "2026-08-20"
-updatedAt: "2026-08-20"
+updatedAt: "2026-11-24"
 category: "small-business-finance"
 tags:
   - profit and loss statement
