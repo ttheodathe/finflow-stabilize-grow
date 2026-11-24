@@ -30,21 +30,21 @@ export const Route = createFileRoute("/help")({
   head: () => ({
     meta: [
       {
-        title: "FinFlowTrack Help Center | Accounting Software Guides & Support",
+        title: "FinFlow Track Help Center | Guides & Support",
       },
       {
         name: "description",
         content:
-          "Learn how to use FinFlowTrack accounting software with guides for invoices, expenses, inventory, subscriptions, teams, and business management.",
+          "Find FinFlow Track help for invoices, expenses, reports, inventory, subscriptions, team access, and everyday account tasks.",
       },
       {
         property: "og:title",
-        content: "FinFlowTrack Help Center | Accounting Software Guides & Support",
+        content: "FinFlow Track Help Center | Guides & Support",
       },
       {
         property: "og:description",
         content:
-          "Learn how to use FinFlowTrack accounting software with guides for invoices, expenses, inventory, subscriptions, teams, and business management.",
+          "Find FinFlow Track help for invoices, expenses, reports, inventory, subscriptions, team access, and everyday account tasks.",
       },
       {
         property: "og:type",
