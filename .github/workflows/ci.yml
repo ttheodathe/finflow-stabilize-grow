@@ -17,7 +17,7 @@ on:
       - feat/stage-e-production-activation-collector
 
 permissions:
-  contents: write
+  contents: read
   actions: read
 
 concurrency:
@@ -56,25 +56,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: TEMPORARY - Prettier format changed files
-        if: github.event_name == 'pull_request'
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          HEAD_REF: ${{ github.head_ref }}
-        run: |
-          git fetch origin "$HEAD_REF"
-          git checkout -B "$HEAD_REF" "origin/$HEAD_REF"
-          git diff --name-only -z "$BASE_SHA" "$HEAD_SHA" -- '*.js' '*.jsx' '*.ts' '*.tsx' '*.json' '*.css' '*.md' '*.yml' '*.yaml' > /tmp/changed-files.z
-          xargs -0 -r npx prettier --write < /tmp/changed-files.z
-          if ! git diff --quiet; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            xargs -0 -r git add -- < /tmp/changed-files.z
-            git commit -m "style: Prettier format GA4 analytics update"
-            git push origin "HEAD:$HEAD_REF"
-          fi
 
       - name: Test SEO pipeline and content-operation safeguards
         run: node --test seo-engine/*.test.mjs seo-engine/activation/*.test.mjs seo-engine/content-ops/*.test.mjs seo-engine/persistence/*.test.mjs seo-engine/research/*.test.mjs seo-engine/schedulers/*.test.mjs seo-engine/publishing/*.test.mjs
