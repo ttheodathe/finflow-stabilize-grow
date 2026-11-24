@@ -13,12 +13,6 @@ declare global {
 }
 
 /**
- * Pending checkout marker shared by the Polar redirect and billing return page.
- * It stores no account, customer, or payment details.
- */
-export const PENDING_POLAR_CHECKOUT_KEY = "finflow_ga4_pending_polar_checkout_v1";
-
-/**
  * Send privacy-conscious product events through the site's existing GA4 setup.
  * Never pass names, email addresses, account IDs, or other personal information.
  * Returns false when the GA4 queue is unavailable so callers can safely retry.
