@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
-import { PENDING_POLAR_CHECKOUT_KEY, trackEvent } from "@/lib/analytics";
+import { trackEvent } from "@/lib/analytics";
+import { PENDING_POLAR_CHECKOUT_KEY } from "@/lib/polar-analytics-attribution";
 import { PLANS, type BillingCycle } from "@/lib/paddle/config";
 
 /**
