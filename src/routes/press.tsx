@@ -7,12 +7,12 @@ export const Route = createFileRoute("/press")({
   head: () => ({
     meta: [
       {
-        title: "FinFlowTrack Press | News, Media Resources & Company Information",
+        title: "FinFlow Track Press & Media Resources",
       },
       {
         name: "description",
         content:
-          "Discover FinFlowTrack company news, announcements, media resources, and information about our accounting and business management platform.",
+          "Find FinFlow Track company information, media announcements, brand details, and press contact information.",
       },
     ],
   }),
