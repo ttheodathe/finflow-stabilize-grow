@@ -1,6 +1,6 @@
 ---
 title: "How to Create an Invoice: A Complete Small Business Guide"
-description: "Learn how to create a professional invoice for your small business, what information to include, how to set payment terms, and how to avoid common invoicing mistakes."
+description: "Learn how to create a small-business invoice, what details to include, how to set payment terms, and how to avoid common invoicing errors."
 slug: "how-to-create-an-invoice"
 author: "FinFlowTrack Editorial Team"
 publishedAt: "2026-08-19"
