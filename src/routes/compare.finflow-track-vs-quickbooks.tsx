@@ -24,18 +24,18 @@ import {
   ExternalLink,
 } from "lucide-react";
 
-const SITE_URL = "https://finflowtrack.com";
+const SITE_URL = "https://www.finflowtrack.com";
 const PAGE_URL = `${SITE_URL}/compare/finflow-track-vs-quickbooks`;
 const PUBLISHED_DATE = "2026-08-13";
-const REVIEWED_DATE = "2026-11-16";
-const REVIEWED_DATE_LABEL = "November 16, 2026";
+const REVIEWED_DATE = "2026-11-24";
+const REVIEWED_DATE_LABEL = "November 24, 2026";
 
 export const Route = createFileRoute("/compare/finflow-track-vs-quickbooks")({
   component: ComparePage,
   head: () => {
-    const title = "FinFlow Track vs QuickBooks: Free Plans, Features & Pricing Compared";
+    const title = "FinFlow Track vs QuickBooks: Free Plan Compared";
     const description =
-      "Compare FinFlow Track and QuickBooks Free on plan limits, invoicing, expense tracking, reports, multi-currency support, and paid features.";
+      "Compare the free plans, invoicing, expenses, financial reports, multi-currency support, and plan limits of FinFlow Track and QuickBooks.";
 
     return {
       meta: [
