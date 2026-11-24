@@ -15,6 +15,7 @@ on:
       - feat/stage-d-publish-package-preflight
       - feat/stage-d-oidc-publisher
       - feat/stage-e-production-activation-collector
+      - seo/gsc-engagement-improvements-2026-11-24
 
 permissions:
   contents: read
@@ -322,7 +323,6 @@ jobs:
         run: npm run lint
 
       - name: Temporary Prettier pass for SEO PR 147
-        if: github.event_name == 'pull_request'
         run: |
           npx prettier --write \
             .github/workflows/ci.yml \
@@ -351,7 +351,6 @@ jobs:
             /tmp/seo-pr-147-formatted/
 
       - name: Upload formatted SEO PR files
-        if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: seo-pr-147-prettier-output
