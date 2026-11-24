@@ -126,7 +126,11 @@ const SUGGESTIONS = [
 ];
 
 function findAnswer(question: string): Answer | undefined {
-  const normalized = question.toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+  const normalized = question
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
   if (!normalized) return undefined;
 
   let best: Answer | undefined;
@@ -152,7 +156,9 @@ export function FinFlowGuide({ pathname }: { pathname: string }) {
   const [asked, setAsked] = useState<string[]>([]);
   const [showAll, setShowAll] = useState(false);
 
-  const isPublicPage = !/^\/(auth|dashboard|app|onboarding|settings)(\/|$)/.test(pathname);
+  const isPublicPage = !/^\/(auth|dashboard|app|onboarding|settings)(\/|$)/.test(
+    pathname,
+  );
   const latestAnswer = useMemo(() => {
     const last = asked[asked.length - 1];
     return last ? findAnswer(last) : undefined;
@@ -183,7 +189,9 @@ export function FinFlowGuide({ pathname }: { pathname: string }) {
           <header className="flex items-center justify-between bg-primary px-4 py-3 text-primary-foreground">
             <div>
               <p className="font-semibold">FinFlow Guide</p>
-              <p className="text-xs text-primary-foreground/80">Product and getting-started help</p>
+              <p className="text-xs text-primary-foreground/80">
+                Product and getting-started help
+              </p>
             </div>
             <button
               type="button"
@@ -222,7 +230,9 @@ export function FinFlowGuide({ pathname }: { pathname: string }) {
                       </>
                     ) : (
                       <>
-                        I don’t have a verified answer to that yet. I don’t want to guess about product features or plan limits. Try the Help Center or contact our team.
+                        I don’t have a verified answer to that yet. I don’t want to
+                        guess about product features or plan limits. Try the Help
+                        Center or contact our team.
                         <div className="mt-2 flex flex-wrap gap-3">
                           <Link
                             to="/help"
