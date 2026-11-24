@@ -9,12 +9,47 @@ declare global {
 }
 
 /**
- * Send privacy-conscious product events through the site's existing GA4 setup.
- * Never pass names, email addresses, record IDs, amounts, or other financial data.
+ * Pending checkout marker shared by the Polar redirect and billing return page.
+ * It stores no account, customer, or payment details.
  */
-export function trackEvent(eventName: string, params: AnalyticsParams = {}) {
-  if (typeof window === "undefined" || typeof window.gtag !== "function") return;
+export const PENDING_POLAR_CHECKOUT_KEY = "finflow_ga4_pending_polar_checkout_v1";
+
+/**
+ * Send privacy-conscious product events through the site's existing GA4 setup.
+ * Never pass names, email addresses, account IDs, or other personal information.
+ * Returns false when the GA4 queue is unavailable so callers can safely retry.
+ */
+export function trackEvent(eventName: string, params: AnalyticsParams = {}): boolean {
+  if (typeof window === "undefined" || typeof window.gtag !== "function") return false;
   window.gtag("event", eventName, params);
+  return true;
+}
+
+/**
+ * Send a one-time event in this browser. The dedupe key stays local and is not
+ * included in the GA4 payload. This is used for lifecycle milestones that
+ * should not repeat when a user reloads a page.
+ */
+export function trackEventOnce(
+  eventName: string,
+  dedupeKey: string,
+  params: AnalyticsParams = {},
+): boolean {
+  if (typeof window === "undefined") return false;
+  const storageKey = `finflow_ga4_once:${eventName}:${dedupeKey}`;
+  try {
+    if (window.localStorage.getItem(storageKey) === "1") return true;
+  } catch {
+    // Continue without browser-level deduplication when storage is unavailable.
+  }
+
+  if (!trackEvent(eventName, params)) return false;
+  try {
+    window.localStorage.setItem(storageKey, "1");
+  } catch {
+    // The event was queued successfully; storage is only a best-effort safeguard.
+  }
+  return true;
 }
 
 /**
