@@ -1,6 +1,6 @@
 ---
-title: "How to Do Bookkeeping for a Small Business: Step-by-Step Guide"
-description: "Learn how to do bookkeeping for a small business with a practical step-by-step system for recording income, tracking expenses, reconciling accounts, managing invoices, and reviewing financial reports."
+title: "Bookkeeping for a Small Business: Step-by-Step Guide"
+description: "Learn small-business bookkeeping step by step: record income, track expenses, reconcile accounts, manage invoices, and review reports."
 slug: "how-to-do-bookkeeping-for-a-small-business"
 author: "FinFlowTrack Editorial Team"
 publishedAt: "2026-08-15"
