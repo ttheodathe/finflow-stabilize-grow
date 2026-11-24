@@ -1,6 +1,6 @@
 ---
-title: "Small Business Bookkeeping Checklist: Daily, Weekly, Monthly & Year-End Tasks"
-description: "Use this small business bookkeeping checklist to stay organized. Learn the daily, weekly, monthly, quarterly, and year-end bookkeeping tasks that keep financial records accurate."
+title: "Small Business Bookkeeping Checklist"
+description: "Use this small-business bookkeeping checklist to organize daily, weekly, monthly, quarterly, and year-end financial tasks."
 slug: "small-business-bookkeeping-checklist"
 author: "FinFlowTrack Editorial Team"
 publishedAt: "2026-08-15"
@@ -29,13 +29,13 @@ You can use it as a practical routine whether you manage your books yourself, us
 
 ## Small business bookkeeping checklist at a glance
 
-| Frequency | Key bookkeeping tasks |
-| --- | --- |
-| Daily / as transactions occur | Record income, expenses, invoices, and payments |
-| Weekly | Review transactions, unpaid invoices, bills, and unusual activity |
-| Monthly | Reconcile accounts, review financial reports, and check cash flow |
-| Quarterly | Analyze trends, review major expenses, and organize required records |
-| Year-end | Complete reconciliations, review annual performance, and prepare records |
+| Frequency                     | Key bookkeeping tasks                                                    |
+| ----------------------------- | ------------------------------------------------------------------------ |
+| Daily / as transactions occur | Record income, expenses, invoices, and payments                          |
+| Weekly                        | Review transactions, unpaid invoices, bills, and unusual activity        |
+| Monthly                       | Reconcile accounts, review financial reports, and check cash flow        |
+| Quarterly                     | Analyze trends, review major expenses, and organize required records     |
+| Year-end                      | Complete reconciliations, review annual performance, and prepare records |
 
 The exact schedule should reflect your transaction volume and business requirements.
 
@@ -344,11 +344,11 @@ Identify categories that have increased materially.
 
 For example:
 
-| Expense category | Q1 | Q2 | Change |
-| --- | ---: | ---: | ---: |
-| Software | $900 | $1,200 | +$300 |
-| Advertising | $2,000 | $2,700 | +$700 |
-| Contractors | $6,000 | $7,500 | +$1,500 |
+| Expense category |     Q1 |     Q2 |  Change |
+| ---------------- | -----: | -----: | ------: |
+| Software         |   $900 | $1,200 |   +$300 |
+| Advertising      | $2,000 | $2,700 |   +$700 |
+| Contractors      | $6,000 | $7,500 | +$1,500 |
 
 The purpose is not to automatically reduce every increasing expense.
 

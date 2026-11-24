@@ -41,20 +41,20 @@ export const Route = createFileRoute("/about")({
   component: AboutPage,
   head: () => ({
     meta: [
-      { title: "About FinFlowTrack | Cloud Accounting Software Built by 2005CLG Ltd" },
+      { title: "About FinFlow Track | Company & Product" },
       {
         name: "description",
         content:
-          "Learn about FinFlowTrack, a cloud accounting platform developed by 2005CLG Ltd, a legally registered company in Rwanda, helping businesses worldwide simplify accounting, invoicing, reporting, inventory, and financial management.",
+          "Meet FinFlow Track, the accounting and financial management platform developed by 2005CLG Ltd in Rwanda for businesses worldwide.",
       },
       {
         property: "og:title",
-        content: "About FinFlowTrack | Cloud Accounting Software Built by 2005CLG Ltd",
+        content: "About FinFlow Track | Company & Product",
       },
       {
         property: "og:description",
         content:
-          "Learn about FinFlowTrack, a cloud accounting platform developed by 2005CLG Ltd, a legally registered company in Rwanda, helping businesses worldwide simplify accounting, invoicing, reporting, inventory, and financial management.",
+          "Meet FinFlow Track, the accounting and financial management platform developed by 2005CLG Ltd in Rwanda for businesses worldwide.",
       },
     ],
   }),
@@ -105,24 +105,80 @@ const coreValues = [
 
 const trustReasons = [
   { icon: CreditCard, title: "Transparent pricing", desc: "Clear plans, published upfront." },
-  { icon: BadgeCheck, title: "No hidden fees", desc: "No surprise charges buried in the fine print." },
-  { icon: KeyRound, title: "Secure authentication", desc: "Modern, secure sign-in for every account." },
-  { icon: Users, title: "Role-based permissions", desc: "Control exactly what each team member can access." },
+  {
+    icon: BadgeCheck,
+    title: "No hidden fees",
+    desc: "No surprise charges buried in the fine print.",
+  },
+  {
+    icon: KeyRound,
+    title: "Secure authentication",
+    desc: "Modern, secure sign-in for every account.",
+  },
+  {
+    icon: Users,
+    title: "Role-based permissions",
+    desc: "Control exactly what each team member can access.",
+  },
   { icon: ScrollText, title: "Audit logs", desc: "Track changes across your financial records." },
-  { icon: Lock, title: "Encrypted communication", desc: "Data in transit is protected end to end." },
-  { icon: Cloud, title: "Cloud infrastructure", desc: "Access your books from anywhere, on any device." },
-  { icon: RefreshCw, title: "Continuous updates", desc: "The product keeps improving, release after release." },
-  { icon: Handshake, title: "Reliable support", desc: "A team that actually responds when you need help." },
+  {
+    icon: Lock,
+    title: "Encrypted communication",
+    desc: "Data in transit is protected end to end.",
+  },
+  {
+    icon: Cloud,
+    title: "Cloud infrastructure",
+    desc: "Access your books from anywhere, on any device.",
+  },
+  {
+    icon: RefreshCw,
+    title: "Continuous updates",
+    desc: "The product keeps improving, release after release.",
+  },
+  {
+    icon: Handshake,
+    title: "Reliable support",
+    desc: "A team that actually responds when you need help.",
+  },
 ];
 
 const securityPoints = [
-  { icon: Lock, title: "HTTPS encryption", desc: "All traffic between your browser and FinFlowTrack is encrypted." },
-  { icon: Users, title: "Role-based access", desc: "Team permissions are scoped to what each role actually needs." },
-  { icon: KeyRound, title: "Secure authentication", desc: "Account access is protected with modern authentication practices." },
-  { icon: Cloud, title: "Automatic backups", desc: "Your data is backed up as part of normal cloud operations." },
-  { icon: ScrollText, title: "Audit logs", desc: "Key actions across your account are recorded and reviewable." },
-  { icon: ShieldCheck, title: "GDPR-conscious privacy", desc: "Privacy practices designed with data protection principles in mind." },
-  { icon: Eye, title: "Continuous monitoring", desc: "We monitor the platform on an ongoing basis to catch issues early." },
+  {
+    icon: Lock,
+    title: "HTTPS encryption",
+    desc: "All traffic between your browser and FinFlowTrack is encrypted.",
+  },
+  {
+    icon: Users,
+    title: "Role-based access",
+    desc: "Team permissions are scoped to what each role actually needs.",
+  },
+  {
+    icon: KeyRound,
+    title: "Secure authentication",
+    desc: "Account access is protected with modern authentication practices.",
+  },
+  {
+    icon: Cloud,
+    title: "Automatic backups",
+    desc: "Your data is backed up as part of normal cloud operations.",
+  },
+  {
+    icon: ScrollText,
+    title: "Audit logs",
+    desc: "Key actions across your account are recorded and reviewable.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "GDPR-conscious privacy",
+    desc: "Privacy practices designed with data protection principles in mind.",
+  },
+  {
+    icon: Eye,
+    title: "Continuous monitoring",
+    desc: "We monitor the platform on an ongoing basis to catch issues early.",
+  },
 ];
 
 const products = [
@@ -143,9 +199,21 @@ const roadmap = [
   { icon: Bot, title: "AI", desc: "Deeper AI-assisted bookkeeping and financial insights." },
   { icon: Zap, title: "Mobile Apps", desc: "Manage your business finances on the go." },
   { icon: Globe2, title: "Public API", desc: "Connect FinFlowTrack to the rest of your stack." },
-  { icon: Landmark, title: "Bank Integrations", desc: "Direct connections to streamline reconciliation." },
-  { icon: RefreshCw, title: "Automation", desc: "Automate recurring, repetitive financial workflows." },
-  { icon: BarChart3, title: "Advanced Reporting", desc: "Deeper, more customizable financial reporting." },
+  {
+    icon: Landmark,
+    title: "Bank Integrations",
+    desc: "Direct connections to streamline reconciliation.",
+  },
+  {
+    icon: RefreshCw,
+    title: "Automation",
+    desc: "Automate recurring, repetitive financial workflows.",
+  },
+  {
+    icon: BarChart3,
+    title: "Advanced Reporting",
+    desc: "Deeper, more customizable financial reporting.",
+  },
 ];
 
 const timeline = [
@@ -189,7 +257,10 @@ function AboutPage() {
           <div className="absolute bottom-0 right-0 h-[400px] w-[600px] rounded-full bg-secondary/10 blur-3xl" />
         </div>
         <div className="container mx-auto max-w-5xl px-6 py-24 text-center">
-          <Badge variant="secondary" className="mb-6 gap-1.5 border-border/60 bg-card/80 px-3 py-1.5 backdrop-blur">
+          <Badge
+            variant="secondary"
+            className="mb-6 gap-1.5 border-border/60 bg-card/80 px-3 py-1.5 backdrop-blur"
+          >
             <Building2 className="h-3.5 w-3.5 text-primary" />
             About FinFlowTrack
           </Badge>
@@ -223,10 +294,10 @@ function AboutPage() {
           <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Company overview</h2>
           <div className="mt-6 grid gap-8 md:grid-cols-2">
             <p className="text-base leading-relaxed text-muted-foreground">
-              FinFlowTrack exists to make accounting and financial management simpler for
-              businesses that don't have a large finance department behind them. Bookkeeping,
-              invoicing, and reporting shouldn't require a specialist just to get started — they
-              should be accessible to whoever is actually running the business.
+              FinFlowTrack exists to make accounting and financial management simpler for businesses
+              that don't have a large finance department behind them. Bookkeeping, invoicing, and
+              reporting shouldn't require a specialist just to get started — they should be
+              accessible to whoever is actually running the business.
             </p>
             <p className="text-base leading-relaxed text-muted-foreground">
               The platform is built global-first, with native multi-currency support, cloud
@@ -268,9 +339,9 @@ function AboutPage() {
                   <p className="mt-1 text-sm font-medium text-primary">Chief Executive Officer</p>
                   <p className="mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground">
                     Theodathe leads FinFlowTrack with a focus on finance, technology, and building
-                    practical software that entrepreneurs can actually rely on day to day. His
-                    work centers on closing the gap between complex financial processes and the
-                    real, everyday needs of small and growing businesses.
+                    practical software that entrepreneurs can actually rely on day to day. His work
+                    centers on closing the gap between complex financial processes and the real,
+                    everyday needs of small and growing businesses.
                   </p>
                   <p className="mt-4 max-w-2xl text-base font-medium leading-relaxed">
                     "FinFlowTrack was created to simplify accounting and financial management for
@@ -289,7 +360,9 @@ function AboutPage() {
           <Badge variant="secondary" className="mb-4">
             Legal information
           </Badge>
-          <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Registered company details</h2>
+          <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
+            Registered company details
+          </h2>
           <Card className="mt-8 border-border/60 shadow-elevated">
             <CardContent className="p-8 md:p-10">
               <div className="flex items-center gap-2 rounded-full bg-secondary/10 px-4 py-2 text-sm font-semibold text-secondary w-fit">
@@ -321,8 +394,8 @@ function AboutPage() {
                 <h3 className="mt-4 text-2xl font-bold tracking-tight">Our Mission</h3>
                 <p className="mt-3 text-base leading-relaxed text-muted-foreground">
                   To simplify accounting and financial management so that any business — regardless
-                  of size or location — can understand and control its own finances without
-                  needing specialized expertise just to get started.
+                  of size or location — can understand and control its own finances without needing
+                  specialized expertise just to get started.
                 </p>
               </CardContent>
             </Card>
@@ -331,8 +404,8 @@ function AboutPage() {
                 <Sparkles className="h-8 w-8 text-secondary" />
                 <h3 className="mt-4 text-2xl font-bold tracking-tight">Our Vision</h3>
                 <p className="mt-3 text-base leading-relaxed text-muted-foreground">
-                  A world where every freelancer, startup, and small business has access to the
-                  same quality of financial tools as larger, well-resourced companies — cloud-based,
+                  A world where every freelancer, startup, and small business has access to the same
+                  quality of financial tools as larger, well-resourced companies — cloud-based,
                   global-first, and built for how businesses actually operate today.
                 </p>
               </CardContent>
@@ -553,7 +626,12 @@ function AboutPage() {
               Join businesses building healthier financial workflows
             </h2>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Button asChild size="lg" variant="secondary" className="bg-card text-foreground hover:bg-card/90">
+              <Button
+                asChild
+                size="lg"
+                variant="secondary"
+                className="bg-card text-foreground hover:bg-card/90"
+              >
                 <Link to="/auth" search={{ mode: "signup" }}>
                   Start Free <ArrowRight className="ml-1 h-4 w-4" />
                 </Link>

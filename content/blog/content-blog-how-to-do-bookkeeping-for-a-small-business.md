@@ -1,6 +1,6 @@
 ---
-title: "How to Do Bookkeeping for a Small Business: Step-by-Step Guide"
-description: "Learn how to do bookkeeping for a small business with a practical step-by-step system for recording income, tracking expenses, reconciling accounts, managing invoices, and reviewing financial reports."
+title: "Bookkeeping for a Small Business: Step-by-Step Guide"
+description: "Learn small-business bookkeeping step by step: record income, track expenses, reconcile accounts, manage invoices, and review reports."
 slug: "how-to-do-bookkeeping-for-a-small-business"
 author: "FinFlowTrack Editorial Team"
 publishedAt: "2026-08-15"
@@ -273,11 +273,11 @@ Do not rely on your bank balance alone to determine whether customers have paid.
 
 A simple accounts receivable report can contain:
 
-| Customer | Invoice | Due date | Amount | Status |
-| --- | --- | --- | ---: | --- |
-| Client A | INV-001 | Aug. 15 | $1,500 | Paid |
-| Client B | INV-002 | Aug. 20 | $2,000 | Due |
-| Client C | INV-003 | Aug. 5 | $750 | Overdue |
+| Customer | Invoice | Due date | Amount | Status  |
+| -------- | ------- | -------- | -----: | ------- |
+| Client A | INV-001 | Aug. 15  | $1,500 | Paid    |
+| Client B | INV-002 | Aug. 20  | $2,000 | Due     |
+| Client C | INV-003 | Aug. 5   |   $750 | Overdue |
 
 Review outstanding invoices regularly.
 
@@ -298,11 +298,11 @@ Examples include:
 
 A simple accounts payable report can include:
 
-| Supplier | Bill | Due date | Amount | Status |
-| --- | --- | --- | ---: | --- |
-| Supplier A | BILL-101 | Aug. 18 | $600 | Due |
-| Supplier B | BILL-102 | Aug. 22 | $250 | Due |
-| Supplier C | BILL-103 | Aug. 10 | $400 | Paid |
+| Supplier   | Bill     | Due date | Amount | Status |
+| ---------- | -------- | -------- | -----: | ------ |
+| Supplier A | BILL-101 | Aug. 18  |   $600 | Due    |
+| Supplier B | BILL-102 | Aug. 22  |   $250 | Due    |
+| Supplier C | BILL-103 | Aug. 10  |   $400 | Paid   |
 
 Knowing what the business owes helps with cash-flow planning.
 
@@ -348,15 +348,15 @@ A profit and loss statement summarizes income and expenses for a period.
 
 A simplified example might look like:
 
-| Item | Amount |
-| --- | ---: |
-| Revenue | $20,000 |
-| Software | $500 |
-| Advertising | $1,500 |
-| Contractors | $6,000 |
-| Office expenses | $500 |
-| Other expenses | $1,000 |
-| Total expenses | $9,500 |
+| Item                                                     |  Amount |
+| -------------------------------------------------------- | ------: |
+| Revenue                                                  | $20,000 |
+| Software                                                 |    $500 |
+| Advertising                                              |  $1,500 |
+| Contractors                                              |  $6,000 |
+| Office expenses                                          |    $500 |
+| Other expenses                                           |  $1,000 |
+| Total expenses                                           |  $9,500 |
 | Net result before applicable taxes and other adjustments | $10,500 |
 
 The exact presentation depends on the accounting method and business.
@@ -430,13 +430,13 @@ The ideal schedule depends on transaction volume.
 
 A practical workflow is:
 
-| Frequency | Bookkeeping activity |
-| --- | --- |
-| Daily or as transactions occur | Record sales, expenses, invoices, and payments |
-| Weekly | Review transactions and unpaid invoices |
-| Monthly | Reconcile accounts and review reports |
-| Quarterly | Analyze trends and review major financial changes |
-| Annually | Complete year-end organization and prepare required information |
+| Frequency                      | Bookkeeping activity                                            |
+| ------------------------------ | --------------------------------------------------------------- |
+| Daily or as transactions occur | Record sales, expenses, invoices, and payments                  |
+| Weekly                         | Review transactions and unpaid invoices                         |
+| Monthly                        | Reconcile accounts and review reports                           |
+| Quarterly                      | Analyze trends and review major financial changes               |
+| Annually                       | Complete year-end organization and prepare required information |
 
 High-volume businesses may need daily reconciliation or more frequent reviews.
 
@@ -514,11 +514,11 @@ Excel or another spreadsheet can work for a simple business if the records are s
 
 A basic transaction sheet might include:
 
-| Date | Description | Customer/Supplier | Category | Income | Expense | Payment method |
-| --- | --- | --- | --- | ---: | ---: | --- |
-| Aug. 1 | Client payment | Client A | Revenue | $1,500 | — | Bank |
-| Aug. 2 | Software | Software Co. | Software | — | $50 | Card |
-| Aug. 3 | Advertising | Ad Platform | Marketing | — | $200 | Card |
+| Date   | Description    | Customer/Supplier | Category  | Income | Expense | Payment method |
+| ------ | -------------- | ----------------- | --------- | -----: | ------: | -------------- |
+| Aug. 1 | Client payment | Client A          | Revenue   | $1,500 |       — | Bank           |
+| Aug. 2 | Software       | Software Co.      | Software  |      — |     $50 | Card           |
+| Aug. 3 | Advertising    | Ad Platform       | Marketing |      — |    $200 | Card           |
 
 For very small businesses, this can provide a basic transaction history.
 
@@ -670,7 +670,7 @@ DIY bookkeeping may be practical when:
 - Financial reporting needs are simple
 - The owner has enough time to maintain the records
 
-The important question is not whether you *can* do it. It is whether you can do it **accurately and consistently without taking time away from higher-value business activities**.
+The important question is not whether you _can_ do it. It is whether you can do it **accurately and consistently without taking time away from higher-value business activities**.
 
 ## A simple bookkeeping workflow for beginners
 

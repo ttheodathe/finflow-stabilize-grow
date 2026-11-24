@@ -1,6 +1,6 @@
 ---
-title: "Break-Even Analysis for Small Business: How to Calculate Your Break-Even Point"
-description: "Calculate small-business break-even units, revenue, contribution margin, target profit, and margin of safety with an interactive calculator and worked examples."
+title: "Break-Even Analysis for Small Business: A Guide"
+description: "Calculate break-even units and revenue, contribution margin, target profit, and margin of safety with worked examples and a calculator."
 slug: "break-even-analysis-small-business"
 author: "FinFlowTrack Editorial Team"
 publishedAt: "2026-08-28"
@@ -251,15 +251,15 @@ Choose monthly, quarterly, or annual analysis and keep the costs and sales assum
 
 Create a list of relevant fixed costs.
 
-| Fixed cost | Monthly amount |
-| --- | ---: |
-| Rent | $1,500 |
-| Salaries | $4,000 |
-| Insurance | $300 |
-| Software | $200 |
-| Professional fees | $300 |
-| Other overhead | $700 |
-| **Total fixed costs** | **$7,000** |
+| Fixed cost            | Monthly amount |
+| --------------------- | -------------: |
+| Rent                  |         $1,500 |
+| Salaries              |         $4,000 |
+| Insurance             |           $300 |
+| Software              |           $200 |
+| Professional fees     |           $300 |
+| Other overhead        |           $700 |
+| **Total fixed costs** |     **$7,000** |
 
 ## Step 3: Identify variable costs
 
@@ -422,10 +422,10 @@ Break-even sales:
 Many businesses sell several products or services with different margins.
 
 | Product | Price | Variable cost | Contribution |
-| --- | ---: | ---: | ---: |
-| A | $50 | $20 | $30 |
-| B | $100 | $70 | $30 |
-| C | $200 | $120 | $80 |
+| ------- | ----: | ------------: | -----------: |
+| A       |   $50 |           $20 |          $30 |
+| B       |  $100 |           $70 |          $30 |
+| C       |  $200 |          $120 |          $80 |
 
 If products are sold in a consistent sales mix, a weighted contribution margin can be used.
 

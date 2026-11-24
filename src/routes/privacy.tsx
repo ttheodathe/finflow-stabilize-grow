@@ -65,7 +65,7 @@ function PrivacyPage() {
           <div className="rounded-xl border p-8">
             <Lock className="mb-5 h-10 w-10 text-primary" />
 
-            <h3 className="text-xl font-semibold">Secure by Design</h3>
+            <h2 className="text-xl font-semibold">Secure by Design</h2>
 
             <p className="mt-4 text-muted-foreground">
               We use technical and organizational measures designed to help protect the information
@@ -76,7 +76,7 @@ function PrivacyPage() {
           <div className="rounded-xl border p-8">
             <Eye className="mb-5 h-10 w-10 text-primary" />
 
-            <h3 className="text-xl font-semibold">Transparent</h3>
+            <h2 className="text-xl font-semibold">Transparent</h2>
 
             <p className="mt-4 text-muted-foreground">
               We explain what information we collect and how it is used in clear language.
@@ -86,7 +86,7 @@ function PrivacyPage() {
           <div className="rounded-xl border p-8">
             <Database className="mb-5 h-10 w-10 text-primary" />
 
-            <h3 className="text-xl font-semibold">Data Responsibility</h3>
+            <h2 className="text-xl font-semibold">Data Responsibility</h2>
 
             <p className="mt-4 text-muted-foreground">
               We collect information necessary to provide and improve our services.
@@ -96,7 +96,7 @@ function PrivacyPage() {
           <div className="rounded-xl border p-8">
             <ShieldCheck className="mb-5 h-10 w-10 text-primary" />
 
-            <h3 className="text-xl font-semibold">Customer Trust</h3>
+            <h2 className="text-xl font-semibold">Customer Trust</h2>
 
             <p className="mt-4 text-muted-foreground">
               Protecting customer information is a core part of how we build FinFlowTrack.
