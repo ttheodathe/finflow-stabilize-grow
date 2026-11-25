@@ -57,6 +57,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Diagnostic Prettier output for demo request files
+        run: npx prettier src/lib/demo-request-validation.ts src/routes/api/demo-requests.tsx
+
       - name: Test SEO pipeline and content-operation safeguards
         run: node --test seo-engine/*.test.mjs seo-engine/activation/*.test.mjs seo-engine/content-ops/*.test.mjs seo-engine/persistence/*.test.mjs seo-engine/research/*.test.mjs seo-engine/schedulers/*.test.mjs seo-engine/publishing/*.test.mjs
       - name: Syntax-check SEO publishing modules
