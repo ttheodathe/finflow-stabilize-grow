@@ -165,6 +165,21 @@ function PrivacyPage() {
             identifier for rate limiting; we do not store the raw network address in the demo
             request records.
           </p>
+          <p className="mt-4 leading-7 text-muted-foreground">
+            Demo enquiries are retained only for as long as reasonably necessary to review and
+            respond to the request, maintain appropriate business records, resolve disputes, and
+            meet applicable legal obligations. When the information is no longer needed for those
+            purposes, it will be deleted or de-identified where appropriate. You may request access
+            to or deletion of your demo enquiry by contacting privacy@finflowtrack.com. We may need
+            to retain limited information where the law requires it or where it is necessary to
+            establish, exercise, or defend legal claims.
+          </p>
+          <p className="mt-4 leading-7 text-muted-foreground">
+            If you have enabled optional marketing updates, you may withdraw that preference at
+            any time by contacting privacy@finflowtrack.com. Demo-request status is managed by
+            authorized FinFlowTrack personnel, and internal email alerts may be sent to the
+            designated team inbox when that notification setting is configured.
+          </p>
         </div>
       </section>
 
