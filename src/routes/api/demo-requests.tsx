@@ -117,17 +117,17 @@ export const Route = createFileRoute("/api/demo-requests")({
           const { error: insertError } = await admin
             .from("demo_requests")
             .insert({
-            full_name: parsed.data.fullName,
-            business_name: parsed.data.businessName,
-            email: parsed.data.email,
-            business_type: parsed.data.businessType,
-            challenge: parsed.data.challenge,
-            preferred_time: parsed.data.preferredTime,
-            phone: parsed.data.phone || null,
-            demo_contact_consent: parsed.data.demoContactConsent,
-            marketing_consent: parsed.data.marketingConsent,
-            submission_fingerprint: fingerprint,
-          });
+              full_name: parsed.data.fullName,
+              business_name: parsed.data.businessName,
+              email: parsed.data.email,
+              business_type: parsed.data.businessType,
+              challenge: parsed.data.challenge,
+              preferred_time: parsed.data.preferredTime,
+              phone: parsed.data.phone || null,
+              demo_contact_consent: parsed.data.demoContactConsent,
+              marketing_consent: parsed.data.marketingConsent,
+              submission_fingerprint: fingerprint,
+            });
 
           if (insertError?.code === "23505") {
             return Response.json(
