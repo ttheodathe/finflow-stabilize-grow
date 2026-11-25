@@ -1,16 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import {
-  ArrowRight,
-  Database,
-  Eye,
-  Globe,
-  Lock,
-  Mail,
-  ShieldCheck,
-  UserCheck,
-} from "lucide-react";
+import { ArrowRight, Database, Eye, Globe, Lock, Mail, ShieldCheck, UserCheck } from "lucide-react";
 
 export const Route = createFileRoute("/privacy")({
   component: PrivacyPage,
@@ -184,8 +175,8 @@ function PrivacyPage() {
             establish, exercise, or defend legal claims.
           </p>
           <p className="mt-4 leading-7 text-muted-foreground">
-            If you have enabled optional marketing updates, you may withdraw that preference at
-            any time by contacting privacy@finflowtrack.com. Demo-request status is managed by
+            If you have enabled optional marketing updates, you may withdraw that preference at any
+            time by contacting privacy@finflowtrack.com. Demo-request status is managed by
             authorized FinFlowTrack personnel, and internal email alerts may be sent to the
             designated team inbox when that notification setting is configured.
           </p>
