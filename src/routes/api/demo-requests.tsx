@@ -13,9 +13,14 @@ export const Route = createFileRoute("/api/demo-requests")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const contentLength = Number(request.headers.get("content-length") ?? "0");
+        const contentLength = Number(
+          request.headers.get("content-length") ?? "0",
+        );
         if (contentLength > MAX_BODY_BYTES) {
-          return Response.json({ error: "Request is too large." }, { status: 413 });
+          return Response.json(
+            { error: "Request is too large." },
+            { status: 413 },
+          );
         }
 
         let body: Record<string, unknown>;
@@ -25,8 +30,15 @@ export const Route = createFileRoute("/api/demo-requests")({
             return Response.json({ error: "Request is too large." }, { status: 413 });
           }
           const parsedBody: unknown = JSON.parse(rawBody);
-          if (parsedBody === null || typeof parsedBody !== "object" || Array.isArray(parsedBody)) {
-            return Response.json({ error: "Invalid request body." }, { status: 400 });
+          if (
+            parsedBody === null ||
+            typeof parsedBody !== "object" ||
+            Array.isArray(parsedBody)
+          ) {
+            return Response.json(
+              { error: "Invalid request body." },
+              { status: 400 },
+            );
           }
           body = parsedBody as Record<string, unknown>;
         } catch {
@@ -34,7 +46,10 @@ export const Route = createFileRoute("/api/demo-requests")({
         }
 
         // Honeypot: silently accept automated submissions without storing them.
-        if (typeof body.website === "string" && body.website.trim().length > 0) {
+        if (
+          typeof body.website === "string" &&
+          body.website.trim().length > 0
+        ) {
           return Response.json({ ok: true }, { status: 202 });
         }
 
@@ -49,7 +64,10 @@ export const Route = createFileRoute("/api/demo-requests")({
         const forwardedFor = request.headers.get("x-forwarded-for");
         const ip = forwardedFor?.split(",")[0]?.trim() ?? "";
         if (!ip || !isIP(ip)) {
-          return Response.json({ error: "Unable to verify request origin." }, { status: 400 });
+          return Response.json(
+            { error: "Unable to verify request origin." },
+            { status: 400 },
+          );
         }
 
         const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -61,7 +79,9 @@ export const Route = createFileRoute("/api/demo-requests")({
         }
 
         try {
-          const { supabaseAdmin: _admin } = await import("@/integrations/supabase/client.server");
+          const { supabaseAdmin: _admin } = await import(
+            "@/integrations/supabase/client.server"
+          );
           // Server-only service-role client; never expose it to the browser.
           // The demo tables are introduced by this PR's migration and are not
           // yet represented in the generated Supabase Database type.
@@ -90,8 +110,13 @@ export const Route = createFileRoute("/api/demo-requests")({
           }
 
           const day = new Date().toISOString().slice(0, 10);
-          const fingerprint = hmac(`demo-request-email:${parsed.data.email}:${day}`, serviceKey);
-          const { error: insertError } = await admin.from("demo_requests").insert({
+          const fingerprint = hmac(
+            `demo-request-email:${parsed.data.email}:${day}`,
+            serviceKey,
+          );
+          const { error: insertError } = await admin
+            .from("demo_requests")
+            .insert({
             full_name: parsed.data.fullName,
             business_name: parsed.data.businessName,
             email: parsed.data.email,
