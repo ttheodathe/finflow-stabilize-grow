@@ -24,7 +24,15 @@ export const Route = createFileRoute("/api/demo-requests")({
           if (new TextEncoder().encode(rawBody).byteLength > MAX_BODY_BYTES) {
             return Response.json({ error: "Request is too large." }, { status: 413 });
           }
-          body = JSON.parse(rawBody) as Record<string, unknown>;
+          const parsedBody: unknown = JSON.parse(rawBody);
+          if (
+            parsedBody === null ||
+            typeof parsedBody !== "object" ||
+            Array.isArray(parsedBody)
+          ) {
+            return Response.json({ error: "Invalid request body." }, { status: 400 });
+          }
+          body = parsedBody as Record<string, unknown>;
         } catch {
           return Response.json({ error: "Invalid JSON." }, { status: 400 });
         }
@@ -61,7 +69,9 @@ export const Route = createFileRoute("/api/demo-requests")({
             "@/integrations/supabase/client.server"
           );
           // Server-only service-role client; never expose it to the browser.
-          const admin = _admin;
+          // The demo tables are introduced by this PR's migration and are not
+          // yet represented in the generated Supabase Database type.
+          const admin = _admin as any;
 
           const ipHash = hmac(`demo-request-ip:${ip}`, serviceKey);
           const { data: allowed, error: rateLimitError } = await admin.rpc(
