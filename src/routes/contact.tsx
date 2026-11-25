@@ -1,6 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { DemoRequestForm } from "@/components/DemoRequestForm";
 import {
   ArrowRight,
   BadgeCheck,
@@ -23,7 +24,7 @@ export const Route = createFileRoute("/contact")({
       {
         name: "description",
         content:
-          "Contact the FinFlowTrack team by email, phone, or WhatsApp. We're here to help with support questions, sales inquiries, and everything in between.",
+          "Request a personalized FinFlowTrack demo. Tell us about your business and financial workflow, and our team will follow up.",
       },
     ],
   }),
@@ -102,7 +103,7 @@ const faqs = [
   {
     question: "Can I request a product demo?",
     answer:
-      "Yes. Email support@finflowtrack.com or send us a WhatsApp message and we'll set up a time to walk you through the platform.",
+      "Yes. Use the demo request form on this page to tell us about your business and preferred time. Our team will review your request and follow up.",
   },
   {
     question: "How do I report a security issue?",
@@ -146,6 +147,30 @@ function ContactPage() {
               </a>
             </div>
           </header>
+        </div>
+      </section>
+
+      {/* Demo Request */}
+      <section
+        id="request-demo"
+        aria-labelledby="demo-heading"
+        className="mx-auto max-w-4xl px-6 py-20"
+      >
+        <div className="mx-auto mb-10 max-w-2xl text-center">
+          <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-1.5 text-sm font-medium text-emerald-800">
+            <ShieldCheck className="h-4 w-4" />
+            Personalized walkthrough
+          </span>
+          <h2 id="demo-heading" className="mt-5 text-3xl font-bold tracking-tight text-slate-900">
+            Request a FinFlowTrack Demo
+          </h2>
+          <p className="mt-4 leading-relaxed text-slate-600">
+            Share a little about your business and what you want to improve. We’ll use your answers
+            to prepare a relevant walkthrough of FinFlowTrack.
+          </p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          <DemoRequestForm />
         </div>
       </section>
 

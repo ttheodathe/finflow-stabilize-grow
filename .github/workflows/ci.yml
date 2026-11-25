@@ -315,6 +315,18 @@ jobs:
           docker cp supabase/tests/manual-journal-role-smoke.sql "$container_id:/tmp/manual-journal-role-smoke.sql"
           docker exec "$container_id" psql -U postgres -d finflow_journal_role_test -v ON_ERROR_STOP=1 -f /tmp/manual-journal-role-smoke.sql
 
+      - name: Verify demo request migration, RLS, consent and rate limits
+        run: |
+          container_id="$(docker ps --filter 'ancestor=postgres:16' --format '{{.ID}}' | head -n 1)"
+          test -n "$container_id"
+          docker exec "$container_id" psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c "CREATE DATABASE finflow_demo_request_test"
+          docker cp supabase/tests/demo-request-fixture.sql "$container_id:/tmp/demo-request-fixture.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_demo_request_test -v ON_ERROR_STOP=1 -f /tmp/demo-request-fixture.sql
+          docker cp supabase/migrations/20261125170000_create_demo_requests.sql "$container_id:/tmp/demo-request-migration.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_demo_request_test -v ON_ERROR_STOP=1 -f /tmp/demo-request-migration.sql
+          docker cp supabase/tests/demo-request-smoke.sql "$container_id:/tmp/demo-request-smoke.sql"
+          docker exec "$container_id" psql -U postgres -d finflow_demo_request_test -v ON_ERROR_STOP=1 -f /tmp/demo-request-smoke.sql
+
       - name: Unit tests
         run: npm run test:unit
 

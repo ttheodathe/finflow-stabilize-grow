@@ -147,6 +147,42 @@ function PrivacyPage() {
           </div>
         </div>
       </section>
+      {/* DEMO REQUEST INFORMATION */}
+      <section className="container mx-auto max-w-6xl px-6 py-16">
+        <div className="max-w-4xl rounded-2xl border bg-background p-8">
+          <h2 className="text-2xl font-bold">Demo Request Information</h2>
+          <p className="mt-4 leading-7 text-muted-foreground">
+            If you request a FinFlowTrack demo, we collect the name, business or organization, email
+            address, optional phone number, business type, preferred contact time, and the details
+            you choose to share about your financial workflow. We use this information to review and
+            respond to your demo request. We also store your demo-contact consent and your separate
+            marketing preference so we can respect the choices you make.
+          </p>
+          <p className="mt-4 leading-7 text-muted-foreground">
+            Marketing updates are optional and are not required to request a demo. We do not treat a
+            demo request as permission to send marketing messages when that separate option is left
+            unchecked. To help limit automated submissions, we also use a keyed, one-way network
+            identifier for rate limiting; we do not store the raw network address in the demo
+            request records.
+          </p>
+          <p className="mt-4 leading-7 text-muted-foreground">
+            Demo enquiries are retained only for as long as reasonably necessary to review and
+            respond to the request, maintain appropriate business records, resolve disputes, and
+            meet applicable legal obligations. When the information is no longer needed for those
+            purposes, it will be deleted or de-identified where appropriate. You may request access
+            to or deletion of your demo enquiry by contacting privacy@finflowtrack.com. We may need
+            to retain limited information where the law requires it or where it is necessary to
+            establish, exercise, or defend legal claims.
+          </p>
+          <p className="mt-4 leading-7 text-muted-foreground">
+            If you have enabled optional marketing updates, you may withdraw that preference at any
+            time by contacting privacy@finflowtrack.com. Demo-request status is managed by
+            authorized FinFlowTrack personnel, and internal email alerts may be sent to the
+            designated team inbox when that notification setting is configured.
+          </p>
+        </div>
+      </section>
+
       {/* HOW WE USE INFORMATION */}
 
       <section className="container mx-auto max-w-6xl px-6 py-20">
