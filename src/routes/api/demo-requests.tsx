@@ -5,7 +5,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { demoRequestSchema } from "@/lib/demo-request-validation";
 
 const MAX_BODY_BYTES = 12_000;
-const ALLOWED_STATUSES = ["new", "contacted", "scheduled", "closed", "spam"] as const;
+const ALLOWED_STATUSES = [
+  "new",
+  "contacted",
+  "scheduled",
+  "closed",
+  "spam",
+] as const;
 
 function hmac(value: string, secret: string): string {
   return createHmac("sha256", secret).update(value).digest("hex");
@@ -17,7 +23,12 @@ async function getAdminContext(request: Request) {
     .map((email) => email.trim().toLowerCase())
     .filter(Boolean);
   if (configuredEmails.length === 0) {
-    return { response: Response.json({ error: "Demo request management is not configured." }, { status: 503 }) };
+    return {
+      response: Response.json(
+        { error: "Demo request management is not configured." },
+        { status: 503 },
+      ),
+    };
   }
 
   const token = request.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
@@ -48,7 +59,9 @@ export const Route = createFileRoute("/api/demo-requests")({
           const offset = Math.max(0, Number(url.searchParams.get("offset")) || 0);
           const { data, error } = await context.admin
             .from("demo_requests")
-            .select("id, full_name, business_name, email, business_type, challenge, preferred_time, phone, demo_contact_consent, marketing_consent, status, created_at")
+            .select(
+              "id, full_name, business_name, email, business_type, challenge, preferred_time, phone, demo_contact_consent, marketing_consent, status, created_at",
+            )
             .order("created_at", { ascending: false })
             .range(offset, offset + limit - 1);
           if (error) {
@@ -71,7 +84,10 @@ export const Route = createFileRoute("/api/demo-requests")({
             typeof body.id !== "string" ||
             !(ALLOWED_STATUSES as readonly string[]).includes(body.status)
           ) {
-            return Response.json({ error: "A valid request id and status are required." }, { status: 400 });
+            return Response.json(
+              { error: "A valid request id and status are required." },
+              { status: 400 },
+            );
           }
           const { data, error } = await context.admin
             .from("demo_requests")
@@ -151,7 +167,9 @@ export const Route = createFileRoute("/api/demo-requests")({
             { p_ip_hash: ipHash },
           );
           if (rateLimitError) {
-            console.error("[demo-requests] rate-limit check failed", { code: rateLimitError.code });
+            console.error("[demo-requests] rate-limit check failed", {
+              code: rateLimitError.code,
+            });
             return Response.json(
               { error: "Demo requests are temporarily unavailable. Please try again later." },
               { status: 503 },
