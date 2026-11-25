@@ -5,13 +5,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { demoRequestSchema } from "@/lib/demo-request-validation";
 
 const MAX_BODY_BYTES = 12_000;
-const ALLOWED_STATUSES = [
-  "new",
-  "contacted",
-  "scheduled",
-  "closed",
-  "spam",
-] as const;
+const ALLOWED_STATUSES = ["new", "contacted", "scheduled", "closed", "spam"] as const;
 
 function hmac(value: string, secret: string): string {
   return createHmac("sha256", secret).update(value).digest("hex");
@@ -233,12 +227,15 @@ export const Route = createFileRoute("/api/demo-requests")({
                   `Marketing consent: ${parsed.data.marketingConsent ? "Yes" : "No"}`,
                 ].join("\n"),
               });
-              if (error) console.error("[demo-requests] internal notification failed", { name: error.name });
+              if (error)
+                console.error("[demo-requests] internal notification failed", { name: error.name });
             } catch (notificationError) {
               console.error("[demo-requests] internal notification failed", notificationError);
             }
           } else {
-            console.warn("[demo-requests] internal notification not configured; request remains stored");
+            console.warn(
+              "[demo-requests] internal notification not configured; request remains stored",
+            );
           }
 
           return Response.json({ ok: true }, { status: 201 });
