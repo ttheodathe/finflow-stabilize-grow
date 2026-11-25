@@ -3,7 +3,12 @@ import { z } from "zod";
 export const demoRequestSchema = z.object({
   fullName: z.string().trim().min(2).max(120),
   businessName: z.string().trim().min(2).max(160),
-  email: z.string().trim().email().max(320).transform((value) => value.toLowerCase()),
+  email: z
+    .string()
+    .trim()
+    .email()
+    .max(320)
+    .transform((value) => value.toLowerCase()),
   businessType: z.enum([
     "small_business",
     "freelancer",
