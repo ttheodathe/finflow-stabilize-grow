@@ -91,9 +91,7 @@ export function DemoRequestForm() {
     return (
       <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-8 text-center">
         <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-700" />
-        <h3 className="mt-4 text-xl font-semibold text-slate-900">
-          Your demo request is received
-        </h3>
+        <h3 className="mt-4 text-xl font-semibold text-slate-900">Your demo request is received</h3>
         <p className="mt-2 text-sm leading-relaxed text-slate-700">
           Thanks for your interest in FinFlowTrack. Our team will review your request and contact
           you using the details you provided.
@@ -237,8 +235,8 @@ export function DemoRequestForm() {
             required
           />
           <Label htmlFor="demo-contact-consent" className="text-sm font-normal leading-relaxed">
-            I agree that FinFlowTrack may contact me about this demo request using the information
-            I provided. *
+            I agree that FinFlowTrack may contact me about this demo request using the information I
+            provided. *
           </Label>
         </div>
         <div className="flex items-start gap-3">
@@ -263,10 +261,7 @@ export function DemoRequestForm() {
       </div>
 
       {error ? (
-        <p
-          role="alert"
-          className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive"
-        >
+        <p role="alert" className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {error}
         </p>
       ) : null}
