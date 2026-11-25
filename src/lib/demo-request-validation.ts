@@ -9,7 +9,14 @@ export const demoRequestSchema = z.object({
     .email()
     .max(320)
     .transform((value) => value.toLowerCase()),
-  businessType: z.enum(["small_business", "freelancer", "startup", "nonprofit", "agency", "other"]),
+  businessType: z.enum([
+    "small_business",
+    "freelancer",
+    "startup",
+    "nonprofit",
+    "agency",
+    "other",
+  ]),
   challenge: z.string().trim().min(20).max(2000),
   preferredTime: z.enum(["morning", "afternoon", "evening", "flexible"]),
   phone: z.string().trim().max(40).optional().or(z.literal("")),
