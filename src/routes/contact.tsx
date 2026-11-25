@@ -151,7 +151,11 @@ function ContactPage() {
       </section>
 
       {/* Demo Request */}
-      <section id="request-demo" aria-labelledby="demo-heading" className="mx-auto max-w-4xl px-6 py-20">
+      <section
+        id="request-demo"
+        aria-labelledby="demo-heading"
+        className="mx-auto max-w-4xl px-6 py-20"
+      >
         <div className="mx-auto mb-10 max-w-2xl text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-1.5 text-sm font-medium text-emerald-800">
             <ShieldCheck className="h-4 w-4" />
