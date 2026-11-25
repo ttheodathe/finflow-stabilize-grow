@@ -321,6 +321,16 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Print canonical formatting for demo request files
+        if: github.event_name == 'pull_request' && github.event.pull_request.number == 153
+        run: |
+          files=(src/components/DemoRequestForm.tsx src/lib/demo-request-validation.ts src/routes/api/demo-requests.tsx src/routes/privacy.tsx)
+          npx prettier --write "${files[@]}"
+          for file in "${files[@]}"; do
+            echo "===== FORMATTED FILE: ${file} ====="
+            cat "${file}"
+          done
+
       - name: Check formatting of changed files
         if: github.event_name == 'pull_request'
         run: |
