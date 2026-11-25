@@ -26,7 +26,10 @@ test("rejects a request without explicit demo-contact consent", () => {
 });
 
 test("rejects malformed email and unsupported selection values", () => {
-  assert.equal(demoRequestSchema.safeParse({ ...validRequest, email: "not-an-email" }).success, false);
+  assert.equal(
+    demoRequestSchema.safeParse({ ...validRequest, email: "not-an-email" }).success,
+    false,
+  );
   assert.equal(
     demoRequestSchema.safeParse({ ...validRequest, preferredTime: "midnight" }).success,
     false,
@@ -34,5 +37,8 @@ test("rejects malformed email and unsupported selection values", () => {
 });
 
 test("rejects a challenge that is too short", () => {
-  assert.equal(demoRequestSchema.safeParse({ ...validRequest, challenge: "Help me" }).success, false);
+  assert.equal(
+    demoRequestSchema.safeParse({ ...validRequest, challenge: "Help me" }).success,
+    false,
+  );
 });
