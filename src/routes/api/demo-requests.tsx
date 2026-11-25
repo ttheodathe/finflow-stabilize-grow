@@ -50,14 +50,18 @@ export const Route = createFileRoute("/api/demo-requests")({
 
         const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
         if (!serviceKey) {
-          return Response.json({ error: "Demo requests are temporarily unavailable." }, { status: 503 });
+          return Response.json(
+            { error: "Demo requests are temporarily unavailable." },
+            { status: 503 },
+          );
         }
 
         try {
-          const { supabaseAdmin: _admin } = await import("@/integrations/supabase/client.server");
+          const { supabaseAdmin: _admin } = await import(
+            "@/integrations/supabase/client.server"
+          );
           // Server-only service-role client; never expose it to the browser.
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const admin = _admin as any;
+          const admin = _admin;
 
           const ipHash = hmac(`demo-request-ip:${ip}`, serviceKey);
           const { data: allowed, error: rateLimitError } = await admin.rpc(
