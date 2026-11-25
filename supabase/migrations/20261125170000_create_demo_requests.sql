@@ -72,7 +72,7 @@ begin
         end,
         request_count = case
           when current_limit.window_started_at <= now() - interval '1 hour' then 1
-          else current_limit.request_count + 1
+          else least(4, current_limit.request_count + 1)
         end
   returning request_count into v_count;
 
