@@ -41,7 +41,7 @@ alter table public.demo_request_rate_limits enable row level security;
 -- server route uses the service-role client after validating every field.
 revoke all on table public.demo_requests from public, anon, authenticated;
 revoke all on table public.demo_request_rate_limits from public, anon, authenticated;
-grant insert, select on table public.demo_requests to service_role;
+grant insert, select, update on table public.demo_requests to service_role;
 grant select, insert, update, delete on table public.demo_request_rate_limits to service_role;
 
 -- Atomic, database-backed hourly limit: at most three accepted requests per
