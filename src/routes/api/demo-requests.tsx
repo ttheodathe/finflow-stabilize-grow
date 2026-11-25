@@ -25,11 +25,7 @@ export const Route = createFileRoute("/api/demo-requests")({
             return Response.json({ error: "Request is too large." }, { status: 413 });
           }
           const parsedBody: unknown = JSON.parse(rawBody);
-          if (
-            parsedBody === null ||
-            typeof parsedBody !== "object" ||
-            Array.isArray(parsedBody)
-          ) {
+          if (parsedBody === null || typeof parsedBody !== "object" || Array.isArray(parsedBody)) {
             return Response.json({ error: "Invalid request body." }, { status: 400 });
           }
           body = parsedBody as Record<string, unknown>;
@@ -65,9 +61,7 @@ export const Route = createFileRoute("/api/demo-requests")({
         }
 
         try {
-          const { supabaseAdmin: _admin } = await import(
-            "@/integrations/supabase/client.server"
-          );
+          const { supabaseAdmin: _admin } = await import("@/integrations/supabase/client.server");
           // Server-only service-role client; never expose it to the browser.
           // The demo tables are introduced by this PR's migration and are not
           // yet represented in the generated Supabase Database type.
@@ -96,10 +90,7 @@ export const Route = createFileRoute("/api/demo-requests")({
           }
 
           const day = new Date().toISOString().slice(0, 10);
-          const fingerprint = hmac(
-            `demo-request-email:${parsed.data.email}:${day}`,
-            serviceKey,
-          );
+          const fingerprint = hmac(`demo-request-email:${parsed.data.email}:${day}`, serviceKey);
           const { error: insertError } = await admin.from("demo_requests").insert({
             full_name: parsed.data.fullName,
             business_name: parsed.data.businessName,
