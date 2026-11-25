@@ -1,7 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import { ArrowRight, Database, Eye, Globe, Lock, Mail, ShieldCheck, UserCheck } from "lucide-react";
+import {
+  ArrowRight,
+  Database,
+  Eye,
+  Globe,
+  Lock,
+  Mail,
+  ShieldCheck,
+  UserCheck,
+} from "lucide-react";
 
 export const Route = createFileRoute("/privacy")({
   component: PrivacyPage,
