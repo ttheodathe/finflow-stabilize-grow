@@ -21,7 +21,10 @@ test("accepts a valid demo request without optional marketing consent", () => {
 });
 
 test("rejects a request without explicit demo-contact consent", () => {
-  const parsed = demoRequestSchema.safeParse({ ...validRequest, demoContactConsent: false });
+  const parsed = demoRequestSchema.safeParse({
+    ...validRequest,
+    demoContactConsent: false,
+  });
   assert.equal(parsed.success, false);
 });
 
