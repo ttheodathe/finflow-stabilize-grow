@@ -147,6 +147,27 @@ function PrivacyPage() {
           </div>
         </div>
       </section>
+      {/* DEMO REQUEST INFORMATION */}
+      <section className="container mx-auto max-w-6xl px-6 py-16">
+        <div className="max-w-4xl rounded-2xl border bg-background p-8">
+          <h2 className="text-2xl font-bold">Demo Request Information</h2>
+          <p className="mt-4 leading-7 text-muted-foreground">
+            If you request a FinFlowTrack demo, we collect the name, business or organization,
+            email address, optional phone number, business type, preferred contact time, and the
+            details you choose to share about your financial workflow. We use this information to
+            review and respond to your demo request. We also store your demo-contact consent and
+            your separate marketing preference so we can respect the choices you make.
+          </p>
+          <p className="mt-4 leading-7 text-muted-foreground">
+            Marketing updates are optional and are not required to request a demo. We do not treat
+            a demo request as permission to send marketing messages when that separate option is
+            left unchecked. To help limit automated submissions, we also use a keyed, one-way
+            network identifier for rate limiting; we do not store the raw network address in the
+            demo request records.
+          </p>
+        </div>
+      </section>
+
       {/* HOW WE USE INFORMATION */}
 
       <section className="container mx-auto max-w-6xl px-6 py-20">
