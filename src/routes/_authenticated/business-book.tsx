@@ -3,13 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 import { localDateKey, sumByCurrency, formatCurrencyTotals } from "@/lib/business-book";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   ArrowDownRight,
@@ -221,8 +215,7 @@ function BusinessBookPage() {
     for (const balance of balances) {
       availableByItem.set(
         balance.item_id,
-        (availableByItem.get(balance.item_id) ?? 0) +
-          Number(balance.quantity_available ?? 0),
+        (availableByItem.get(balance.item_id) ?? 0) + Number(balance.quantity_available ?? 0),
       );
     }
 
@@ -389,9 +382,7 @@ function BusinessBookPage() {
             <div className="text-xl font-semibold">
               {loading ? "Loading…" : formatCurrencyTotals(expenseTotals)}
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {expenses.length} expense entries
-            </p>
+            <p className="mt-1 text-xs text-muted-foreground">{expenses.length} expense entries</p>
           </CardContent>
         </Card>
 
@@ -401,9 +392,7 @@ function BusinessBookPage() {
             <CircleAlert className="h-4 w-4 text-amber-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold">
-              {loading ? "…" : lowStockProducts.length}
-            </div>
+            <div className="text-2xl font-semibold">{loading ? "…" : lowStockProducts.length}</div>
             <p className="mt-1 text-xs text-muted-foreground">
               Based on available stock across warehouses
             </p>
@@ -428,9 +417,7 @@ function BusinessBookPage() {
                 to={action.to}
                 className="group flex min-h-24 items-center gap-3 rounded-lg border p-4 transition-colors hover:border-primary/50 hover:bg-muted/50"
               >
-                <span
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"
-                >
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <Icon className="h-5 w-5" />
                 </span>
                 <span className="min-w-0 flex-1">
@@ -439,9 +426,7 @@ function BusinessBookPage() {
                     {action.description}
                   </span>
                 </span>
-                <ArrowUpRight
-                  className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-                />
+                <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
               </Link>
             );
           })}
@@ -511,15 +496,11 @@ function BusinessBookPage() {
                 {loading ? "…" : lowStockProducts.length}
               </Badge>
             </div>
-            <CardDescription>
-              Products at or below their configured reorder level.
-            </CardDescription>
+            <CardDescription>Products at or below their configured reorder level.</CardDescription>
           </CardHeader>
           <CardContent>
             {loading ? (
-              <p className="py-6 text-center text-sm text-muted-foreground">
-                Checking inventory…
-              </p>
+              <p className="py-6 text-center text-sm text-muted-foreground">Checking inventory…</p>
             ) : lowStockProducts.length === 0 ? (
               <div className="rounded-lg border border-dashed p-6 text-center">
                 <Boxes className="mx-auto mb-2 h-7 w-7 text-muted-foreground" />
@@ -532,20 +513,12 @@ function BusinessBookPage() {
                 {lowStockProducts.slice(0, 6).map((product) => {
                   const available = balances
                     .filter((balance) => balance.item_id === product.id)
-                    .reduce(
-                      (total, balance) => total + Number(balance.quantity_available ?? 0),
-                      0,
-                    );
+                    .reduce((total, balance) => total + Number(balance.quantity_available ?? 0), 0);
                   return (
-                    <div
-                      key={product.id}
-                      className="flex items-center justify-between gap-3"
-                    >
+                    <div key={product.id} className="flex items-center justify-between gap-3">
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium">{product.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {product.sku || "No SKU"}
-                        </p>
+                        <p className="text-xs text-muted-foreground">{product.sku || "No SKU"}</p>
                       </div>
                       <div className="shrink-0 text-right">
                         <p className="text-sm font-semibold">{available}</p>

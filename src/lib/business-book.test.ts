@@ -13,10 +13,7 @@ test("sumByCurrency keeps currencies separate", () => {
 });
 
 test("sumByCurrency ignores invalid amounts and defaults a missing currency", () => {
-  const totals = sumByCurrency([
-    { amount: 4 },
-    { currency: "EUR", amount: "not-a-number" },
-  ]);
+  const totals = sumByCurrency([{ amount: 4 }, { currency: "EUR", amount: "not-a-number" }]);
 
   assert.deepEqual(totals, { USD: 4 });
 });
