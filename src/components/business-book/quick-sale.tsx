@@ -38,6 +38,14 @@ type SaleProduct = {
 };
 
 type SaleCustomer = { id: string; name: string };
+type CartLine = {
+  product: SaleProduct;
+  quantity: number;
+  unitPrice: number;
+  subtotal: number;
+  tax: number;
+  total: number;
+};
 
 type QuickSaleProps = {
   companyId: string;
@@ -75,6 +83,7 @@ export function QuickSale({ companyId, onSaved }: QuickSaleProps) {
   const [customerId, setCustomerId] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [unitPrice, setUnitPrice] = useState("");
+  const [cart, setCart] = useState<CartLine[]>([]);
   const [saleDate, setSaleDate] = useState(localDate());
   const [paidNow, setPaidNow] = useState(true);
   const [paymentAmount, setPaymentAmount] = useState("");
@@ -116,13 +125,16 @@ export function QuickSale({ companyId, onSaved }: QuickSaleProps) {
   }, [companyId, open]);
 
   const product = products.find((item) => item.id === productId) ?? null;
-  const currency = product?.currency || defaultCurrency || "USD";
+  const currency = cart[0]?.product.currency || product?.currency || defaultCurrency || "USD";
   const qty = Number(quantity);
   const price = Number(unitPrice);
-  const subtotal = Number.isFinite(qty) && Number.isFinite(price) ? qty * price : 0;
-  const tax = subtotal * (Number(product?.tax_rate ?? 0) / 100);
+  const lineSubtotal = Number.isFinite(qty) && Number.isFinite(price) ? qty * price : 0;
+  const lineTax = lineSubtotal * (Number(product?.tax_rate ?? 0) / 100);
+  const subtotal = cart.reduce((sum, line) => sum + line.subtotal, 0);
+  const tax = cart.reduce((sum, line) => sum + line.tax, 0);
   const total = subtotal + tax;
   const received = Number(paymentAmount);
+  const currencyMismatch = !!product && cart.length > 0 && product.currency !== cart[0].product.currency;
 
   useEffect(() => {
     if (!product) return;
@@ -137,25 +149,56 @@ export function QuickSale({ companyId, onSaved }: QuickSaleProps) {
   }, [productId]);
 
   useEffect(() => {
-    if (!product) return;
     setPaymentAmount(total.toFixed(2));
-  }, [quantity, unitPrice, productId]);
+  }, [total]);
 
   const canSave = useMemo(
     () =>
-      !!product &&
-      Number.isFinite(qty) &&
-      qty > 0 &&
-      Number.isFinite(price) &&
-      price >= 0 &&
+      cart.length > 0 &&
       total > 0 &&
       (!paidNow || (Number.isFinite(received) && received > 0 && received <= total + 0.000001)),
-    [product, qty, price, total, paidNow, received],
+    [cart, total, paidNow, received],
   );
+
+  function addToCart() {
+    if (!product || !Number.isFinite(qty) || qty <= 0 || !Number.isFinite(price) || price < 0) return;
+    if (currencyMismatch) {
+      toast.error(`This sale uses ${cart[0].product.currency}. Choose a product priced in the same currency.`);
+      return;
+    }
+    const line: CartLine = {
+      product,
+      quantity: qty,
+      unitPrice: price,
+      subtotal: lineSubtotal,
+      tax: lineTax,
+      total: lineSubtotal + lineTax,
+    };
+    setCart((current) => {
+      const existing = current.find((item) => item.product.id === product.id);
+      if (!existing) return [...current, line];
+      return current.map((item) =>
+        item.product.id === product.id
+          ? {
+              ...item,
+              quantity: item.quantity + qty,
+              unitPrice: (item.subtotal + line.subtotal) / (item.quantity + qty),
+              subtotal: item.subtotal + line.subtotal,
+              tax: item.tax + line.tax,
+              total: item.total + line.total,
+            }
+          : item,
+      );
+    });
+    setProductId("");
+    setQuantity("1");
+    setUnitPrice("");
+  }
 
   function resetForm() {
     setProductId("");
     setCustomerId("");
+    setCart([]);
     setQuantity("1");
     setUnitPrice("");
     setSaleDate(localDate());
@@ -167,7 +210,7 @@ export function QuickSale({ companyId, onSaved }: QuickSaleProps) {
 
   async function saveSale(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!companyId || !product || !canSave) return;
+    if (!companyId || cart.length === 0 || !canSave) return;
     setSaving(true);
     let invoiceId: string | null = null;
     let invoiceNumber = "";
@@ -206,19 +249,20 @@ export function QuickSale({ companyId, onSaved }: QuickSaleProps) {
         throw new Error(invoiceError?.message ?? "Could not create the sale");
       invoiceId = invoice.id;
 
-      const { error: lineError } = await supabase.from("invoice_items").insert(
+      const linePayload = cart.map((line) =>
         scoped({
           invoice_id: invoice.id,
           user_id: authData.user.id,
           company_id: companyId,
-          item_id: product.id,
-          description: product.name,
-          quantity: qty,
-          unit_price: price,
-          tax_rate: Number(product.tax_rate ?? 0),
-          amount: subtotal,
+          item_id: line.product.id,
+          description: line.product.name,
+          quantity: line.quantity,
+          unit_price: line.unitPrice,
+          tax_rate: Number(line.product.tax_rate ?? 0),
+          amount: line.subtotal,
         }),
       );
+      const { error: lineError } = await supabase.from("invoice_items").insert(linePayload);
       if (lineError) {
         await supabase.from("invoices").delete().eq("id", invoice.id).eq("company_id", companyId);
         invoiceId = null;
@@ -308,12 +352,12 @@ export function QuickSale({ companyId, onSaved }: QuickSaleProps) {
         <DialogHeader>
           <DialogTitle>Record a quick sale</DialogTitle>
           <DialogDescription>
-            Record a product sale using your existing invoices, inventory and payment records.
+            Add multiple products to one sale. Inventory, invoices and payments use FinFlow's existing accounting workflows.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={saveSale} className="space-y-4">
           <div className="space-y-2">
-            <Label>Product</Label>
+            <Label>Add product</Label>
             <Select value={productId} onValueChange={setProductId} disabled={loading || saving}>
               <SelectTrigger>
                 <SelectValue placeholder={loading ? "Loading products…" : "Choose a product"} />
@@ -321,15 +365,17 @@ export function QuickSale({ companyId, onSaved }: QuickSaleProps) {
               <SelectContent>
                 {products.map((item) => (
                   <SelectItem key={item.id} value={item.id}>
-                    {item.name}
-                    {item.sku ? ` · ${item.sku}` : ""}
+                    {item.name}{item.sku ? ` · ${item.sku}` : ""} · {item.currency || "USD"}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             {products.length === 0 && !loading && (
-              <p className="text-xs text-muted-foreground">
-                Add an active product first in Products.
+              <p className="text-xs text-muted-foreground">Add an active product first in Products.</p>
+            )}
+            {currencyMismatch && (
+              <p className="text-xs text-destructive">
+                This cart uses {cart[0].product.currency}. All products in one invoice must use the same currency.
               </p>
             )}
           </div>
@@ -337,27 +383,44 @@ export function QuickSale({ companyId, onSaved }: QuickSaleProps) {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label>Quantity</Label>
-              <Input
-                type="number"
-                min="0.01"
-                step="0.01"
-                required
-                value={quantity}
-                onChange={(event) => setQuantity(event.target.value)}
-              />
+              <Input type="number" min="0.01" step="0.01" value={quantity}
+                onChange={(event) => setQuantity(event.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Unit selling price ({currency})</Label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                required
-                value={unitPrice}
-                onChange={(event) => setUnitPrice(event.target.value)}
-              />
+              <Label>Unit price ({product?.currency || currency})</Label>
+              <Input type="number" min="0" step="0.01" value={unitPrice}
+                onChange={(event) => setUnitPrice(event.target.value)} />
             </div>
           </div>
+          <Button type="button" variant="outline" className="w-full"
+            disabled={!product || currencyMismatch || !Number.isFinite(qty) || qty <= 0 || !Number.isFinite(price) || price < 0 || saving}
+            onClick={addToCart}>
+            Add product to sale
+          </Button>
+
+          {cart.length > 0 && (
+            <div className="space-y-2 rounded-lg border p-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold">Sale items ({cart.length})</p>
+                <p className="text-xs text-muted-foreground">{currency}</p>
+              </div>
+              {cart.map((line) => (
+                <div key={line.product.id} className="flex items-center justify-between gap-3 border-t pt-2 text-sm">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{line.product.name}</p>
+                    <p className="text-xs text-muted-foreground">{line.quantity} × {money(line.unitPrice, currency)}</p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <span className="font-medium">{money(line.total, currency)}</span>
+                    <Button type="button" size="sm" variant="ghost" disabled={saving}
+                      onClick={() => setCart((current) => current.filter((item) => item.product.id !== line.product.id))}>
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>Customer (optional)</Label>
@@ -385,17 +448,16 @@ export function QuickSale({ companyId, onSaved }: QuickSaleProps) {
               <span>{money(subtotal, currency)}</span>
             </div>
             <div className="mt-1 flex justify-between">
-              <span>Tax ({Number(product?.tax_rate ?? 0)}%)</span>
+              <span>Tax</span>
               <span>{money(tax, currency)}</span>
             </div>
             <div className="mt-2 flex justify-between border-t pt-2 font-semibold">
               <span>Total</span>
               <span>{money(total, currency)}</span>
             </div>
-            {product?.track_inventory && (
+            {cart.some((line) => line.product.track_inventory) && (
               <p className="mt-2 text-xs text-muted-foreground">
-                Inventory is reduced by the existing invoice stock workflow when this sale is
-                finalized.
+                Inventory is reduced by the existing invoice stock workflow when this sale is finalized.
               </p>
             )}
           </div>
@@ -468,7 +530,7 @@ export function QuickSale({ companyId, onSaved }: QuickSaleProps) {
           </div>
 
           <Button type="submit" className="w-full" disabled={saving || loading || !canSave}>
-            {saving ? "Saving sale…" : "Save sale"}
+            {saving ? "Saving sale…" : `Save sale · ${money(total, currency)}`}
           </Button>
         </form>
       </DialogContent>
