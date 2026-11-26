@@ -134,7 +134,8 @@ export function QuickSale({ companyId, onSaved }: QuickSaleProps) {
   const tax = cart.reduce((sum, line) => sum + line.tax, 0);
   const total = subtotal + tax;
   const received = Number(paymentAmount);
-  const currencyMismatch = !!product && cart.length > 0 && product.currency !== cart[0].product.currency;
+  const currencyMismatch =
+    !!product && cart.length > 0 && product.currency !== cart[0].product.currency;
 
   useEffect(() => {
     if (!product) return;
@@ -161,9 +162,12 @@ export function QuickSale({ companyId, onSaved }: QuickSaleProps) {
   );
 
   function addToCart() {
-    if (!product || !Number.isFinite(qty) || qty <= 0 || !Number.isFinite(price) || price < 0) return;
+    if (!product || !Number.isFinite(qty) || qty <= 0 || !Number.isFinite(price) || price < 0)
+      return;
     if (currencyMismatch) {
-      toast.error(`This sale uses ${cart[0].product.currency}. Choose a product priced in the same currency.`);
+      toast.error(
+        `This sale uses ${cart[0].product.currency}. Choose a product priced in the same currency.`,
+      );
       return;
     }
     const line: CartLine = {
@@ -352,7 +356,8 @@ export function QuickSale({ companyId, onSaved }: QuickSaleProps) {
         <DialogHeader>
           <DialogTitle>Record a quick sale</DialogTitle>
           <DialogDescription>
-            Add multiple products to one sale. Inventory, invoices and payments use FinFlow's existing accounting workflows.
+            Add multiple products to one sale. Inventory, invoices and payments use FinFlow's
+            existing accounting workflows.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={saveSale} className="space-y-4">
@@ -365,17 +370,21 @@ export function QuickSale({ companyId, onSaved }: QuickSaleProps) {
               <SelectContent>
                 {products.map((item) => (
                   <SelectItem key={item.id} value={item.id}>
-                    {item.name}{item.sku ? ` · ${item.sku}` : ""} · {item.currency || "USD"}
+                    {item.name}
+                    {item.sku ? ` · ${item.sku}` : ""} · {item.currency || "USD"}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             {products.length === 0 && !loading && (
-              <p className="text-xs text-muted-foreground">Add an active product first in Products.</p>
+              <p className="text-xs text-muted-foreground">
+                Add an active product first in Products.
+              </p>
             )}
             {currencyMismatch && (
               <p className="text-xs text-destructive">
-                This cart uses {cart[0].product.currency}. All products in one invoice must use the same currency.
+                This cart uses {cart[0].product.currency}. All products in one invoice must use the
+                same currency.
               </p>
             )}
           </div>
@@ -383,18 +392,40 @@ export function QuickSale({ companyId, onSaved }: QuickSaleProps) {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label>Quantity</Label>
-              <Input type="number" min="0.01" step="0.01" value={quantity}
-                onChange={(event) => setQuantity(event.target.value)} />
+              <Input
+                type="number"
+                min="0.01"
+                step="0.01"
+                value={quantity}
+                onChange={(event) => setQuantity(event.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label>Unit price ({product?.currency || currency})</Label>
-              <Input type="number" min="0" step="0.01" value={unitPrice}
-                onChange={(event) => setUnitPrice(event.target.value)} />
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                value={unitPrice}
+                onChange={(event) => setUnitPrice(event.target.value)}
+              />
             </div>
           </div>
-          <Button type="button" variant="outline" className="w-full"
-            disabled={!product || currencyMismatch || !Number.isFinite(qty) || qty <= 0 || !Number.isFinite(price) || price < 0 || saving}
-            onClick={addToCart}>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            disabled={
+              !product ||
+              currencyMismatch ||
+              !Number.isFinite(qty) ||
+              qty <= 0 ||
+              !Number.isFinite(price) ||
+              price < 0 ||
+              saving
+            }
+            onClick={addToCart}
+          >
             Add product to sale
           </Button>
 
@@ -405,15 +436,29 @@ export function QuickSale({ companyId, onSaved }: QuickSaleProps) {
                 <p className="text-xs text-muted-foreground">{currency}</p>
               </div>
               {cart.map((line) => (
-                <div key={line.product.id} className="flex items-center justify-between gap-3 border-t pt-2 text-sm">
+                <div
+                  key={line.product.id}
+                  className="flex items-center justify-between gap-3 border-t pt-2 text-sm"
+                >
                   <div className="min-w-0">
                     <p className="truncate font-medium">{line.product.name}</p>
-                    <p className="text-xs text-muted-foreground">{line.quantity} × {money(line.unitPrice, currency)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {line.quantity} × {money(line.unitPrice, currency)}
+                    </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
                     <span className="font-medium">{money(line.total, currency)}</span>
-                    <Button type="button" size="sm" variant="ghost" disabled={saving}
-                      onClick={() => setCart((current) => current.filter((item) => item.product.id !== line.product.id))}>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      disabled={saving}
+                      onClick={() =>
+                        setCart((current) =>
+                          current.filter((item) => item.product.id !== line.product.id),
+                        )
+                      }
+                    >
                       Remove
                     </Button>
                   </div>
@@ -457,7 +502,8 @@ export function QuickSale({ companyId, onSaved }: QuickSaleProps) {
             </div>
             {cart.some((line) => line.product.track_inventory) && (
               <p className="mt-2 text-xs text-muted-foreground">
-                Inventory is reduced by the existing invoice stock workflow when this sale is finalized.
+                Inventory is reduced by the existing invoice stock workflow when this sale is
+                finalized.
               </p>
             )}
           </div>
