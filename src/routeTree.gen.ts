@@ -38,6 +38,7 @@ import { Route as TestimonialsRouteImport } from './routes/testimonials'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AuthenticatedAiBookkeeperRouteImport } from './routes/_authenticated/ai-bookkeeper'
 import { Route as AuthenticatedAppsRouteImport } from './routes/_authenticated/apps'
+import { Route as AuthenticatedBusinessBookRouteImport } from './routes/_authenticated/business-book'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedCompaniesRouteImport } from './routes/_authenticated/companies'
 import { Route as AuthenticatedCustomersRouteImport } from './routes/_authenticated/customers'
@@ -247,6 +248,11 @@ const AuthenticatedAiBookkeeperRoute =
 const AuthenticatedAppsRoute = AuthenticatedAppsRouteImport.update({
   id: '/apps',
   path: '/apps',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedBusinessBookRoute = AuthenticatedBusinessBookRouteImport.update({
+  id: '/business-book',
+  path: '/business-book',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCalendarRoute = AuthenticatedCalendarRouteImport.update({
@@ -644,6 +650,7 @@ export interface FileRoutesByFullPath {
   '/verify-email': typeof VerifyEmailRoute
   '/ai-bookkeeper': typeof AuthenticatedAiBookkeeperRoute
   '/apps': typeof AuthenticatedAppsRoute
+  '/business-book': typeof AuthenticatedBusinessBookRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/companies': typeof AuthenticatedCompaniesRoute
   '/customers': typeof AuthenticatedCustomersRoute
@@ -739,6 +746,7 @@ export interface FileRoutesByTo {
   '/verify-email': typeof VerifyEmailRoute
   '/ai-bookkeeper': typeof AuthenticatedAiBookkeeperRoute
   '/apps': typeof AuthenticatedAppsRoute
+  '/business-book': typeof AuthenticatedBusinessBookRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/companies': typeof AuthenticatedCompaniesRoute
   '/customers': typeof AuthenticatedCustomersRoute
@@ -836,6 +844,7 @@ export interface FileRoutesById {
   '/verify-email': typeof VerifyEmailRoute
   '/_authenticated/ai-bookkeeper': typeof AuthenticatedAiBookkeeperRoute
   '/_authenticated/apps': typeof AuthenticatedAppsRoute
+  '/_authenticated/business-book': typeof AuthenticatedBusinessBookRoute
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/companies': typeof AuthenticatedCompaniesRoute
   '/_authenticated/customers': typeof AuthenticatedCustomersRoute
@@ -933,6 +942,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/ai-bookkeeper'
     | '/apps'
+    | '/business-book'
     | '/calendar'
     | '/companies'
     | '/customers'
@@ -1028,6 +1038,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/ai-bookkeeper'
     | '/apps'
+    | '/business-book'
     | '/calendar'
     | '/companies'
     | '/customers'
@@ -1443,6 +1454,13 @@ declare module '@tanstack/react-router' {
       path: '/apps'
       fullPath: '/apps'
       preLoaderRoute: typeof AuthenticatedAppsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/business-book': {
+      id: '/_authenticated/business-book'
+      path: '/business-book'
+      fullPath: '/business-book'
+      preLoaderRoute: typeof AuthenticatedBusinessBookRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/calendar': {
@@ -1920,6 +1938,7 @@ const AuthenticatedTaxReturnsRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAiBookkeeperRoute: typeof AuthenticatedAiBookkeeperRoute
   AuthenticatedAppsRoute: typeof AuthenticatedAppsRoute
+  AuthenticatedBusinessBookRoute: typeof AuthenticatedBusinessBookRoute
   AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
   AuthenticatedCompaniesRoute: typeof AuthenticatedCompaniesRoute
   AuthenticatedCustomersRoute: typeof AuthenticatedCustomersRoute
@@ -1970,6 +1989,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAiBookkeeperRoute: AuthenticatedAiBookkeeperRoute,
   AuthenticatedAppsRoute: AuthenticatedAppsRoute,
+  AuthenticatedBusinessBookRoute: AuthenticatedBusinessBookRoute,
   AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
   AuthenticatedCompaniesRoute: AuthenticatedCompaniesRoute,
   AuthenticatedCustomersRoute: AuthenticatedCustomersRoute,

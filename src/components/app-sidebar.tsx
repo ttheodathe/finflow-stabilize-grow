@@ -95,6 +95,7 @@ const PLAN_LABELS: Record<string, string> = {
 };
 
 const navGroups: NavGroup[] = [
+  { label: "Business Book", icon: BookOpen, to: "/business-book" },
   { label: "Dashboard", icon: LayoutDashboard, to: "/dashboard" },
   { label: "Companies", icon: Building2, to: "/companies" },
   {

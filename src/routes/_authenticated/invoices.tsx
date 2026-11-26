@@ -406,7 +406,10 @@ function InvoicesPage() {
       customer_id: form.customer_id || null,
       issue_date: form.issue_date,
       due_date: form.due_date || null,
-      status: form.status,
+      // New invoices are staged as drafts until their line items exist. This
+      // lets the database post the ledger and stock effects only after the
+      // complete invoice has been saved.
+      status: editing ? form.status : "draft",
       currency: form.currency,
       subtotal: totals.subtotal,
       tax: totals.tax,
@@ -450,7 +453,11 @@ function InvoicesPage() {
     }
 
     if (invoiceId) {
-      await supabase.from("invoice_items").delete().eq("invoice_id", invoiceId);
+      const { error: deleteItemsError } = await supabase
+        .from("invoice_items")
+        .delete()
+        .eq("invoice_id", invoiceId);
+      if (deleteItemsError) return toast.error(deleteItemsError.message);
       if (lines.length > 0) {
         const rows = lines.map((l) => ({
           invoice_id: invoiceId!,
@@ -464,13 +471,20 @@ function InvoicesPage() {
           amount: (Number(l.quantity) || 0) * (Number(l.unit_price) || 0),
         }));
         const { error } = await supabase.from("invoice_items").insert(scoped(rows));
-        if (error) return toast.error(error.message);
+        if (error) {
+          if (!editing) await supabase.from("invoices").delete().eq("id", invoiceId);
+          return toast.error(error.message);
+        }
       }
-      // Ledger posting is deferred on INSERT (line items don't exist yet
-      // at that point) — this touch-update fires the UPDATE trigger path
-      // so the invoice actually posts to the general ledger now that its
-      // items are saved. Same pattern bills already use.
-      await supabase.from("invoices").update({ status: payload.status }).eq("id", invoiceId);
+      // For new invoices this transitions draft -> requested status after
+      // the line items are present. The same database event posts the ledger
+      // and dispatches tracked inventory once. Existing invoice edits retain
+      // their current status workflow.
+      const { error: finalizeError } = await supabase
+        .from("invoices")
+        .update({ status: form.status })
+        .eq("id", invoiceId);
+      if (finalizeError) return toast.error(finalizeError.message);
     }
 
     toast.success(editing ? "Invoice updated" : "Invoice created");
