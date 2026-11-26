@@ -74,9 +74,9 @@ export const Route = createFileRoute("/changelog")({
   }),
 });
 
-const LATEST_UPDATE = "July 2026";
-const CURRENT_VERSION = "v1.0.0";
-const LAST_UPDATED = "July 12, 2026";
+const LATEST_UPDATE = "November 2026";
+const CURRENT_VERSION = "v1.1.0";
+const LAST_UPDATED = "November 26, 2026";
 
 type UpdateCategory = "feature" | "improvement" | "bugfix" | "security" | "documentation";
 
@@ -129,6 +129,60 @@ interface ChangelogEntry {
 
 const releases: ChangelogEntry[] = [
   {
+    version: "v1.1.0",
+    date: "November 2026",
+    title: "Demo Requests, Conversion Analytics & SEO Improvements",
+    summary:
+      "A product and growth update focused on making it easier to request a product walkthrough, improving the accuracy of signup and billing measurement, and helping customers discover clearer answers in search.",
+    items: {
+      feature: [
+        "Added a dedicated demo request form to the Contact page.",
+        "Added private server-side demo request handling and an admin review workflow.",
+        "Configured internal email notifications for new demo enquiries.",
+      ],
+      improvement: [
+        "Aligned GA4 lead and checkout events with verified signup and billing actions.",
+        "Record purchase events only after a positive paid order is confirmed by the billing provider.",
+        "Improved homepage and comparison-page search titles, descriptions, canonical URLs, and structured data.",
+        "Expanded practical answers for free-plan invoice and financial reporting questions.",
+      ],
+      security: [
+        "Protected demo request records with row-level security and server-only database access.",
+        "Added server-side input validation, a spam honeypot, request rate limiting, and duplicate-submission protection.",
+        "Separated required demo-contact consent from optional marketing consent.",
+        "Updated the Privacy Policy to explain demo enquiry data handling.",
+        "Kept personal and financial account details out of GA4 event payloads.",
+      ],
+      bugfix: [
+        "Corrected page title and description issues found during SEO audits.",
+        "Fixed heading hierarchy issues on selected public pages.",
+      ],
+      documentation: [
+        "Updated public product and support information alongside the demo request workflow.",
+      ],
+    },
+  },
+  {
+    version: "v1.0.1",
+    date: "July 2026",
+    title: "Stability & Experience Update",
+    summary:
+      "A follow-up release focused on making the core launch experience smoother and more reliable.",
+    items: {
+      improvement: [
+        "Improved company creation flow",
+        "Better subscription handling",
+        "Improved error messages",
+        "Better database reliability",
+      ],
+      bugfix: [
+        "Resolved intermittent authentication issues",
+        "Fixed permission handling edge cases",
+        "Addressed minor user experience issues reported after launch",
+      ],
+    },
+  },
+  {
     version: "v1.0.0",
     date: "July 2026",
     title: "Public Launch",
@@ -158,41 +212,6 @@ const releases: ChangelogEntry[] = [
       ],
     },
   },
-  {
-    version: "v1.0.1",
-    date: "July 2026",
-    title: "Stability & Experience Update",
-    summary:
-      "A follow-up release focused on making the core launch experience smoother and more reliable.",
-    items: {
-      improvement: [
-        "Improved company creation flow",
-        "Better subscription handling",
-        "Improved error messages",
-        "Better database reliability",
-      ],
-      bugfix: [
-        "Resolved intermittent authentication issues",
-        "Fixed permission handling edge cases",
-        "Addressed minor user experience issues reported after launch",
-      ],
-    },
-  },
-  {
-    version: "v1.1.0",
-    date: "Planned",
-    title: "Business Growth Update",
-    summary:
-      "Our next planned release, focused on giving growing businesses deeper financial visibility and smoother collaboration.",
-    items: {
-      feature: [
-        "Advanced financial reports",
-        "Export tools",
-        "Automation improvements",
-        "Better collaboration tools",
-      ],
-    },
-  },
 ];
 
 const roadmapItems = [
@@ -205,9 +224,9 @@ const roadmapItems = [
 ];
 
 const versionHistory = [
-  { version: "v1.0.0", title: "Public Launch" },
+  { version: "v1.1.0", title: "Demo Requests, Conversion Analytics & SEO Improvements" },
   { version: "v1.0.1", title: "Stability & Experience Update" },
-  { version: "v1.1.0", title: "Business Growth Update (Planned)" },
+  { version: "v1.0.0", title: "Public Launch" },
 ];
 
 const faqs = [
@@ -302,27 +321,27 @@ function ChangelogPage() {
             Featured Release · {CURRENT_VERSION}
           </span>
           <h3 className="mt-5 text-2xl font-bold tracking-tight text-white sm:text-3xl">
-            Introducing FinFlowTrack 1.0
+            Introducing FinFlowTrack 1.1
           </h3>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-base">
-            Our first public release introduces the foundation of modern small business accounting —
-            built to help freelancers, startups, and growing teams manage their finances in one
-            connected platform.
+            This release makes it easier to request a guided product demo, strengthens privacy
+            around enquiries, improves measurement of verified signup and billing milestones, and
+            sharpens the information customers see when discovering FinFlowTrack through search.
           </p>
           <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {[
-              "Account authentication",
-              "Company workspace management",
-              "Multiple company support",
-              "Team collaboration",
-              "Subscription system",
-              "Customers",
-              "Suppliers",
-              "Products",
-              "Invoices",
-              "Expenses",
-              "Inventory foundation",
-              "Reports",
+              "Dedicated demo request form",
+              "Private server-side intake",
+              "Admin enquiry review",
+              "Email notifications",
+              "Consent-aware collection",
+              "Spam and rate-limit controls",
+              "Protected enquiry records",
+              "Verified lead events",
+              "Checkout event alignment",
+              "Confirmed purchase tracking",
+              "Improved search snippets",
+              "Canonical URL improvements",
             ].map((capability) => (
               <div
                 key={capability}
