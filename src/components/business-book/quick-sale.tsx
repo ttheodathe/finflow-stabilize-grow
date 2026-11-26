@@ -182,6 +182,7 @@ export function QuickSale({ companyId, onSaved }: QuickSaleProps) {
           ? {
               ...item,
               quantity: item.quantity + qty,
+              unitPrice: (item.subtotal + line.subtotal) / (item.quantity + qty),
               subtotal: item.subtotal + line.subtotal,
               tax: item.tax + line.tax,
               total: item.total + line.total,
