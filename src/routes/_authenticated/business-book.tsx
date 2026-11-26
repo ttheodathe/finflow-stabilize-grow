@@ -3,7 +3,13 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 import { localDateKey, sumByCurrency, formatCurrencyTotals } from "@/lib/business-book";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   ArrowDownRight,
@@ -36,6 +42,7 @@ type InvoiceRow = {
   issue_date: string;
   created_at: string;
 };
+
 type PaymentRow = {
   id: string;
   amount: number;
@@ -43,6 +50,7 @@ type PaymentRow = {
   payment_date: string;
   created_at: string;
 };
+
 type ExpenseRow = {
   id: string;
   amount: number;
@@ -53,13 +61,18 @@ type ExpenseRow = {
   category: string | null;
   created_at: string;
 };
+
 type ProductRow = {
   id: string;
   name: string;
   sku: string | null;
   reorder_level: number | null;
 };
-type BalanceRow = { item_id: string; quantity_available: number | null };
+
+type BalanceRow = {
+  item_id: string;
+  quantity_available: number | null;
+};
 
 type ActivityRow = {
   id: string;
@@ -147,6 +160,7 @@ function BusinessBookPage() {
         productResult,
         balanceResult,
       ].some((result) => result.error);
+
       if (failed) {
         setLoadError(true);
         setLoading(false);
@@ -172,16 +186,33 @@ function BusinessBookPage() {
       sumByCurrency(
         invoices
           .filter((invoice) => invoice.status !== "draft")
-          .map((invoice) => ({ amount: invoice.total, currency: invoice.currency })),
+          .map((invoice) => ({
+            amount: invoice.total,
+            currency: invoice.currency,
+          })),
       ),
     [invoices],
   );
+
   const paymentTotals = useMemo(
-    () => sumByCurrency(payments.map((payment) => ({ amount: payment.amount, currency: payment.currency }))),
+    () =>
+      sumByCurrency(
+        payments.map((payment) => ({
+          amount: payment.amount,
+          currency: payment.currency,
+        })),
+      ),
     [payments],
   );
+
   const expenseTotals = useMemo(
-    () => sumByCurrency(expenses.map((expense) => ({ amount: expense.amount, currency: expense.currency }))),
+    () =>
+      sumByCurrency(
+        expenses.map((expense) => ({
+          amount: expense.amount,
+          currency: expense.currency,
+        })),
+      ),
     [expenses],
   );
 
@@ -190,9 +221,11 @@ function BusinessBookPage() {
     for (const balance of balances) {
       availableByItem.set(
         balance.item_id,
-        (availableByItem.get(balance.item_id) ?? 0) + Number(balance.quantity_available ?? 0),
+        (availableByItem.get(balance.item_id) ?? 0) +
+          Number(balance.quantity_available ?? 0),
       );
     }
+
     return products
       .filter((product) => {
         const reorderLevel = Number(product.reorder_level ?? 0);
@@ -231,6 +264,7 @@ function BusinessBookPage() {
         kind: "expense" as const,
       })),
     ];
+
     return rows.sort((a, b) => b.date.localeCompare(a.date)).slice(0, 8);
   }, [expenses, invoices, payments]);
 
@@ -285,7 +319,9 @@ function BusinessBookPage() {
       <div className="mx-auto max-w-4xl py-16 text-center">
         <BookOpen className="mx-auto mb-4 h-10 w-10 text-muted-foreground" />
         <h1 className="text-2xl font-bold">Business Book</h1>
-        <p className="mt-2 text-muted-foreground">Choose a company to view its daily business records.</p>
+        <p className="mt-2 text-muted-foreground">
+          Choose a company to view its daily business records.
+        </p>
       </div>
     );
   }
@@ -322,40 +358,55 @@ function BusinessBookPage() {
             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-semibold">{loading ? "Loading…" : formatCurrencyTotals(salesTotals)}</div>
+            <div className="text-xl font-semibold">
+              {loading ? "Loading…" : formatCurrencyTotals(salesTotals)}
+            </div>
             <p className="mt-1 text-xs text-muted-foreground">
               {invoices.filter((invoice) => invoice.status !== "draft").length} non-draft invoices
             </p>
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardDescription>Money received today</CardDescription>
             <ArrowDownRight className="h-4 w-4 text-emerald-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-semibold">{loading ? "Loading…" : formatCurrencyTotals(paymentTotals)}</div>
+            <div className="text-xl font-semibold">
+              {loading ? "Loading…" : formatCurrencyTotals(paymentTotals)}
+            </div>
             <p className="mt-1 text-xs text-muted-foreground">Payments recorded today</p>
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardDescription>Expenses recorded today</CardDescription>
             <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-semibold">{loading ? "Loading…" : formatCurrencyTotals(expenseTotals)}</div>
-            <p className="mt-1 text-xs text-muted-foreground">{expenses.length} expense entries</p>
+            <div className="text-xl font-semibold">
+              {loading ? "Loading…" : formatCurrencyTotals(expenseTotals)}
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {expenses.length} expense entries
+            </p>
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardDescription>Products at reorder level</CardDescription>
             <CircleAlert className="h-4 w-4 text-amber-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold">{loading ? "…" : lowStockProducts.length}</div>
-            <p className="mt-1 text-xs text-muted-foreground">Based on available stock across warehouses</p>
+            <div className="text-2xl font-semibold">
+              {loading ? "…" : lowStockProducts.length}
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Based on available stock across warehouses
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -363,7 +414,10 @@ function BusinessBookPage() {
       <Card>
         <CardHeader>
           <CardTitle>What would you like to record?</CardTitle>
-          <CardDescription>Choose an action. FinFlow keeps the underlying business and accounting records connected.</CardDescription>
+          <CardDescription>
+            Choose an action. FinFlow keeps the underlying business and accounting records
+            connected.
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {actions.map((action) => {
@@ -374,14 +428,20 @@ function BusinessBookPage() {
                 to={action.to}
                 className="group flex min-h-24 items-center gap-3 rounded-lg border p-4 transition-colors hover:border-primary/50 hover:bg-muted/50"
               >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <span
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"
+                >
                   <Icon className="h-5 w-5" />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block font-semibold">{action.title}</span>
-                  <span className="mt-1 block text-sm text-muted-foreground">{action.description}</span>
+                  <span className="mt-1 block text-sm text-muted-foreground">
+                    {action.description}
+                  </span>
                 </span>
-                <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                <ArrowUpRight
+                  className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                />
               </Link>
             );
           })}
@@ -392,21 +452,29 @@ function BusinessBookPage() {
         <Card>
           <CardHeader>
             <CardTitle>Today's entries</CardTitle>
-            <CardDescription>Sales, payments and expenses recorded for this business today.</CardDescription>
+            <CardDescription>
+              Sales, payments and expenses recorded for this business today.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {loadError ? (
               <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm">
                 <p className="font-medium">We couldn't load today's records.</p>
-                <p className="mt-1 text-muted-foreground">Your data has not been changed. Refresh to try again.</p>
+                <p className="mt-1 text-muted-foreground">
+                  Your data has not been changed. Refresh to try again.
+                </p>
               </div>
             ) : loading ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">Loading today's entries…</p>
+              <p className="py-8 text-center text-sm text-muted-foreground">
+                Loading today's entries…
+              </p>
             ) : activity.length === 0 ? (
               <div className="rounded-lg border border-dashed p-8 text-center">
                 <Wallet className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
                 <p className="font-medium">No entries yet today</p>
-                <p className="mt-1 text-sm text-muted-foreground">Record your first sale, payment or expense to start today's book.</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Record your first sale, payment or expense to start today's book.
+                </p>
               </div>
             ) : (
               <div className="divide-y">
@@ -443,36 +511,55 @@ function BusinessBookPage() {
                 {loading ? "…" : lowStockProducts.length}
               </Badge>
             </div>
-            <CardDescription>Products at or below their configured reorder level.</CardDescription>
+            <CardDescription>
+              Products at or below their configured reorder level.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {loading ? (
-              <p className="py-6 text-center text-sm text-muted-foreground">Checking inventory…</p>
+              <p className="py-6 text-center text-sm text-muted-foreground">
+                Checking inventory…
+              </p>
             ) : lowStockProducts.length === 0 ? (
               <div className="rounded-lg border border-dashed p-6 text-center">
                 <Boxes className="mx-auto mb-2 h-7 w-7 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">No products are currently at their reorder level.</p>
+                <p className="text-sm text-muted-foreground">
+                  No products are currently at their reorder level.
+                </p>
               </div>
             ) : (
               <div className="space-y-3">
                 {lowStockProducts.slice(0, 6).map((product) => {
                   const available = balances
                     .filter((balance) => balance.item_id === product.id)
-                    .reduce((total, balance) => total + Number(balance.quantity_available ?? 0), 0);
+                    .reduce(
+                      (total, balance) => total + Number(balance.quantity_available ?? 0),
+                      0,
+                    );
                   return (
-                    <div key={product.id} className="flex items-center justify-between gap-3">
+                    <div
+                      key={product.id}
+                      className="flex items-center justify-between gap-3"
+                    >
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium">{product.name}</p>
-                        <p className="text-xs text-muted-foreground">{product.sku || "No SKU"}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {product.sku || "No SKU"}
+                        </p>
                       </div>
                       <div className="shrink-0 text-right">
                         <p className="text-sm font-semibold">{available}</p>
-                        <p className="text-xs text-muted-foreground">Reorder at {Number(product.reorder_level)}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Reorder at {Number(product.reorder_level)}
+                        </p>
                       </div>
                     </div>
                   );
                 })}
-                <Link to="/items/inventory" className="inline-flex items-center gap-1 pt-1 text-sm font-medium text-primary hover:underline">
+                <Link
+                  to="/items/inventory"
+                  className="inline-flex items-center gap-1 pt-1 text-sm font-medium text-primary hover:underline"
+                >
                   Open inventory <ArrowUpRight className="h-3.5 w-3.5" />
                 </Link>
               </div>
@@ -482,7 +569,9 @@ function BusinessBookPage() {
       </div>
 
       <p className="text-xs leading-relaxed text-muted-foreground">
-        Sales recorded are invoice totals, while money received comes from payment records. They are shown separately and are not added together. Amounts remain grouped by their original currency; no exchange-rate conversion is assumed.
+        Sales recorded are invoice totals, while money received comes from payment records. They are
+        shown separately and are not added together. Amounts remain grouped by their original
+        currency; no exchange-rate conversion is assumed.
       </p>
     </div>
   );
