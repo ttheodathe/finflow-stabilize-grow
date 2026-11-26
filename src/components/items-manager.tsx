@@ -86,6 +86,7 @@ export function ItemsManager({
     currency: "USD",
     unit: type === "service" ? "hour" : "unit",
     track_inventory: type === "product",
+    stock_quantity: "0",
     is_active: true,
   });
 
@@ -190,6 +191,7 @@ export function ItemsManager({
       currency: "USD",
       unit: type === "service" ? "hour" : "unit",
       track_inventory: type === "product",
+      stock_quantity: "0",
       is_active: true,
     });
     setOpen(true);
@@ -207,6 +209,7 @@ export function ItemsManager({
       currency: it.currency,
       unit: it.unit ?? "unit",
       track_inventory: it.track_inventory,
+      stock_quantity: String(it.stock_quantity),
       is_active: it.is_active,
     });
     setOpen(true);
@@ -230,6 +233,7 @@ export function ItemsManager({
       currency: form.currency,
       unit: form.unit || null,
       track_inventory: form.track_inventory,
+      stock_quantity: Number(form.stock_quantity) || 0,
       is_active: form.is_active,
     };
     const { error } = editing
@@ -388,11 +392,15 @@ export function ItemsManager({
                 </div>
               )}
               {type === "product" && form.track_inventory && (
-                <p className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
-                  Stock quantities are managed through recorded stock movements and purchase
-                  receipts, not by editing the product record. This keeps every stock change
-                  auditable and synchronized with inventory balances.
-                </p>
+                <div>
+                  <Label>Stock quantity</Label>
+                  <Input
+                    type="number"
+                    step="1"
+                    value={form.stock_quantity}
+                    onChange={(e) => setForm({ ...form, stock_quantity: e.target.value })}
+                  />
+                </div>
               )}
               <div className="flex items-center justify-between rounded-md border p-3">
                 <Label>Active</Label>
