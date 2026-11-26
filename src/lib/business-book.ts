@@ -9,7 +9,7 @@ export type CurrencyAmount = {
  */
 export function sumByCurrency(rows: CurrencyAmount[]): Record<string, number> {
   return rows.reduce<Record<string, number>>((totals, row) => {
-    const currency = (row.currency || "USD").toUpperCase();
+    const currency = (row.currency || "USD").trim().toUpperCase() || "USD";
     const amount = Number(row.amount ?? 0);
     if (!Number.isFinite(amount)) return totals;
     totals[currency] = (totals[currency] ?? 0) + amount;
