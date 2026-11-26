@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
+import { QuickSale } from "@/components/business-book/quick-sale";
 import { localDateKey, sumByCurrency, formatCurrencyTotals } from "@/lib/business-book";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -333,15 +334,18 @@ function BusinessBookPage() {
           </p>
           <p className="mt-2 text-sm font-medium">{todayLabel}</p>
         </div>
-        <button
-          type="button"
-          onClick={() => setReloadKey((key) => key + 1)}
-          disabled={loading}
-          className="inline-flex h-9 items-center justify-center gap-2 rounded-md border bg-background px-3 text-sm font-medium transition-colors hover:bg-accent disabled:opacity-50"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          Refresh
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <QuickSale companyId={companyId} onSaved={() => setReloadKey((key) => key + 1)} />
+          <button
+            type="button"
+            onClick={() => setReloadKey((key) => key + 1)}
+            disabled={loading}
+            className="inline-flex h-9 items-center justify-center gap-2 rounded-md border bg-background px-3 text-sm font-medium transition-colors hover:bg-accent disabled:opacity-50"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </button>
+        </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
