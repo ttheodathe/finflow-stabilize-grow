@@ -95,15 +95,15 @@ export function QuickSale({ companyId, onSaved }: QuickSaleProps) {
         .eq("type", "product")
         .eq("is_active", true)
         .order("name"),
-      supabase
-        .from("customers")
-        .select("id,name")
-        .eq("company_id", companyId)
-        .order("name"),
+      supabase.from("customers").select("id,name").eq("company_id", companyId).order("name"),
     ]).then(([productResult, customerResult]: any[]) => {
       if (cancelled) return;
       if (productResult.error || customerResult.error) {
-        toast.error(productResult.error?.message ?? customerResult.error?.message ?? "Could not load sale options");
+        toast.error(
+          productResult.error?.message ??
+            customerResult.error?.message ??
+            "Could not load sale options",
+        );
       } else {
         setProducts((productResult.data ?? []) as SaleProduct[]);
         setCustomers((customerResult.data ?? []) as SaleCustomer[]);
@@ -127,7 +127,13 @@ export function QuickSale({ companyId, onSaved }: QuickSaleProps) {
   useEffect(() => {
     if (!product) return;
     setUnitPrice(String(Number(product.price) || 0));
-    setPaymentAmount(String((Number(product.price) || 0) * (Number(quantity) || 1) * (1 + Number(product.tax_rate || 0) / 100)));
+    setPaymentAmount(
+      String(
+        (Number(product.price) || 0) *
+          (Number(quantity) || 1) *
+          (1 + Number(product.tax_rate || 0) / 100),
+      ),
+    );
   }, [productId]);
 
   useEffect(() => {
@@ -167,7 +173,8 @@ export function QuickSale({ companyId, onSaved }: QuickSaleProps) {
     let invoiceNumber = "";
     try {
       const { data: authData, error: authError } = await supabase.auth.getUser();
-      if (authError || !authData.user) throw new Error("Your session has expired. Please sign in again.");
+      if (authError || !authData.user)
+        throw new Error("Your session has expired. Please sign in again.");
 
       // The invoice is staged as a draft until its line is saved. Moving it to
       // sent then invokes the existing stock-dispatch and invoice-journal logic.
@@ -195,7 +202,8 @@ export function QuickSale({ companyId, onSaved }: QuickSaleProps) {
         .insert(scoped(invoicePayload))
         .select("id")
         .single();
-      if (invoiceError || !invoice) throw new Error(invoiceError?.message ?? "Could not create the sale");
+      if (invoiceError || !invoice)
+        throw new Error(invoiceError?.message ?? "Could not create the sale");
       invoiceId = invoice.id;
 
       const { error: lineError } = await supabase.from("invoice_items").insert(
@@ -229,7 +237,8 @@ export function QuickSale({ companyId, onSaved }: QuickSaleProps) {
       }
 
       if (paidNow) {
-        const { rate: paymentRate, companyCurrency: paymentCompanyCurrency } = await lockExchangeRate(companyId, currency);
+        const { rate: paymentRate, companyCurrency: paymentCompanyCurrency } =
+          await lockExchangeRate(companyId, currency);
         const { error: paymentError } = await supabase.from("payments").insert(
           scoped({
             user_id: authData.user.id,
@@ -268,9 +277,14 @@ export function QuickSale({ companyId, onSaved }: QuickSaleProps) {
       // If an invoice was created but a later request failed, leave the
       // saved invoice visible rather than attempting an unsafe blind rollback.
       const message = error instanceof Error ? error.message : "Could not save this sale";
-      toast.error(invoiceId ? `Sale ${invoiceNumber} may have been saved. Check invoices before retrying. ${message}` : message, {
-        duration: 10000,
-      });
+      toast.error(
+        invoiceId
+          ? `Sale ${invoiceNumber} may have been saved. Check invoices before retrying. ${message}`
+          : message,
+        {
+          duration: 10000,
+        },
+      );
       if (invoiceId) onSaved();
     } finally {
       setSaving(false);
@@ -278,9 +292,12 @@ export function QuickSale({ companyId, onSaved }: QuickSaleProps) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => {
-      if (!saving) setOpen(nextOpen);
-    }}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!saving) setOpen(nextOpen);
+      }}
+    >
       <DialogTrigger asChild>
         <Button className="gap-2" onClick={() => setOpen(true)}>
           <ShoppingCart className="h-4 w-4" />
@@ -298,51 +315,87 @@ export function QuickSale({ companyId, onSaved }: QuickSaleProps) {
           <div className="space-y-2">
             <Label>Product</Label>
             <Select value={productId} onValueChange={setProductId} disabled={loading || saving}>
-              <SelectTrigger><SelectValue placeholder={loading ? "Loading products…" : "Choose a product"} /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue placeholder={loading ? "Loading products…" : "Choose a product"} />
+              </SelectTrigger>
               <SelectContent>
                 {products.map((item) => (
                   <SelectItem key={item.id} value={item.id}>
-                    {item.name}{item.sku ? ` · ${item.sku}` : ""}
+                    {item.name}
+                    {item.sku ? ` · ${item.sku}` : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             {products.length === 0 && !loading && (
-              <p className="text-xs text-muted-foreground">Add an active product first in Products.</p>
+              <p className="text-xs text-muted-foreground">
+                Add an active product first in Products.
+              </p>
             )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label>Quantity</Label>
-              <Input type="number" min="0.01" step="0.01" required value={quantity} onChange={(event) => setQuantity(event.target.value)} />
+              <Input
+                type="number"
+                min="0.01"
+                step="0.01"
+                required
+                value={quantity}
+                onChange={(event) => setQuantity(event.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label>Unit selling price ({currency})</Label>
-              <Input type="number" min="0" step="0.01" required value={unitPrice} onChange={(event) => setUnitPrice(event.target.value)} />
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                required
+                value={unitPrice}
+                onChange={(event) => setUnitPrice(event.target.value)}
+              />
             </div>
           </div>
 
           <div className="space-y-2">
             <Label>Customer (optional)</Label>
-            <Select value={customerId || "walk-in"} onValueChange={(value) => setCustomerId(value === "walk-in" ? "" : value)}>
-              <SelectTrigger><SelectValue placeholder="Walk-in customer" /></SelectTrigger>
+            <Select
+              value={customerId || "walk-in"}
+              onValueChange={(value) => setCustomerId(value === "walk-in" ? "" : value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Walk-in customer" />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="walk-in">Walk-in customer</SelectItem>
                 {customers.map((customer) => (
-                  <SelectItem key={customer.id} value={customer.id}>{customer.name}</SelectItem>
+                  <SelectItem key={customer.id} value={customer.id}>
+                    {customer.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
           <div className="rounded-lg border bg-muted/30 p-3 text-sm">
-            <div className="flex justify-between"><span>Subtotal</span><span>{money(subtotal, currency)}</span></div>
-            <div className="mt-1 flex justify-between"><span>Tax ({Number(product?.tax_rate ?? 0)}%)</span><span>{money(tax, currency)}</span></div>
-            <div className="mt-2 flex justify-between border-t pt-2 font-semibold"><span>Total</span><span>{money(total, currency)}</span></div>
+            <div className="flex justify-between">
+              <span>Subtotal</span>
+              <span>{money(subtotal, currency)}</span>
+            </div>
+            <div className="mt-1 flex justify-between">
+              <span>Tax ({Number(product?.tax_rate ?? 0)}%)</span>
+              <span>{money(tax, currency)}</span>
+            </div>
+            <div className="mt-2 flex justify-between border-t pt-2 font-semibold">
+              <span>Total</span>
+              <span>{money(total, currency)}</span>
+            </div>
             {product?.track_inventory && (
               <p className="mt-2 text-xs text-muted-foreground">
-                Inventory is reduced by the existing invoice stock workflow when this sale is finalized.
+                Inventory is reduced by the existing invoice stock workflow when this sale is
+                finalized.
               </p>
             )}
           </div>
@@ -350,9 +403,16 @@ export function QuickSale({ companyId, onSaved }: QuickSaleProps) {
           <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
             <div>
               <p className="text-sm font-medium">Payment received now</p>
-              <p className="text-xs text-muted-foreground">Turn this off to record an unpaid sale.</p>
+              <p className="text-xs text-muted-foreground">
+                Turn this off to record an unpaid sale.
+              </p>
             </div>
-            <input type="checkbox" checked={paidNow} onChange={(event) => setPaidNow(event.target.checked)} className="h-4 w-4 accent-primary" />
+            <input
+              type="checkbox"
+              checked={paidNow}
+              onChange={(event) => setPaidNow(event.target.checked)}
+              className="h-4 w-4 accent-primary"
+            />
           </div>
 
           {paidNow && (
@@ -360,28 +420,51 @@ export function QuickSale({ companyId, onSaved }: QuickSaleProps) {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label>Amount received ({currency})</Label>
-                  <Input type="number" min="0.01" max={total} step="0.01" required value={paymentAmount} onChange={(event) => setPaymentAmount(event.target.value)} />
+                  <Input
+                    type="number"
+                    min="0.01"
+                    max={total}
+                    step="0.01"
+                    required
+                    value={paymentAmount}
+                    onChange={(event) => setPaymentAmount(event.target.value)}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Payment method</Label>
                   <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
-                      {METHODS.map((method) => <SelectItem key={method} value={method}>{method.replace("_", " ")}</SelectItem>)}
+                      {METHODS.map((method) => (
+                        <SelectItem key={method} value={method}>
+                          {method.replace("_", " ")}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <div className="space-y-2">
                 <Label>Payment reference (optional)</Label>
-                <Input value={reference} onChange={(event) => setReference(event.target.value)} placeholder="Receipt number or transaction reference" />
+                <Input
+                  value={reference}
+                  onChange={(event) => setReference(event.target.value)}
+                  placeholder="Receipt number or transaction reference"
+                />
               </div>
             </>
           )}
 
           <div className="space-y-2">
             <Label>Sale date</Label>
-            <Input type="date" required value={saleDate} onChange={(event) => setSaleDate(event.target.value)} />
+            <Input
+              type="date"
+              required
+              value={saleDate}
+              onChange={(event) => setSaleDate(event.target.value)}
+            />
           </div>
 
           <Button type="submit" className="w-full" disabled={saving || loading || !canSave}>
