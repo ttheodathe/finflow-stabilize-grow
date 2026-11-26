@@ -13,9 +13,9 @@ test("sumByCurrency keeps currencies separate", () => {
 });
 
 test("sumByCurrency ignores invalid amounts and defaults a missing currency", () => {
-  const totals = sumByCurrency([{ amount: 4 }, { currency: "EUR", amount: "not-a-number" }]);
+  const totals = sumByCurrency([{ amount: 4 }, { currency: " ", amount: 1 }, { currency: "EUR", amount: "not-a-number" }]);
 
-  assert.deepEqual(totals, { USD: 4 });
+  assert.deepEqual(totals, { USD: 5 });
 });
 
 test("localDateKey uses local calendar date rather than UTC", () => {
