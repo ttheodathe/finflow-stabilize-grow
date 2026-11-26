@@ -3,21 +3,22 @@ import test from "node:test";
 import { formatCurrencyTotals, localDateKey, sumByCurrency } from "./business-book.ts";
 
 test("sumByCurrency keeps currencies separate", () => {
-  assert.deepEqual(
-    sumByCurrency([
-      { currency: "USD", amount: 10 },
-      { currency: "usd", amount: "2.5" },
-      { currency: "RWF", amount: 1000 },
-    ]),
-    { USD: 12.5, RWF: 1000 },
-  );
+  const totals = sumByCurrency([
+    { currency: "USD", amount: 10 },
+    { currency: "usd", amount: "2.5" },
+    { currency: "RWF", amount: 1000 },
+  ]);
+
+  assert.deepEqual(totals, { USD: 12.5, RWF: 1000 });
 });
 
 test("sumByCurrency ignores invalid amounts and defaults a missing currency", () => {
-  assert.deepEqual(
-    sumByCurrency([{ amount: 4 }, { currency: "EUR", amount: "not-a-number" }]),
-    { USD: 4 },
-  );
+  const totals = sumByCurrency([
+    { amount: 4 },
+    { currency: "EUR", amount: "not-a-number" },
+  ]);
+
+  assert.deepEqual(totals, { USD: 4 });
 });
 
 test("localDateKey uses local calendar date rather than UTC", () => {
@@ -27,6 +28,8 @@ test("localDateKey uses local calendar date rather than UTC", () => {
 
 test("formatCurrencyTotals handles empty and multiple currency totals", () => {
   assert.equal(formatCurrencyTotals({}), "—");
-  assert.match(formatCurrencyTotals({ USD: 12, RWF: 5000 }), /USD|\$/);
-  assert.match(formatCurrencyTotals({ USD: 12, RWF: 5000 }), /RWF/);
+
+  const formatted = formatCurrencyTotals({ USD: 12, RWF: 5000 });
+  assert.match(formatted, /USD|\$/);
+  assert.match(formatted, /RWF/);
 });
