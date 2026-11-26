@@ -148,9 +148,10 @@ BEGIN
 END;
 $function$;
 
--- Repost only when a field that affects the invoice journal changes.
--- Status is included so draft -> sent posts after invoice lines are persisted;
--- subtotal/tax/currency/rate are included so edits cannot leave stale entries.
+-- Repost when a journal-affecting field changes or the invoice crosses the
+-- draft boundary. Draft -> sent posts after lines are persisted; sent -> draft
+-- removes the journal. Ordinary sent/partial/paid/overdue transitions must not
+-- rebuild revenue or receivables.
 CREATE OR REPLACE FUNCTION public.handle_invoice_change()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -174,8 +175,7 @@ BEGIN
       OLD.tax,
       OLD.total,
       OLD.exchange_rate,
-      OLD.base_currency_amount,
-      OLD.status
+      OLD.base_currency_amount
     ) IS DISTINCT FROM (
       NEW.company_id,
       NEW.user_id,
@@ -186,9 +186,10 @@ BEGIN
       NEW.tax,
       NEW.total,
       NEW.exchange_rate,
-      NEW.base_currency_amount,
-      NEW.status
-    ) THEN
+      NEW.base_currency_amount
+    )
+    OR (OLD.status IS DISTINCT FROM NEW.status
+        AND (OLD.status = 'draft' OR NEW.status = 'draft')) THEN
       DELETE FROM public.journal_entries
        WHERE company_id = OLD.company_id
          AND source_type = 'invoice'
