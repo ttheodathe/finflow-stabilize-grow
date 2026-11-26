@@ -161,3 +161,41 @@ BEGIN
   END LOOP;
 END;
 $function$;
+
+-- A partially paid invoice remains a completed sale for inventory purposes.
+-- The old committed-status list omitted "partial", so a first partial payment
+-- could incorrectly return dispatched stock to inventory.
+CREATE OR REPLACE FUNCTION public.handle_invoice_stock()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'pg_catalog', 'public', 'pg_temp'
+AS $function$
+DECLARE
+  committed_statuses text[] := ARRAY['sent', 'partial', 'paid', 'overdue'];
+  old_committed boolean;
+  new_committed boolean;
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    IF NEW.status = ANY(committed_statuses) THEN
+      PERFORM public.apply_invoice_stock(NEW.id, 1, 'invoice_' || NEW.status);
+    END IF;
+    RETURN NEW;
+  ELSIF TG_OP = 'UPDATE' THEN
+    old_committed := OLD.status = ANY(committed_statuses);
+    new_committed := NEW.status = ANY(committed_statuses);
+    IF new_committed AND NOT old_committed THEN
+      PERFORM public.apply_invoice_stock(NEW.id, 1, 'invoice_' || NEW.status);
+    ELSIF old_committed AND NOT new_committed THEN
+      PERFORM public.apply_invoice_stock(NEW.id, -1, 'invoice_reversed');
+    END IF;
+    RETURN NEW;
+  ELSIF TG_OP = 'DELETE' THEN
+    IF OLD.status = ANY(committed_statuses) THEN
+      PERFORM public.apply_invoice_stock(OLD.id, -1, 'invoice_deleted');
+    END IF;
+    RETURN OLD;
+  END IF;
+  RETURN NULL;
+END;
+$function$;
