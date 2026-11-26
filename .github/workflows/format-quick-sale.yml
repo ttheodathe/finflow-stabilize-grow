@@ -1,0 +1,33 @@
+name: Format Quick Sale component
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.head_ref == 'feature/business-book-workspace-2026-11-26'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx prettier --write src/components/business-book/quick-sale.tsx
+      - name: Commit formatting if needed
+        run: |
+          if ! git diff --quiet -- src/components/business-book/quick-sale.tsx; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add src/components/business-book/quick-sale.tsx
+            git commit -m "Format Quick Sale component"
+            git push
+          fi
