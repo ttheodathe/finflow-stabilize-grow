@@ -6,7 +6,9 @@ import { Label } from "@/components/ui/label";
 import { sumByCurrency, formatCurrencyTotals, localDateKey } from "@/lib/business-book";
 import { Download, RefreshCw, TrendingUp } from "lucide-react";
 
-const supabase = (await import("@/integrations/supabase/client")).supabase as any;
+import { supabase as _sb } from "@/integrations/supabase/client";
+
+const supabase = _sb as any;
 const EXCLUDED_SALE_STATUSES = new Set(["draft", "void", "voided", "cancelled", "canceled"]);
 const PAGE_SIZE = 1000;
 const MAX_ROWS = 10000;
@@ -78,7 +80,7 @@ async function fetchAllRows<T>(buildQuery: () => any): Promise<{ rows: T[]; trun
 function exportSalesCsv(invoices: InvoiceRow[], payments: PaymentRow[], from: string, to: string) {
   const escape = (value: string | number) => {
     const text = String(value);
-    return /[",\\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+    return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
   };
   const rows: (string | number)[][] = [
     ["Type", "Date", "Reference", "Status or method", "Amount", "Currency"],
@@ -99,7 +101,7 @@ function exportSalesCsv(invoices: InvoiceRow[], payments: PaymentRow[], from: st
       payment.currency,
     ]),
   ];
-  const csv = rows.map((row) => row.map(escape).join(",")).join("\\n");
+  const csv = rows.map((row) => row.map(escape).join(",")).join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
@@ -127,6 +129,7 @@ export function SalesSummary({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [truncated, setTruncated] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   function applyPreset(nextPreset: Exclude<RangePreset, "custom">) {
     const end = localDateKey();
@@ -194,7 +197,7 @@ export function SalesSummary({
     return () => {
       cancelled = true;
     };
-  }, [companyId, from, to, reloadToken]);
+  }, [companyId, from, to, reloadToken, refreshKey]);
 
   const sales = useMemo(
     () => invoices.filter((invoice) => !EXCLUDED_SALE_STATUSES.has(invoice.status.toLowerCase())),
@@ -265,7 +268,7 @@ export function SalesSummary({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setInvoices((current) => [...current])}
+            onClick={() => setRefreshKey((current) => current + 1)}
             disabled={loading}
           >
             <RefreshCw className="mr-2 h-4 w-4" />
