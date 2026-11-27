@@ -352,9 +352,7 @@ export function SalesSummary({
       </CardHeader>
       <CardContent className="space-y-5">
         {error ? (
-          <div
-            className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive"
-          >
+          <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
             {error}
           </div>
         ) : (
@@ -395,9 +393,7 @@ export function SalesSummary({
               {loading ? (
                 <p className="py-6 text-center text-sm text-muted-foreground">Loading activity…</p>
               ) : dailyRows.length === 0 ? (
-                <div
-                  className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground"
-                >
+                <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
                   No sales or payments were recorded in this period.
                 </div>
               ) : (
@@ -448,9 +444,7 @@ export function SalesSummary({
               {loading ? (
                 <p className="py-5 text-center text-sm text-muted-foreground">Loading sales…</p>
               ) : recentSales.length === 0 ? (
-                <p
-                  className="rounded-lg border border-dashed p-5 text-center text-sm text-muted-foreground"
-                >
+                <p className="rounded-lg border border-dashed p-5 text-center text-sm text-muted-foreground">
                   No sales to display for this period.
                 </p>
               ) : (
@@ -485,8 +479,8 @@ export function SalesSummary({
 
             {truncated && (
               <p className="text-xs text-amber-700">
-                This report reached its 10,000-row safety limit. Narrow the date range to review
-                all records.
+                This report reached its 10,000-row safety limit. Narrow the date range to review all
+                records.
               </p>
             )}
             <p className="text-xs leading-relaxed text-muted-foreground">
