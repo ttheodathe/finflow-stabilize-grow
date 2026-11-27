@@ -52,14 +52,14 @@ Record the business name, report date, location or sales channel, shift if relev
 
 Include the figures that explain how the day's sales total was calculated.
 
-| Field | What it means |
-| --- | --- |
-| Gross sales | Value of completed sales before discounts and returns, using one consistent definition |
-| Discounts | Discounts applied to those sales |
-| Returns and refunds | Value of goods returned or sales reversed during the reporting period |
-| Net sales | Gross sales minus discounts and returns, before separately tracked sales tax |
-| Sales tax or similar taxes | Tax collected or charged, shown separately where applicable |
-| Customer charges | The amount customers were charged after discounts, returns, and applicable taxes |
+| Field                      | What it means                                                                          |
+| -------------------------- | -------------------------------------------------------------------------------------- |
+| Gross sales                | Value of completed sales before discounts and returns, using one consistent definition |
+| Discounts                  | Discounts applied to those sales                                                       |
+| Returns and refunds        | Value of goods returned or sales reversed during the reporting period                  |
+| Net sales                  | Gross sales minus discounts and returns, before separately tracked sales tax           |
+| Sales tax or similar taxes | Tax collected or charged, shown separately where applicable                            |
+| Customer charges           | The amount customers were charged after discounts, returns, and applicable taxes       |
 
 Businesses may use different definitions for gross and net sales in their point-of-sale or accounting systems. State the definition used in the report and apply it consistently. Do not compare two reports that calculate these fields differently.
 
@@ -87,26 +87,26 @@ The following example is illustrative. It shows how a small product shop might s
 
 ### Example sales summary
 
-| Report field | Example amount |
-| --- | ---: |
-| Gross sales | $2,500.00 |
-| Discounts | $150.00 |
-| Returns | $100.00 |
-| Net sales before tax | $2,250.00 |
-| Sales tax collected | $90.00 |
-| Customer charges after adjustments | $2,340.00 |
+| Report field                       | Example amount |
+| ---------------------------------- | -------------: |
+| Gross sales                        |      $2,500.00 |
+| Discounts                          |        $150.00 |
+| Returns                            |        $100.00 |
+| Net sales before tax               |      $2,250.00 |
+| Sales tax collected                |         $90.00 |
+| Customer charges after adjustments |      $2,340.00 |
 
 In this example, net sales are calculated as gross sales minus discounts and returns. Tax is shown separately rather than being treated as sales revenue. The exact labels and tax presentation should follow the business's accounting setup and local requirements.
 
 ### Example payment summary
 
-| Payment or balance category | Example amount |
-| --- | ---: |
-| Cash received | $800.00 |
-| Card, bank, and mobile payments received | $1,100.00 |
-| Total payments received | $1,900.00 |
-| Unpaid customer balance from sales in the report | $440.00 |
-| Total customer charges | $2,340.00 |
+| Payment or balance category                      | Example amount |
+| ------------------------------------------------ | -------------: |
+| Cash received                                    |        $800.00 |
+| Card, bank, and mobile payments received         |      $1,100.00 |
+| Total payments received                          |      $1,900.00 |
+| Unpaid customer balance from sales in the report |        $440.00 |
+| Total customer charges                           |      $2,340.00 |
 
 The example shows why sales and receipts must be reported separately. Customer charges total $2,340, but only $1,900 has been received so far. The remaining $440 is unpaid at the time of the report. It should not be included in the cash counted or treated as a completed payment. This example assumes the receipts relate to the sales shown in the same report. In an actual business, a payment received today may settle an older invoice; report the receipt on its payment date and retain the original invoice reference so it is not confused with today's sales.
 
@@ -114,13 +114,13 @@ If a customer makes a partial payment, record the amount received and the remain
 
 ### Example product breakdown
 
-| Product | Quantity sold | Net sales value |
-| --- | ---: | ---: |
-| Water bottle | 30 | $240.00 |
-| Notebook | 55 | $220.00 |
-| Phone charger | 20 | $300.00 |
-| Other products | — | $1,490.00 |
-| **Total** | **—** | **$2,250.00** |
+| Product        | Quantity sold | Net sales value |
+| -------------- | ------------: | --------------: |
+| Water bottle   |            30 |         $240.00 |
+| Notebook       |            55 |         $220.00 |
+| Phone charger  |            20 |         $300.00 |
+| Other products |             — |       $1,490.00 |
+| **Total**      |         **—** |   **$2,250.00** |
 
 The item values above are illustrative and are grouped to show the layout. In a real report, the product breakdown should reconcile to the net sales total under the same definitions, date range, and currency.
 
@@ -164,14 +164,14 @@ For a cash drawer, one useful control is to compare the expected closing cash wi
 
 A basic calculation is:
 
-~~~text
+```text
 Expected closing cash =
   Opening cash float
   + Cash received from customers
   - Cash refunds paid from the drawer
   - Approved cash expenses paid from the drawer
   - Cash removed from the drawer
-~~~
+```
 
 Compare the expected amount with the actual cash count. Record and investigate any difference. Do not include card, bank transfer, or mobile payments in the physical cash total.
 
@@ -193,10 +193,10 @@ Use one row per completed sale or one row per product line, with a shared sale r
 
 Suggested columns:
 
-| Date | Sale reference | Product or service | Quantity | Unit price | Discount | Tax | Line total | Status |
-| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
-| 27 Nov | SALE-001 | Water bottle | 3 | $8.00 | $0.00 | $0.00 | $24.00 | Complete |
-| 27 Nov | SALE-002 | Notebook | 5 | $4.00 | $0.00 | $0.00 | $20.00 | Complete |
+| Date   | Sale reference | Product or service | Quantity | Unit price | Discount |   Tax | Line total | Status   |
+| ------ | -------------- | ------------------ | -------: | ---------: | -------: | ----: | ---------: | -------- |
+| 27 Nov | SALE-001       | Water bottle       |        3 |      $8.00 |    $0.00 | $0.00 |     $24.00 | Complete |
+| 27 Nov | SALE-002       | Notebook           |        5 |      $4.00 |    $0.00 | $0.00 |     $20.00 | Complete |
 
 These are illustrative sample entries. Use the fields and tax treatment appropriate to your business. If one sale includes several products, repeat the sale reference on each product line and make sure the report does not count the transaction total more than once.
 
@@ -207,9 +207,9 @@ Use one row per payment, not one row per sale. This allows a customer to pay in 
 Suggested columns:
 
 | Payment date | Sale reference | Payment method | Payment reference | Amount received | Currency |
-| --- | --- | --- | --- | ---: | --- |
-| 27 Nov | SALE-001 | Cash | — | $24.00 | USD |
-| 28 Nov | SALE-002 | Bank transfer | TXN-EXAMPLE-02 | $20.00 | USD |
+| ------------ | -------------- | -------------- | ----------------- | --------------: | -------- |
+| 27 Nov       | SALE-001       | Cash           | —                 |          $24.00 | USD      |
+| 28 Nov       | SALE-002       | Bank transfer  | TXN-EXAMPLE-02    |          $20.00 | USD      |
 
 The second example payment is dated the following day to demonstrate that the sale date and payment date can be different. It is illustrative only.
 
@@ -219,9 +219,9 @@ Create one row per reporting date, then calculate the totals from the underlying
 
 For example, if the payment sheet has the payment date in column A, method in column C, and amount in column E, a formula to total cash received for the report date in cell A2 is:
 
-~~~excel
+```excel
 =SUMIFS(Payments!$E:$E,Payments!$A:$A,$A2,Payments!$C:$C,"Cash")
-~~~
+```
 
 Adjust the sheet names and column references to match your own workbook. Keep formulas protected from accidental editing, use clear column headings, and test the totals against a few transactions before relying on the report.
 
@@ -231,11 +231,11 @@ A spreadsheet can calculate totals, but it cannot confirm that a cash count, ban
 
 These records are related, but they serve different purposes.
 
-| Record | Main purpose | Typical detail |
-| --- | --- | --- |
-| Sales register | Captures individual sales | Date, reference, product, quantity, price, customer, status |
-| Daily sales report | Summarizes trading activity | Daily totals, product breakdown, payment summary, exceptions |
-| Cash book | Records cash and bank movements | Receipts, payments, deposits, withdrawals, balances |
+| Record             | Main purpose                    | Typical detail                                               |
+| ------------------ | ------------------------------- | ------------------------------------------------------------ |
+| Sales register     | Captures individual sales       | Date, reference, product, quantity, price, customer, status  |
+| Daily sales report | Summarizes trading activity     | Daily totals, product breakdown, payment summary, exceptions |
+| Cash book          | Records cash and bank movements | Receipts, payments, deposits, withdrawals, balances          |
 
 A daily report should be traceable back to the sales register and payment records. It should not replace the detailed transaction history or the formal accounting records required by the business.
 
