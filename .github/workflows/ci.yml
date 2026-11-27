@@ -330,6 +330,10 @@ jobs:
       - name: Unit tests
         run: npm run test:unit
 
+      - name: Capture Prettier output for PR 164 (temporary diagnostic)
+        if: github.event_name == 'pull_request' && github.event.pull_request.number == 164
+        run: npx prettier content/blog/daily-sales-report-template-small-business.md | base64 -w 0
+
       - name: Lint
         run: npm run lint
 
