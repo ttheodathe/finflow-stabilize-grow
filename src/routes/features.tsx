@@ -79,14 +79,19 @@ const modules: Module[] = [
   {
     icon: ShoppingCart,
     title: "Quick sales for product businesses",
-    desc: "Record counter sales without building an invoice line by line. Add products to one sale and keep the transaction connected to your business records.",
+    desc:
+      "Record counter sales without building an invoice line by line. Add products to one sale and keep the transaction connected to your business records.",
     points: [
       { text: "Add multiple products and quantities to one sale" },
       { text: "Review unit prices, subtotal, tax and total before saving" },
       { text: "Record walk-in or existing customers" },
       { text: "Mark a sale as paid or unpaid" },
-      { text: "Record cash, bank transfer, card, check or other payment methods, with an optional reference" },
-      { text: "Save the sale as an invoice and use the existing inventory and accounting workflows" },
+      {
+        text: "Record cash, bank transfer, card, check or other payment methods, with an optional reference",
+      },
+      {
+        text: "Save the sale as an invoice and use the existing inventory and accounting workflows",
+      },
     ],
   },
   {
