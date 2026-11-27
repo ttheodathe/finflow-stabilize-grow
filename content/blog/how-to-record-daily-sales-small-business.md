@@ -1,5 +1,5 @@
 ---
-title: "How to Record Daily Sales for a Small Business: A Practical Guide"
+title: "How to Record Daily Sales for a Small Business"
 description: "Learn how to record daily sales, track products and quantities, mark payments, and keep small-business sales records organized without relying on scattered notebooks or spreadsheets."
 slug: "how-to-record-daily-sales-small-business"
 author: "FinFlowTrack Editorial Team"
