@@ -14,6 +14,7 @@ import {
   Receipt,
   ScrollText,
   ShieldCheck,
+  ShoppingCart,
   Users,
   Wallet,
   FileText,
@@ -38,9 +39,9 @@ import { PLANS, type PlanKey } from "@/lib/paddle/config";
  * drift from what each plan actually unlocks.
  */
 
-const PAGE_TITLE = "FinFlow Track Product — Invoicing, Expenses & Receivables";
+const PAGE_TITLE = "FinFlow Track Features — Quick Sales, Inventory & Accounting";
 const PAGE_DESC =
-  "See how FinFlow Track helps service businesses create client invoices, record payments and expenses, and review outstanding receivables and financial reports.";
+  "Explore FinFlow Track features for small businesses: multi-product quick sales, inventory tracking, invoicing, payment recording, expenses and financial reports.";
 
 export const Route = createFileRoute("/features")({
   component: FeaturesPage,
@@ -75,6 +76,23 @@ type Module = {
 };
 
 const modules: Module[] = [
+  {
+    icon: ShoppingCart,
+    title: "Quick sales for product businesses",
+    desc: "Record counter sales without building an invoice line by line. Add products to one sale and keep the transaction connected to your business records.",
+    points: [
+      { text: "Add multiple products and quantities to one sale" },
+      { text: "Review unit prices, subtotal, tax and total before saving" },
+      { text: "Record walk-in or existing customers" },
+      { text: "Mark a sale as paid or unpaid" },
+      {
+        text: "Record cash, bank transfer, card, check or other payment methods, with an optional reference",
+      },
+      {
+        text: "Save the sale as an invoice and use the existing inventory and accounting workflows",
+      },
+    ],
+  },
   {
     icon: FileText,
     title: "Invoicing",
@@ -123,7 +141,7 @@ const modules: Module[] = [
   {
     icon: Package,
     title: "Inventory",
-    desc: "Know what you hold and where it is.",
+    desc: "Manage products and follow stock movements as sales are finalized.",
     points: [
       { text: "Products, variants, services and categories", feature: "inventory" },
       { text: "Warehouses and stock movements", feature: "warehouses" },
@@ -232,7 +250,15 @@ const trust = [
 const faqs = [
   {
     q: "Who is FinFlowTrack for?",
-    a: "Owner-led service businesses and small teams that need clear invoicing, expense tracking and financial reporting.",
+    a: "Small product-selling and service businesses, freelancers and teams that need to record sales, manage inventory, issue invoices, track expenses and review financial reports.",
+  },
+  {
+    q: "How does Quick Sale work?",
+    a: "Quick Sale lets you add multiple active products to one transaction, set quantities and prices, review tax and totals, optionally select a customer, and record the sale as paid or unpaid. A sale is saved through the invoice workflow, so tracked inventory and accounting entries follow the configured invoice rules. All products in one sale must use the same currency.",
+  },
+  {
+    q: "Does Quick Sale support cash registers or barcode scanners?",
+    a: "Quick Sale is an in-app sales entry workflow. It does not currently claim support for dedicated cash-register hardware, barcode scanners or offline checkout.",
   },
   {
     q: "Is there a free plan?",
@@ -272,12 +298,12 @@ function FeaturesPage() {
             FinFlow Track product
           </span>
           <h1 className="mt-6 text-5xl font-bold tracking-tight lg:text-6xl">
-            Follow every invoice through to payment.
+            Record sales, track stock and keep your books connected.
           </h1>
           <p className="mt-8 max-w-3xl text-lg leading-8 text-muted-foreground">
-            Create and share client invoices, record payments, track operating expenses and review
-            outstanding customer balances. Explore the additional financial tools available across
-            the plans.
+            Record quick sales for physical products or create detailed customer invoices. Track
+            inventory, capture payments and expenses, and review the financial position of your
+            business from connected records.
           </p>
           <div className="mt-10 flex flex-wrap gap-4">
             <Link
