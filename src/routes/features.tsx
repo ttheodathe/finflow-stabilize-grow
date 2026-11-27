@@ -79,8 +79,7 @@ const modules: Module[] = [
   {
     icon: ShoppingCart,
     title: "Quick sales for product businesses",
-    desc:
-      "Record counter sales without building an invoice line by line. Add products to one sale and keep the transaction connected to your business records.",
+    desc: "Record counter sales without building an invoice line by line. Add products to one sale and keep the transaction connected to your business records.",
     points: [
       { text: "Add multiple products and quantities to one sale" },
       { text: "Review unit prices, subtotal, tax and total before saving" },
