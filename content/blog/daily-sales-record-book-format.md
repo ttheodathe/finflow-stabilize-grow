@@ -38,20 +38,20 @@ A shop selling several products in one transaction should usually keep item-leve
 
 A practical transaction register can use these columns:
 
-| Column | What to record |
-| --- | --- |
-| Date | Date the sale occurred |
-| Sale reference | Unique receipt, invoice, or transaction number |
-| Customer | Customer name or a walk-in label, where appropriate |
-| Description | Product, service, or a reference to the itemized lines |
-| Subtotal | Amount before discounts and applicable taxes |
-| Discount | Approved discount, if any |
-| Tax | Applicable tax amount, where required |
-| Sale total | Final amount charged |
-| Amount received | Payments recorded against the sale |
-| Balance | Sale total less amount received |
-| Payment method | Cash, bank transfer, card, or other method |
-| Status | Paid, partly paid, or unpaid |
+| Column          | What to record                                         |
+| --------------- | ------------------------------------------------------ |
+| Date            | Date the sale occurred                                 |
+| Sale reference  | Unique receipt, invoice, or transaction number         |
+| Customer        | Customer name or a walk-in label, where appropriate    |
+| Description     | Product, service, or a reference to the itemized lines |
+| Subtotal        | Amount before discounts and applicable taxes           |
+| Discount        | Approved discount, if any                              |
+| Tax             | Applicable tax amount, where required                  |
+| Sale total      | Final amount charged                                   |
+| Amount received | Payments recorded against the sale                     |
+| Balance         | Sale total less amount received                        |
+| Payment method  | Cash, bank transfer, card, or other method             |
+| Status          | Paid, partly paid, or unpaid                           |
 
 A business may need additional fields such as salesperson, location, order number, delivery reference, or currency. Add fields that answer a real operational question rather than making every row difficult to complete.
 
@@ -59,11 +59,11 @@ A business may need additional fields such as salesperson, location, order numbe
 
 The following is an illustrative example only. It is not a real business transaction or a suggested tax calculation.
 
-| Date | Reference | Description | Sale total | Received | Balance | Status |
-| --- | --- | --- | ---: | ---: | ---: | --- |
-| 27 Nov | SALE-014 | Water bottles | $24.00 | $24.00 | $0.00 | Paid |
-| 27 Nov | SALE-015 | Notebooks | $20.00 | $5.00 | $15.00 | Partly paid |
-| 27 Nov | SALE-016 | Pen sets | $15.00 | $0.00 | $15.00 | Unpaid |
+| Date   | Reference | Description   | Sale total | Received | Balance | Status      |
+| ------ | --------- | ------------- | ---------: | -------: | ------: | ----------- |
+| 27 Nov | SALE-014  | Water bottles | $24.00     | $24.00   | $0.00   | Paid        |
+| 27 Nov | SALE-015  | Notebooks     | $20.00     | $5.00    | $15.00  | Partly paid |
+| 27 Nov | SALE-016  | Pen sets      | $15.00     | $0.00    | $15.00  | Unpaid      |
 
 This register shows $59.00 in sales, $29.00 received, and $30.00 still outstanding in the example. The sales total and the amount received are different measures; do not report them as though they were the same.
 
@@ -73,11 +73,11 @@ When a customer pays the remaining $15.00 later, add the receipt against SALE-01
 
 When one customer buys several products, use one sale reference and record a separate line for each item.
 
-| Sale reference | Product | Quantity | Unit price | Line total |
-| --- | --- | ---: | ---: | ---: |
-| SALE-017 | Water bottle | 2 | $8.00 | $16.00 |
-| SALE-017 | Notebook | 3 | $4.00 | $12.00 |
-| SALE-017 | Pen set | 1 | $5.00 | $5.00 |
+| Sale reference | Product      | Quantity | Unit price | Line total |
+| -------------- | ------------ | -------: | ---------: | ---------: |
+| SALE-017       | Water bottle | 2        | $8.00      | $16.00     |
+| SALE-017       | Notebook     | 3        | $4.00      | $12.00     |
+| SALE-017       | Pen set      | 1        | $5.00      | $5.00      |
 
 In this illustrative example, SALE-017 has a subtotal of $33.00 before any applicable discounts or taxes.
 
