@@ -28,12 +28,12 @@ This guide walks through a basic structure you can adapt. For a paper-register a
 
 A useful workbook can start with four sheets:
 
-| Worksheet | Purpose |
-| --- | --- |
-| Sales Register | One row per sale or transaction |
-| Sale Lines | One row per product sold, linked by sale reference |
-| Payments | One row per payment received |
-| Products | Product names, codes, and any stock fields you maintain |
+| Worksheet      | Purpose                                                 |
+| -------------- | ------------------------------------------------------- |
+| Sales Register | One row per sale or transaction                         |
+| Sale Lines     | One row per product sold, linked by sale reference      |
+| Payments       | One row per payment received                            |
+| Products       | Product names, codes, and any stock fields you maintain |
 
 Keep a separate instructions or summary sheet if several people will use the workbook.
 
@@ -41,19 +41,19 @@ Keep a separate instructions or summary sheet if several people will use the wor
 
 Use one row for each transaction. Suggested columns:
 
-| Column | Example field |
-| --- | --- |
-| A | Sale date |
-| B | Sale reference |
-| C | Customer |
-| D | Currency |
-| E | Subtotal |
-| F | Discount |
-| G | Tax |
-| H | Sale total |
-| I | Amount received |
-| J | Balance |
-| K | Payment status |
+| Column | Example field   |
+| ------ | --------------- |
+| A      | Sale date       |
+| B      | Sale reference  |
+| C      | Customer        |
+| D      | Currency        |
+| E      | Subtotal        |
+| F      | Discount        |
+| G      | Tax             |
+| H      | Sale total      |
+| I      | Amount received |
+| J      | Balance         |
+| K      | Payment status  |
 
 For a row 2 example, the basic calculations are:
 
@@ -73,10 +73,10 @@ For greater control, use structured Excel Tables so formulas extend when you add
 Use a separate row for each product line:
 
 | Sale reference | Product code | Product name | Quantity | Unit price | Line total |
-| --- | --- | --- | ---: | ---: | ---: |
-| SALE-001 | BTL-01 | Water bottle | 2 | $8.00 | $16.00 |
-| SALE-001 | NOTE-02 | Notebook | 3 | $4.00 | $12.00 |
-| SALE-002 | PEN-03 | Pen set | 1 | $5.00 | $5.00 |
+| -------------- | ------------ | ------------ | -------: | ---------: | ---------: |
+| SALE-001       | BTL-01       | Water bottle | 2        | $8.00      | $16.00     |
+| SALE-001       | NOTE-02      | Notebook     | 3        | $4.00      | $12.00     |
+| SALE-002       | PEN-03       | Pen set      | 1        | $5.00      | $5.00      |
 
 The figures are examples only. A line total can be calculated as quantity multiplied by unit price (for example, `=D2*E2` if quantity is in D and unit price is in E). Keep discounts and taxes at the transaction or line level consistently, depending on how your business prices its sales.
 
@@ -86,10 +86,10 @@ Do not repeat the whole sale total on every product line and then sum that colum
 
 A sale can be paid immediately, partly paid, or settled later. Record each receipt as its own row:
 
-| Payment date | Sale reference | Amount | Currency | Method | Reference |
-| --- | --- | ---: | --- | --- | --- |
-| 27 Nov | SALE-001 | $28.00 | USD | Cash | Example |
-| 28 Nov | SALE-002 | $2.00 | USD | Bank transfer | Example |
+| Payment date | Sale reference | Amount | Currency | Method        | Reference |
+| ------------ | -------------- | -----: | -------- | ------------- | --------- |
+| 27 Nov       | SALE-001       | $28.00 | USD      | Cash          | Example   |
+| 28 Nov       | SALE-002       | $2.00  | USD      | Bank transfer | Example   |
 
 These are illustrative entries only. The payment total for a sale should be calculated from payment rows linked to that sale reference and currency. If a customer makes two payments, keep two payment records rather than overwriting the first one.
 
