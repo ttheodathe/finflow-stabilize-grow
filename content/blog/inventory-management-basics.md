@@ -49,15 +49,15 @@ A stock balance is the result of stock movements. If you only overwrite the quan
 
 Common stock movements include:
 
-| Movement | Typical effect on available quantity |
-| --- | --- |
-| Opening stock | Establishes the starting quantity |
-| Purchase received | Increases quantity |
-| Sale dispatched | Decreases quantity |
-| Customer return | May increase quantity if goods are saleable |
-| Supplier return | Decreases quantity |
-| Damage or loss | Decreases quantity |
-| Stock correction | Changes the balance with a documented reason |
+| Movement                   | Typical effect on available quantity         |
+| -------------------------- | -------------------------------------------- |
+| Opening stock              | Establishes the starting quantity            |
+| Purchase received          | Increases quantity                           |
+| Sale dispatched            | Decreases quantity                           |
+| Customer return            | May increase quantity if goods are saleable  |
+| Supplier return            | Decreases quantity                           |
+| Damage or loss             | Decreases quantity                           |
+| Stock correction           | Changes the balance with a documented reason |
 | Transfer between locations | Decreases one location and increases another |
 
 A basic quantity relationship is:
@@ -157,11 +157,11 @@ The purpose is not merely to hold more stock. Excess stock can tie up money and 
 
 ## 9. Choose a recordkeeping method that fits the business
 
-| Method | May fit when | Watch for |
-| --- | --- | --- |
-| Paper stock card | Few products and one person maintains records | Totals and past movements can be hard to search |
-| Spreadsheet | Small catalog and simple stock movements | Formulas, duplicate edits, and version conflicts |
-| Inventory software | Multiple products, users, locations, and frequent movements | Setup, training, plan limits, and workflow fit |
+| Method             | May fit when                                                | Watch for                                        |
+| ------------------ | ----------------------------------------------------------- | ------------------------------------------------ |
+| Paper stock card   | Few products and one person maintains records               | Totals and past movements can be hard to search  |
+| Spreadsheet        | Small catalog and simple stock movements                    | Formulas, duplicate edits, and version conflicts |
+| Inventory software | Multiple products, users, locations, and frequent movements | Setup, training, plan limits, and workflow fit   |
 
 A spreadsheet can work well when someone is responsible for updating it and reconciling it. Inventory software may be more useful when sales, purchases, transfers, returns, and stock movements need to remain connected.
 
