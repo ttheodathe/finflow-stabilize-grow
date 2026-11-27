@@ -108,7 +108,7 @@ In this example, net sales are calculated as gross sales minus discounts and ret
 | Unpaid customer balance from sales in the report | $440.00 |
 | Total customer charges | $2,340.00 |
 
-The example shows why sales and receipts must be reported separately. Customer charges total $2,340, but only $1,900 has been received so far. The remaining $440 is unpaid at the time of the report. It should not be included in the cash counted or treated as a completed payment.
+The example shows why sales and receipts must be reported separately. Customer charges total $2,340, but only $1,900 has been received so far. The remaining $440 is unpaid at the time of the report. It should not be included in the cash counted or treated as a completed payment. This example assumes the receipts relate to the sales shown in the same report. In an actual business, a payment received today may settle an older invoice; report the receipt on its payment date and retain the original invoice reference so it is not confused with today's sales.
 
 If a customer makes a partial payment, record the amount received and the remaining balance separately. When the rest arrives later, record the receipt against the original invoice or sale reference.
 
@@ -120,7 +120,7 @@ If a customer makes a partial payment, record the amount received and the remain
 | Notebook | 55 | $220.00 |
 | Phone charger | 20 | $300.00 |
 | Other products | — | $1,490.00 |
-| **Total** | **Example total** | **$2,250.00** |
+| **Total** | **—** | **$2,250.00** |
 
 The item values above are illustrative and are grouped to show the layout. In a real report, the product breakdown should reconcile to the net sales total under the same definitions, date range, and currency.
 
