@@ -188,7 +188,9 @@ export function SalesSummary({
         setLoading(false);
       } catch (loadError) {
         if (cancelled) return;
-        setError(loadError instanceof Error ? loadError.message : "Could not load the sales summary.");
+        setError(
+          loadError instanceof Error ? loadError.message : "Could not load the sales summary.",
+        );
         setLoading(false);
       }
     }
@@ -204,11 +206,23 @@ export function SalesSummary({
     [invoices],
   );
   const salesTotals = useMemo(
-    () => sumByCurrency(sales.map((invoice) => ({ amount: invoice.total, currency: invoice.currency }))),
+    () =>
+      sumByCurrency(
+        sales.map((invoice) => ({
+          amount: invoice.total,
+          currency: invoice.currency,
+        })),
+      ),
     [sales],
   );
   const paymentTotals = useMemo(
-    () => sumByCurrency(payments.map((payment) => ({ amount: payment.amount, currency: payment.currency }))),
+    () =>
+      sumByCurrency(
+        payments.map((payment) => ({
+          amount: payment.amount,
+          currency: payment.currency,
+        })),
+      ),
     [payments],
   );
   const openInvoiceCount = sales.filter((invoice) => {
@@ -277,13 +291,25 @@ export function SalesSummary({
         </div>
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div className="flex flex-wrap gap-2">
-            <Button size="sm" variant={preset === "7" ? "default" : "outline"} onClick={() => applyPreset("7")}>
+            <Button
+              size="sm"
+              variant={preset === "7" ? "default" : "outline"}
+              onClick={() => applyPreset("7")}
+            >
               Last 7 days
             </Button>
-            <Button size="sm" variant={preset === "30" ? "default" : "outline"} onClick={() => applyPreset("30")}>
+            <Button
+              size="sm"
+              variant={preset === "30" ? "default" : "outline"}
+              onClick={() => applyPreset("30")}
+            >
               Last 30 days
             </Button>
-            <Button size="sm" variant={preset === "month" ? "default" : "outline"} onClick={() => applyPreset("month")}>
+            <Button
+              size="sm"
+              variant={preset === "month" ? "default" : "outline"}
+              onClick={() => applyPreset("month")}
+            >
               This month
             </Button>
           </div>
@@ -344,7 +370,9 @@ export function SalesSummary({
                 <p className="mt-2 text-xl font-semibold">
                   {loading ? "Loading…" : formatCurrencyTotals(paymentTotals)}
                 </p>
-                <p className="mt-1 text-xs text-muted-foreground">{payments.length} payment records</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {payments.length} payment records
+                </p>
               </div>
               <div className="rounded-lg border p-4">
                 <p className="text-sm text-muted-foreground">Open invoices</p>
@@ -389,11 +417,15 @@ export function SalesSummary({
                           <td className="px-3 py-2 text-right tabular-nums">
                             {row.sales ? formatAmount(row.sales, row.currency) : "—"}
                           </td>
-                          <td className="px-3 py-2 text-right tabular-nums">{row.salesCount || "—"}</td>
+                          <td className="px-3 py-2 text-right tabular-nums">
+                            {row.salesCount || "—"}
+                          </td>
                           <td className="px-3 py-2 text-right tabular-nums">
                             {row.payments ? formatAmount(row.payments, row.currency) : "—"}
                           </td>
-                          <td className="px-3 py-2 text-right tabular-nums">{row.paymentCount || "—"}</td>
+                          <td className="px-3 py-2 text-right tabular-nums">
+                            {row.paymentCount || "—"}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -431,7 +463,9 @@ export function SalesSummary({
                         <tr key={invoice.id} className="border-t">
                           <td className="px-3 py-2">{invoice.issue_date}</td>
                           <td className="px-3 py-2 font-medium">{invoice.invoice_number}</td>
-                          <td className="px-3 py-2 capitalize">{invoice.status.replaceAll("_", " ")}</td>
+                          <td className="px-3 py-2 capitalize">
+                            {invoice.status.replaceAll("_", " ")}
+                          </td>
                           <td className="px-3 py-2 text-right tabular-nums">
                             {formatAmount(Number(invoice.total), invoice.currency)}
                           </td>
@@ -445,7 +479,8 @@ export function SalesSummary({
 
             {truncated && (
               <p className="text-xs text-amber-700">
-                This report reached its 10,000-row safety limit. Narrow the date range to review all records.
+                This report reached its 10,000-row safety limit. Narrow the date range to review
+                all records.
               </p>
             )}
             <p className="text-xs leading-relaxed text-muted-foreground">
