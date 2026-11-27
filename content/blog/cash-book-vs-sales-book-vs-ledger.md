@@ -83,12 +83,12 @@ A ledger is not simply another daily sales list. It organizes accounting entries
 
 Imagine a business issues an invoice for $200 on Monday. The customer pays $80 on Monday and the remaining $120 on Friday. The example assumes one currency and excludes tax and fees for simplicity.
 
-| Record | Monday | Friday |
-| --- | --- | --- |
-| Sales record | Record the $200 sale | No new sale for this receipt |
-| Payment record / cash book | Record $80 received | Record $120 received |
-| Customer balance | $120 remains | Balance becomes $0 after the full payment |
-| General ledger | Record the sale and receipt under the accounting rules | Record the later receipt against the receivable |
+| Record                     | Monday                                                 | Friday                                          |
+| -------------------------- | ------------------------------------------------------ | ----------------------------------------------- |
+| Sales record               | Record the $200 sale                                   | No new sale for this receipt                    |
+| Payment record / cash book | Record $80 received                                    | Record $120 received                            |
+| Customer balance           | $120 remains                                           | Balance becomes $0 after the full payment       |
+| General ledger             | Record the sale and receipt under the accounting rules | Record the later receipt against the receivable |
 
 The example demonstrates why sales and receipts should remain distinct. The Friday payment settles part of an earlier sale; it should not create a second $120 sale.
 
