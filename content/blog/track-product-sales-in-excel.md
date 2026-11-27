@@ -59,14 +59,14 @@ For a row 2 example, the basic calculations are:
 
 ```excel
 H2 = E2-F2+G2
-I2 = SUMIF(Payments!B:B,B2,Payments!C:C)
+I2 = SUMIFS(Payments!C:C,Payments!B:B,B2,Payments!D:D,D2)
 J2 = MAX(0,H2-I2)
 K2 = IF(J2=0,"Paid",IF(I2=0,"Unpaid","Partly paid"))
 ```
 
 These formulas are illustrative. Confirm the workbook's tax and discount treatment before relying on the calculated sale total. If you use multiple currencies, add currency to the matching criteria so a payment in one currency cannot be applied to a sale in another.
 
-For greater control, use structured Excel Tables so formulas extend when you add rows. Protect formula columns from accidental editing.
+For greater control, use structured Excel Tables so formulas extend when you add rows. Protect formula columns from accidental editing. The SUMIFS example matches both the sale reference and currency so payments in another currency are not accidentally applied to the sale.
 
 ## 3. Itemize each product in Sale Lines
 
@@ -78,7 +78,7 @@ Use a separate row for each product line:
 | SALE-001 | NOTE-02 | Notebook | 3 | $4.00 | $12.00 |
 | SALE-002 | PEN-03 | Pen set | 1 | $5.00 | $5.00 |
 
-The figures are examples only. A line total can be calculated as quantity multiplied by unit price. Keep discounts and taxes at the transaction or line level consistently, depending on how your business prices its sales.
+The figures are examples only. A line total can be calculated as quantity multiplied by unit price (for example, `=D2*E2` if quantity is in D and unit price is in E). Keep discounts and taxes at the transaction or line level consistently, depending on how your business prices its sales.
 
 Do not repeat the whole sale total on every product line and then sum that column. That would count the same sale more than once.
 
