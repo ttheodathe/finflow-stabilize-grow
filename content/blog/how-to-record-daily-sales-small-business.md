@@ -76,29 +76,29 @@ Sales records provide source information for bookkeeping and reporting. They hel
 
 Use a consistent structure. The following example shows the information a small product seller might capture.
 
-| Field | Example |
-| --- | --- |
-| Date | 27 November 2026 |
-| Sale reference | SALE-2026-014 |
-| Customer | Walk-in customer |
-| Product | Reusable water bottle |
-| Quantity | 3 |
-| Unit price | $8.00 |
-| Tax | $0.00 in this example |
-| Sale total | $24.00 |
-| Payment status | Paid |
-| Payment method | Cash |
+| Field          | Example               |
+| -------------- | --------------------- |
+| Date           | 27 November 2026      |
+| Sale reference | SALE-2026-014         |
+| Customer       | Walk-in customer      |
+| Product        | Reusable water bottle |
+| Quantity       | 3                     |
+| Unit price     | $8.00                 |
+| Tax            | $0.00 in this example |
+| Sale total     | $24.00                |
+| Payment status | Paid                  |
+| Payment method | Cash                  |
 
 The figures above are illustrative only. Apply the prices, tax treatment, currency, and recordkeeping requirements relevant to your own business.
 
 For a sale containing more than one product, record each product as a separate line under the same transaction. For example:
 
-| Product | Quantity | Unit price | Line total |
-| --- | ---: | ---: | ---: |
-| Water bottle | 3 | $8.00 | $24.00 |
-| Notebook | 2 | $4.00 | $8.00 |
-| Pen set | 1 | $5.00 | $5.00 |
-| **Subtotal** | | | **$37.00** |
+| Product      | Quantity | Unit price | Line total |
+| ------------ | -------: | ---------: | ---------: |
+| Water bottle |        3 |      $8.00 |     $24.00 |
+| Notebook     |        2 |      $4.00 |      $8.00 |
+| Pen set      |        1 |      $5.00 |      $5.00 |
+| **Subtotal** |          |            | **$37.00** |
 
 The sale total should then reflect any applicable discounts, taxes, and other adjustments. Keep the calculation and supporting details clear enough that another person can understand how the total was reached.
 
@@ -188,11 +188,11 @@ For more detail on managing customer balances, read [Accounts Receivable Managem
 
 Each method can work, but each has trade-offs.
 
-| Method | Useful when | Common limitations |
-| --- | --- | --- |
-| Paper sales book | Transaction volume is low and one person maintains the records | Searching, totals, corrections, and sharing information can take time |
-| Spreadsheet | The business needs a flexible, low-cost register | Formulas can be overwritten; payment and stock updates may be separate |
-| Sales or accounting software | The business wants structured transactions and connected records | Setup, training, plan limits, and workflow fit need to be evaluated |
+| Method                       | Useful when                                                      | Common limitations                                                     |
+| ---------------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Paper sales book             | Transaction volume is low and one person maintains the records   | Searching, totals, corrections, and sharing information can take time  |
+| Spreadsheet                  | The business needs a flexible, low-cost register                 | Formulas can be overwritten; payment and stock updates may be separate |
+| Sales or accounting software | The business wants structured transactions and connected records | Setup, training, plan limits, and workflow fit need to be evaluated    |
 
 A notebook is not automatically unreliable, and software is not automatically accurate. A well-maintained paper register may be better than a digital system that staff do not use consistently.
 
@@ -202,10 +202,10 @@ The important questions are whether the method captures the information the busi
 
 A spreadsheet can be a useful starting point. Create columns for:
 
-| Date | Reference | Customer | Item or service | Quantity | Unit price | Total | Payment status | Payment method |
-| --- | --- | --- | --- | ---: | ---: | ---: | --- | --- |
-| 27 Nov | SALE-014 | Walk-in | Water bottle | 3 | $8.00 | $24.00 | Paid | Cash |
-| 27 Nov | SALE-015 | Customer B | Notebook | 5 | $4.00 | $20.00 | Unpaid | — |
+| Date   | Reference | Customer   | Item or service | Quantity | Unit price |  Total | Payment status | Payment method |
+| ------ | --------- | ---------- | --------------- | -------: | ---------: | -----: | -------------- | -------------- |
+| 27 Nov | SALE-014  | Walk-in    | Water bottle    |        3 |      $8.00 | $24.00 | Paid           | Cash           |
+| 27 Nov | SALE-015  | Customer B | Notebook        |        5 |      $4.00 | $20.00 | Unpaid         | —              |
 
 These are illustrative sample entries, not actual business transactions. For a sale with several products, use one row per product line and a shared sale reference, or use a separate sales sheet and sales-line sheet so totals are not accidentally counted multiple times.
 
