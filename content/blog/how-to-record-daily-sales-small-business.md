@@ -182,7 +182,7 @@ For a credit sale, record the sale and the amount the customer still owes. Inclu
 
 When the customer pays later, record the payment against the original sale or invoice. This keeps the outstanding balance visible and helps avoid recording the same income or receipt twice.
 
-For more detail on managing customer balances, read [Accounts Receivable Management for Small Business](/blog/accounts-receivable-management).
+For more detail on managing customer balances, read [Accounts Receivable Management for Small Business](/blog/accounts-receivable-management). For the difference between sales records and money received, see [Cash Book vs. Sales Book vs. Ledger](/blog/cash-book-vs-sales-book-vs-ledger).
 
 ## Daily Sales Book vs. Spreadsheet vs. Sales Software
 
@@ -210,6 +210,8 @@ A spreadsheet can be a useful starting point. Create columns for:
 These are illustrative sample entries, not actual business transactions. For a sale with several products, use one row per product line and a shared sale reference, or use a separate sales sheet and sales-line sheet so totals are not accidentally counted multiple times.
 
 Protect formulas, restrict editing where appropriate, and keep a backup. If several people enter sales, agree on who can create, edit, approve, and reconcile records.
+
+For a ready-to-adapt paper register layout, see [Daily Sales Record Book Format](/blog/daily-sales-record-book-format). For a spreadsheet approach, see [How to Track Product Sales in Excel](/blog/track-product-sales-in-excel).
 
 ## Common Daily Sales Recording Mistakes
 
