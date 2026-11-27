@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase as _sb } from "@/integrations/supabase/client";
 import { useActiveCompanyId } from "@/hooks/useActiveCompanyId";
 import { QuickSale } from "@/components/business-book/quick-sale";
+import { SalesSummary } from "@/components/business-book/sales-summary";
 import { localDateKey, sumByCurrency, formatCurrencyTotals } from "@/lib/business-book";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -403,6 +404,8 @@ function BusinessBookPage() {
           </CardContent>
         </Card>
       </div>
+
+      <SalesSummary companyId={companyId} reloadToken={reloadKey} />
 
       <Card>
         <CardHeader>
