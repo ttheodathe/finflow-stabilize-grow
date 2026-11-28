@@ -11,10 +11,7 @@ test("last contact uses Never and calendar-relative labels", () => {
 });
 
 test("days silent uses the latest contact before the sent date", () => {
-  assert.equal(
-    getDaysSilent("overdue", "2026-11-24T08:00:00", "2026-11-01T08:00:00", now),
-    4,
-  );
+  assert.equal(getDaysSilent("overdue", "2026-11-24T08:00:00", "2026-11-01T08:00:00", now), 4);
   assert.equal(getDaysSilent("sent", null, "2026-11-25T08:00:00", now), 3);
 });
 
