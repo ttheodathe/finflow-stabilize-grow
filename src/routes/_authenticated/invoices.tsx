@@ -174,6 +174,7 @@ function InvoicesPage() {
 
   async function load() {
     if (!companyId) return;
+    setLastContactAtByInvoice({});
     const { data: u } = await supabase.auth.getUser();
     const [inv, cust, cat, ws, comp, followupRes] = await Promise.all([
       supabase
@@ -224,6 +225,7 @@ function InvoicesPage() {
   }
 
   async function openFollowups(inv: Invoice) {
+    if (!companyId) return;
     setFollowupInvoice(inv);
     setFollowups([]);
     setFollowupDate(toLocalDateTimeInput());
@@ -1034,10 +1036,10 @@ function InvoicesPage() {
                     >
                       <Download className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(i)} disabled={!canEditInvoices}>
+                    <Button variant="ghost" size="icon" onClick={() => openEdit(i)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => remove(i.id)} disabled={!canPermission("invoice.delete")}>
+                    <Button variant="ghost" size="icon" onClick={() => remove(i.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </TableCell>
