@@ -1049,9 +1049,11 @@ function InvoicesPage() {
                           ? new Date(lastContactAtByInvoice[i.id]).toLocaleDateString()
                           : "Never"}
                       </div>
-                      <div className="text-xs text-muted-foreground">
-                        {formatRelativeContact(lastContactAtByInvoice[i.id])}
-                      </div>
+                      {lastContactAtByInvoice[i.id] && (
+                        <div className="text-xs text-muted-foreground">
+                          {formatRelativeContact(lastContactAtByInvoice[i.id])}
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell>
                       {(() => {
