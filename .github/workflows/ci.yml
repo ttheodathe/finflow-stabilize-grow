@@ -335,7 +335,7 @@ jobs:
 
       - name: Preview Prettier formatting changes
         run: |
-          for file in src/lib/invoice-followups.test.ts src/lib/invoice-followups.ts src/routes/_authenticated/invoices.tsx src/routes/_authenticated/reports.tsx; do
+          for file in src/lib/invoice-followups.test.ts src/lib/invoice-followups.ts src/routes/_authenticated/invoices.tsx src/routes/_authenticated/reports.tsx src/routes/api/send-reminder.tsx; do
             echo "### $file"
             npx prettier "$file" | diff -u "$file" - || true
           done
