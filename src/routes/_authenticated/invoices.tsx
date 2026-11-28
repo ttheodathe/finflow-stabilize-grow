@@ -204,7 +204,11 @@ function InvoicesPage() {
             .maybeSingle()
         : Promise.resolve({ data: null }),
       supabase.from("companies").select("name").eq("id", companyId).maybeSingle(),
-      supabase.from("invoice_followups").select("invoice_id,contacted_at").eq("company_id", companyId).order("contacted_at", { ascending: false }),
+      supabase
+        .from("invoice_followups")
+        .select("invoice_id,contacted_at")
+        .eq("company_id", companyId)
+        .order("contacted_at", { ascending: false }),
     ]);
     if (inv.error) toast.error(inv.error.message);
     else setItems(inv.data as unknown as Invoice[]);
@@ -254,7 +258,9 @@ function InvoicesPage() {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) return toast.error("Please sign in again.");
     const contactedAt = new Date(followupDate);
-    if (Number.isNaN(contactedAt.getTime())) return toast.error("Choose a valid contact date.");
+    if (Number.isNaN(contactedAt.getTime())) {
+      return toast.error("Choose a valid contact date.");
+    }
     setFollowupSaving(true);
     const { data, error } = await supabase
       .from("invoice_followups")
@@ -270,13 +276,16 @@ function InvoicesPage() {
       .single();
     if (error) toast.error(error.message);
     else {
-      setFollowups((current) => [data as InvoiceFollowup, ...current].sort(
-        (a, b) => new Date(b.contacted_at).getTime() - new Date(a.contacted_at).getTime(),
-      ));
+      setFollowups((current) =>
+        [data as InvoiceFollowup, ...current].sort(
+          (a, b) => new Date(b.contacted_at).getTime() - new Date(a.contacted_at).getTime(),
+        ),
+      );
       setLastContactAtByInvoice((current) => ({
         ...current,
         [followupInvoice.id]:
-          !current[followupInvoice.id] || contactedAt.getTime() > new Date(current[followupInvoice.id]).getTime()
+          !current[followupInvoice.id] ||
+          contactedAt.getTime() > new Date(current[followupInvoice.id]).getTime()
             ? contactedAt.toISOString()
             : current[followupInvoice.id],
       }));
@@ -289,8 +298,12 @@ function InvoicesPage() {
   async function deleteFollowup(id: string) {
     if (!companyId || !followupInvoice || !canEditInvoices) return;
     if (!confirm("Delete this follow-up entry?")) return;
-    const { error } = await supabase.from("invoice_followups").delete()
-      .eq("id", id).eq("company_id", companyId).eq("invoice_id", followupInvoice.id);
+    const { error } = await supabase
+      .from("invoice_followups")
+      .delete()
+      .eq("id", id)
+      .eq("company_id", companyId)
+      .eq("invoice_id", followupInvoice.id);
     if (error) return toast.error(error.message);
     const next = followups.filter((entry) => entry.id !== id);
     setFollowups(next);
@@ -956,14 +969,18 @@ function InvoicesPage() {
         <div className="flex flex-wrap items-center gap-2">
           <Label htmlFor="invoice-contact-filter">Contact filter</Label>
           <Select value={contactFilter} onValueChange={setContactFilter}>
-            <SelectTrigger id="invoice-contact-filter" className="w-52"><SelectValue /></SelectTrigger>
+            <SelectTrigger id="invoice-contact-filter" className="w-52">
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All invoices</SelectItem>
               <SelectItem value="silent-7">No contact in 7+ days</SelectItem>
             </SelectContent>
           </Select>
         </div>
-        <p className="text-xs text-muted-foreground">Silence applies to sent, partly paid and overdue invoices.</p>
+        <p className="text-xs text-muted-foreground">
+          Silence applies to sent, partly paid and overdue invoices.
+        </p>
       </div>
       <div className="bg-card border rounded-xl overflow-x-auto">
         {items.length === 0 ? (
@@ -977,13 +994,34 @@ function InvoicesPage() {
                 <TableHead>Date</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Last contact</TableHead>
-                <TableHead><button type="button" className="hover:text-foreground" onClick={() => setSortBySilence((v) => !v)} title="Sort by days silent">Days silent {sortBySilence ? "↓" : "↕"}</button></TableHead>
+                <TableHead>
+                  <button
+                    type="button"
+                    className="hover:text-foreground"
+                    onClick={() => setSortBySilence((v) => !v)}
+                    title="Sort by days silent"
+                  >
+                    Days silent {sortBySilence ? "↓" : "↕"}
+                  </button>
+                </TableHead>
                 <TableHead className="text-right">Total</TableHead>
                 <TableHead className="w-40"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {[...items].filter((i) => contactFilter !== "silent-7" || (getDaysSilent(i.status, lastContactAtByInvoice[i.id], i.sent_at) ?? -1) >= 7).sort((a, b) => sortBySilence ? ((getDaysSilent(b.status, lastContactAtByInvoice[b.id], b.sent_at) ?? -1) - (getDaysSilent(a.status, lastContactAtByInvoice[a.id], a.sent_at) ?? -1)) : 0).map((i) => (
+              {[...items]
+                .filter(
+                  (i) =>
+                    contactFilter !== "silent-7" ||
+                    (getDaysSilent(i.status, lastContactAtByInvoice[i.id], i.sent_at) ?? -1) >= 7,
+                )
+                .sort((a, b) =>
+                  sortBySilence
+                    ? (getDaysSilent(b.status, lastContactAtByInvoice[b.id], b.sent_at) ?? -1) -
+                      (getDaysSilent(a.status, lastContactAtByInvoice[a.id], a.sent_at) ?? -1)
+                    : 0,
+                )
+                .map((i) => (
                 <TableRow key={i.id}>
                   <TableCell className="font-medium">{i.invoice_number}</TableCell>
                   <TableCell>{i.customers?.name ?? "—"}</TableCell>
@@ -994,16 +1032,39 @@ function InvoicesPage() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <div>{lastContactAtByInvoice[i.id] ? new Date(lastContactAtByInvoice[i.id]).toLocaleDateString() : "Never"}</div>
-                    <div className="text-xs text-muted-foreground">{formatRelativeContact(lastContactAtByInvoice[i.id])}</div>
+                    <div>
+                      {lastContactAtByInvoice[i.id]
+                        ? new Date(lastContactAtByInvoice[i.id]).toLocaleDateString()
+                        : "Never"}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {formatRelativeContact(lastContactAtByInvoice[i.id])}
+                    </div>
                   </TableCell>
-                  <TableCell>{(() => {
-                    const days = getDaysSilent(i.status, lastContactAtByInvoice[i.id], i.sent_at);
-                    return days === null ? "—" : <Badge variant={days >= 7 ? "destructive" : "outline"}>{days} {days === 1 ? "day" : "days"}</Badge>;
-                  })()}</TableCell>
+                  <TableCell>
+                    {(() => {
+                      const days = getDaysSilent(
+                        i.status,
+                        lastContactAtByInvoice[i.id],
+                        i.sent_at,
+                      );
+                      return days === null ? (
+                        "—"
+                      ) : (
+                        <Badge variant={days >= 7 ? "destructive" : "outline"}>
+                          {days} {days === 1 ? "day" : "days"}
+                        </Badge>
+                      );
+                    })()}
+                  </TableCell>
                   <TableCell className="text-right">{fmt(Number(i.total), i.currency)}</TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => openFollowups(i)} title="View and log follow-ups">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => openFollowups(i)}
+                      title="View and log follow-ups"
+                    >
                       <Clock className="h-4 w-4" />
                     </Button>
                     <Button
