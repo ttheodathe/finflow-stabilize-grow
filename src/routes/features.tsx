@@ -39,7 +39,7 @@ import { PLANS, type PlanKey } from "@/lib/paddle/config";
  * drift from what each plan actually unlocks.
  */
 
-const PAGE_TITLE = "FinFlow Track Features — Quick Sales, Inventory & Accounting";
+const PAGE_TITLE = "FinFlow Track Features — Invoicing, Sales, Inventory & Accounting";
 const PAGE_DESC =
   "Explore FinFlow Track features for small businesses: multi-product quick sales, inventory tracking, invoicing, payment recording, expenses and financial reports.";
 
@@ -95,15 +95,27 @@ const modules: Module[] = [
   },
   {
     icon: FileText,
-    title: "Invoicing",
-    desc: "Create and send invoices, quote customers and record the payments you receive.",
+    title: "Invoicing & customer follow-ups",
+    desc: "Create and send invoices, record payments, and keep a clear history of when your team last contacted customers about outstanding balances.",
     points: [
       {
-        text: "Invoices with PDF export, email delivery and a shareable online link",
+        text: "Create invoices with PDF export, email delivery and a shareable online link",
         feature: "invoices",
       },
-      { text: "Estimates (quotations) for customers" },
-      { text: "Record customer payments against invoices" },
+      { text: "Prepare customer estimates (quotations) and record payments against invoices" },
+      {
+        text: "Log follow-ups by email, phone, WhatsApp, SMS, in person or another channel, with an optional note",
+      },
+      { text: "View follow-up history and the latest contact date for each invoice" },
+      {
+        text: "Track days since the last contact, filter invoices with 7 or more silent days, and sort by silence",
+      },
+      {
+        text: "Automatically record successful in-app invoice and payment-reminder emails as email follow-ups when the sender has invoice-edit permission",
+      },
+      {
+        text: "Review last-contact information in receivables aging and export report data to CSV",
+      },
       { text: "Recurring invoices", feature: "recurringInvoices" },
       { text: "Credit notes", feature: "creditNotes" },
     ],
@@ -263,6 +275,10 @@ const faqs = [
   {
     q: "Is there a free plan?",
     a: "Yes. The Free plan includes basic accounting, invoice creation, expense tracking, customer management and basic reports. Paid plans unlock more features, companies and team members. See the plan table above and the pricing page.",
+  },
+  {
+    q: "Can I track customer follow-ups for unpaid invoices?",
+    a: "Yes. The Invoices area lets permitted team members record customer contact attempts, add optional notes, and review follow-up history. FinFlow Track shows the latest contact date and days since contact, and receivables aging includes last-contact information. Successful in-app invoice and payment-reminder emails can also be logged automatically when the sender has invoice-edit permission.",
   },
   {
     q: "Does FinFlowTrack connect directly to my bank?",
