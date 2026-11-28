@@ -40,7 +40,10 @@ as $function$
   select exists (
     select 1
       from public.company_members cm
-      join public.role_permissions rp on rp.role_id = cm.role_id
+      join public.roles r
+        on r.id = cm.role_id
+       and (r.company_id is null or r.company_id = p_company_id)
+      join public.role_permissions rp on rp.role_id = r.id
       join public.permissions p on p.id = rp.permission_id
      where cm.company_id = p_company_id
        and cm.user_id = auth.uid()
