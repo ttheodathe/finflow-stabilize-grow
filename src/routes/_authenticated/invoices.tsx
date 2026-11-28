@@ -1174,32 +1174,127 @@ function InvoicesPage() {
           )}
         </DialogContent>
       </Dialog>
-      <Dialog open={Boolean(followupInvoice)} onOpenChange={(v) => { if (!v) setFollowupInvoice(null); }}>
+      <Dialog
+        open={Boolean(followupInvoice)}
+        onOpenChange={(v) => {
+          if (!v) setFollowupInvoice(null);
+        }}
+      >
         <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Follow-up history{followupInvoice ? " · " + followupInvoice.invoice_number : ""}</DialogTitle></DialogHeader>
-          {followupInvoice && <div className="space-y-5">
-            {canEditInvoices && <form onSubmit={saveFollowup} className="space-y-3 rounded-lg border p-3">
-              <div className="font-medium text-sm">Log follow-up</div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1"><Label htmlFor="followup-date">Contact date and time</Label><Input id="followup-date" type="datetime-local" value={followupDate} onChange={(e) => setFollowupDate(e.target.value)} required /></div>
-                <div className="space-y-1"><Label>Channel</Label><Select value={followupChannel} onValueChange={(v) => setFollowupChannel(v as InvoiceContactChannel)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>
-                  <SelectItem value="email">Email</SelectItem><SelectItem value="phone">Phone</SelectItem><SelectItem value="whatsapp">WhatsApp</SelectItem><SelectItem value="sms">SMS</SelectItem><SelectItem value="in_person">In person</SelectItem><SelectItem value="other">Other</SelectItem>
-                </SelectContent></Select></div>
-              </div>
-              <div className="space-y-1"><Label htmlFor="followup-note">Note (optional)</Label><Input id="followup-note" maxLength={500} placeholder="Brief summary of the conversation" value={followupNote} onChange={(e) => setFollowupNote(e.target.value)} /></div>
-              <Button type="submit" className="w-full" disabled={followupSaving}>{followupSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Save follow-up</Button>
-            </form>}
-            <section className="space-y-3"><div className="font-medium text-sm">History</div>
-              {followupsLoading ? <div className="py-6 text-center text-sm text-muted-foreground"><Loader2 className="inline h-4 w-4 animate-spin mr-2" />Loading history…</div>
-              : followups.length === 0 ? <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">No follow-ups recorded yet.</div>
-              : <div className="space-y-3">{followups.map((entry) => <div key={entry.id} className="flex items-start justify-between gap-3 border-b pb-3 last:border-0">
-                <div className="min-w-0 space-y-1"><div className="font-medium text-sm">
-                  {entry.channel === "in_person" ? "In person" : entry.channel === "whatsapp" ? "WhatsApp" : entry.channel.toUpperCase() === "SMS" ? "SMS" : entry.channel.charAt(0).toUpperCase() + entry.channel.slice(1)}
-                </div><div className="text-xs text-muted-foreground">{new Date(entry.contacted_at).toLocaleString()}</div>{entry.note && <p className="text-sm break-words">{entry.note}</p>}</div>
-                {canEditInvoices && <Button type="button" variant="ghost" size="icon" title="Delete follow-up" onClick={() => deleteFollowup(entry.id)}><Trash2 className="h-4 w-4" /></Button>}
-              </div>)}</div>}
-            </section>
-          </div>}
+          <DialogHeader>
+            <DialogTitle>
+              Follow-up history
+              {followupInvoice ? ` · ${followupInvoice.invoice_number}` : ""}
+            </DialogTitle>
+          </DialogHeader>
+          {followupInvoice && (
+            <div className="space-y-5">
+              {canEditInvoices && (
+                <form onSubmit={saveFollowup} className="space-y-3 rounded-lg border p-3">
+                  <div className="font-medium text-sm">Log follow-up</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label htmlFor="followup-date">Contact date and time</Label>
+                      <Input
+                        id="followup-date"
+                        type="datetime-local"
+                        value={followupDate}
+                        onChange={(e) => setFollowupDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Channel</Label>
+                      <Select
+                        value={followupChannel}
+                        onValueChange={(v) => setFollowupChannel(v as InvoiceContactChannel)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="email">Email</SelectItem>
+                          <SelectItem value="phone">Phone</SelectItem>
+                          <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                          <SelectItem value="sms">SMS</SelectItem>
+                          <SelectItem value="in_person">In person</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="followup-note">Note (optional)</Label>
+                    <Input
+                      id="followup-note"
+                      maxLength={500}
+                      placeholder="Brief summary of the conversation"
+                      value={followupNote}
+                      onChange={(e) => setFollowupNote(e.target.value)}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={followupSaving}>
+                    {followupSaving ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : null}
+                    Save follow-up
+                  </Button>
+                </form>
+              )}
+              <section className="space-y-3">
+                <div className="font-medium text-sm">History</div>
+                {followupsLoading ? (
+                  <div className="py-6 text-center text-sm text-muted-foreground">
+                    <Loader2 className="inline h-4 w-4 animate-spin mr-2" />
+                    Loading history…
+                  </div>
+                ) : followups.length === 0 ? (
+                  <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                    No follow-ups recorded yet.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {followups.map((entry) => (
+                      <div
+                        key={entry.id}
+                        className="flex items-start justify-between gap-3 border-b pb-3 last:border-0"
+                      >
+                        <div className="min-w-0 space-y-1">
+                          <div className="font-medium text-sm">
+                            {entry.channel === "in_person"
+                              ? "In person"
+                              : entry.channel === "whatsapp"
+                                ? "WhatsApp"
+                                : entry.channel === "sms"
+                                  ? "SMS"
+                                  : entry.channel.charAt(0).toUpperCase() +
+                                    entry.channel.slice(1)}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {new Date(entry.contacted_at).toLocaleString()}
+                          </div>
+                          {entry.note && (
+                            <p className="text-sm break-words">{entry.note}</p>
+                          )}
+                        </div>
+                        {canEditInvoices && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            title="Delete follow-up"
+                            onClick={() => deleteFollowup(entry.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
