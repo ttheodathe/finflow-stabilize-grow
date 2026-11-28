@@ -110,11 +110,11 @@ export const Route = createFileRoute("/api/send-reminder")({
             .eq("user_id", caller.userId)
             .eq("status", "active")
             .maybeSingle();
-          const role = member?.role as any;
-          const roleBelongsToCompany = role?.company_id == null || role.company_id === companyId;
+          const memberRole = member?.role as any;
+          const roleBelongsToCompany = memberRole?.company_id == null || memberRole.company_id === companyId;
           const canEditInvoices =
             roleBelongsToCompany &&
-            (role?.role_permissions?.some((rp: any) => rp.permission?.key === "invoice.edit") ??
+            (memberRole?.role_permissions?.some((rp: any) => rp.permission?.key === "invoice.edit") ??
               false);
           if (canEditInvoices) {
             const contactedAt = new Date().toISOString();
