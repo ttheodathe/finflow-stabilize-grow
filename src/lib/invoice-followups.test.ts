@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { formatRelativeContact, getDaysSilent } from "./invoice-followups";
+import { formatRelativeContact, getDaysSilent } from "./invoice-followups.ts";
 
 const now = new Date("2026-11-28T12:00:00");
 
