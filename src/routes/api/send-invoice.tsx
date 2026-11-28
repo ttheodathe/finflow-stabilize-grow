@@ -91,6 +91,36 @@ export const Route = createFileRoute("/api/send-invoice")({
             console.error(error);
             return Response.json({ error: "Failed sending invoice" }, { status: 500 });
           }
+
+          // Record only successful sends. Follow-up creation is permission-gated
+          // independently because this route's existing send access is broader
+          // than the invoice.edit permission used by manual follow-up actions.
+          const { data: member } = await caller.admin
+            .from("company_members")
+            .select("role:roles(role_permissions(permission:permissions(key)))")
+            .eq("company_id", invoice.company_id)
+            .eq("user_id", caller.userId)
+            .eq("status", "active")
+            .maybeSingle();
+          const role = member?.role as any;
+          const canEditInvoices =
+            role?.role_permissions?.some((rp: any) => rp.permission?.key === "invoice.edit") ??
+            false;
+          if (canEditInvoices) {
+            const { error: followupError } = await caller.admin.from("invoice_followups").insert({
+              company_id: invoice.company_id,
+              invoice_id: invoice.id,
+              contacted_at: new Date().toISOString(),
+              channel: "email",
+              note: "Invoice emailed to customer",
+              created_by: caller.userId,
+            });
+            if (followupError) {
+              // Email has already been delivered; do not report the send as failed.
+              console.error("Invoice sent but follow-up logging failed", followupError);
+            }
+          }
+
           return Response.json({ success: true, id: data?.id });
         } catch (error) {
           console.error(error);
