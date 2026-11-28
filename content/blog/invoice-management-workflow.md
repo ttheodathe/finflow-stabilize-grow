@@ -44,11 +44,9 @@ Treating all sent invoices as money received creates an inaccurate view of avail
 
 Consider this illustrative example:
 
-| Invoice activity  |   Amount |
-| ----------------- | -------: |
-| Invoice issued    |   $1,200 |
-| Payment received  |     $500 |
-| Remaining balance | **$700** |
+- **Invoice issued:** $1,200
+- **Payment received:** $500
+- **Remaining balance:** $700
 The $500 payment should be connected to the $1,200 invoice. The open amount is $700, not $1,200 and not zero. These are made-up figures for explanation, not a customer transaction or FinFlow Track result.
 
 The central rule is simple: **track the invoice and its payments together**. A bank deposit, payment notification, or customer message is useful evidence, but the invoice record still needs to show how much has been applied and what remains.
@@ -147,13 +145,11 @@ A partial payment reduces the outstanding balance but does not automatically clo
 
 Illustrative example:
 
-| Payment record          |   Amount |
-| ----------------------- | -------: |
-| Original invoice        |   $2,000 |
-| First payment           |     $750 |
-| Second payment          |     $500 |
-| Total recorded payments |   $1,250 |
-| **Outstanding balance** | **$750** |
+- **Original invoice:** $2,000
+- **First payment:** $750
+- **Second payment:** $500
+- **Total recorded payments:** $1,250
+- **Outstanding balance:** $750
 The calculation is:
 
 ```text
@@ -190,11 +186,9 @@ For example, an invoice of $900 with $300 in recorded payments has an outstandin
 
 A useful invoice tracking view includes:
 
-| Invoice | Customer | Due date | Invoice total | Paid | Outstanding | Status    |
-| ------- | -------- | -------- | ------------: | ---: | ----------: | --------- |
-| INV-101 | Client A | Dec. 5   |          $900 | $300 |        $600 | Part-paid |
-| INV-102 | Client B | Dec. 8   |          $450 | $450 |          $0 | Paid      |
-| INV-103 | Client C | Nov. 20  |        $1,100 |   $0 |      $1,100 | Overdue   |
+- **INV-101 — Client A:** due Dec. 5; invoice total $900; paid $300; outstanding $600; status: part-paid.
+- **INV-102 — Client B:** due Dec. 8; invoice total $450; paid $450; outstanding $0; status: paid.
+- **INV-103 — Client C:** due Nov. 20; invoice total $1,100; paid $0; outstanding $1,100; status: overdue.
 This example is fictional. Status labels and aging rules may differ between spreadsheets and accounting systems. The important thing is that the amount paid, remaining balance, and due date can be checked together.
 
 ### Review invoices by due date and age
