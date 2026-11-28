@@ -95,7 +95,7 @@ create policy "invoice followups delete by invoice editors"
   );
 
 comment on table public.invoice_followups is
-  'Append-only-style contact history for invoices; last contact is derived from max(contacted_at).';
+  'Contact history for invoices; last contact is derived from max(contacted_at).';
 comment on column public.invoice_followups.channel is
   'Contact channel: email, phone, whatsapp, sms, in_person, or other.';
 
