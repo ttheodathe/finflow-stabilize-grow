@@ -1166,7 +1166,9 @@ function AgingTable({
           ))}
           {rows.length > 0 && (
             <tr className="font-semibold border-t">
-              <td className="px-6 py-2" colSpan={showLastContact ? 2 : 1}>Total</td>
+              <td className="px-6 py-2" colSpan={showLastContact ? 2 : 1}>
+                Total
+              </td>
               {totals.map((v, i) => (
                 <td key={i} className="px-4 py-2 text-right">
                   {fmt(v)}
