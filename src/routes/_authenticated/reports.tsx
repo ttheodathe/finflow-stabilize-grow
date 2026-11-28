@@ -1118,9 +1118,7 @@ function AgingTable({
         <thead>
           <tr className="bg-muted/40 border-b">
             <th className="px-6 py-2 text-left font-semibold">{nameLabel}</th>
-            {showLastContact && (
-              <th className="px-4 py-2 text-left font-semibold">Last contact</th>
-            )}
+            {showLastContact && <th className="px-4 py-2 text-left font-semibold">Last contact</th>}
             {labels.map((label) => (
               <th key={label} className="px-4 py-2 text-right font-semibold">
                 {label}
@@ -1194,10 +1192,7 @@ function ReceivablesAging() {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const [
-        { data, error },
-        { data: contactRows, error: contactError },
-      ] = await Promise.all([
+      const [{ data, error }, { data: contactRows, error: contactError }] = await Promise.all([
         supabase
           .from("invoices")
           .select("id,total,status,due_date,customers(name),base_currency_amount")
@@ -1261,8 +1256,8 @@ function ReceivablesAging() {
     <div>
       <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
         <p className="text-muted-foreground">
-          Unpaid invoices as of today, grouped by customer and days past due. Last contact is
-          the most recent follow-up across each customer’s outstanding invoices.
+          Unpaid invoices as of today, grouped by customer and days past due. Last contact is the
+          most recent follow-up across each customer’s outstanding invoices.
         </p>
         <Button
           variant="outline"
