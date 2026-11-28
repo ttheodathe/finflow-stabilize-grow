@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { scoped } from "@/lib/company-scope";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase as _sb } from "@/integrations/supabase/client";
 // Schema drift: generated Database types lag behind applied migrations.
 const supabase = _sb as any; // untyped-db
@@ -32,6 +32,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import {
   Plus,
+  Clock,
   Pencil,
   Trash2,
   X,
@@ -55,6 +56,13 @@ import { UpgradePlanModal } from "@/components/UpgradePlanModal";
 import { useSubscriptionLimits } from "@/lib/subscription-limits";
 import type { PlanKey } from "@/lib/paddle/config";
 import { trackAccountingAction } from "@/lib/analytics";
+import { usePermissions } from "@/hooks/usePermissions";
+import {
+  formatRelativeContact,
+  getDaysSilent,
+  toLocalDateTimeInput,
+  type InvoiceContactChannel,
+} from "@/lib/invoice-followups";
 
 type InvoicingSettings = {
   invoicePrefix: string;
@@ -85,6 +93,14 @@ type Invoice = {
   share_token_revoked_at: string | null;
   sent_at: string | null;
 };
+type InvoiceFollowup = {
+  id: string;
+  invoice_id: string;
+  contacted_at: string;
+  channel: InvoiceContactChannel;
+  note: string | null;
+  created_at: string;
+};
 type Customer = { id: string; name: string };
 type CatalogItem = {
   id: string;
@@ -112,6 +128,8 @@ function fmt(n: number, c = "USD") {
 function InvoicesPage() {
   const companyId = useActiveCompanyId();
   const defaultCurrency = useDefaultCurrency();
+  const { can: canPermission } = usePermissions(companyId ?? "");
+  const canEditInvoices = canPermission("invoice.edit");
   const [items, setItems] = useState<Invoice[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [catalog, setCatalog] = useState<CatalogItem[]>([]);
@@ -142,6 +160,18 @@ function InvoicesPage() {
   const [sendingId, setSendingId] = useState<string | null>(null);
   const [shareDialogInvoice, setShareDialogInvoice] = useState<Invoice | null>(null);
   const [shareActionBusy, setShareActionBusy] = useState(false);
+  const [lastContactAtByInvoice, setLastContactAtByInvoice] = useState<Record<string, string>>({});
+  const [followupInvoice, setFollowupInvoice] = useState<Invoice | null>(null);
+  const [followups, setFollowups] = useState<InvoiceFollowup[]>([]);
+  const [followupsLoading, setFollowupsLoading] = useState(false);
+  const followupRequestId = useRef(0);
+  const followupListRequestId = useRef(0);
+  const [followupSaving, setFollowupSaving] = useState(false);
+  const [followupDate, setFollowupDate] = useState(() => toLocalDateTimeInput());
+  const [followupChannel, setFollowupChannel] = useState<InvoiceContactChannel>("email");
+  const [followupNote, setFollowupNote] = useState("");
+  const [contactFilter, setContactFilter] = useState("all");
+  const [sortBySilence, setSortBySilence] = useState(false);
 
   async function loadWeeklyUsage() {
     if (!companyId) return;
@@ -151,8 +181,10 @@ function InvoicesPage() {
 
   async function load() {
     if (!companyId) return;
+    const listRequestId = ++followupListRequestId.current;
+    setLastContactAtByInvoice({});
     const { data: u } = await supabase.auth.getUser();
-    const [inv, cust, cat, ws, comp] = await Promise.all([
+    const [inv, cust, cat, ws, comp, followupRes] = await Promise.all([
       supabase
         .from("invoices")
         .select("*, customers(name,email)")
@@ -175,9 +207,23 @@ function InvoicesPage() {
             .maybeSingle()
         : Promise.resolve({ data: null }),
       supabase.from("companies").select("name").eq("id", companyId).maybeSingle(),
+      supabase
+        .from("invoice_followups")
+        .select("invoice_id,contacted_at")
+        .eq("company_id", companyId)
+        .order("contacted_at", { ascending: false }),
     ]);
     if (inv.error) toast.error(inv.error.message);
     else setItems(inv.data as unknown as Invoice[]);
+    if (listRequestId === followupListRequestId.current && followupRes.error) {
+      toast.error("Unable to load invoice contact history.");
+    } else if (listRequestId === followupListRequestId.current) {
+      const latest: Record<string, string> = {};
+      for (const entry of followupRes.data ?? []) {
+        if (!latest[entry.invoice_id]) latest[entry.invoice_id] = entry.contacted_at;
+      }
+      setLastContactAtByInvoice(latest);
+    }
     if (cust.data) setCustomers(cust.data as Customer[]);
     if (cat.data) setCatalog(cat.data as CatalogItem[]);
     if (ws.data) {
@@ -189,6 +235,91 @@ function InvoicesPage() {
       });
     }
     if (comp.data?.name) setCompanyName(comp.data.name);
+  }
+
+  async function openFollowups(inv: Invoice) {
+    if (!companyId) return;
+    const requestId = ++followupRequestId.current;
+    setFollowupInvoice(inv);
+    setFollowups([]);
+    setFollowupDate(toLocalDateTimeInput());
+    setFollowupChannel("email");
+    setFollowupNote("");
+    setFollowupsLoading(true);
+    const { data, error } = await supabase
+      .from("invoice_followups")
+      .select("id,invoice_id,contacted_at,channel,note,created_at")
+      .eq("company_id", companyId)
+      .eq("invoice_id", inv.id)
+      .order("contacted_at", { ascending: false });
+    if (requestId !== followupRequestId.current) return;
+    if (error) toast.error("Unable to load follow-up history.");
+    else setFollowups((data ?? []) as InvoiceFollowup[]);
+    setFollowupsLoading(false);
+  }
+
+  async function saveFollowup(e: React.FormEvent) {
+    e.preventDefault();
+    if (!companyId || !followupInvoice || !canEditInvoices) return;
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) return toast.error("Please sign in again.");
+    const contactedAt = new Date(followupDate);
+    if (Number.isNaN(contactedAt.getTime())) {
+      return toast.error("Choose a valid contact date.");
+    }
+    setFollowupSaving(true);
+    const { data, error } = await supabase
+      .from("invoice_followups")
+      .insert({
+        company_id: companyId,
+        invoice_id: followupInvoice.id,
+        contacted_at: contactedAt.toISOString(),
+        channel: followupChannel,
+        note: followupNote.trim() || null,
+        created_by: userData.user.id,
+      })
+      .select("id,invoice_id,contacted_at,channel,note,created_at")
+      .single();
+    if (error) toast.error(error.message);
+    else {
+      setFollowups((current) =>
+        [data as InvoiceFollowup, ...current].sort(
+          (a, b) => new Date(b.contacted_at).getTime() - new Date(a.contacted_at).getTime(),
+        ),
+      );
+      setLastContactAtByInvoice((current) => ({
+        ...current,
+        [followupInvoice.id]:
+          !current[followupInvoice.id] ||
+          contactedAt.getTime() > new Date(current[followupInvoice.id]).getTime()
+            ? contactedAt.toISOString()
+            : current[followupInvoice.id],
+      }));
+      setFollowupNote("");
+      toast.success("Follow-up recorded.");
+    }
+    setFollowupSaving(false);
+  }
+
+  async function deleteFollowup(id: string) {
+    if (!companyId || !followupInvoice || !canEditInvoices) return;
+    if (!confirm("Delete this follow-up entry?")) return;
+    const { error } = await supabase
+      .from("invoice_followups")
+      .delete()
+      .eq("id", id)
+      .eq("company_id", companyId)
+      .eq("invoice_id", followupInvoice.id);
+    if (error) return toast.error(error.message);
+    const next = followups.filter((entry) => entry.id !== id);
+    setFollowups(next);
+    setLastContactAtByInvoice((current) => {
+      const updated = { ...current };
+      if (next[0]) updated[followupInvoice.id] = next[0].contacted_at;
+      else delete updated[followupInvoice.id];
+      return updated;
+    });
+    toast.success("Follow-up deleted.");
   }
 
   function isShareLinkActive(inv: Invoice) {
@@ -300,6 +431,12 @@ function InvoicesPage() {
     }
   }
   useEffect(() => {
+    followupRequestId.current += 1;
+    followupListRequestId.current += 1;
+    setFollowupInvoice(null);
+    setFollowups([]);
+    setFollowupsLoading(false);
+    setLastContactAtByInvoice({});
     load();
     loadWeeklyUsage();
   }, [companyId]);
@@ -840,7 +977,24 @@ function InvoicesPage() {
         currentPlan={plan as PlanKey}
       />
 
-      <div className="bg-card border rounded-xl">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <Label htmlFor="invoice-contact-filter">Contact filter</Label>
+          <Select value={contactFilter} onValueChange={setContactFilter}>
+            <SelectTrigger id="invoice-contact-filter" className="w-52">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All invoices</SelectItem>
+              <SelectItem value="silent-7">No contact in 7+ days</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Silence applies to sent, partly paid and overdue invoices.
+        </p>
+      </div>
+      <div className="bg-card border rounded-xl overflow-x-auto">
         {items.length === 0 ? (
           <div className="p-12 text-center text-muted-foreground">No invoices yet.</div>
         ) : (
@@ -851,67 +1005,126 @@ function InvoicesPage() {
                 <TableHead>Customer</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Last contact</TableHead>
+                <TableHead>
+                  <button
+                    type="button"
+                    className="hover:text-foreground"
+                    onClick={() => setSortBySilence((v) => !v)}
+                    title="Sort by days silent"
+                  >
+                    Days silent {sortBySilence ? "↓" : "↕"}
+                  </button>
+                </TableHead>
                 <TableHead className="text-right">Total</TableHead>
                 <TableHead className="w-40"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.map((i) => (
-                <TableRow key={i.id}>
-                  <TableCell className="font-medium">{i.invoice_number}</TableCell>
-                  <TableCell>{i.customers?.name ?? "—"}</TableCell>
-                  <TableCell>{i.issue_date}</TableCell>
-                  <TableCell>
-                    <Badge variant={i.status === "paid" ? "default" : "secondary"}>
-                      {i.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">{fmt(Number(i.total), i.currency)}</TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setShareDialogInvoice(i)}
-                      title="Manage invoice sharing link"
-                    >
-                      <Link2 className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => sendInvoiceEmail(i)}
-                      disabled={sendingId === i.id}
-                      title={
-                        i.sent_at
-                          ? `Sent ${new Date(i.sent_at).toLocaleDateString()} — resend`
-                          : "Send invoice by email"
-                      }
-                    >
-                      {sendingId === i.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : i.sent_at ? (
-                        <MailCheck className="h-4 w-4 text-emerald-600" />
-                      ) : (
-                        <Mail className="h-4 w-4" />
+              {[...items]
+                .filter(
+                  (i) =>
+                    contactFilter !== "silent-7" ||
+                    (getDaysSilent(i.status, lastContactAtByInvoice[i.id], i.sent_at) ?? -1) >= 7,
+                )
+                .sort((a, b) =>
+                  sortBySilence
+                    ? (getDaysSilent(b.status, lastContactAtByInvoice[b.id], b.sent_at) ?? -1) -
+                      (getDaysSilent(a.status, lastContactAtByInvoice[a.id], a.sent_at) ?? -1)
+                    : 0,
+                )
+                .map((i) => (
+                  <TableRow key={i.id}>
+                    <TableCell className="font-medium">{i.invoice_number}</TableCell>
+                    <TableCell>{i.customers?.name ?? "—"}</TableCell>
+                    <TableCell>{i.issue_date}</TableCell>
+                    <TableCell>
+                      <Badge variant={i.status === "paid" ? "default" : "secondary"}>
+                        {i.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        {lastContactAtByInvoice[i.id]
+                          ? new Date(lastContactAtByInvoice[i.id]).toLocaleDateString()
+                          : "Never"}
+                      </div>
+                      {lastContactAtByInvoice[i.id] && (
+                        <div className="text-xs text-muted-foreground">
+                          {formatRelativeContact(lastContactAtByInvoice[i.id])}
+                        </div>
                       )}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => downloadPdf(i)}
-                      title="Download PDF"
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(i)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => remove(i.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell>
+                      {(() => {
+                        const days = getDaysSilent(
+                          i.status,
+                          lastContactAtByInvoice[i.id],
+                          i.sent_at,
+                        );
+                        return days === null ? (
+                          "—"
+                        ) : (
+                          <Badge variant={days >= 7 ? "destructive" : "outline"}>
+                            {days} {days === 1 ? "day" : "days"}
+                          </Badge>
+                        );
+                      })()}
+                    </TableCell>
+                    <TableCell className="text-right">{fmt(Number(i.total), i.currency)}</TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => openFollowups(i)}
+                        title="View and log follow-ups"
+                      >
+                        <Clock className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setShareDialogInvoice(i)}
+                        title="Manage invoice sharing link"
+                      >
+                        <Link2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => sendInvoiceEmail(i)}
+                        disabled={sendingId === i.id}
+                        title={
+                          i.sent_at
+                            ? `Sent ${new Date(i.sent_at).toLocaleDateString()} — resend`
+                            : "Send invoice by email"
+                        }
+                      >
+                        {sendingId === i.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : i.sent_at ? (
+                          <MailCheck className="h-4 w-4 text-emerald-600" />
+                        ) : (
+                          <Mail className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => downloadPdf(i)}
+                        title="Download PDF"
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => openEdit(i)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => remove(i.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         )}
@@ -971,6 +1184,128 @@ function InvoicesPage() {
                 Generating a new link immediately invalidates the previous link. Existing customer
                 links remain unchanged until you revoke or regenerate them.
               </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={Boolean(followupInvoice)}
+        onOpenChange={(v) => {
+          if (!v) {
+            followupRequestId.current += 1;
+            setFollowupInvoice(null);
+            setFollowups([]);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Follow-up history
+              {followupInvoice ? ` · ${followupInvoice.invoice_number}` : ""}
+            </DialogTitle>
+          </DialogHeader>
+          {followupInvoice && (
+            <div className="space-y-5">
+              {canEditInvoices && (
+                <form onSubmit={saveFollowup} className="space-y-3 rounded-lg border p-3">
+                  <div className="font-medium text-sm">Log follow-up</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label htmlFor="followup-date">Contact date and time</Label>
+                      <Input
+                        id="followup-date"
+                        type="datetime-local"
+                        value={followupDate}
+                        onChange={(e) => setFollowupDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Channel</Label>
+                      <Select
+                        value={followupChannel}
+                        onValueChange={(v) => setFollowupChannel(v as InvoiceContactChannel)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="email">Email</SelectItem>
+                          <SelectItem value="phone">Phone</SelectItem>
+                          <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                          <SelectItem value="sms">SMS</SelectItem>
+                          <SelectItem value="in_person">In person</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="followup-note">Note (optional)</Label>
+                    <Input
+                      id="followup-note"
+                      maxLength={500}
+                      placeholder="Brief summary of the conversation"
+                      value={followupNote}
+                      onChange={(e) => setFollowupNote(e.target.value)}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={followupSaving}>
+                    {followupSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Save follow-up
+                  </Button>
+                </form>
+              )}
+              <section className="space-y-3">
+                <div className="font-medium text-sm">History</div>
+                {followupsLoading ? (
+                  <div className="py-6 text-center text-sm text-muted-foreground">
+                    <Loader2 className="inline h-4 w-4 animate-spin mr-2" />
+                    Loading history…
+                  </div>
+                ) : followups.length === 0 ? (
+                  <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                    No follow-ups recorded yet.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {followups.map((entry) => (
+                      <div
+                        key={entry.id}
+                        className="flex items-start justify-between gap-3 border-b pb-3 last:border-0"
+                      >
+                        <div className="min-w-0 space-y-1">
+                          <div className="font-medium text-sm">
+                            {entry.channel === "in_person"
+                              ? "In person"
+                              : entry.channel === "whatsapp"
+                                ? "WhatsApp"
+                                : entry.channel === "sms"
+                                  ? "SMS"
+                                  : entry.channel.charAt(0).toUpperCase() + entry.channel.slice(1)}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {new Date(entry.contacted_at).toLocaleString()}
+                          </div>
+                          {entry.note && <p className="text-sm break-words">{entry.note}</p>}
+                        </div>
+                        {canEditInvoices && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            title="Delete follow-up"
+                            onClick={() => deleteFollowup(entry.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
             </div>
           )}
         </DialogContent>

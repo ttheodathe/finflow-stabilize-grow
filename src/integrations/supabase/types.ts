@@ -1953,6 +1953,54 @@ export type Database = {
           },
         ]
       }
+      invoice_followups: {
+        Row: {
+          channel: string
+          company_id: string
+          contacted_at: string
+          created_at: string
+          created_by: string | null
+          id: string
+          invoice_id: string
+          note: string | null
+        }
+        Insert: {
+          channel: string
+          company_id: string
+          contacted_at: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_id: string
+          note?: string | null
+        }
+        Update: {
+          channel?: string
+          company_id?: string
+          contacted_at?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_id?: string
+          note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_followups_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_followups_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           base_currency_amount: number | null

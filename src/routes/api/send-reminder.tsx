@@ -100,6 +100,42 @@ export const Route = createFileRoute("/api/send-reminder")({
             console.error(error);
             return Response.json({ error: "Failed sending the reminder" }, { status: 500 });
           }
+
+          // Log each invoice included in the successfully delivered reminder,
+          // but only when the sender has the invoice.edit permission.
+          const { data: member } = await caller.admin
+            .from("company_members")
+            .select("role:roles(company_id,role_permissions(permission:permissions(key)))")
+            .eq("company_id", companyId)
+            .eq("user_id", caller.userId)
+            .eq("status", "active")
+            .maybeSingle();
+          const memberRole = member?.role as any;
+          const roleBelongsToCompany =
+            memberRole?.company_id == null || memberRole.company_id === companyId;
+          const canEditInvoices =
+            roleBelongsToCompany &&
+            (memberRole?.role_permissions?.some(
+              (rp: any) => rp.permission?.key === "invoice.edit",
+            ) ??
+              false);
+          if (canEditInvoices) {
+            const contactedAt = new Date().toISOString();
+            const { error: followupError } = await caller.admin.from("invoice_followups").insert(
+              invoices.map((invoice: { id: string }) => ({
+                company_id: companyId,
+                invoice_id: invoice.id,
+                contacted_at: contactedAt,
+                channel: "email",
+                note: "Payment reminder emailed to customer",
+                created_by: caller.userId,
+              })),
+            );
+            if (followupError) {
+              console.error("Reminder sent but follow-up logging failed", followupError);
+            }
+          }
+
           return Response.json({ success: true, id: data?.id, sentTo: customer.email });
         } catch (error) {
           console.error(error);
