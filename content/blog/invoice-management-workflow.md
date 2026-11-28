@@ -44,10 +44,10 @@ Treating all sent invoices as money received creates an inaccurate view of avail
 
 Consider this illustrative example:
 
-| Invoice activity | Amount |
-| --- | ---: |
-| Invoice issued | $1,200 |
-| Payment received | $500 |
+| Invoice activity  |   Amount |
+| ----------------- | ------: |
+| Invoice issued    |   $1,200 |
+| Payment received  |     $500 |
 | Remaining balance | **$700** |
 
 The $500 payment should be connected to the $1,200 invoice. The open amount is $700, not $1,200 and not zero. These are made-up figures for explanation, not a customer transaction or FinFlow Track result.
@@ -148,12 +148,12 @@ A partial payment reduces the outstanding balance but does not automatically clo
 
 Illustrative example:
 
-| Payment record | Amount |
-| --- | ---: |
-| Original invoice | $2,000 |
-| First payment | $750 |
-| Second payment | $500 |
-| Total recorded payments | $1,250 |
+| Payment record          |   Amount |
+| ----------------------- | ------: |
+| Original invoice        |   $2,000 |
+| First payment           |     $750 |
+| Second payment          |     $500 |
+| Total recorded payments |   $1,250 |
 | **Outstanding balance** | **$750** |
 
 The calculation is:
@@ -192,11 +192,11 @@ For example, an invoice of $900 with $300 in recorded payments has an outstandin
 
 A useful invoice tracking view includes:
 
-| Invoice | Customer | Due date | Invoice total | Paid | Outstanding | Status |
-| --- | --- | --- | ---: | ---: | ---: | --- |
-| INV-101 | Client A | Dec. 5 | $900 | $300 | $600 | Part-paid |
-| INV-102 | Client B | Dec. 8 | $450 | $450 | $0 | Paid |
-| INV-103 | Client C | Nov. 20 | $1,100 | $0 | $1,100 | Overdue |
+| Invoice | Customer | Due date | Invoice total | Paid | Outstanding | Status    |
+| ------- | -------- | -------- | -----------: | --: | ---------: | --------- |
+| INV-101 | Client A | Dec. 5   |          $900 | $300 |        $600 | Part-paid |
+| INV-102 | Client B | Dec. 8   |          $450 | $450 |          $0 | Paid      |
+| INV-103 | Client C | Nov. 20  |        $1,100 |   $0 |      $1,100 | Overdue   |
 
 This example is fictional. Status labels and aging rules may differ between spreadsheets and accounting systems. The important thing is that the amount paid, remaining balance, and due date can be checked together.
 
