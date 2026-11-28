@@ -1,10 +1,4 @@
-export type InvoiceContactChannel =
-  | "email"
-  | "phone"
-  | "whatsapp"
-  | "sms"
-  | "in_person"
-  | "other";
+export type InvoiceContactChannel = "email" | "phone" | "whatsapp" | "sms" | "in_person" | "other";
 
 export type InvoiceSilenceStatus = "draft" | "sent" | "partial" | "overdue" | "paid" | string;
 
