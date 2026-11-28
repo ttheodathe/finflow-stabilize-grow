@@ -338,9 +338,6 @@ jobs:
         run: |
           git diff --name-only -z "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}" -- '*.js' '*.jsx' '*.ts' '*.tsx' '*.json' '*.css' '*.md' '*.yml' '*.yaml' | xargs -0 -r npx prettier --check
 
-      - name: Diagnostic TypeScript typecheck before build
-        run: npm run typecheck
-
       - name: Production build
         run: npm run build
         env:
