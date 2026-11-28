@@ -1,10 +1,10 @@
 ---
-title: "Small Business Balance Sheet: Assets, Liabilities & Equity"
-description: "Understand a small-business balance sheet with a worked example of assets, liabilities, equity, and key liquidity measures."
+title: "Small Business Balance Sheet: Example, Format & Guide"
+description: "Learn how to read a small business balance sheet with a practical example of assets, liabilities, equity and key liquidity measures."
 slug: "balance-sheet-for-small-business"
 author: "FinFlowTrack Editorial Team"
 publishedAt: "2026-08-20"
-updatedAt: "2026-11-16"
+updatedAt: "2026-11-28"
 category: "small-business-finance"
 tags:
   - balance sheet
@@ -17,7 +17,7 @@ featured: false
 draft: false
 ---
 
-# Balance Sheet for Small Business: How to Read Assets, Liabilities and Equity
+# Small Business Balance Sheet: Example, Format and How to Read It
 
 A business can be profitable and still have financial problems.
 
