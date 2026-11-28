@@ -1191,6 +1191,7 @@ function ReceivablesAging() {
 
   useEffect(() => {
     if (!companyId) return;
+    let cancelled = false;
     (async () => {
       setLoading(true);
       const [
@@ -1209,7 +1210,7 @@ function ReceivablesAging() {
           .order("contacted_at", { ascending: false }),
       ]);
       if (error || contactError) {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
         return;
       }
       const latestByInvoice = new Map<string, string>();
@@ -1246,11 +1247,14 @@ function ReceivablesAging() {
         );
         byCustomer.set(name, row);
       }
-      setRows(
-        [...byCustomer.values()].sort((a, b) => b.total - a.total),
-      );
+      if (cancelled) return;
+      setRows([...byCustomer.values()].sort((a, b) => b.total - a.total));
       setLoading(false);
     })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [companyId, cutoffs]);
 
   return (
