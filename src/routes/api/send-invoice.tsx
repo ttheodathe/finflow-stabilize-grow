@@ -97,7 +97,7 @@ export const Route = createFileRoute("/api/send-invoice")({
           // than the invoice.edit permission used by manual follow-up actions.
           const { data: member } = await caller.admin
             .from("company_members")
-            .select("role:roles(role_permissions(permission:permissions(key)))")
+            .select("role:roles(company_id,role_permissions(permission:permissions(key)))")
             .eq("company_id", invoice.company_id)
             .eq("user_id", caller.userId)
             .eq("status", "active")
