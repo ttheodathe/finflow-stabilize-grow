@@ -107,7 +107,9 @@ export const Route = createFileRoute("/api/send-invoice")({
             memberRole?.company_id == null || memberRole.company_id === invoice.company_id;
           const canEditInvoices =
             roleBelongsToCompany &&
-            (memberRole?.role_permissions?.some((rp: any) => rp.permission?.key === "invoice.edit") ??
+            (memberRole?.role_permissions?.some(
+              (rp: any) => rp.permission?.key === "invoice.edit",
+            ) ??
               false);
           if (canEditInvoices) {
             const { error: followupError } = await caller.admin.from("invoice_followups").insert({
