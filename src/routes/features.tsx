@@ -310,9 +310,7 @@ function FeaturesPage() {
       {/* HERO */}
       <section className="border-b">
         <div className="container mx-auto max-w-7xl px-6 py-20">
-          <span
-            className="inline-flex rounded-full bg-primary/10 px-4 py-1 text-sm font-medium text-primary"
-          >
+          <span className="inline-flex rounded-full bg-primary/10 px-4 py-1 text-sm font-medium text-primary">
             FinFlow Track product
           </span>
           <h1 className="mt-6 text-5xl font-bold tracking-tight lg:text-6xl">
