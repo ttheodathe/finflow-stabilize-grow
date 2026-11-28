@@ -57,7 +57,12 @@ import { useSubscriptionLimits } from "@/lib/subscription-limits";
 import type { PlanKey } from "@/lib/paddle/config";
 import { trackAccountingAction } from "@/lib/analytics";
 import { usePermissions } from "@/hooks/usePermissions";
-import { formatRelativeContact, getDaysSilent, toLocalDateTimeInput, type InvoiceContactChannel } from "@/lib/invoice-followups";
+import {
+  formatRelativeContact,
+  getDaysSilent,
+  toLocalDateTimeInput,
+  type InvoiceContactChannel,
+} from "@/lib/invoice-followups";
 
 type InvoicingSettings = {
   invoicePrefix: string;
@@ -1127,7 +1132,9 @@ function InvoicesPage() {
               {followupsLoading ? <div className="py-6 text-center text-sm text-muted-foreground"><Loader2 className="inline h-4 w-4 animate-spin mr-2" />Loading history…</div>
               : followups.length === 0 ? <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">No follow-ups recorded yet.</div>
               : <div className="space-y-3">{followups.map((entry) => <div key={entry.id} className="flex items-start justify-between gap-3 border-b pb-3 last:border-0">
-                <div className="min-w-0 space-y-1"><div className="font-medium text-sm capitalize">{entry.channel === "in_person" ? "In person" : entry.channel}</div><div className="text-xs text-muted-foreground">{new Date(entry.contacted_at).toLocaleString()}</div>{entry.note && <p className="text-sm break-words">{entry.note}</p>}</div>
+                <div className="min-w-0 space-y-1"><div className="font-medium text-sm">
+                  {entry.channel === "in_person" ? "In person" : entry.channel === "whatsapp" ? "WhatsApp" : entry.channel.toUpperCase() === "SMS" ? "SMS" : entry.channel.charAt(0).toUpperCase() + entry.channel.slice(1)}
+                </div><div className="text-xs text-muted-foreground">{new Date(entry.contacted_at).toLocaleString()}</div>{entry.note && <p className="text-sm break-words">{entry.note}</p>}</div>
                 {canEditInvoices && <Button type="button" variant="ghost" size="icon" title="Delete follow-up" onClick={() => deleteFollowup(entry.id)}><Trash2 className="h-4 w-4" /></Button>}
               </div>)}</div>}
             </section>
