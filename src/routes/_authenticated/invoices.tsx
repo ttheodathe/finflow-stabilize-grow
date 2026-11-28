@@ -1034,95 +1034,95 @@ function InvoicesPage() {
                     : 0,
                 )
                 .map((i) => (
-                <TableRow key={i.id}>
-                  <TableCell className="font-medium">{i.invoice_number}</TableCell>
-                  <TableCell>{i.customers?.name ?? "—"}</TableCell>
-                  <TableCell>{i.issue_date}</TableCell>
-                  <TableCell>
-                    <Badge variant={i.status === "paid" ? "default" : "secondary"}>
-                      {i.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div>
-                      {lastContactAtByInvoice[i.id]
-                        ? new Date(lastContactAtByInvoice[i.id]).toLocaleDateString()
-                        : "Never"}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {formatRelativeContact(lastContactAtByInvoice[i.id])}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {(() => {
-                      const days = getDaysSilent(
-                        i.status,
-                        lastContactAtByInvoice[i.id],
-                        i.sent_at,
-                      );
-                      return days === null ? (
-                        "—"
-                      ) : (
-                        <Badge variant={days >= 7 ? "destructive" : "outline"}>
-                          {days} {days === 1 ? "day" : "days"}
-                        </Badge>
-                      );
-                    })()}
-                  </TableCell>
-                  <TableCell className="text-right">{fmt(Number(i.total), i.currency)}</TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => openFollowups(i)}
-                      title="View and log follow-ups"
-                    >
-                      <Clock className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setShareDialogInvoice(i)}
-                      title="Manage invoice sharing link"
-                    >
-                      <Link2 className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => sendInvoiceEmail(i)}
-                      disabled={sendingId === i.id}
-                      title={
-                        i.sent_at
-                          ? `Sent ${new Date(i.sent_at).toLocaleDateString()} — resend`
-                          : "Send invoice by email"
-                      }
-                    >
-                      {sendingId === i.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : i.sent_at ? (
-                        <MailCheck className="h-4 w-4 text-emerald-600" />
-                      ) : (
-                        <Mail className="h-4 w-4" />
-                      )}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => downloadPdf(i)}
-                      title="Download PDF"
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(i)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => remove(i.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+                  <TableRow key={i.id}>
+                    <TableCell className="font-medium">{i.invoice_number}</TableCell>
+                    <TableCell>{i.customers?.name ?? "—"}</TableCell>
+                    <TableCell>{i.issue_date}</TableCell>
+                    <TableCell>
+                      <Badge variant={i.status === "paid" ? "default" : "secondary"}>
+                        {i.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        {lastContactAtByInvoice[i.id]
+                          ? new Date(lastContactAtByInvoice[i.id]).toLocaleDateString()
+                          : "Never"}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {formatRelativeContact(lastContactAtByInvoice[i.id])}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {(() => {
+                        const days = getDaysSilent(
+                          i.status,
+                          lastContactAtByInvoice[i.id],
+                          i.sent_at,
+                        );
+                        return days === null ? (
+                          "—"
+                        ) : (
+                          <Badge variant={days >= 7 ? "destructive" : "outline"}>
+                            {days} {days === 1 ? "day" : "days"}
+                          </Badge>
+                        );
+                      })()}
+                    </TableCell>
+                    <TableCell className="text-right">{fmt(Number(i.total), i.currency)}</TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => openFollowups(i)}
+                        title="View and log follow-ups"
+                      >
+                        <Clock className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setShareDialogInvoice(i)}
+                        title="Manage invoice sharing link"
+                      >
+                        <Link2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => sendInvoiceEmail(i)}
+                        disabled={sendingId === i.id}
+                        title={
+                          i.sent_at
+                            ? `Sent ${new Date(i.sent_at).toLocaleDateString()} — resend`
+                            : "Send invoice by email"
+                        }
+                      >
+                        {sendingId === i.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : i.sent_at ? (
+                          <MailCheck className="h-4 w-4 text-emerald-600" />
+                        ) : (
+                          <Mail className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => downloadPdf(i)}
+                        title="Download PDF"
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => openEdit(i)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => remove(i.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         )}
@@ -1250,9 +1250,7 @@ function InvoicesPage() {
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={followupSaving}>
-                    {followupSaving ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : null}
+                    {followupSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                     Save follow-up
                   </Button>
                 </form>
@@ -1283,15 +1281,12 @@ function InvoicesPage() {
                                 ? "WhatsApp"
                                 : entry.channel === "sms"
                                   ? "SMS"
-                                  : entry.channel.charAt(0).toUpperCase() +
-                                    entry.channel.slice(1)}
+                                  : entry.channel.charAt(0).toUpperCase() + entry.channel.slice(1)}
                           </div>
                           <div className="text-xs text-muted-foreground">
                             {new Date(entry.contacted_at).toLocaleString()}
                           </div>
-                          {entry.note && (
-                            <p className="text-sm break-words">{entry.note}</p>
-                          )}
+                          {entry.note && <p className="text-sm break-words">{entry.note}</p>}
                         </div>
                         {canEditInvoices && (
                           <Button
