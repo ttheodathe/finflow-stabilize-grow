@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { scoped } from "@/lib/company-scope";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase as _sb } from "@/integrations/supabase/client";
 // Schema drift: generated Database types lag behind applied migrations.
 const supabase = _sb as any; // untyped-db
@@ -164,6 +164,8 @@ function InvoicesPage() {
   const [followupInvoice, setFollowupInvoice] = useState<Invoice | null>(null);
   const [followups, setFollowups] = useState<InvoiceFollowup[]>([]);
   const [followupsLoading, setFollowupsLoading] = useState(false);
+  const followupRequestId = useRef(0);
+  const followupListRequestId = useRef(0);
   const [followupSaving, setFollowupSaving] = useState(false);
   const [followupDate, setFollowupDate] = useState(() => toLocalDateTimeInput());
   const [followupChannel, setFollowupChannel] = useState<InvoiceContactChannel>("email");
@@ -179,6 +181,7 @@ function InvoicesPage() {
 
   async function load() {
     if (!companyId) return;
+    const listRequestId = ++followupListRequestId.current;
     setLastContactAtByInvoice({});
     const { data: u } = await supabase.auth.getUser();
     const [inv, cust, cat, ws, comp, followupRes] = await Promise.all([
@@ -212,8 +215,9 @@ function InvoicesPage() {
     ]);
     if (inv.error) toast.error(inv.error.message);
     else setItems(inv.data as unknown as Invoice[]);
-    if (followupRes.error) toast.error("Unable to load invoice contact history.");
-    else {
+    if (listRequestId === followupListRequestId.current && followupRes.error) {
+      toast.error("Unable to load invoice contact history.");
+    } else if (listRequestId === followupListRequestId.current) {
       const latest: Record<string, string> = {};
       for (const entry of followupRes.data ?? []) {
         if (!latest[entry.invoice_id]) latest[entry.invoice_id] = entry.contacted_at;
@@ -235,6 +239,7 @@ function InvoicesPage() {
 
   async function openFollowups(inv: Invoice) {
     if (!companyId) return;
+    const requestId = ++followupRequestId.current;
     setFollowupInvoice(inv);
     setFollowups([]);
     setFollowupDate(toLocalDateTimeInput());
@@ -247,6 +252,7 @@ function InvoicesPage() {
       .eq("company_id", companyId)
       .eq("invoice_id", inv.id)
       .order("contacted_at", { ascending: false });
+    if (requestId !== followupRequestId.current) return;
     if (error) toast.error("Unable to load follow-up history.");
     else setFollowups((data ?? []) as InvoiceFollowup[]);
     setFollowupsLoading(false);
@@ -425,6 +431,12 @@ function InvoicesPage() {
     }
   }
   useEffect(() => {
+    followupRequestId.current += 1;
+    followupListRequestId.current += 1;
+    setFollowupInvoice(null);
+    setFollowups([]);
+    setFollowupsLoading(false);
+    setLastContactAtByInvoice({});
     load();
     loadWeeklyUsage();
   }, [companyId]);
@@ -1177,7 +1189,11 @@ function InvoicesPage() {
       <Dialog
         open={Boolean(followupInvoice)}
         onOpenChange={(v) => {
-          if (!v) setFollowupInvoice(null);
+          if (!v) {
+            followupRequestId.current += 1;
+            setFollowupInvoice(null);
+            setFollowups([]);
+          }
         }}
       >
         <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
