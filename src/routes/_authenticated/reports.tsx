@@ -1008,7 +1008,12 @@ function CashFlow() {
 // AgingRow now holds a dynamic bucket array instead of fixed d1_30/d31_60/…
 // fields, so the number of days per bucket can be configured per-user
 // (default cutoffs: 30/60/90) rather than hardcoded.
-type AgingRow = { name: string; buckets: number[]; total: number; lastContactAt?: string | null };
+type AgingRow = {
+  name: string;
+  buckets: number[];
+  total: number;
+  lastContactAt?: string | null;
+};
 
 type AgingBucketConfig = { cutoffs: number[] };
 
@@ -1026,7 +1031,12 @@ function bucketLabels(cutoffs: number[]): string[] {
 }
 
 function newAgingRow(name: string, bucketCount: number): AgingRow {
-  return { name, buckets: new Array(bucketCount).fill(0), total: 0, lastContactAt: null };
+  return {
+    name,
+    buckets: new Array(bucketCount).fill(0),
+    total: 0,
+    lastContactAt: null,
+  };
 }
 
 function bucketByDaysPastDue(dueDate: string, amount: number, row: AgingRow, cutoffs: number[]) {
@@ -1108,7 +1118,9 @@ function AgingTable({
         <thead>
           <tr className="bg-muted/40 border-b">
             <th className="px-6 py-2 text-left font-semibold">{nameLabel}</th>
-            {showLastContact && <th className="px-4 py-2 text-left font-semibold">Last contact</th>}
+            {showLastContact && (
+              <th className="px-4 py-2 text-left font-semibold">Last contact</th>
+            )}
             {labels.map((label) => (
               <th key={label} className="px-4 py-2 text-right font-semibold">
                 {label}
@@ -1120,14 +1132,20 @@ function AgingTable({
         <tbody>
           {loading && (
             <tr>
-              <td colSpan={bucketCount + 2 + (showLastContact ? 1 : 0)} className="px-6 py-4 text-center text-muted-foreground">
+              <td
+                colSpan={bucketCount + 2 + (showLastContact ? 1 : 0)}
+                className="px-6 py-4 text-center text-muted-foreground"
+              >
                 Loading…
               </td>
             </tr>
           )}
           {!loading && rows.length === 0 && (
             <tr>
-              <td colSpan={bucketCount + 2 + (showLastContact ? 1 : 0)} className="px-6 py-4 text-muted-foreground">
+              <td
+                colSpan={bucketCount + 2 + (showLastContact ? 1 : 0)}
+                className="px-6 py-4 text-muted-foreground"
+              >
                 {emptyLabel}
               </td>
             </tr>
@@ -1135,7 +1153,11 @@ function AgingTable({
           {rows.map((r) => (
             <tr key={r.name} className="border-b last:border-0">
               <td className="px-6 py-2">{r.name}</td>
-              {showLastContact && <td className="px-4 py-2 text-sm">{r.lastContactAt ? new Date(r.lastContactAt).toLocaleDateString() : "Never"}</td>}
+              {showLastContact && (
+                <td className="px-4 py-2 text-sm">
+                  {r.lastContactAt ? new Date(r.lastContactAt).toLocaleDateString() : "Never"}
+                </td>
+              )}
               {r.buckets.map((v, i) => (
                 <td key={i} className="px-4 py-2 text-right">
                   {fmt(v)}
@@ -1171,7 +1193,10 @@ function ReceivablesAging() {
     if (!companyId) return;
     (async () => {
       setLoading(true);
-      const [{ data, error }, { data: contactRows, error: contactError }] = await Promise.all([
+      const [
+        { data, error },
+        { data: contactRows, error: contactError },
+      ] = await Promise.all([
         supabase
           .from("invoices")
           .select("id,total,status,due_date,customers(name),base_currency_amount")
@@ -1206,7 +1231,11 @@ function ReceivablesAging() {
         const name = inv.customers?.name ?? "Unassigned";
         const row = byCustomer.get(name) ?? newAgingRow(name, bucketCount);
         const contactAt = latestByInvoice.get(inv.id);
-        if (contactAt && (!row.lastContactAt || new Date(contactAt).getTime() > new Date(row.lastContactAt).getTime())) {
+        if (
+          contactAt &&
+          (!row.lastContactAt ||
+            new Date(contactAt).getTime() > new Date(row.lastContactAt).getTime())
+        ) {
           row.lastContactAt = contactAt;
         }
         bucketByDaysPastDue(
@@ -1217,7 +1246,9 @@ function ReceivablesAging() {
         );
         byCustomer.set(name, row);
       }
-      setRows([...byCustomer.values()].sort((a, b) => b.total - a.total));
+      setRows(
+        [...byCustomer.values()].sort((a, b) => b.total - a.total),
+      );
       setLoading(false);
     })();
   }, [companyId, cutoffs]);
@@ -1226,14 +1257,20 @@ function ReceivablesAging() {
     <div>
       <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
         <p className="text-muted-foreground">
-          Unpaid invoices as of today, grouped by customer and days past due. Last contact is the most recent follow-up across each customer’s outstanding invoices.
+          Unpaid invoices as of today, grouped by customer and days past due. Last contact is
+          the most recent follow-up across each customer’s outstanding invoices.
         </p>
         <Button
           variant="outline"
           onClick={() => {
             const labels = bucketLabels(cutoffs);
             const header = ["Customer", "Last contact", ...labels, "Total"];
-            const csvRows = rows.map((r) => [r.name, r.lastContactAt ? new Date(r.lastContactAt).toISOString() : "Never", ...r.buckets, r.total]);
+            const csvRows = rows.map((r) => [
+              r.name,
+              r.lastContactAt ? new Date(r.lastContactAt).toISOString() : "Never",
+              ...r.buckets,
+              r.total,
+            ]);
             exportRowsAsCsv("ar-aging", header, csvRows);
           }}
           disabled={loading || rows.length === 0}
