@@ -1171,7 +1171,7 @@ function ReceivablesAging() {
     if (!companyId) return;
     (async () => {
       setLoading(true);
-      const [{ data, error }, { data: contactRows }] = await Promise.all([
+      const [{ data, error }, { data: contactRows, error: contactError }] = await Promise.all([
         supabase
           .from("invoices")
           .select("id,total,status,due_date,customers(name),base_currency_amount")
@@ -1183,7 +1183,7 @@ function ReceivablesAging() {
           .eq("company_id", companyId)
           .order("contacted_at", { ascending: false }),
       ]);
-      if (error) {
+      if (error || contactError) {
         setLoading(false);
         return;
       }
@@ -1226,7 +1226,7 @@ function ReceivablesAging() {
     <div>
       <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
         <p className="text-muted-foreground">
-          Unpaid invoices as of today, grouped by customer and days past due.
+          Unpaid invoices as of today, grouped by customer and days past due. Last contact is the most recent follow-up across each customer’s outstanding invoices.
         </p>
         <Button
           variant="outline"
