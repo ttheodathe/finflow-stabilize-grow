@@ -16,7 +16,7 @@ tags:
   - freelancer invoicing
   - small business finance
 
-draft: true
+draft: false
 featured: false
 ---
 
