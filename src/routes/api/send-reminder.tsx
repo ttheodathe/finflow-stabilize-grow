@@ -105,7 +105,7 @@ export const Route = createFileRoute("/api/send-reminder")({
           // but only when the sender has the invoice.edit permission.
           const { data: member } = await caller.admin
             .from("company_members")
-            .select("role:roles(role_permissions(permission:permissions(key)))")
+            .select("role:roles(company_id,role_permissions(permission:permissions(key)))")
             .eq("company_id", companyId)
             .eq("user_id", caller.userId)
             .eq("status", "active")
