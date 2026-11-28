@@ -103,10 +103,16 @@ const modules: Module[] = [
         feature: "invoices",
       },
       { text: "Prepare customer estimates (quotations) and record payments against invoices" },
-      { text: "Log follow-ups by email, phone, WhatsApp, SMS, in person or another channel, with an optional note" },
+      {
+        text: "Log follow-ups by email, phone, WhatsApp, SMS, in person or another channel, with an optional note",
+      },
       { text: "View follow-up history and the latest contact date for each invoice" },
-      { text: "Track days since the last contact, filter invoices with 7 or more silent days, and sort by silence" },
-      { text: "Automatically record successful in-app invoice and payment-reminder emails as email follow-ups when the sender has invoice-edit permission" },
+      {
+        text: "Track days since the last contact, filter invoices with 7 or more silent days, and sort by silence",
+      },
+      {
+        text: "Automatically record successful in-app invoice and payment-reminder emails as email follow-ups when the sender has invoice-edit permission",
+      },
       { text: "Review last-contact information in receivables aging and export report data to CSV" },
       { text: "Recurring invoices", feature: "recurringInvoices" },
       { text: "Credit notes", feature: "creditNotes" },
